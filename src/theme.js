@@ -1,0 +1,104 @@
+import { createTheme } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#2E7D32", // Vert recyclage
+      light: "#60AD5E",
+      dark: "#1B5E20",
+    },
+    secondary: {
+      main: "#FF8F00", // Orange énergique
+      light: "#FFAB40",
+      dark: "#E65100",
+    },
+    background: {
+      default: "#F8F9FA",
+      paper: "#FFFFFF",
+    },
+    success: {
+      main: "#4CAF50",
+    },
+    warning: {
+      main: "#FF9800",
+    },
+    error: {
+      main: "#F44336",
+    },
+    info: {
+      main: "#2196F3",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+      fontSize: "2.5rem",
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: "2rem",
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: "1.75rem",
+    },
+    h4: {
+      fontWeight: 500,
+      fontSize: "1.5rem",
+    },
+    h5: {
+      fontWeight: 500,
+      fontSize: "1.25rem",
+    },
+    h6: {
+      fontWeight: 500,
+      fontSize: "1rem",
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        },
+      },
+    },
+    MuiFormControl: {
+      defaultProps: {
+        fullWidth: true,
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        fullWidth: true,
+      },
+    },
+    MuiSelect: {
+      defaultProps: {
+        fullWidth: true,
+      },
+    },
+  },
+});
+
+export default theme;
