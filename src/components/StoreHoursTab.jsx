@@ -616,7 +616,7 @@ const StoreHoursTab = () => {
       ) : (
         <Grid container spacing={3}>
           {Object.keys(groupedHours).map(storeId => (
-            <Grid item xs={12} md={6} key={storeId}>
+            <Grid size={{ xs: 12, md: 6}} key={storeId}>
               <Card>
                 <CardHeader
                   title={
@@ -723,7 +723,7 @@ const StoreHoursTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -740,7 +740,7 @@ const StoreHoursTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Jour de la semaine</InputLabel>
                 <Select
@@ -757,7 +757,7 @@ const StoreHoursTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Créneau horaire</InputLabel>
                 <Select
@@ -775,7 +775,7 @@ const StoreHoursTab = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Typography variant="subtitle2" sx={{ mb: 2, color: '#666', fontWeight: 'bold' }}>
                 Configuration rapide des créneaux
               </Typography>
@@ -831,7 +831,7 @@ const StoreHoursTab = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -846,7 +846,7 @@ const StoreHoursTab = () => {
 
             {formData.is_open && (
               <>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12}}>
                   <FormControlLabel
                     control={
                       <Switch
@@ -861,7 +861,7 @@ const StoreHoursTab = () => {
 
                 {!formData.is_24h && (
                   <>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12,sm:6}}>
                       <TextField
                         fullWidth
                         label="Heure d'ouverture"
@@ -872,7 +872,7 @@ const StoreHoursTab = () => {
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12,sm:6}}>
                       <TextField
                         fullWidth
                         label="Heure de fermeture"
@@ -888,7 +888,7 @@ const StoreHoursTab = () => {
               </>
             )}
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes (optionnel)"
@@ -920,7 +920,7 @@ const StoreHoursTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -937,7 +937,7 @@ const StoreHoursTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Catégorie des tâches"
@@ -946,7 +946,7 @@ const StoreHoursTab = () => {
                 onChange={handleReportOptionsChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Date de début"
@@ -957,7 +957,7 @@ const StoreHoursTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Date de fin"
@@ -968,7 +968,7 @@ const StoreHoursTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -980,7 +980,7 @@ const StoreHoursTab = () => {
                 label="Inclure les notes et horaires dans les tâches"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Alert severity="info">
                 <Typography variant="body2">
                   Cette action va créer des tâches dans le planning pour chaque créneau d'ouverture 

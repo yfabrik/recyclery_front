@@ -101,7 +101,7 @@ const Users = () => {
 
       <Grid container spacing={3}>
         {users.map((user) => (
-          <Grid item xs={12} md={6} lg={4} key={user.id}>
+          <Grid size={{ xs: 12, md: 6,lg:4}} key={user.id}>
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>

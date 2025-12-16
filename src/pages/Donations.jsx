@@ -84,7 +84,7 @@ const Donations = () => {
 
       <Grid container spacing={3}>
         {donations.map((donation) => (
-          <Grid item xs={12} md={6} key={donation.id}>
+          <Grid size={{ xs: 12, md: 6}} key={donation.id}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>

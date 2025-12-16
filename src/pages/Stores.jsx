@@ -291,20 +291,20 @@ const Stores = () => {
           {/* Liste des magasins */}
           <Grid container spacing={3}>
             {loading ? (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                   <CircularProgress />
                 </Box>
               </Grid>
             ) : stores.length === 0 ? (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Alert severity="info">
                   Aucun magasin configuré. Créez-en un pour commencer.
                 </Alert>
               </Grid>
             ) : (
               stores.map((store) => (
-                <Grid item xs={12} md={6} lg={4} key={store.id}>
+                <Grid size={{ xs: 12, md: 6,lg:4}} key={store.id}>
                   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -411,7 +411,7 @@ const Stores = () => {
               </Typography>
               <Grid container spacing={2} justifyContent="center">
                 {stores.map(store => (
-                  <Grid item key={store.id}>
+                  <Grid key={store.id}>
                     <Card 
                       sx={{ 
                         minWidth: 200, 

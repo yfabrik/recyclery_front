@@ -82,7 +82,7 @@ const StoreStats = ({ stores, loading }) => {
       
       <Grid container spacing={3}>
         {stores.map((store) => (
-          <Grid item xs={12} md={6} lg={4} key={store.id}>
+          <Grid size={{ xs: 12, md: 6,lg:4}} key={store.id}>
             <Card sx={{ height: '100%', position: 'relative' }}>
               <CardContent>
                 {/* En-tête du magasin */}
@@ -111,7 +111,7 @@ const StoreStats = ({ stores, loading }) => {
                 {/* Statistiques principales */}
                 <Grid container spacing={2}>
                   {/* Chiffre d'affaires */}
-                  <Grid item xs={6}>
+                  <Grid size={{ xs:6}}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h5" color="success.main" fontWeight="bold">
                         {formatCurrency(store.stats.currentMonth.revenue)}
@@ -123,7 +123,7 @@ const StoreStats = ({ stores, loading }) => {
                   </Grid>
 
                   {/* Transactions */}
-                  <Grid item xs={6}>
+                  <Grid size={{ xs:6}}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h5" color="primary.main" fontWeight="bold">
                         {store.stats.currentMonth.transactions}
@@ -135,7 +135,7 @@ const StoreStats = ({ stores, loading }) => {
                   </Grid>
 
                   {/* Panier moyen */}
-                  <Grid item xs={6}>
+                  <Grid size={{ xs:6}}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="info.main" fontWeight="bold">
                         {formatCurrency(store.stats.currentMonth.averageTransaction)}
@@ -147,7 +147,7 @@ const StoreStats = ({ stores, loading }) => {
                   </Grid>
 
                   {/* Articles disponibles */}
-                  <Grid item xs={6}>
+                  <Grid size={{ xs:6}}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="warning.main" fontWeight="bold">
                         {store.stats.items.available}

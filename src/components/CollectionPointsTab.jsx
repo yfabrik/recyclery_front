@@ -451,7 +451,7 @@ const CollectionPointsTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Nom du point"
@@ -461,7 +461,7 @@ const CollectionPointsTab = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth>
                 <InputLabel>Type</InputLabel>
                 <Select
@@ -479,7 +479,7 @@ const CollectionPointsTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Adresse"
@@ -491,7 +491,7 @@ const CollectionPointsTab = () => {
                 rows={2}
               />
             </Grid>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12,md:8}}>
               <TextField
                 fullWidth
                 label="Ville"
@@ -501,7 +501,7 @@ const CollectionPointsTab = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12,md:4}}>
               <TextField
                 fullWidth
                 label="Code postal"
@@ -511,7 +511,7 @@ const CollectionPointsTab = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Personne de contact"
@@ -520,7 +520,7 @@ const CollectionPointsTab = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Téléphone"
@@ -529,7 +529,7 @@ const CollectionPointsTab = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Email"
@@ -539,7 +539,7 @@ const CollectionPointsTab = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth>
                 <InputLabel>Recyclerie</InputLabel>
                 <Select
@@ -557,7 +557,7 @@ const CollectionPointsTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes"
@@ -568,7 +568,7 @@ const CollectionPointsTab = () => {
                 rows={3}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -703,7 +703,7 @@ const CollectionPointsTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Point de Collecte</InputLabel>
                 <Select
@@ -720,7 +720,7 @@ const CollectionPointsTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Date"
@@ -731,7 +731,7 @@ const CollectionPointsTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de début"
@@ -742,7 +742,7 @@ const CollectionPointsTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de fin"
@@ -753,7 +753,7 @@ const CollectionPointsTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Nom de l'employé"
@@ -762,7 +762,7 @@ const CollectionPointsTab = () => {
                 onChange={handlePresenceInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -774,7 +774,7 @@ const CollectionPointsTab = () => {
                 label="Présent"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes (optionnel)"

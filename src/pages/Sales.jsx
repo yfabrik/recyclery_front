@@ -120,7 +120,7 @@ const Sales = () => {
 
       <Grid container spacing={3}>
         {/* Statistiques rapides */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12,md:4}}>
           <Card sx={{ bgcolor: 'success.main', color: 'white' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -140,7 +140,7 @@ const Sales = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12,md:4}}>
           <Card sx={{ bgcolor: 'info.main', color: 'white' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -160,7 +160,7 @@ const Sales = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12,md:4}}>
           <Card sx={{ bgcolor: 'warning.main', color: 'white' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -181,7 +181,7 @@ const Sales = () => {
         </Grid>
 
         {/* Tableau des ventes */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12}}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

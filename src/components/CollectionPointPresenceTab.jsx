@@ -354,7 +354,7 @@ const CollectionPointPresenceTab = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Filtrer par point de collecte</InputLabel>
                 <Select
@@ -373,7 +373,7 @@ const CollectionPointPresenceTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <Typography variant="body2" color="textSecondary">
                 {selectedCollectionPoint ? 
                   `Affichage des jours de présence pour ${collectionPoints.find(p => p.id === parseInt(selectedCollectionPoint))?.name || 'point sélectionné'}` : 
@@ -519,7 +519,7 @@ const CollectionPointPresenceTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Point de collecte</InputLabel>
                 <Select
@@ -536,7 +536,7 @@ const CollectionPointPresenceTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Magasin assigné</InputLabel>
                 <Select
@@ -556,7 +556,7 @@ const CollectionPointPresenceTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Jour de la semaine</InputLabel>
                 <Select
@@ -573,7 +573,7 @@ const CollectionPointPresenceTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Créneau</InputLabel>
                 <Select
@@ -590,7 +590,7 @@ const CollectionPointPresenceTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -602,7 +602,7 @@ const CollectionPointPresenceTab = () => {
                 label="Présent ce jour"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de début"
@@ -614,7 +614,7 @@ const CollectionPointPresenceTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de fin"
@@ -626,7 +626,7 @@ const CollectionPointPresenceTab = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -638,7 +638,7 @@ const CollectionPointPresenceTab = () => {
                 label="Présent 24h/24"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline

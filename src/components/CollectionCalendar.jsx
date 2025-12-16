@@ -510,7 +510,7 @@ const CollectionCalendar = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControl fullWidth required>
                 <InputLabel>Point de Collecte</InputLabel>
                 <Select
@@ -530,7 +530,7 @@ const CollectionCalendar = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 type="date"
@@ -542,7 +542,7 @@ const CollectionCalendar = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 type="time"
@@ -554,7 +554,7 @@ const CollectionCalendar = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth>
                 <InputLabel>Collecteur</InputLabel>
                 <Select
@@ -575,7 +575,7 @@ const CollectionCalendar = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Véhicule"
@@ -588,7 +588,7 @@ const CollectionCalendar = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 type="number"
@@ -614,7 +614,7 @@ const CollectionCalendar = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes"

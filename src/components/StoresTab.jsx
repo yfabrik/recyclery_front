@@ -524,7 +524,7 @@ const StoresTab = () => {
         <>
           {/* Statistiques rapides */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12,sm:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="primary">
@@ -536,7 +536,7 @@ const StoresTab = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12,sm:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="success.main">
@@ -548,7 +548,7 @@ const StoresTab = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12,sm:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="info.main">
@@ -880,7 +880,7 @@ const StoresTab = () => {
                   return acc;
                 }, {})
               ).map(([storeId, hours]) => (
-                <Grid item xs={12} md={6} key={storeId}>
+                <Grid size={{ xs: 12, md: 6}} key={storeId}>
                   <Card>
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -1067,7 +1067,7 @@ const StoresTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 required
@@ -1078,7 +1078,7 @@ const StoresTab = () => {
                 placeholder="Ex: Caisse principale, Entrepôt, Bureau..."
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -1095,7 +1095,7 @@ const StoresTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Description"
@@ -1107,7 +1107,7 @@ const StoresTab = () => {
                 placeholder="Ex: Zone de stockage des articles électroniques, Point de vente principal..."
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1143,7 +1143,7 @@ const StoresTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -1160,7 +1160,7 @@ const StoresTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Jour de la semaine</InputLabel>
                 <Select
@@ -1178,7 +1178,7 @@ const StoresTab = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1193,7 +1193,7 @@ const StoresTab = () => {
 
             {hoursFormData.is_open && (
               <>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12}}>
                   <FormControlLabel
                     control={
                       <Switch
@@ -1208,7 +1208,7 @@ const StoresTab = () => {
 
                 {!hoursFormData.is_24h && (
                   <>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12,sm:6}}>
                       <TextField
                         fullWidth
                         label="Heure d'ouverture"
@@ -1219,7 +1219,7 @@ const StoresTab = () => {
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12,sm:6}}>
                       <TextField
                         fullWidth
                         label="Heure de fermeture"
@@ -1235,7 +1235,7 @@ const StoresTab = () => {
               </>
             )}
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes (optionnel)"

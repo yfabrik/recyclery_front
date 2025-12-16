@@ -521,8 +521,8 @@ const Dashboard = () => {
       </Box>
 
       {/* Statistiques principales améliorées */}
-      <Grid container spacing={3} sx={{ mb: 4, background: "yellow" }}>
-        <Grid size={3}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Articles en stock"
             value={stats.availableItems?.toLocaleString() || "0"}
@@ -533,7 +533,7 @@ const Dashboard = () => {
             trendValue={salesTrend?.value}
           />
         </Grid>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Ventes ce mois"
             value={stats.soldThisMonth?.toLocaleString() || "0"}
@@ -544,7 +544,7 @@ const Dashboard = () => {
             trendValue={salesTrend?.value}
           />
         </Grid>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Chiffre d'affaires"
             value={`${stats.totalRevenue?.toLocaleString() || "0"}€`}
@@ -555,7 +555,7 @@ const Dashboard = () => {
             trendValue={revenueTrend?.value}
           />
         </Grid>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Dons en attente"
             value={stats.pendingDonations?.toLocaleString() || "0"}
@@ -567,7 +567,7 @@ const Dashboard = () => {
       </Grid>
 
       {/* Statistiques secondaires */}
-      <Grid container spacing={3} sx={{ mb: 4 }} columns={12}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Collections programmées"

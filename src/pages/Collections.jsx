@@ -123,7 +123,7 @@ const Collections = () => {
 
       <Grid container spacing={3}>
         {collections.map((collection) => (
-          <Grid item xs={12} md={6} key={collection.id}>
+          <Grid size={{ xs: 12, md: 6}} key={collection.id}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>

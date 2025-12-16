@@ -345,7 +345,7 @@ const Arrivals = () => {
       {showForm && (
         <Grid container spacing={3}>
           {/* Formulaire principal */}
-          <Grid item xs={12} lg={8}>
+          <Grid size={{ xs: 12, lg: 8 }} >
             <Paper sx={{ p: 4 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Add color="primary" />
@@ -354,7 +354,7 @@ const Arrivals = () => {
 
               <Grid container spacing={3}>
                 {/* Catégorie */}
-                <Grid item xs={12} md={6}>
+                <Grid  size={{ xs: 12, md: 6}}>
                   <FormControl fullWidth required>
                     <InputLabel>Catégorie</InputLabel>
                     <Select
@@ -376,7 +376,7 @@ const Arrivals = () => {
                 </Grid>
 
                 {/* Sous-catégorie */}
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6}}>
                   <FormControl fullWidth disabled={!formData.category_id}>
                     <InputLabel>Sous-catégorie</InputLabel>
                     <Select
@@ -396,7 +396,7 @@ const Arrivals = () => {
                 </Grid>
 
                 {/* Poids */}
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6}}>
                   <TextField
                     fullWidth
                     required
@@ -424,7 +424,7 @@ const Arrivals = () => {
                 </Grid>
 
                 {/* Date et heure */}
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3}}>
                   <TextField
                     fullWidth
                     required
@@ -442,7 +442,7 @@ const Arrivals = () => {
                   />
                 </Grid>
 
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3}}>
                   <TextField
                     fullWidth
                     label="Heure"
@@ -457,7 +457,7 @@ const Arrivals = () => {
                 </Grid>
 
                 {/* Type de source */}
-                <Grid item xs={12}>
+                <Grid size={{xs:12}}>
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Provenance
                   </Typography>
@@ -467,7 +467,7 @@ const Arrivals = () => {
                       { value: 'volunteer_donation', label: 'Apport Volontaire', icon: <VolunteerActivism /> },
                       { value: 'house_clearance', label: 'Vide Maison', icon: <Home /> }
                     ].map((source) => (
-                      <Grid item xs={12} md={4} key={source.value}>
+                      <Grid size={{xs:12,md:4}} key={source.value}>
                         <Card 
                           sx={{ 
                             cursor: 'pointer',
@@ -494,7 +494,7 @@ const Arrivals = () => {
 
                 {/* Détails selon le type de source */}
                 {formData.source_type === 'collection_point' && (
-                  <Grid item xs={12}>
+                  <Grid size={{xs:12}}>
                     <FormControl fullWidth required>
                       <InputLabel>Point de Collecte</InputLabel>
                       <Select
@@ -522,7 +522,7 @@ const Arrivals = () => {
                 )}
 
                 {(formData.source_type === 'volunteer_donation' || formData.source_type === 'house_clearance') && (
-                  <Grid item xs={12}>
+                  <Grid size={{xs:12}}>
                     <TextField
                       fullWidth
                       label="Détails supplémentaires"
@@ -539,7 +539,7 @@ const Arrivals = () => {
                 )}
 
                 {/* Notes */}
-                <Grid item xs={12}>
+                <Grid size={{xs:12}}>
                   <TextField
                     fullWidth
                     label="Notes"
@@ -582,7 +582,7 @@ const Arrivals = () => {
 
 
           {/* Résumé de la journée */}
-          <Grid item xs={12} lg={4}>
+          <Grid  size={{xs:12,lg:4}} >
             <Paper sx={{ p: 3, mb: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Résumé du jour

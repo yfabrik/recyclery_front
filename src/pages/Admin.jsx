@@ -514,7 +514,7 @@ const SalesAnalyticsTab = () => {
         
         <Grid container spacing={2} alignItems="center">
           {/* Filtre par magasin */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Magasin</InputLabel>
               <Select
@@ -534,7 +534,7 @@ const SalesAnalyticsTab = () => {
 
 
           {/* Filtre par période */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Période</InputLabel>
               <Select
@@ -552,7 +552,7 @@ const SalesAnalyticsTab = () => {
           {/* Dates personnalisées */}
           {filters.period === 'custom' && (
             <>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12,md:3}}>
                 <TextField
                   fullWidth
                   label="Date de début"
@@ -562,7 +562,7 @@ const SalesAnalyticsTab = () => {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12,md:3}}>
                 <TextField
                   fullWidth
                   label="Date de fin"
@@ -576,7 +576,7 @@ const SalesAnalyticsTab = () => {
           )}
 
           {/* Recherche par numéro de transaction */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <TextField
               fullWidth
               label="N° de transaction"
@@ -600,7 +600,7 @@ const SalesAnalyticsTab = () => {
           </Grid>
 
           {/* Bouton pour effacer tous les filtres */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12}}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
               <Button
                 variant="outlined"
@@ -623,7 +623,7 @@ const SalesAnalyticsTab = () => {
 
       {/* Statistiques principales */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12,sm:6,md:3}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="primary" fontWeight="bold">
@@ -636,7 +636,7 @@ const SalesAnalyticsTab = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12,sm:6,md:3}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="success.main" fontWeight="bold">
@@ -659,7 +659,7 @@ const SalesAnalyticsTab = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12,sm:6,md:3}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="info.main" fontWeight="bold">
@@ -672,7 +672,7 @@ const SalesAnalyticsTab = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12,sm:6,md:3}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="warning.main" fontWeight="bold">
@@ -690,7 +690,7 @@ const SalesAnalyticsTab = () => {
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {/* Répartition par mode de paiement */}
         {statistics.payment_methods && statistics.payment_methods.length > 0 && (
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6}}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -724,7 +724,7 @@ const SalesAnalyticsTab = () => {
 
         {/* Statistiques par code postal */}
         {postalCodeStats.length > 0 && (
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6}}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -957,28 +957,28 @@ const SalesAnalyticsTab = () => {
           {selectedTransaction && (
             <Grid container spacing={3} sx={{ mt: 1 }}>
               {/* Informations de la transaction */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#f8f9fa' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Informations de la transaction
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Montant total: <strong>{formatCurrency(selectedTransaction.total_amount)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Mode de paiement: <strong>{getPaymentMethodLabel(selectedTransaction.payment_method)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Date: <strong>{new Date(selectedTransaction.created_at).toLocaleDateString('fr-FR')}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Caissier: <strong>{selectedTransaction.cashier_name || 'N/A'}</strong>
                       </Typography>
@@ -988,7 +988,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Type de remboursement */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth>
                   <InputLabel>Type de remboursement</InputLabel>
                   <Select
@@ -1004,7 +1004,7 @@ const SalesAnalyticsTab = () => {
 
               {/* Montant du remboursement */}
               {refundForm.refund_type === 'partial' && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12}}>
                   <TextField
                     fullWidth
                     type="number"
@@ -1022,7 +1022,7 @@ const SalesAnalyticsTab = () => {
               )}
 
               {/* Raison du remboursement */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth>
                   <InputLabel>Raison du remboursement</InputLabel>
                   <Select
@@ -1041,7 +1041,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Mode de remboursement */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <FormControl fullWidth>
                   <InputLabel>Mode de remboursement</InputLabel>
                   <Select
@@ -1057,7 +1057,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Notes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <TextField
                   fullWidth
                   multiline
@@ -1070,7 +1070,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Résumé du remboursement */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#e3f2fd' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Résumé du remboursement
@@ -1115,48 +1115,48 @@ const SalesAnalyticsTab = () => {
           {selectedTransaction && (
             <Grid container spacing={3} sx={{ mt: 1 }}>
               {/* Informations de la transaction */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#f8f9fa' }}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
                     📋 Informations de la transaction
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Numéro: <strong>#{selectedTransaction.transaction_number}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Montant: <strong>{formatCurrency(selectedTransaction.total_amount)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Mode de paiement: <strong>{getPaymentMethodLabel(selectedTransaction.payment_method)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Date: <strong>{new Date(selectedTransaction.created_at).toLocaleDateString('fr-FR')}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Heure: <strong>{new Date(selectedTransaction.created_at).toLocaleTimeString('fr-FR')}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Caissier: <strong>{selectedTransaction.cashier_name || 'N/A'}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Magasin: <strong>{selectedTransaction.store_name || 'N/A'}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3}}>
                       <Typography variant="body2" color="textSecondary">
                         Statut: <strong>
                           {selectedTransaction.refunded_at ? 
@@ -1171,7 +1171,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Historique des remboursements */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
                     💰 Historique des remboursements
@@ -1260,13 +1260,13 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Résumé financier */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#e3f2fd' }}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
                     💼 Résumé financier
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={4}>
+                    <Grid size={{ xs:4}}>
                       <Typography variant="body2" color="textSecondary">
                         Montant initial:
                       </Typography>
@@ -1274,7 +1274,7 @@ const SalesAnalyticsTab = () => {
                         {formatCurrency(selectedTransaction.total_amount)}
                       </Typography>
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid size={{ xs:4}}>
                       <Typography variant="body2" color="textSecondary">
                         Total remboursé:
                       </Typography>
@@ -1282,7 +1282,7 @@ const SalesAnalyticsTab = () => {
                         -{formatCurrency(transactionRefunds.reduce((sum, refund) => sum + parseFloat(refund.refund_amount), 0))}
                       </Typography>
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid size={{ xs:4}}>
                       <Typography variant="body2" color="textSecondary">
                         Solde restant:
                       </Typography>
@@ -1320,28 +1320,28 @@ const SalesAnalyticsTab = () => {
           {selectedTransactionForCredit && (
             <Grid container spacing={3} sx={{ mt: 1 }}>
               {/* Informations de la transaction */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#f8f9fa' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Informations de la transaction
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Montant total: <strong>{formatCurrency(selectedTransactionForCredit.total_amount)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Mode de paiement: <strong>{getPaymentMethodLabel(selectedTransactionForCredit.payment_method)}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Date: <strong>{new Date(selectedTransactionForCredit.created_at).toLocaleDateString('fr-FR')}</strong>
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs:6}}>
                       <Typography variant="body2" color="textSecondary">
                         Caissier: <strong>{selectedTransactionForCredit.cashier_name || 'N/A'}</strong>
                       </Typography>
@@ -1351,7 +1351,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Raison de l'avoir */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth>
                   <InputLabel>Raison de l'avoir</InputLabel>
                   <Select
@@ -1371,7 +1371,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Montant de l'avoir */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <TextField
                   fullWidth
                   type="number"
@@ -1388,7 +1388,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Notes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <TextField
                   fullWidth
                   multiline
@@ -1401,7 +1401,7 @@ const SalesAnalyticsTab = () => {
               </Grid>
 
               {/* Résumé de l'avoir */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Card variant="outlined" sx={{ p: 2, bgcolor: '#fff3e0' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Résumé de l'avoir
@@ -1589,7 +1589,7 @@ const DonationsTab = () => {
       {/* Statistiques des dons */}
       {donationStats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1606,7 +1606,7 @@ const DonationsTab = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1623,7 +1623,7 @@ const DonationsTab = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1640,7 +1640,7 @@ const DonationsTab = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1752,7 +1752,7 @@ const DonationsTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Nom du Bénéficiaire"
@@ -1761,7 +1761,7 @@ const DonationsTab = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Contact (email/téléphone)"
@@ -1769,7 +1769,7 @@ const DonationsTab = () => {
                 onChange={(e) => setDonationForm(prev => ({ ...prev, donor_contact: e.target.value }))}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Description du Don"
@@ -1780,7 +1780,7 @@ const DonationsTab = () => {
                 required
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Valeur Estimée (€)"
@@ -1789,7 +1789,7 @@ const DonationsTab = () => {
                 onChange={(e) => setDonationForm(prev => ({ ...prev, estimated_value: e.target.value }))}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Statut</InputLabel>
                 <Select
@@ -1959,7 +1959,7 @@ const EcoOrganismsTab = () => {
       {/* Statistiques */}
       {ecoOrganismStats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -1977,7 +1977,7 @@ const EcoOrganismsTab = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -1995,7 +1995,7 @@ const EcoOrganismsTab = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -2113,7 +2113,7 @@ const EcoOrganismsTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Nom *"
@@ -2123,7 +2123,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Description"
@@ -2134,7 +2134,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Email de contact"
@@ -2144,7 +2144,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Téléphone"
@@ -2153,7 +2153,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Adresse"
@@ -2164,7 +2164,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Site Web"
@@ -2173,7 +2173,7 @@ const EcoOrganismsTab = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -2493,7 +2493,7 @@ const UsersTab = () => {
 
       {/* Statistiques des utilisateurs */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12,sm:6,md:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="primary" fontWeight="bold">
@@ -2506,7 +2506,7 @@ const UsersTab = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12,sm:6,md:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="success.main" fontWeight="bold">
@@ -2519,7 +2519,7 @@ const UsersTab = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12,sm:6,md:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="info.main" fontWeight="bold">
@@ -2542,7 +2542,7 @@ const UsersTab = () => {
             </Typography>
             <Grid container spacing={2}>
               {userStats.users_by_role.map((rolestat) => (
-                <Grid item xs={6} sm={4} md={2} key={rolestat.role}>
+                <Grid size={{ xs:6,sm:4,md:2}} key={rolestat.role}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Chip
                       label={rolestat.role}
@@ -2673,7 +2673,7 @@ const UsersTab = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Nom d'utilisateur *"
@@ -2681,7 +2681,7 @@ const UsersTab = () => {
                 onChange={(e) => setUserForm(prev => ({...prev, username: e.target.value}))}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Email *"
@@ -2690,7 +2690,7 @@ const UsersTab = () => {
                 onChange={(e) => setUserForm(prev => ({...prev, email: e.target.value}))}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Prénom"
@@ -2698,7 +2698,7 @@ const UsersTab = () => {
                 onChange={(e) => setUserForm(prev => ({...prev, first_name: e.target.value}))}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Nom"
@@ -2706,7 +2706,7 @@ const UsersTab = () => {
                 onChange={(e) => setUserForm(prev => ({...prev, last_name: e.target.value}))}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Téléphone"
@@ -2715,7 +2715,7 @@ const UsersTab = () => {
               />
             </Grid>
             {!editingUser && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <TextField
                   fullWidth
                   label="Mot de passe *"
@@ -2725,7 +2725,7 @@ const UsersTab = () => {
                 />
               </Grid>
             )}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth>
                 <InputLabel>Rôle *</InputLabel>
                 <Select
@@ -2741,7 +2741,7 @@ const UsersTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -2758,7 +2758,7 @@ const UsersTab = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -3389,7 +3389,7 @@ const LogisticsTab = () => {
 
       <Grid container spacing={3}>
         {/* Planning Collectes */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -3414,7 +3414,7 @@ const LogisticsTab = () => {
         </Grid>
 
         {/* Bordereaux */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -3439,7 +3439,7 @@ const LogisticsTab = () => {
         </Grid>
 
         {/* Collectes */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -3464,7 +3464,7 @@ const LogisticsTab = () => {
         </Grid>
 
         {/* Statistiques Logistiques */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

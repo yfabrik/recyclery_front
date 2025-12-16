@@ -95,7 +95,7 @@ const NumericKeypad = ({
       {/* Clavier numérique */}
       <Grid container spacing={1}>
         {/* Ligne 1: 7, 8, 9 */}
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -111,7 +111,7 @@ const NumericKeypad = ({
             7
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -127,7 +127,7 @@ const NumericKeypad = ({
             8
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -143,7 +143,7 @@ const NumericKeypad = ({
             9
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -164,7 +164,7 @@ const NumericKeypad = ({
         </Grid>
 
         {/* Ligne 2: 4, 5, 6 */}
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -180,7 +180,7 @@ const NumericKeypad = ({
             4
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -196,7 +196,7 @@ const NumericKeypad = ({
             5
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -212,7 +212,7 @@ const NumericKeypad = ({
             6
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -233,7 +233,7 @@ const NumericKeypad = ({
         </Grid>
 
         {/* Ligne 3: 1, 2, 3 */}
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -249,7 +249,7 @@ const NumericKeypad = ({
             1
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -265,7 +265,7 @@ const NumericKeypad = ({
             2
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -281,12 +281,12 @@ const NumericKeypad = ({
             3
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           {/* Espace réservé */}
         </Grid>
 
         {/* Ligne 4: 0, . */}
-        <Grid item xs={6}>
+        <Grid size={{ xs:6}}>
           <Button
             fullWidth
             variant="outlined"
@@ -302,7 +302,7 @@ const NumericKeypad = ({
             0
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           <Button
             fullWidth
             variant="outlined"
@@ -318,7 +318,7 @@ const NumericKeypad = ({
             ,
           </Button>
         </Grid>
-        <Grid item xs={3}>
+        <Grid size={{ xs:3}}>
           {/* Espace pour l'alignement */}
         </Grid>
       </Grid>
@@ -330,7 +330,7 @@ const NumericKeypad = ({
         </Typography>
         <Grid container spacing={1}>
           {[0.5, 1, 2, 5, 10, 20].map((weight) => (
-            <Grid item xs={2} key={weight}>
+            <Grid size={{xs:2}} key={weight}>
               <Button
                 fullWidth
                 variant="text"

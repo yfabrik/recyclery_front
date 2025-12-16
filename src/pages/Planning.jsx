@@ -4148,7 +4148,7 @@ const Planning = () => {
         {/* Calendrier par créneaux */}
         <Grid container spacing={3}>
           {/* Créneau Matin */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6}}>
             <Card sx={{ height: '100%', border: '2px solid #4caf50' }}>
               <CardHeader
                 title={
@@ -4350,7 +4350,7 @@ const Planning = () => {
           </Grid>
 
           {/* Créneau Après-midi */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6}}>
             <Card sx={{ height: '100%', border: '2px solid #ff9800' }}>
               <CardHeader
                 title={
@@ -4560,7 +4560,7 @@ const Planning = () => {
       {/* Sélecteurs de magasin et lieu */}
       <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <FormControl fullWidth>
               <InputLabel>Filtrer par magasin</InputLabel>
               <Select
@@ -4584,7 +4584,7 @@ const Planning = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <FormControl fullWidth disabled={!selectedStore}>
               <InputLabel>Filtrer par lieu</InputLabel>
               <Select
@@ -4609,7 +4609,7 @@ const Planning = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12,sm:4}}>
             <Typography variant="body2" color="text.secondary">
               {selectedStore ? 
                 `Affichage des tâches pour ${stores.find(s => s.id === parseInt(selectedStore))?.name || 'magasin sélectionné'}` : 
@@ -4686,7 +4686,7 @@ const Planning = () => {
               return (
                 <Grid container spacing={2}>
                 {Object.entries(getEmployeesByDay()).map(([dayKey, dayData]) => (
-                  <Grid item xs={12} sm={6} md={4} lg={1.7} key={dayKey}>
+                  <Grid size={{ xs: 12,sm:6,md:4,lg:1.7}}  key={dayKey}>
                     <Card sx={{ 
                       height: '100%',
                       border: '1px solid #e0e0e0',
@@ -4815,7 +4815,7 @@ const Planning = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Tâche</InputLabel>
                 <Select
@@ -4843,7 +4843,7 @@ const Planning = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Date"
@@ -4854,7 +4854,7 @@ const Planning = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de début"
@@ -4865,7 +4865,7 @@ const Planning = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heure de fin"
@@ -4878,7 +4878,7 @@ const Planning = () => {
             </Grid>
             
             {/* Boutons de configuration rapide des horaires */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Typography variant="subtitle2" sx={{ mb: 2, color: '#666', fontWeight: 'bold' }}>
                 Configuration rapide des horaires
               </Typography>
@@ -4921,7 +4921,7 @@ const Planning = () => {
             </Grid>
 
             {/* Message informatif sur l'assignation des employés */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Box sx={{ 
                 p: 2, 
                 bgcolor: '#e3f2fd', 
@@ -4938,7 +4938,7 @@ const Planning = () => {
               </Box>
             </Grid>
             
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Priorité</InputLabel>
                 <Select
@@ -4958,7 +4958,7 @@ const Planning = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Magasin</InputLabel>
                 <Select
@@ -4978,7 +4978,7 @@ const Planning = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Lieu spécifique</InputLabel>
                 <Select
@@ -5000,7 +5000,7 @@ const Planning = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline
@@ -5280,7 +5280,7 @@ const Planning = () => {
           
           <Grid container spacing={3} sx={{ mt: 1 }}>
             {/* Employés déjà assignés */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Person color="primary" />
                 Employés assignés ({taskAssignedEmployees.length})
@@ -5364,7 +5364,7 @@ const Planning = () => {
             </Grid>
 
             {/* Employés disponibles */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PersonAdd color="action" />
                 Employés disponibles
@@ -5546,7 +5546,7 @@ const Planning = () => {
             
             <Grid container spacing={3} sx={{ mt: 1 }}>
               {/* Employés déjà assignés */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <Person sx={{ fontSize: 20, color: '#2196f3' }} />
                   Employé assigné
@@ -5618,7 +5618,7 @@ const Planning = () => {
               </Grid>
 
               {/* Employés disponibles */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <PersonAdd sx={{ fontSize: 20, color: '#4caf50' }} />
                   Employés disponibles

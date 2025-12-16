@@ -306,7 +306,7 @@ const WasteManagement = () => {
       {/* Statistiques */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -324,7 +324,7 @@ const WasteManagement = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -342,7 +342,7 @@ const WasteManagement = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -360,7 +360,7 @@ const WasteManagement = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12,sm:6,md:3}}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -396,7 +396,7 @@ const WasteManagement = () => {
         </Box>
 
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12,sm:6,md:2}}>
             <FormControl fullWidth size="small">
               <InputLabel>Catégorie</InputLabel>
               <Select
@@ -413,7 +413,7 @@ const WasteManagement = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12,sm:6,md:2}}>
             <FormControl fullWidth size="small">
               <InputLabel>Type</InputLabel>
               <Select
@@ -428,7 +428,7 @@ const WasteManagement = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12,sm:6,md:2}}>
             <TextField
               fullWidth
               size="small"
@@ -440,7 +440,7 @@ const WasteManagement = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12,sm:6,md:2}}>
             <TextField
               fullWidth
               size="small"
@@ -452,7 +452,7 @@ const WasteManagement = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12,sm:6,md:2}}>
             <Button
               variant="outlined"
               startIcon={<FilterList />}
@@ -563,7 +563,7 @@ const WasteManagement = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Date de sortie"
@@ -575,7 +575,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Type de sortie</InputLabel>
                 <Select
@@ -593,7 +593,7 @@ const WasteManagement = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Catégorie</InputLabel>
                 <Select
@@ -614,7 +614,7 @@ const WasteManagement = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Sous-catégorie</InputLabel>
                 <Select
@@ -635,7 +635,7 @@ const WasteManagement = () => {
             </Grid>
 
             {disposalForm.disposal_type === 'eco_organism' && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth required>
                   <InputLabel>Éco-organisme</InputLabel>
                   <Select
@@ -653,7 +653,7 @@ const WasteManagement = () => {
               </Grid>
             )}
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Poids (kg)"
@@ -673,7 +673,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Volume (m³)"
@@ -684,7 +684,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Méthode de transport"
@@ -693,7 +693,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Entreprise de transport"
@@ -702,7 +702,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Coût du transport (€)"
@@ -713,7 +713,7 @@ const WasteManagement = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 label="Notes"

@@ -42,7 +42,7 @@ const Settings = () => {
 
       <Grid container spacing={3}>
         {/* Notifications */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -74,7 +74,7 @@ const Settings = () => {
         </Grid>
 
         {/* Sécurité */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -106,7 +106,7 @@ const Settings = () => {
         </Grid>
 
         {/* Apparence */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -134,7 +134,7 @@ const Settings = () => {
         </Grid>
 
         {/* Système */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

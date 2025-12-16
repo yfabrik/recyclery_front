@@ -196,7 +196,7 @@ const CollectionReceipts = () => {
           Filtres
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <TextField
               fullWidth
               label="Rechercher"
@@ -208,7 +208,7 @@ const CollectionReceipts = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <FormControl fullWidth>
               <InputLabel>Statut</InputLabel>
               <Select
@@ -224,7 +224,7 @@ const CollectionReceipts = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <FormControl fullWidth>
               <InputLabel>Employé</InputLabel>
               <Select
@@ -241,7 +241,7 @@ const CollectionReceipts = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <TextField
               fullWidth
               type="date"
@@ -251,7 +251,7 @@ const CollectionReceipts = () => {
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <TextField
               fullWidth
               type="date"
@@ -261,7 +261,7 @@ const CollectionReceipts = () => {
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={12} md={1}>
+          <Grid size={{ xs: 12,md:1}}>
             <Button
               fullWidth
               variant="outlined"
@@ -282,7 +282,7 @@ const CollectionReceipts = () => {
 
       {/* Statistiques */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12,md:3}}>
           <Paper sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="h4" color="primary" fontWeight="bold">
               {filteredReceipts.length}
@@ -292,7 +292,7 @@ const CollectionReceipts = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12,md:3}}>
           <Paper sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="h4" color="success.main" fontWeight="bold">
               {filteredReceipts.filter(r => r.status === 'completed').length}
@@ -302,7 +302,7 @@ const CollectionReceipts = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12,md:3}}>
           <Paper sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="h4" color="warning.main" fontWeight="bold">
               {filteredReceipts.filter(r => r.status === 'in_progress').length}
@@ -312,7 +312,7 @@ const CollectionReceipts = () => {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12,md:3}}>
           <Paper sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="h4" color="info.main" fontWeight="bold">
               {filteredReceipts.filter(r => r.status === 'planned').length}

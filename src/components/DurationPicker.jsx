@@ -156,7 +156,7 @@ const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
         </Typography>
         <Grid container spacing={1} sx={{ mb: 3 }}>
           {quickDurations.map((duration) => (
-            <Grid item xs={6} sm={4} md={2.4} key={duration}>
+            <Grid size={{ xs:6 ,sm:4, md:2.4}} key={duration}>
               <Chip
                 label={formatDuration(duration)}
                 onClick={() => handleQuickSelect(duration)}
@@ -182,7 +182,7 @@ const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
         <Box sx={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: 1, p: 1 }}>
           <Grid container spacing={0.5}>
             {allDurations.map((duration) => (
-              <Grid item xs={3} sm={2} md={1.5} key={duration}>
+              <Grid size={{xs:3, sm:2, md:1.5}}  key={duration}>
                 <Chip
                   label={formatDuration(duration)}
                   size="small"

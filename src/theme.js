@@ -83,21 +83,7 @@ const theme = createTheme({
         },
       },
     },
-    MuiFormControl: {
-      defaultProps: {
-        fullWidth: true,
-      },
-    },
-    MuiTextField: {
-      defaultProps: {
-        fullWidth: true,
-      },
-    },
-    MuiSelect: {
-      defaultProps: {
-        fullWidth: true,
-      },
-    },
+   
   },
 });
 

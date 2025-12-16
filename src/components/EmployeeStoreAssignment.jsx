@@ -156,7 +156,7 @@ const EmployeeStoreAssignment = ({ employeeId, employeeName, onClose, onSave }) 
           const isPrimary = assignment?.is_primary || false;
           
           return (
-            <Grid item xs={12} sm={6} md={4} key={store.id}>
+            <Grid size={{ xs: 12,sm:6,md:4}} key={store.id}>
               <Card 
                 sx={{ 
                   border: isAssigned ? '2px solid #4caf50' : '1px solid #e0e0e0',

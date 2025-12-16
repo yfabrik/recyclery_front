@@ -317,7 +317,7 @@ const EmployeeManagement = () => {
       {/* Filtres et recherche */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12,md:4}}>
             <TextField
               fullWidth
               placeholder="Rechercher un employé..."
@@ -328,7 +328,7 @@ const EmployeeManagement = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Rôle</InputLabel>
               <Select
@@ -345,7 +345,7 @@ const EmployeeManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Statut</InputLabel>
               <Select
@@ -359,7 +359,7 @@ const EmployeeManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <Button
               variant="outlined"
               startIcon={<Refresh />}
@@ -375,7 +375,7 @@ const EmployeeManagement = () => {
       {/* Liste des employés */}
       <Grid container spacing={3}>
         {filteredEmployees.map((employee) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={employee.id}>
+          <Grid size={{ xs: 12,sm:6,md:4,lg:3}} key={employee.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -537,7 +537,7 @@ const EmployeeManagement = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 required
@@ -547,7 +547,7 @@ const EmployeeManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 required
@@ -558,7 +558,7 @@ const EmployeeManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Rôle</InputLabel>
                 <Select
@@ -575,7 +575,7 @@ const EmployeeManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Téléphone"
@@ -585,7 +585,7 @@ const EmployeeManagement = () => {
                 placeholder="06 12 34 56 78"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Heures de contrat par semaine"
@@ -597,7 +597,7 @@ const EmployeeManagement = () => {
                 helperText="Nombre d'heures par semaine (défaut: 35h)"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="ID Recyclerie"

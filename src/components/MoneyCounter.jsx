@@ -98,7 +98,7 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
       
       <Grid container spacing={2}>
         {/* Pièces */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -173,7 +173,7 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
         </Grid>
 
         {/* Billets */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6}}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

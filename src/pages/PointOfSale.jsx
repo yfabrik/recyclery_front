@@ -526,7 +526,7 @@ const PointOfSale = () => {
           <DialogTitle>Ouverture de Caisse</DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth required>
                   <InputLabel>Magasin</InputLabel>
                   <Select
@@ -543,7 +543,7 @@ const PointOfSale = () => {
                 </FormControl>
               </Grid>
               
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth required>
                   <InputLabel>Caisse</InputLabel>
                   <Select
@@ -561,7 +561,7 @@ const PointOfSale = () => {
                 </FormControl>
               </Grid>
               
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <TextField
                   fullWidth
                   required
@@ -593,7 +593,7 @@ const PointOfSale = () => {
                 />
               </Grid>
               
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <TextField
                   fullWidth
                   multiline
@@ -666,7 +666,7 @@ const PointOfSale = () => {
       {/* En-tête de session */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container alignItems="center" justifyContent="space-between">
-          <Grid item>
+          <Grid>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <PosIcon color="primary" />
               <Box>
@@ -679,7 +679,7 @@ const PointOfSale = () => {
               </Box>
             </Box>
           </Grid>
-          <Grid item>
+          <Grid>
             <Button
               variant="outlined"
               color="error"
@@ -694,7 +694,7 @@ const PointOfSale = () => {
 
       <Grid container spacing={2}>
         {/* Scanner et panier */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12,lg:8}}>
           {/* Scanner */}
           <Paper sx={{ p: 2, mb: 2 }}>
             <Typography variant="h6" gutterBottom>
@@ -826,7 +826,7 @@ const PointOfSale = () => {
         </Grid>
 
         {/* Résumé et paiement */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12,lg:4}}>
           <Paper sx={{ p: 2, position: 'sticky', top: 20 }}>
             <Typography variant="h6" gutterBottom>
               Résumé de la Commande
@@ -878,7 +878,7 @@ const PointOfSale = () => {
         <DialogTitle>Ajouter un Article Manuel</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <FormControl fullWidth required>
                 <InputLabel>Catégorie</InputLabel>
                 <Select
@@ -901,7 +901,7 @@ const PointOfSale = () => {
             
             {/* Sous-catégorie si disponible */}
             {manualItemData.category_id && categories.filter(cat => cat.parent_id == manualItemData.category_id).length > 0 && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <FormControl fullWidth>
                   <InputLabel>Sous-catégorie</InputLabel>
                   <Select
@@ -920,7 +920,7 @@ const PointOfSale = () => {
               </Grid>
             )}
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Poids (kg) - Optionnel"
@@ -940,7 +940,7 @@ const PointOfSale = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 required
@@ -963,7 +963,7 @@ const PointOfSale = () => {
             
             {/* Aperçu du nom généré */}
             {(manualItemData.category_id || manualItemData.subcategory_id) && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Box sx={{ 
                   p: 2, 
                   bgcolor: 'grey.50', 
@@ -991,7 +991,7 @@ const PointOfSale = () => {
               </Grid>
             )}
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline
@@ -1055,7 +1055,7 @@ const PointOfSale = () => {
           </Alert>
           
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 required
@@ -1088,7 +1088,7 @@ const PointOfSale = () => {
               />
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline
@@ -1158,13 +1158,13 @@ const PointOfSale = () => {
         <DialogTitle>Encaissement</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Typography variant="h5" color="primary" textAlign="center">
                 Total à encaisser: {getCartTotal().toFixed(2)}€
               </Typography>
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControl fullWidth>
                 <InputLabel>Mode de paiement</InputLabel>
                 <Select
@@ -1179,7 +1179,7 @@ const PointOfSale = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 required
@@ -1195,14 +1195,14 @@ const PointOfSale = () => {
             </Grid>
             
             {parseFloat(paymentData.payment_amount) > getCartTotal() && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <Alert severity="info">
                   Rendu à donner: {(parseFloat(paymentData.payment_amount) - getCartTotal()).toFixed(2)}€
                 </Alert>
               </Grid>
             )}
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Nom du client (optionnel)"
@@ -1211,7 +1211,7 @@ const PointOfSale = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <TextField
                 fullWidth
                 label="Email du client (optionnel)"

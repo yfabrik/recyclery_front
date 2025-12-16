@@ -232,7 +232,7 @@ const EmployeeTools = () => {
             {tools
               .filter(tool => tool.category === category)
               .map((tool) => (
-                <Grid item xs={12} sm={6} md={4} key={tool.id}>
+                <Grid size={{ xs: 12,sm:6,md:4}} key={tool.id}>
                   <Card 
                     sx={{ 
                       height: '100%',
@@ -394,7 +394,7 @@ const EmployeeTools = () => {
               
               <Grid container spacing={2}>
                 {selectedTool.features.map((feature, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
+                  <Grid size={{ xs: 12,sm:6}} key={index}>
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 

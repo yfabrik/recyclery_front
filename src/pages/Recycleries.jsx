@@ -272,7 +272,7 @@ const Recycleries = () => {
       {/* Liste des recycleries */}
       <Grid container spacing={3}>
         {recycleries.map((recyclery) => (
-          <Grid item xs={12} md={6} lg={4} key={recyclery.id}>
+          <Grid size={{ xs: 12, md: 6,lg:4}} key={recyclery.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

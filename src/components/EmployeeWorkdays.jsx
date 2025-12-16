@@ -155,13 +155,13 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={3}>
+            <Grid size={{ xs:3}}>
               <Typography variant="subtitle1" fontWeight="bold">
                 Jour
               </Typography>
             </Grid>
             {timeSlots.map(slot => (
-              <Grid item xs={4.5} key={slot.key}>
+              <Grid size={{ xs:4.5}} key={slot.key}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {slot.icon}
                   <Typography variant="subtitle1" fontWeight="bold" sx={{ color: slot.color }}>
@@ -180,7 +180,7 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
           <CardContent>
             <Grid container spacing={2} alignItems="center">
               {/* Nom du jour */}
-              <Grid item xs={3}>
+              <Grid size={{ xs:3}}>
                 <Typography variant="body1" fontWeight="medium">
                   {day.label}
                 </Typography>
@@ -191,7 +191,7 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
                 const workday = getWorkdayForDayAndSlot(day.key, slot.key);
                 
                 return (
-                  <Grid item xs={4.5} key={slot.key}>
+                  <Grid size={{ xs:4.5}} key={slot.key}>
                     <Box sx={{ 
                       p: 2, 
                       border: '1px solid #e0e0e0', 

@@ -463,7 +463,7 @@ const TaskManagement = () => {
       {/* Filtres et recherche */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12,md:4}}>
             <TextField
               fullWidth
               placeholder="Rechercher une tâche..."
@@ -474,7 +474,7 @@ const TaskManagement = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Catégorie</InputLabel>
               <Select
@@ -491,7 +491,7 @@ const TaskManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12,md:3}}>
             <FormControl fullWidth>
               <InputLabel>Priorité</InputLabel>
               <Select
@@ -508,7 +508,7 @@ const TaskManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12,md:2}}>
             <Button
               variant="outlined"
               startIcon={<Refresh />}
@@ -528,7 +528,7 @@ const TaskManagement = () => {
           const priorityInfo = getPriorityInfo(task.priority);
           
           return (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={task.id}>
+            <Grid size={{ xs: 12,sm:6,md:4,lg:3}} key={task.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
@@ -706,7 +706,7 @@ const TaskManagement = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 required
@@ -716,7 +716,7 @@ const TaskManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Taux horaire (€)"
@@ -726,7 +726,7 @@ const TaskManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline
@@ -737,7 +737,7 @@ const TaskManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Catégorie</InputLabel>
                 <Select
@@ -754,7 +754,7 @@ const TaskManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth required>
                 <InputLabel>Priorité</InputLabel>
                 <Select
@@ -771,7 +771,7 @@ const TaskManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Durée estimée (minutes)"
@@ -782,7 +782,7 @@ const TaskManagement = () => {
                 inputProps={{ min: 15, max: 480 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <TextField
                 fullWidth
                 label="Lieu"
@@ -791,7 +791,7 @@ const TaskManagement = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12,sm:6}}>
               <FormControl fullWidth>
                 <InputLabel>Employé assigné</InputLabel>
                 <Select
@@ -813,7 +813,7 @@ const TaskManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Typography variant="subtitle2" gutterBottom>
                 Compétences requises
               </Typography>
@@ -829,7 +829,7 @@ const TaskManagement = () => {
                 ))}
               </Box>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <Typography variant="subtitle2" gutterBottom>
                 Équipement nécessaire
               </Typography>
@@ -845,7 +845,7 @@ const TaskManagement = () => {
                 ))}
               </Box>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <FormControlLabel
                 control={
                   <Switch
@@ -858,7 +858,7 @@ const TaskManagement = () => {
               />
             </Grid>
             {formData.is_recurring && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12}}>
                 <FormControl fullWidth>
                   <InputLabel>Modèle de récurrence</InputLabel>
                   <Select
@@ -876,7 +876,7 @@ const TaskManagement = () => {
                 </FormControl>
               </Grid>
             )}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 fullWidth
                 multiline
@@ -905,7 +905,7 @@ const TaskManagement = () => {
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
             {/* Employés déjà assignés */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Typography variant="h6" gutterBottom>
                 Employés assignés ({taskEmployees.length})
               </Typography>
@@ -944,7 +944,7 @@ const TaskManagement = () => {
             </Grid>
 
             {/* Employés disponibles */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Typography variant="h6" gutterBottom>
                 Employés disponibles
               </Typography>

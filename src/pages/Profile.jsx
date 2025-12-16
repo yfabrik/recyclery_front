@@ -62,7 +62,7 @@ const Profile = () => {
 
       <Grid container spacing={3}>
         {/* Informations de base */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12,md:4}}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Avatar
@@ -101,7 +101,7 @@ const Profile = () => {
         </Grid>
 
         {/* Détails du profil */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12,md:8}}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -110,7 +110,7 @@ const Profile = () => {
               <Divider sx={{ mb: 3 }} />
               
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12,sm:6}}>
                   <TextField
                     fullWidth
                     label="Nom d'utilisateur"
@@ -120,7 +120,7 @@ const Profile = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12,sm:6}}>
                   <TextField
                     fullWidth
                     label="Email"
@@ -131,7 +131,7 @@ const Profile = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12,sm:6}}>
                   <TextField
                     fullWidth
                     label="Rôle"
@@ -142,7 +142,7 @@ const Profile = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12,sm:6}}>
                   <TextField
                     fullWidth
                     label="Recyclerie"
@@ -171,7 +171,7 @@ const Profile = () => {
         </Grid>
 
         {/* Statistiques utilisateur */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12}}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

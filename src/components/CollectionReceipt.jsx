@@ -266,7 +266,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
           {/* En-tête du bordereau */}
           <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f8f9fa' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
                   BORDEREAU DE COLLECTE
                 </Typography>
@@ -288,7 +288,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Box sx={{ textAlign: 'right' }}>
                   <Typography variant="h6" gutterBottom>
                     Recyclerie Éco-Solutions
@@ -305,7 +305,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
 
           {/* Informations de collecte */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationOn color="primary" />
@@ -332,7 +332,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                 )}
               </Paper>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Person color="primary" />
@@ -367,7 +367,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
             {editing && (
               <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
                 <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={3}>
+                  <Grid size={{ xs: 12,md:3}}>
                     <TextField
                       fullWidth
                       label="Article"
@@ -376,7 +376,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid size={{ xs: 12,md:2}}>
                     <TextField
                       fullWidth
                       label="Catégorie"
@@ -385,7 +385,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={6} md={1}>
+                  <Grid size={{ xs: 6, md:1}}>
                     <TextField
                       fullWidth
                       label="Qté"
@@ -396,7 +396,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       inputProps={{ min: 1 }}
                     />
                   </Grid>
-                  <Grid item xs={6} md={1}>
+                  <Grid size={{ xs: 6, md:1}}>
                     <TextField
                       fullWidth
                       label="Poids (kg)"
@@ -407,7 +407,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       inputProps={{ min: 0, step: 0.1 }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid size={{ xs: 12,md:2}}>
                     <FormControl fullWidth size="small">
                       <InputLabel>État</InputLabel>
                       <Select
@@ -422,7 +422,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={2}>
+                  <Grid size={{ xs: 12,md:2}}>
                     <TextField
                       fullWidth
                       label="Notes"
@@ -431,7 +431,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={1}>
+                  <Grid size={{ xs: 12,md:1}}>
                     <IconButton onClick={handleAddItem} color="primary">
                       <Add />
                     </IconButton>
@@ -502,7 +502,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
 
           {/* Résumé et signatures */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Scale color="primary" />
@@ -536,7 +536,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                 )}
               </Paper>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6}}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom>
                   Notes et Observations
@@ -565,7 +565,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
               Signatures
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Box sx={{ textAlign: 'center', minHeight: 100, border: '1px dashed #ccc', p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Signature du Collecteur
@@ -578,7 +578,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6}}>
                 <Box sx={{ textAlign: 'center', minHeight: 100, border: '1px dashed #ccc', p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Signature du Donateur
