@@ -186,7 +186,7 @@ const Navbar = ({ onMenuToggle }) => {
                 borderRadius: '8px',
               }}
             >
-              <Badge badgeContent={3} color="error">
+              <Badge badgeContent={42} color="error">
                 <Notifications />
               </Badge>
             </IconButton>

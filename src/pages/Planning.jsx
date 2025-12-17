@@ -804,7 +804,7 @@ const Planning = () => {
       }
       
       // UTILISER LE NOUVEL ENDPOINT BACKEND QUI GÈRE CORRECTEMENT LA DISPONIBILITÉ
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl = ""//import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       
       console.log('🔍 Tentative de chargement des employés disponibles pour la tâche:', schedule.id);
       console.log('🔑 Token présent:', !!token);
@@ -858,7 +858,7 @@ const Planning = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       
       console.log('🚛 Tentative de chargement des employés disponibles pour la collecte:', collection.id);
       
@@ -920,7 +920,7 @@ const Planning = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       await axios.post(`${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees`, {
         employee_id: employeeId
       }, {
@@ -959,7 +959,7 @@ const Planning = () => {
   const handleUnassignEmployeeFromCollection = async (employeeId) => {
     try {
       const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       await axios.delete(`${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees/${employeeId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -1041,7 +1041,7 @@ const Planning = () => {
   const handleUnassignEmployeeFromTask = async (employeeId) => {
     try {
       const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       await axios.delete(`${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees/${employeeId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

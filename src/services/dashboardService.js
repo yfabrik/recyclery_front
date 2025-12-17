@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Configuration axios avec token d'authentification
 const api = axios.create({
