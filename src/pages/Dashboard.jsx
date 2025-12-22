@@ -1,267 +1,255 @@
-import React, { useState, useEffect } from "react";
 import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Paper,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Chip,
-  Button,
-  LinearProgress,
-  Divider,
-  IconButton,
-  Tooltip,
-  Alert,
-  CircularProgress,
-  Badge,
-  Stack,
-} from "@mui/material";
-import {
-  TrendingUp,
-  TrendingDown,
-  Inventory,
-  ShoppingCart,
-  People,
-  LocalShipping,
-  VolunteerActivism,
-  Store,
   Assessment,
-  Refresh,
-  MoreVert,
-  CheckCircle,
-  Warning,
-  Error,
-  Info,
-  AttachMoney,
   Category,
+  CheckCircle,
+  Inventory,
+  LocalShipping,
+  People,
   QrCode,
-  Schedule,
-  Receipt,
-  DeleteSweep,
+  Refresh,
+  ShoppingCart,
+  Store,
+  TrendingUp,
+  VolunteerActivism
 } from "@mui/icons-material";
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Divider,
+  Grid,
+  IconButton,
+  LinearProgress,
+  List,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
 
 // Fonction pour obtenir l'icône par nom
-const getIconByName = (iconName) => {
-  const icons = {
-    ShoppingCart,
-    VolunteerActivism,
-    LocalShipping,
-    Inventory,
-    People,
-  };
-  return icons[iconName] || Info;
-};
-import { useAuth } from "../contexts/AuthContext";
-import QuickStats from "../components/QuickStats";
+// const getIconByName = (iconName) => {
+//   const icons = {
+//     ShoppingCart,
+//     VolunteerActivism,
+//     LocalShipping,
+//     Inventory,
+//     People,
+//   };
+//   return icons[iconName] || Info;
+// };
+import { ActivityItem } from "../components/dashboard/ActivityItem";
+import { SimpleChart } from "../components/dashboard/SimpleChart";
+import { StatCard } from "../components/dashboard/StatCard";
 import DashboardNotifications from "../components/DashboardNotifications";
-import WeatherWidget from "../components/WeatherWidget";
+import QuickStats from "../components/QuickStats";
 import StoreStats from "../components/StoreStats";
+import WeatherWidget from "../components/WeatherWidget";
+import { useAuth } from "../contexts/AuthContext";
 import dashboardService from "../services/dashboardService";
 
 // Composant de carte statistique amélioré
-const StatCard = ({
-  title,
-  value,
-  icon,
-  color,
-  subtitle,
-  trend,
-  trendValue,
-  onClick,
-}) => (
-  <Card
-    sx={{
-      height: "100%",
-      cursor: onClick ? "pointer" : "default",
-      transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-      "&:hover": onClick
-        ? {
-            transform: "translateY(-4px)",
-            boxShadow: 4,
-          }
-        : {},
-    }}
-    onClick={onClick}
-  >
-    <CardContent>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 2,
-        }}
-      >
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography
-            color="textSecondary"
-            gutterBottom
-            variant="overline"
-            sx={{ fontSize: "0.75rem" }}
-          >
-            {title}
-          </Typography>
-          <Typography
-            variant="h4"
-            component="div"
-            color={color}
-            sx={{ fontWeight: "bold" }}
-          >
-            {value}
-          </Typography>
-          {subtitle && (
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
-        <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>
-          {icon}
-        </Avatar>
-      </Box>
-      {trend && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {trend === "up" ? (
-            <TrendingUp color="success" fontSize="small" />
-          ) : (
-            <TrendingDown color="error" fontSize="small" />
-          )}
-          <Typography
-            variant="body2"
-            color={trend === "up" ? "success.main" : "error.main"}
-          >
-            {trendValue}
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            vs mois dernier
-          </Typography>
-        </Box>
-      )}
-    </CardContent>
-  </Card>
-);
+// const StatCard = ({
+//   title,
+//   value,
+//   icon,
+//   color,
+//   subtitle,
+//   trend,
+//   trendValue,
+//   onClick,
+// }) => (
+//   <Card
+//     sx={{
+//       height: "100%",
+//       cursor: onClick ? "pointer" : "default",
+//       transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+//       "&:hover": onClick
+//         ? {
+//             transform: "translateY(-4px)",
+//             boxShadow: 4,
+//           }
+//         : {},
+//     }}
+//     onClick={onClick}
+//   >
+//     <CardContent>
+//       <Box
+//         sx={{
+//           display: "flex",
+//           alignItems: "center",
+//           justifyContent: "space-between",
+//           mb: 2,
+//         }}
+//       >
+//         <Box sx={{ flexGrow: 1 }}>
+//           <Typography
+//             color="textSecondary"
+//             gutterBottom
+//             variant="overline"
+//             sx={{ fontSize: "0.75rem" }}
+//           >
+//             {title}
+//           </Typography>
+//           <Typography
+//             variant="h4"
+//             component="div"
+//             color={color}
+//             sx={{ fontWeight: "bold" }}
+//           >
+//             {value}
+//           </Typography>
+//           {subtitle && (
+//             <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+//               {subtitle}
+//             </Typography>
+//           )}
+//         </Box>
+//         <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>
+//           {icon}
+//         </Avatar>
+//       </Box>
+//       {trend && (
+//         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+//           {trend === "up" ? (
+//             <TrendingUp color="success" fontSize="small" />
+//           ) : (
+//             <TrendingDown color="error" fontSize="small" />
+//           )}
+//           <Typography
+//             variant="body2"
+//             color={trend === "up" ? "success.main" : "error.main"}
+//           >
+//             {trendValue}
+//           </Typography>
+//           <Typography variant="body2" color="textSecondary">
+//             vs mois dernier
+//           </Typography>
+//         </Box>
+//       )}
+//     </CardContent>
+//   </Card>
+// );
 
 // Composant de graphique simple
-const SimpleChart = ({ data, title, color = "primary", labels }) => (
-  <Paper sx={{ p: 2, height: "100%" }}>
-    <Typography variant="h6" gutterBottom>
-      {title}
-    </Typography>
-    <Box
-      sx={{ display: "flex", alignItems: "end", gap: 1, height: 120, mt: 2 }}
-    >
-      {data.map((value, index) => (
-        <Box
-          key={index}
-          sx={{
-            flexGrow: 1,
-            height: `${(value / Math.max(...data)) * 100}%`,
-            bgcolor: `${color}.main`,
-            borderRadius: 1,
-            minHeight: 20,
-            display: "flex",
-            alignItems: "end",
-            justifyContent: "center",
-            color: "white",
-            fontSize: "0.75rem",
-            fontWeight: "bold",
-          }}
-        >
-          {value}
-        </Box>
-      ))}
-    </Box>
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        mt: 1,
-        fontSize: "0.75rem",
-      }}
-    >
-      {labels ? (
-        labels.map((label, index) => (
-          <Typography key={index} variant="caption">
-            {label}
-          </Typography>
-        ))
-      ) : (
-        <>
-          <Typography variant="caption">Lun</Typography>
-          <Typography variant="caption">Mar</Typography>
-          <Typography variant="caption">Mer</Typography>
-          <Typography variant="caption">Jeu</Typography>
-          <Typography variant="caption">Ven</Typography>
-          <Typography variant="caption">Sam</Typography>
-          <Typography variant="caption">Dim</Typography>
-        </>
-      )}
-    </Box>
-  </Paper>
-);
+// const SimpleChart = ({ data, title, color = "primary", labels }) => (
+//   <Paper sx={{ p: 2, height: "100%" }}>
+//     <Typography variant="h6" gutterBottom>
+//       {title}
+//     </Typography>
+//     <Box
+//       sx={{ display: "flex", alignItems: "end", gap: 1, height: 120, mt: 2 }}
+//     >
+//       {data.map((value, index) => (
+//         <Box
+//           key={index}
+//           sx={{
+//             flexGrow: 1,
+//             height: `${(value / Math.max(...data)) * 100}%`,
+//             bgcolor: `${color}.main`,
+//             borderRadius: 1,
+//             minHeight: 20,
+//             display: "flex",
+//             alignItems: "end",
+//             justifyContent: "center",
+//             color: "white",
+//             fontSize: "0.75rem",
+//             fontWeight: "bold",
+//           }}
+//         >
+//           {value}
+//         </Box>
+//       ))}
+//     </Box>
+//     <Box
+//       sx={{
+//         display: "flex",
+//         justifyContent: "space-between",
+//         mt: 1,
+//         fontSize: "0.75rem",
+//       }}
+//     >
+//       {labels ? (
+//         labels.map((label, index) => (
+//           <Typography key={index} variant="caption">
+//             {label}
+//           </Typography>
+//         ))
+//       ) : (
+//         <>
+//           <Typography variant="caption">Lun</Typography>
+//           <Typography variant="caption">Mar</Typography>
+//           <Typography variant="caption">Mer</Typography>
+//           <Typography variant="caption">Jeu</Typography>
+//           <Typography variant="caption">Ven</Typography>
+//           <Typography variant="caption">Sam</Typography>
+//           <Typography variant="caption">Dim</Typography>
+//         </>
+//       )}
+//     </Box>
+//   </Paper>
+// );
 
 // Composant d'activité récente amélioré
-const ActivityItem = ({ activity }) => {
-  const IconComponent = getIconByName(activity.icon);
+// const ActivityItem = ({ activity }) => {
+//   const IconComponent = getIconByName(activity.icon);
 
-  return (
-    <ListItem sx={{ px: 0 }}>
-      <ListItemAvatar>
-        <Avatar
-          sx={{ bgcolor: `${activity.color}.main`, width: 40, height: 40 }}
-        >
-          <IconComponent />
-        </Avatar>
-      </ListItemAvatar>
-      <ListItemText
-        primary={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {activity.description}
-            </Typography>
-            <Chip
-              label={activity.status}
-              size="small"
-              color={activity.statusColor}
-              variant="outlined"
-            />
-          </Box>
-        }
-        secondary={
-          <React.Fragment>
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              component="span"
-              sx={{ display: "block" }}
-            >
-              {activity.time}
-            </Typography>
-            {activity.amount && (
-              <Typography
-                variant="body2"
-                color="primary"
-                sx={{ fontWeight: 500, display: "block" }}
-                component="span"
-              >
-                {activity.amount}
-              </Typography>
-            )}
-          </React.Fragment>
-        }
-      />
-      <IconButton size="small">
-        <MoreVert />
-      </IconButton>
-    </ListItem>
-  );
-};
+//   return (
+//     <ListItem sx={{ px: 0 }}>
+//       <ListItemAvatar>
+//         <Avatar
+//           sx={{ bgcolor: `${activity.color}.main`, width: 40, height: 40 }}
+//         >
+//           <IconComponent />
+//         </Avatar>
+//       </ListItemAvatar>
+//       <ListItemText
+//         primary={
+//           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+//             <Typography variant="body1" sx={{ fontWeight: 500 }}>
+//               {activity.description}
+//             </Typography>
+//             <Chip
+//               label={activity.status}
+//               size="small"
+//               color={activity.statusColor}
+//               variant="outlined"
+//             />
+//           </Box>
+//         }
+//         secondary={
+//           <React.Fragment>
+//             <Typography
+//               variant="body2"
+//               color="textSecondary"
+//               component="span"
+//               sx={{ display: "block" }}
+//             >
+//               {activity.time}
+//             </Typography>
+//             {activity.amount && (
+//               <Typography
+//                 variant="body2"
+//                 color="primary"
+//                 sx={{ fontWeight: 500, display: "block" }}
+//                 component="span"
+//               >
+//                 {activity.amount}
+//               </Typography>
+//             )}
+//           </React.Fragment>
+//         }
+//       />
+//       <IconButton size="small">
+//         <MoreVert />
+//       </IconButton>
+//     </ListItem>
+//   );
+// };
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -382,6 +370,8 @@ const Dashboard = () => {
 
         if (result.success) {
           setStats(result.data.stats);
+          setStats(mockStats);
+
           setActivities(result.data.activities);
 
           // Mettre à jour les données des graphiques
