@@ -436,7 +436,7 @@ const WasteManagement = () => {
               type="date"
               value={filters.date_from}
               onChange={(e) => handleFilterChange('date_from', e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
 
@@ -448,7 +448,7 @@ const WasteManagement = () => {
               type="date"
               value={filters.date_to}
               onChange={(e) => handleFilterChange('date_to', e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
 
@@ -570,7 +570,7 @@ const WasteManagement = () => {
                 type="date"
                 value={disposalForm.disposal_date}
                 onChange={(e) => setDisposalForm(prev => ({ ...prev, disposal_date: e.target.value }))}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 required
               />
             </Grid>

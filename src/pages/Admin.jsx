@@ -490,7 +490,7 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 //                   type="date"
 //                   value={filters.date_from}
 //                   onChange={(e) => setFilters(prev => ({...prev, date_from: e.target.value}))}
-//                   InputLabelProps={{ shrink: true }}
+//                   slotProps={{ inputLabel: { shrink: true } }}
 //                 />
 //               </Grid>
 //               <Grid size={{ xs: 12,md:3}}>
@@ -500,7 +500,7 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 //                   type="date"
 //                   value={filters.date_to}
 //                   onChange={(e) => setFilters(prev => ({...prev, date_to: e.target.value}))}
-//                   InputLabelProps={{ shrink: true }}
+//                   slotProps={{ inputLabel: { shrink: true } }}
 //                 />
 //               </Grid>
 //             </>

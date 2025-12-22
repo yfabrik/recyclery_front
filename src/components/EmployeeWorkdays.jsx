@@ -225,7 +225,7 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
                             label="Début"
                             value={workday.start_time || ''}
                             onChange={(e) => updateWorkday(day.key, slot.key, 'start_time', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                            slotProps={{ inputLabel: { shrink: true } }}
                             sx={{ width: 100 }}
                           />
                           <Typography variant="body2">-</Typography>
@@ -235,7 +235,7 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
                             label="Fin"
                             value={workday.end_time || ''}
                             onChange={(e) => updateWorkday(day.key, slot.key, 'end_time', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                            slotProps={{ inputLabel: { shrink: true } }}
                             sx={{ width: 100 }}
                           />
                         </Box>

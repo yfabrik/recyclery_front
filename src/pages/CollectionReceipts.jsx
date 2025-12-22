@@ -248,7 +248,7 @@ const CollectionReceipts = () => {
               label="Date début"
               value={filters.date_from}
               onChange={(e) => handleFilterChange('date_from', e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
           <Grid size={{ xs: 12,md:2}}>
@@ -258,7 +258,7 @@ const CollectionReceipts = () => {
               label="Date fin"
               value={filters.date_to}
               onChange={(e) => handleFilterChange('date_to', e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
           <Grid size={{ xs: 12,md:1}}>

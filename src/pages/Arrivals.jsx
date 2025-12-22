@@ -1,55 +1,50 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
+  Add,
+  Business,
+  CalendarToday,
+  Category,
+  Clear,
+  Home,
+  Inventory,
+  LocalShipping,
+  LocationOn,
+  Save,
+  Scale,
+  TouchApp,
+  Visibility,
+  VolunteerActivism
+} from '@mui/icons-material';
+import {
   Box,
-  Paper,
-  Grid,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
   Card,
   CardContent,
   Chip,
-  IconButton,
-  Alert,
+  Container,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
+  DialogTitle,
+  Divider,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Fab,
-  Divider,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Add,
-  Save,
-  Clear,
-  Inventory,
-  Scale,
-  LocationOn,
-  CalendarToday,
-  Category,
-  TouchApp,
-  Visibility,
-  Delete,
-  LocalShipping,
-  VolunteerActivism,
-  Home,
-  Business,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import NumericKeypad from '../components/NumericKeypad';
+import { useAuth } from '../contexts/AuthContext';
 
 const Arrivals = () => {
   const { user } = useAuth();
@@ -432,7 +427,7 @@ const Arrivals = () => {
                     type="date"
                     value={formData.arrival_date}
                     onChange={(e) => handleInputChange('arrival_date', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{ inputLabel: { shrink: true } }}
                     InputProps={{
                       startAdornment: <CalendarToday sx={{ mr: 1, color: 'text.secondary' }} />
                     }}
@@ -449,7 +444,7 @@ const Arrivals = () => {
                     type="time"
                     value={formData.arrival_time}
                     onChange={(e) => handleInputChange('arrival_time', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{ inputLabel: { shrink: true } }}
                     sx={{ 
                       '& .MuiInputBase-input': { fontSize: '1.1rem', padding: '16px 14px' }
                     }}

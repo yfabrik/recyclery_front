@@ -538,7 +538,7 @@ const CollectionCalendar = () => {
                 name="scheduled_date"
                 value={formData.scheduled_date}
                 onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 required
               />
             </Grid>
@@ -550,7 +550,7 @@ const CollectionCalendar = () => {
                 name="scheduled_time"
                 value={formData.scheduled_time}
                 onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 required
               />
             </Grid>

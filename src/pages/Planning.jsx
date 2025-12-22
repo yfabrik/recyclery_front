@@ -4851,7 +4851,7 @@ const Planning = () => {
                 type="date"
                 value={formData.scheduled_date ? formData.scheduled_date.toISOString().split('T')[0] : ''}
                 onChange={handleDateChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12,sm:6}}>
@@ -4862,7 +4862,7 @@ const Planning = () => {
                 type="time"
                 value={formData.start_time}
                 onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12,sm:6}}>
@@ -4873,7 +4873,7 @@ const Planning = () => {
                 type="time"
                 value={formData.end_time}
                 onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             
