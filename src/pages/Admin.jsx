@@ -5,8 +5,8 @@ import {
   LocalShipping,
   People,
   Schedule,
-  Settings
-} from '@mui/icons-material';
+  Settings,
+} from "@mui/icons-material";
 import {
   Box,
   Container,
@@ -14,16 +14,17 @@ import {
   Paper,
   Tab,
   Tabs,
-  Typography
-} from '@mui/material';
-import { useState } from 'react';
-import Planning from './Planning';
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
+import Planning from "./Planning";
 
-import { ConfigurationTab } from '../components/admin/ConfigurationTab';
-import { DonationsTab } from '../components/admin/DonationsTab';
-import { LogisticsTab } from '../components/admin/LogisticsTab';
-import { SalesAnalyticsTab } from '../components/admin/SalesAnalyticsTab';
-import { UsersTab } from '../components/admin/UsersTab';
+import { ConfigurationTab } from "../components/admin/ConfigurationTab";
+import { DonationsTab } from "../components/admin/DonationsTab";
+import { LogisticsTab } from "../components/admin/LogisticsTab";
+import { SalesAnalyticsTab } from "../components/admin/SalesAnalyticsTab";
+import { UsersTab } from "../components/admin/UsersTab";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 
 // // Composant pour l'onglet de suivi des ventes
 // const SalesAnalyticsTab = () => {
@@ -47,7 +48,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //     payment_methods: []
 //   });
 //   const [postalCodeStats, setPostalCodeStats] = useState([]);
-  
+
 //   // États pour la pop-up de remboursement
 //   const [refundDialog, setRefundDialog] = useState(false);
 //   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -63,7 +64,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //   const [transactionDetailsDialog, setTransactionDetailsDialog] = useState(false);
 //   const [transactionRefunds, setTransactionRefunds] = useState([]);
 //   const [loadingRefunds, setLoadingRefunds] = useState(false);
-  
+
 //   // État pour stocker tous les remboursements des transactions
 //   const [allTransactionRefunds, setAllTransactionRefunds] = useState({});
 
@@ -102,7 +103,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //     try {
 //       setLoading(true);
 //       const token = localStorage.getItem('token');
-      
+
 //       // Préparer les paramètres pour l'API (sans transaction_number pour l'instant)
 //       const apiParams = {
 //         store_id: filters.store_id,
@@ -110,14 +111,14 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         date_from: filters.date_from,
 //         date_to: filters.date_to
 //       };
-      
+
 //       // Récupérer les transactions
 //       console.log(apiParams)
 //       const transactionsResponse = await axios.get('/api/sales-transactions', {
 //         headers: { Authorization: `Bearer ${token}` },
 //         params: apiParams
 //       });
-      
+
 //       // Récupérer les statistiques
 //       const statsResponse = await axios.get('/api/sales-transactions/stats/summary', {
 //         headers: { Authorization: `Bearer ${token}` },
@@ -131,22 +132,22 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       });
 
 //       let transactions = transactionsResponse.data.transactions || [];
-      
+
 //       // Filtrage côté client par numéro de transaction si spécifié
 //       if (filters.transaction_number) {
-//         transactions = transactions.filter(transaction => 
-//           transaction.transaction_number && 
+//         transactions = transactions.filter(transaction =>
+//           transaction.transaction_number &&
 //           transaction.transaction_number.toLowerCase().includes(filters.transaction_number.toLowerCase())
 //         );
 //       }
-      
+
 //       setSalesData(transactions);
 //       setStatistics(statsResponse.data.stats || {});
 //       setPostalCodeStats(postalResponse.data.postal_codes || []);
-      
+
 //       // Récupérer les remboursements pour toutes les transactions
 //       await fetchAllTransactionRefunds(transactions, token);
-      
+
 //     } catch (error) {
 //       console.error('Erreur lors du chargement des données de vente:', error);
 //       toast.error('Erreur lors du chargement des données');
@@ -234,7 +235,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       ...prev,
 //       [field]: value
 //     }));
-    
+
 //     // Si le type de remboursement change vers "total", remettre le montant total
 //     if (field === 'refund_type' && value === 'full' && selectedTransaction) {
 //       setRefundForm(prev => ({
@@ -307,7 +308,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       const response = await axios.get(`${apiConfig.baseURL}/api/sales-transactions/${transactionId}/refunds`, {
 //         headers: { Authorization: `Bearer ${token}` }
 //       });
-      
+
 //       if (response.data.success) {
 //         setTransactionRefunds(response.data.refunds || []);
 //       }
@@ -404,7 +405,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       refundsResults.forEach(result => {
 //         refundsMap[result.transactionId] = result.refunds;
 //       });
-      
+
 //       setAllTransactionRefunds(refundsMap);
 //     } catch (error) {
 //       console.error('Erreur lors du chargement des remboursements:', error);
@@ -436,14 +437,13 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         </Button>
 //       </Box>
 
-
 //       {/* Filtres */}
 //       <Paper sx={{ p: 3, mb: 3 }}>
 //         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 //           <FilterList />
 //           Filtres
 //         </Typography>
-        
+
 //         <Grid container spacing={2} alignItems="center">
 //           {/* Filtre par magasin */}
 //           <Grid size={{ xs: 12,md:3}}>
@@ -463,7 +463,6 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               </Select>
 //             </FormControl>
 //           </Grid>
-
 
 //           {/* Filtre par période */}
 //           <Grid size={{ xs: 12,md:3}}>
@@ -567,7 +566,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </CardContent>
 //           </Card>
 //         </Grid>
-        
+
 //         <Grid size={{ xs: 12,sm:6,md:3}}>
 //           <Card>
 //             <CardContent sx={{ textAlign: 'center' }}>
@@ -590,7 +589,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </CardContent>
 //           </Card>
 //         </Grid>
-        
+
 //         <Grid size={{ xs: 12,sm:6,md:3}}>
 //           <Card>
 //             <CardContent sx={{ textAlign: 'center' }}>
@@ -603,7 +602,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </CardContent>
 //           </Card>
 //         </Grid>
-        
+
 //         <Grid size={{ xs: 12,sm:6,md:3}}>
 //           <Card>
 //             <CardContent sx={{ textAlign: 'center' }}>
@@ -709,7 +708,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               />
 //             )}
 //           </Box>
-          
+
 //           {salesData.length === 0 ? (
 //             <Alert severity="info">
 //               Aucune transaction trouvée pour la période sélectionnée.
@@ -774,11 +773,11 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                               </Typography>
 //                             );
 //                           }
-                          
+
 //                           const totalRefunded = refunds.reduce((sum, refund) => sum + parseFloat(refund.refund_amount), 0);
 //                           const isFullRefund = refunds.some(refund => refund.refund_type === 'full');
 //                           const hasCreditNote = refunds.some(refund => refund.refund_type === 'credit_note');
-                          
+
 //                           return (
 //                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
 //                               <Typography variant="body2" color="error" fontWeight="bold">
@@ -826,39 +825,39 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                       <TableCell>
 //                         <Box sx={{ display: 'flex', gap: 1 }}>
 //                           <Tooltip title="Voir les détails">
-//                             <IconButton 
-//                               size="small" 
-//                               color="primary" 
+//                             <IconButton
+//                               size="small"
+//                               color="primary"
 //                               onClick={() => handleViewTransactionDetails(transaction)}
 //                             >
 //                               <Visibility />
 //                             </IconButton>
 //                           </Tooltip>
-                          
+
 //                           <Tooltip title="Créer un avoir">
-//                             <IconButton 
-//                               size="small" 
-//                               color="warning" 
+//                             <IconButton
+//                               size="small"
+//                               color="warning"
 //                               onClick={() => handleCreditNote(transaction)}
 //                             >
 //                               <Receipt />
 //                             </IconButton>
 //                           </Tooltip>
-                          
+
 //                           <Tooltip title="Réimprimer le ticket">
-//                             <IconButton 
-//                               size="small" 
-//                               color="info" 
+//                             <IconButton
+//                               size="small"
+//                               color="info"
 //                               onClick={() => handleReprintReceipt(transaction.transaction_number)}
 //                             >
 //                               <Print />
 //                             </IconButton>
 //                           </Tooltip>
-                          
+
 //                           <Tooltip title="Remboursement">
-//                             <IconButton 
-//                               size="small" 
-//                               color="error" 
+//                             <IconButton
+//                               size="small"
+//                               color="error"
 //                               onClick={() => handleRefund(transaction)}
 //                             >
 //                               <Undo />
@@ -943,10 +942,10 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                     label="Montant du remboursement (€)"
 //                     value={refundForm.refund_amount}
 //                     onChange={(e) => handleRefundFormChange('refund_amount', e.target.value)}
-//                     inputProps={{ 
-//                       min: 0.01, 
+//                     inputProps={{
+//                       min: 0.01,
 //                       max: selectedTransaction.total_amount,
-//                       step: 0.01 
+//                       step: 0.01
 //                     }}
 //                     helperText={`Maximum: ${formatCurrency(selectedTransaction.total_amount)}`}
 //                   />
@@ -1022,9 +1021,9 @@ import { UsersTab } from '../components/admin/UsersTab';
 //           <Button onClick={handleCloseRefundDialog}>
 //             Annuler
 //           </Button>
-//           <Button 
-//             onClick={handleProcessRefund} 
-//             variant="contained" 
+//           <Button
+//             onClick={handleProcessRefund}
+//             variant="contained"
 //             color="error"
 //             startIcon={<Undo />}
 //           >
@@ -1091,8 +1090,8 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                     <Grid size={{ xs: 6, md: 3}}>
 //                       <Typography variant="body2" color="textSecondary">
 //                         Statut: <strong>
-//                           {selectedTransaction.refunded_at ? 
-//                             <Chip label="Remboursé" color="error" size="small" /> : 
+//                           {selectedTransaction.refunded_at ?
+//                             <Chip label="Remboursé" color="error" size="small" /> :
 //                             <Chip label="Actif" color="success" size="small" />
 //                           }
 //                         </strong>
@@ -1108,7 +1107,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
 //                     💰 Historique des remboursements
 //                   </Typography>
-                  
+
 //                   {loadingRefunds ? (
 //                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
 //                       <CircularProgress />
@@ -1131,10 +1130,10 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                           {transactionRefunds.map((refund) => (
 //                             <TableRow key={refund.id}>
 //                               <TableCell>
-//                                 <Chip 
-//                                   label={refund.refund_type === 'full' ? 'Total' : 'Partiel'} 
-//                                   color={refund.refund_type === 'full' ? 'error' : 'warning'} 
-//                                   size="small" 
+//                                 <Chip
+//                                   label={refund.refund_type === 'full' ? 'Total' : 'Partiel'}
+//                                   color={refund.refund_type === 'full' ? 'error' : 'warning'}
+//                                   size="small"
 //                                 />
 //                               </TableCell>
 //                               <TableCell>
@@ -1153,10 +1152,10 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                                 </Typography>
 //                               </TableCell>
 //                               <TableCell>
-//                                 <Chip 
-//                                   label={getPaymentMethodLabel(refund.refund_method)} 
-//                                   color="info" 
-//                                   size="small" 
+//                                 <Chip
+//                                   label={getPaymentMethodLabel(refund.refund_method)}
+//                                   color="info"
+//                                   size="small"
 //                                 />
 //                               </TableCell>
 //                               <TableCell>
@@ -1170,10 +1169,10 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                                 </Typography>
 //                               </TableCell>
 //                               <TableCell>
-//                                 <Chip 
-//                                   label={refund.status === 'completed' ? 'Terminé' : refund.status} 
-//                                   color={refund.status === 'completed' ? 'success' : 'default'} 
-//                                   size="small" 
+//                                 <Chip
+//                                   label={refund.status === 'completed' ? 'Terminé' : refund.status}
+//                                   color={refund.status === 'completed' ? 'success' : 'default'}
+//                                   size="small"
 //                                 />
 //                               </TableCell>
 //                             </TableRow>
@@ -1220,7 +1219,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                       </Typography>
 //                       <Typography variant="h6" color="primary">
 //                         {formatCurrency(
-//                           selectedTransaction.total_amount - 
+//                           selectedTransaction.total_amount -
 //                           transactionRefunds.reduce((sum, refund) => sum + parseFloat(refund.refund_amount), 0)
 //                         )}
 //                       </Typography>
@@ -1378,7 +1377,6 @@ import { UsersTab } from '../components/admin/UsersTab';
 //   );
 // };
 
-
 // // Composant pour l'onglet de gestion des dons
 // const DonationsTab = () => {
 //   const [donations, setDonations] = useState([]);
@@ -1457,23 +1455,23 @@ import { UsersTab } from '../components/admin/UsersTab';
 //   const handleSaveDonation = async () => {
 //     try {
 //       const token = localStorage.getItem('token');
-//       const url = editingDonation 
+//       const url = editingDonation
 //         ? `/api/donations/${editingDonation.id}`
 //         : '/api/donations';
-      
+
 //       const method = editingDonation ? 'put' : 'post';
-      
+
 //       console.log('Données envoyées:', donationForm);
-      
+
 //       await axios[method](url, donationForm, {
 //         headers: { Authorization: `Bearer ${token}` }
 //       });
-      
-//       toast.success(editingDonation 
+
+//       toast.success(editingDonation
 //         ? 'Don mis à jour avec succès'
 //         : 'Don enregistré avec succès'
 //       );
-      
+
 //       handleCloseDonationDialog();
 //       fetchDonations();
 //       fetchDonationStats();
@@ -1827,19 +1825,19 @@ import { UsersTab } from '../components/admin/UsersTab';
 
 //   const handleSaveEcoOrganism = async () => {
 //     try {
-//       const url = editingEcoOrganism 
+//       const url = editingEcoOrganism
 //         ? `/api/eco-organisms/${editingEcoOrganism.id}`
 //         : '/api/eco-organisms';
-      
+
 //       const method = editingEcoOrganism ? 'put' : 'post';
-      
+
 //       await axios[method](url, ecoOrganismForm);
-      
-//       toast.success(editingEcoOrganism 
+
+//       toast.success(editingEcoOrganism
 //         ? 'Éco-organisme mis à jour avec succès'
 //         : 'Éco-organisme créé avec succès'
 //       );
-      
+
 //       handleCloseEcoOrganismDialog();
 //       fetchEcoOrganisms();
 //       fetchEcoOrganismStats();
@@ -1908,7 +1906,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               </CardContent>
 //             </Card>
 //           </Grid>
-          
+
 //           <Grid size={{ xs: 12,sm:4}}>
 //             <Card>
 //               <CardContent>
@@ -1926,7 +1924,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               </CardContent>
 //             </Card>
 //           </Grid>
-          
+
 //           <Grid size={{ xs: 12,sm:4}}>
 //             <Card>
 //               <CardContent>
@@ -2271,12 +2269,12 @@ import { UsersTab } from '../components/admin/UsersTab';
 //   const handleSaveUser = async () => {
 //     try {
 //       const token = localStorage.getItem('token');
-      
+
 //       if (editingUser) {
 //         // Mise à jour
 //         const updateData = { ...userForm };
 //         delete updateData.password; // Ne pas envoyer le mot de passe lors de la mise à jour
-        
+
 //         await axios.put(`/api/users/${editingUser.id}`, updateData, {
 //           headers: { Authorization: `Bearer ${token}` }
 //         });
@@ -2287,13 +2285,13 @@ import { UsersTab } from '../components/admin/UsersTab';
 //           toast.error('Le mot de passe est requis pour un nouvel utilisateur');
 //           return;
 //         }
-        
+
 //         await axios.post('/api/users', userForm, {
 //           headers: { Authorization: `Bearer ${token}` }
 //         });
 //         toast.success('Utilisateur créé avec succès');
 //       }
-      
+
 //       handleCloseUserDialog();
 //       fetchUsers();
 //       fetchUserStats();
@@ -2342,7 +2340,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       }, {
 //         headers: { Authorization: `Bearer ${token}` }
 //       });
-      
+
 //       toast.success('Mot de passe mis à jour avec succès');
 //       handleClosePasswordDialog();
 //     } catch (error) {
@@ -2355,7 +2353,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //     try {
 //       const token = localStorage.getItem('token');
 //       const newStatus = !user.is_active;
-      
+
 //       if (newStatus) {
 //         // Réactiver l'utilisateur
 //         await axios.put(`/api/users/${user.id}`, { is_active: true }, {
@@ -2369,7 +2367,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         });
 //         toast.success('Utilisateur désactivé');
 //       }
-      
+
 //       fetchUsers();
 //       fetchUserStats();
 //     } catch (error) {
@@ -2437,7 +2435,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </CardContent>
 //           </Card>
 //         </Grid>
-        
+
 //         <Grid size={{ xs: 12,sm:6,md:4}}>
 //           <Card>
 //             <CardContent sx={{ textAlign: 'center' }}>
@@ -2450,7 +2448,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </CardContent>
 //           </Card>
 //         </Grid>
-        
+
 //         <Grid size={{ xs: 12,sm:6,md:4}}>
 //           <Card>
 //             <CardContent sx={{ textAlign: 'center' }}>
@@ -2496,7 +2494,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //           <Typography variant="h6" gutterBottom>
 //             📋 Liste des Utilisateurs ({users.length})
 //           </Typography>
-          
+
 //           {users.length === 0 ? (
 //             <Alert severity="info">
 //               Aucun utilisateur trouvé.
@@ -2521,8 +2519,8 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                       <TableCell>
 //                         <Box>
 //                           <Typography variant="body2" fontWeight="bold">
-//                             {user.first_name && user.last_name 
-//                               ? `${user.first_name} ${user.last_name}` 
+//                             {user.first_name && user.last_name
+//                               ? `${user.first_name} ${user.last_name}`
 //                               : user.username}
 //                           </Typography>
 //                           {user.first_name && user.last_name && (
@@ -2705,7 +2703,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         </DialogContent>
 //         <DialogActions>
 //           <Button onClick={handleCloseUserDialog}>Annuler</Button>
-//           <Button 
+//           <Button
 //             onClick={handleSaveUser}
 //             variant="contained"
 //             disabled={!userForm.username || !userForm.email || !userForm.role || (!editingUser && !userForm.password)}
@@ -2753,7 +2751,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         </DialogContent>
 //         <DialogActions>
 //           <Button onClick={handleClosePasswordDialog}>Annuler</Button>
-//           <Button 
+//           <Button
 //             onClick={handleChangePassword}
 //             variant="contained"
 //             color="warning"
@@ -2792,18 +2790,18 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       const response = await axios.get('/api/categories', {
 //         headers: { Authorization: `Bearer ${token}` }
 //       });
-      
+
 //       // Organiser les catégories en structure hiérarchique
 //       const allCategories = response.data.categories || [];
 //       const mainCategories = allCategories.filter(cat => !cat.parent_id);
 //       const subcategories = allCategories.filter(cat => cat.parent_id);
-      
+
 //       // Ajouter les sous-catégories à leurs catégories parentes
 //       const organizedCategories = mainCategories.map(category => ({
 //         ...category,
 //         subcategories: subcategories.filter(sub => sub.parent_id === category.id)
 //       }));
-      
+
 //       setCategories(organizedCategories);
 //     } catch (error) {
 //       toast.error('Erreur lors du chargement des catégories');
@@ -2859,7 +2857,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //   const handleSave = async () => {
 //     try {
 //       const token = localStorage.getItem('token');
-      
+
 //       if (editingCategory) {
 //         await axios.put(`/api/categories/${editingCategory.id}`, formData, {
 //           headers: { Authorization: `Bearer ${token}` }
@@ -2871,7 +2869,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //         });
 //         toast.success('Catégorie créée avec succès');
 //       }
-      
+
 //       handleCloseDialog();
 //       fetchCategories();
 //     } catch (error) {
@@ -2903,16 +2901,16 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       Palette,
 //       AdminPanelSettings,
 //     };
-    
+
 //     const IconComponent = iconMap[iconName] || Category;
 //     return <IconComponent />;
 //   };
 
 //   const renderCategoryCard = (category, isSubcategory = false) => (
-//     <Card 
-//       key={category.id} 
+//     <Card
+//       key={category.id}
 //       variant={isSubcategory ? "outlined" : "elevation"}
-//       sx={{ 
+//       sx={{
 //         mb: 1,
 //         ml: isSubcategory ? 3 : 0,
 //         backgroundColor: isSubcategory ? 'grey.50' : 'white'
@@ -2933,7 +2931,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                   {category.description}
 //                 </Typography>
 //               )}
-//               <Chip 
+//               <Chip
 //                 label={isSubcategory ? "Sous-catégorie" : "Catégorie principale"}
 //                 size="small"
 //                 color={isSubcategory ? "secondary" : "primary"}
@@ -2955,8 +2953,8 @@ import { UsersTab } from '../components/admin/UsersTab';
 //             </Tooltip>
 //             {!isSubcategory && (
 //               <Tooltip title="Ajouter une sous-catégorie">
-//                 <IconButton 
-//                   onClick={() => handleOpenDialog(null, category.id)} 
+//                 <IconButton
+//                   onClick={() => handleOpenDialog(null, category.id)}
 //                   color="success"
 //                 >
 //                   <Add />
@@ -2999,7 +2997,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               {renderCategoryCard(category)}
 //               {category.subcategories && category.subcategories.length > 0 && (
 //                 <Box sx={{ ml: 2, mt: 1 }}>
-//                   {category.subcategories.map(subcategory => 
+//                   {category.subcategories.map(subcategory =>
 //                     <Box key={subcategory.id}>
 //                       {renderCategoryCard(subcategory, true)}
 //                     </Box>
@@ -3014,10 +3012,10 @@ import { UsersTab } from '../components/admin/UsersTab';
 //       {/* Dialog pour créer/modifier une catégorie */}
 //       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
 //         <DialogTitle>
-//           {editingCategory 
-//             ? 'Modifier la catégorie' 
-//             : formData.parent_id 
-//               ? 'Nouvelle sous-catégorie' 
+//           {editingCategory
+//             ? 'Modifier la catégorie'
+//             : formData.parent_id
+//               ? 'Nouvelle sous-catégorie'
 //               : 'Nouvelle catégorie'
 //           }
 //         </DialogTitle>
@@ -3030,7 +3028,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //                 </strong>
 //               </Alert>
 //             )}
-            
+
 //             <TextField
 //               fullWidth
 //               label="Nom de la catégorie"
@@ -3039,7 +3037,7 @@ import { UsersTab } from '../components/admin/UsersTab';
 //               margin="normal"
 //               required
 //             />
-            
+
 //             <TextField
 //               fullWidth
 //               label="Description"
@@ -3082,9 +3080,9 @@ import { UsersTab } from '../components/admin/UsersTab';
 //           <Button onClick={handleCloseDialog} startIcon={<Cancel />}>
 //             Annuler
 //           </Button>
-//           <Button 
-//             onClick={handleSave} 
-//             variant="contained" 
+//           <Button
+//             onClick={handleSave}
+//             variant="contained"
 //             startIcon={<Save />}
 //             disabled={!formData.name.trim()}
 //           >
@@ -3097,17 +3095,23 @@ import { UsersTab } from '../components/admin/UsersTab';
 // };
 
 const Admin = () => {
-  const [tabValue, setTabValue] = useState(0);
+  // const [tabValue, setTabValue] = useState(0);
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+  // const handleTabChange = (event, newValue) => {
+  //   setTabValue(newValue);
+  // };
+const location = useLocation();
+
+const tabValue =
+  location.pathname === "/admin"
+    ? "/admin/config"
+    : location.pathname;
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
-          <AdminPanelSettings sx={{ mr: 1, verticalAlign: 'middle' }} />
+          <AdminPanelSettings sx={{ mr: 1, verticalAlign: "middle" }} />
           Administration
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
@@ -3115,10 +3119,10 @@ const Admin = () => {
         </Typography>
       </Box>
 
-      <Paper sx={{ width: '100%' }}>
+      <Paper sx={{ width: "100%" }}>
         <Tabs
           value={tabValue}
-          onChange={handleTabChange}
+          // onChange={handleTabChange}
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
@@ -3127,30 +3131,34 @@ const Admin = () => {
             // background: 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 50%, #1976d2 100%)',
             // borderRadius: 1,
             // boxShadow: '0 4px 20px rgba(66, 165, 245, 0.3)',
-            '& .MuiTab-root': {
+            "& .MuiTab-root": {
               // color: 'rgba(255,255,255,0.8)',
               fontWeight: 500,
-              borderRadius: '8px',
-              margin: '4px',
-              transition: 'all 0.2s ease-in-out',
-              '&.Mui-selected': {
+              borderRadius: "8px",
+              margin: "4px",
+              transition: "all 0.2s ease-in-out",
+              "&.Mui-selected": {
                 // color: '#ffffff',
-                backgroundColor: 'rgba(255,255,255,0.25)',
+                backgroundColor: "rgba(255,255,255,0.25)",
                 fontWeight: 700,
-                boxShadow: '0 2px 8px rgba(255,255,255,0.3)',
+                boxShadow: "0 2px 8px rgba(255,255,255,0.3)",
               },
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                transform: 'translateY(-1px)',
-              }
-            }
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                transform: "translateY(-1px)",
+              },
+            },
           }}
         >
-          <Tab 
-            label="Configuration Logiciel" 
-            icon={<Settings />} 
+          <Tab
+            component={Link}
+            label="Configuration Logiciel"
+            to="/admin/config"
+            value="/admin/config"
+
+            icon={<Settings />}
             iconPosition="start"
-            sx={{ 
+            sx={{
               minHeight: 72,
               // '&.Mui-selected': {
               //   color: '#ffffff',
@@ -3160,47 +3168,65 @@ const Admin = () => {
               // }
             }}
           />
-          <Tab 
-            label="Suivi des Ventes" 
-            icon={<Assessment />} 
+          <Tab
+            component={Link}
+            label="Suivi des Ventes"
+            value="/admin/sales"
+            to="/admin/sales"
+            icon={<Assessment />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
-          <Tab 
-            label="Dons" 
-            icon={<CardGiftcard />} 
+          <Tab
+            component={Link}
+            label="Dons"
+            value="/admin/don"
+            to="/admin/don"
+            icon={<CardGiftcard />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
-          <Tab 
-            label="Logistique" 
-            icon={<LocalShipping />} 
+          <Tab
+            component={Link}
+            label="Logistique"
+            value="/admin/logistic"
+            to="/admin/logistic"
+            icon={<LocalShipping />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
-          <Tab 
-            label="Planning" 
-            icon={<Schedule />} 
+          <Tab
+            component={Link}
+            label="Planning"
+            value="/admin/planning"
+            to="/admin/planning"
+            icon={<Schedule />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
-          <Tab 
-            label="Utilisateurs" 
-            icon={<People />} 
+          <Tab
+            component={Link}
+            label="Utilisateurs"
+            value="/admin/users"
+            to="/admin/users"
+            icon={<People />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
         </Tabs>
-        
+
         <Divider />
-        
+
         <Box sx={{ p: 3 }}>
-          {tabValue === 0 && <ConfigurationTab />}
-          {tabValue === 1 && <SalesAnalyticsTab />}
-          {tabValue === 2 && <DonationsTab />}
-          {tabValue === 3 && <LogisticsTab />}
-          {tabValue === 4 && <Planning />}
-          {tabValue === 5 && <UsersTab />}
+          <Routes>
+            <Route index element={<Navigate to="/admin/config" replace/>}></Route>
+            <Route path="config/*" element={<ConfigurationTab />} />
+            <Route path="sales" element={<SalesAnalyticsTab />} />
+            <Route path="don" element={<DonationsTab />} />
+            <Route path="logistic" element={<LogisticsTab />} />
+            <Route path="planning" element={<Planning />} />
+            <Route path="users" element={<UsersTab />} />
+          </Routes>
         </Box>
       </Paper>
     </Container>
@@ -3219,10 +3245,10 @@ const Admin = () => {
 //         </Typography>
 //       </Box>
 
-//       <Tabs 
-//         value={tabValue} 
-//         onChange={(e, newValue) => setTabValue(newValue)} 
-//         sx={{ 
+//       <Tabs
+//         value={tabValue}
+//         onChange={(e, newValue) => setTabValue(newValue)}
+//         sx={{
 //           mb: 3,
 //           backgroundColor: '#f8f9fa',
 //           borderRadius: 2,
@@ -3245,40 +3271,40 @@ const Admin = () => {
 //           }
 //         }}
 //       >
-//         <Tab 
-//           label="Catégories" 
-//           icon={<Category />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Catégories"
+//           icon={<Category />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#1976d2', backgroundColor: '#e3f2fd' } }}
 //         />
-//         <Tab 
-//           label="Lieux de collecte" 
-//           icon={<LocationOn />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Lieux de collecte"
+//           icon={<LocationOn />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#f57c00', backgroundColor: '#fff3e0' } }}
 //         />
-//         <Tab 
-//           label="Magasins" 
-//           icon={<Store />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Magasins"
+//           icon={<Store />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#7b1fa2', backgroundColor: '#f3e5f5' } }}
 //         />
-//         <Tab 
-//           label="Éco-organismes" 
-//           icon={<Nature />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Éco-organismes"
+//           icon={<Nature />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#388e3c', backgroundColor: '#e8f5e8' } }}
 //         />
-//         <Tab 
-//           label="Employés" 
-//           icon={<People />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Employés"
+//           icon={<People />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#d32f2f', backgroundColor: '#ffebee' } }}
 //         />
-//         <Tab 
-//           label="Tâches" 
-//           icon={<Work />} 
-//           iconPosition="start" 
+//         <Tab
+//           label="Tâches"
+//           icon={<Work />}
+//           iconPosition="start"
 //           sx={{ '&.Mui-selected': { color: '#f57c00', backgroundColor: '#fff3e0' } }}
 //         />
 //         <Tab
@@ -3333,8 +3359,8 @@ const Admin = () => {
 //               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 //                 Gérer les plannings de collecte et les créneaux horaires
 //               </Typography>
-//               <Button 
-//                 variant="contained" 
+//               <Button
+//                 variant="contained"
 //                 startIcon={<Schedule />}
 //                 onClick={() => window.location.href = '/collection-schedule'}
 //                 fullWidth
@@ -3358,8 +3384,8 @@ const Admin = () => {
 //               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 //                 Consulter et gérer les bordereaux de collecte
 //               </Typography>
-//               <Button 
-//                 variant="contained" 
+//               <Button
+//                 variant="contained"
 //                 startIcon={<Receipt />}
 //                 onClick={() => window.location.href = '/collection-receipts'}
 //                 fullWidth
@@ -3383,8 +3409,8 @@ const Admin = () => {
 //               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 //                 Suivre et gérer les collectes en cours
 //               </Typography>
-//               <Button 
-//                 variant="contained" 
+//               <Button
+//                 variant="contained"
 //                 startIcon={<LocalShipping />}
 //                 onClick={() => window.location.href = '/collections'}
 //                 fullWidth
@@ -3408,8 +3434,8 @@ const Admin = () => {
 //               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
 //                 Consulter les statistiques et rapports logistiques
 //               </Typography>
-//               <Button 
-//                 variant="outlined" 
+//               <Button
+//                 variant="outlined"
 //                 startIcon={<Assessment />}
 //                 onClick={() => window.location.href = '/dashboard'}
 //                 fullWidth
