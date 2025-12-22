@@ -1,0 +1,432 @@
+import {
+  Add,
+  AdminPanelSettings,
+  Cancel,
+  Category,
+  Delete,
+  Edit,
+  Inventory,
+  Palette,
+  Save,
+  Settings,
+} from "@mui/icons-material";
+import {
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+
+interface CategoryProps {
+  id: number;
+  name: string;
+  description: string;
+  icon?: string;
+  parent_id?: number;
+  subcategories?: CategoryProps[];
+}
+
+export const CategoriesTab = () => {
+  const [categories, setCategories] = useState<CategoryProps[]>([]);
+  const [availableIcons, setAvailableIcons] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryProps | null>(
+    null
+  );
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    icon: "",
+    parent_id: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchAvailableIcons();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("/api/categories", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Organiser les catégories en structure hiérarchique
+      const allCategories = response.data.categories || [];
+      const mainCategories = allCategories.filter(
+        (cat: CategoryProps) => !cat.parent_id
+      );
+      const subcategories = allCategories.filter(
+        (cat: CategoryProps) => cat.parent_id
+      );
+
+      // Ajouter les sous-catégories à leurs catégories parentes
+      const organizedCategories = mainCategories.map(
+        (category: CategoryProps) => ({
+          ...category,
+          subcategories: subcategories.filter(
+            (sub: CategoryProps) => sub.parent_id === category.id
+          ),
+        })
+      );
+
+      setCategories(organizedCategories);
+    } catch (error) {
+      toast.error("Erreur lors du chargement des catégories");
+      console.error("Erreur:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailableIcons = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("/api/categories/icons", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const icons = response.data.icons || [];
+      setAvailableIcons(
+        icons.map((icon) => ({
+          name: icon,
+          label: icon,
+        }))
+      );
+    } catch (error) {
+      console.error("Erreur lors du chargement des icônes:", error);
+    }
+  };
+
+  const handleOpenDialog = (
+    category: CategoryProps | null = null,
+    parentId = null
+  ) => {
+    if (category) {
+      setEditingCategory(category);
+      setFormData({
+        name: category.name,
+        description: category.description || "",
+        icon: category.icon || "",
+        parent_id: category.parent_id || null,
+      });
+    } else {
+      setEditingCategory(null);
+      setFormData({
+        name: "",
+        description: "",
+        icon: "",
+        parent_id: parentId,
+      });
+    }
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingCategory(null);
+    setFormData({ name: "", description: "", icon: "", parent_id: null });
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (editingCategory) {
+        await axios.put(`/api/categories/${editingCategory.id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Catégorie mise à jour avec succès");
+      } else {
+        await axios.post("/api/categories", formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Catégorie créée avec succès");
+      }
+
+      handleCloseDialog();
+      fetchCategories();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error || "Erreur lors de la sauvegarde"
+      );
+    }
+  };
+
+  const handleDelete = async (category: CategoryProps) => {
+    if (
+      window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
+    ) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`/api/categories/${category.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Catégorie supprimée avec succès");
+        fetchCategories();
+      } catch (error) {
+        toast.error(
+          error.response?.data?.error || "Erreur lors de la suppression"
+        );
+      }
+    }
+  };
+
+  const getIconComponent = (iconName) => {
+    // Import dynamique des icônes Material-UI
+    const iconMap = {
+      Category,
+      Inventory,
+      Settings,
+      Palette,
+      AdminPanelSettings,
+    };
+
+    const IconComponent = iconMap[iconName] || Category;
+    return <IconComponent />;
+  };
+
+  const renderCategoryCard = (
+    category: CategoryProps,
+    isSubcategory = false
+  ) => (
+    <Card
+      key={category.id}
+      variant={isSubcategory ? "outlined" : "elevation"}
+      sx={{
+        mb: 1,
+        ml: isSubcategory ? 3 : 0,
+        backgroundColor: isSubcategory ? "grey.50" : "white",
+      }}
+    >
+      <CardContent>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
+              {category.icon ? getIconComponent(category.icon) : <Category />}
+            </Avatar>
+            <Box>
+              <Typography
+                variant={isSubcategory ? "subtitle1" : "h6"}
+                fontWeight="bold"
+              >
+                {category.name}
+              </Typography>
+              {category.description && (
+                <Typography variant="body2" color="text.secondary">
+                  {category.description}
+                </Typography>
+              )}
+              <Chip
+                label={
+                  isSubcategory ? "Sous-catégorie" : "Catégorie principale"
+                }
+                size="small"
+                color={isSubcategory ? "secondary" : "primary"}
+                variant="outlined"
+                sx={{ mt: 0.5 }}
+              />
+            </Box>
+          </Box>
+          <Box>
+            <Tooltip title="Modifier">
+              <IconButton
+                onClick={() => handleOpenDialog(category)}
+                color="primary"
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Supprimer">
+              <IconButton onClick={() => handleDelete(category)} color="error">
+                <Delete />
+              </IconButton>
+            </Tooltip>
+            {!isSubcategory && (
+              <Tooltip title="Ajouter une sous-catégorie">
+                <IconButton
+                  onClick={() => handleOpenDialog(null, category.id)}
+                  color="success"
+                >
+                  <Add />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
+  if (loading) {
+    return <Typography>Chargement...</Typography>;
+  }
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold">
+          Gestion des Catégories
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpenDialog()}
+        >
+          Nouvelle Catégorie
+        </Button>
+      </Box>
+
+      {categories.length === 0 ? (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Aucune catégorie trouvée. Créez votre première catégorie pour
+          commencer.
+        </Alert>
+      ) : (
+        <Box>
+          {categories.map((category) => (
+            <Box key={category.id} sx={{ mb: 2 }}>
+              {renderCategoryCard(category)}
+              {category.subcategories && category.subcategories.length > 0 && (
+                <Box sx={{ ml: 2, mt: 1 }}>
+                  {category.subcategories.map((subcategory) => (
+                    <Box key={subcategory.id}>
+                      {renderCategoryCard(subcategory, true)}
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Dialog pour créer/modifier une catégorie */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingCategory
+            ? "Modifier la catégorie"
+            : formData.parent_id
+            ? "Nouvelle sous-catégorie"
+            : "Nouvelle catégorie"}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            {formData.parent_id && !editingCategory && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Cette catégorie sera créée comme sous-catégorie de :{" "}
+                <strong>
+                  {categories.find((cat) => cat.id === formData.parent_id)
+                    ?.name || "Catégorie parente"}
+                </strong>
+              </Alert>
+            )}
+
+            <TextField
+              fullWidth
+              label="Nom de la catégorie"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              margin="normal"
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="Description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              margin="normal"
+              multiline
+              rows={3}
+            />
+
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Icône</InputLabel>
+              <Select
+                value={formData.icon}
+                onChange={(e) =>
+                  setFormData({ ...formData, icon: e.target.value })
+                }
+                label="Icône"
+              >
+                <MenuItem key="no-icon" value="">
+                  <em>Aucune icône</em>
+                </MenuItem>
+                {availableIcons.map((icon) => (
+                  <MenuItem key={icon.name} value={icon.name}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {getIconComponent(icon.name)}
+                      {icon.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {formData.parent_id && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Cette catégorie sera créée comme sous-catégorie.
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} startIcon={<Cancel />}>
+            Annuler
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            startIcon={<Save />}
+            disabled={!formData.name.trim()}
+          >
+            Sauvegarder
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
