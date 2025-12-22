@@ -36,8 +36,17 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { createDonation, getDonations, getDonationsStats, updateDonation } from "../../services/api/donations";
 
-interface donor {
+
+interface donStats{
+total_donations:number
+pending_donations:number
+accepted_donations:number
+rejected_donations:number
+total_estimated_value:number
+}
+interface donation {
   id?: number;
   donor_name: string;
   donor_contact: string;
@@ -49,18 +58,18 @@ interface donor {
 }
 
 export const DonationsTab = () => {
-  const [donations, setDonations] = useState<donor[]>([]);
+  const [donations, setDonations] = useState<donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [donationDialog, setDonationDialog] = useState(false);
-  const [editingDonation, setEditingDonation] = useState<donor | null>(null);
-  const [donationForm, setDonationForm] = useState<donor>({
+  const [editingDonation, setEditingDonation] = useState<donation | null>(null);
+  const [donationForm, setDonationForm] = useState<donation>({
     donor_name: "",
     donor_contact: "",
     item_description: "",
     estimated_value: "",
     status: "pending",
   });
-  const [donationStats, setDonationStats] = useState(null);
+  const [donationStats, setDonationStats] = useState<donStats|null>(null);
 
   useEffect(() => {
     fetchDonations();
@@ -70,9 +79,10 @@ export const DonationsTab = () => {
   const fetchDonations = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/donations", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await getDonations() 
+      // await axios.get("/api/donations", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setDonations(response.data.donations || []);
     } catch (error) {
       console.error("Erreur lors du chargement des dons:", error);
@@ -85,16 +95,17 @@ export const DonationsTab = () => {
   const fetchDonationStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/donations/stats", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await getDonationsStats()
+      // await axios.get("/api/donations/stats", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setDonationStats(response.data.stats);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
-  const handleOpenDonationDialog = (donation: donor | null = null) => {
+  const handleOpenDonationDialog = (donation: donation | null = null) => {
     if (donation) {
       setEditingDonation(donation);
       setDonationForm({
@@ -124,18 +135,19 @@ export const DonationsTab = () => {
 
   const handleSaveDonation = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const url = editingDonation
-        ? `/api/donations/${editingDonation.id}`
-        : "/api/donations";
+      editingDonation ? await updateDonation(editingDonation.id,donationForm):await createDonation(donationForm)
+      // const token = localStorage.getItem("token");
+      // const url = editingDonation
+      //   ? `/api/donations/${editingDonation.id}`
+      //   : "/api/donations";
 
-      const method = editingDonation ? "put" : "post";
+      // const method = editingDonation ? "put" : "post";
 
-      console.log("Données envoyées:", donationForm);
+      // console.log("Données envoyées:", donationForm);
 
-      await axios[method](url, donationForm, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // await axios[method](url, donationForm, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
 
       toast.success(
         editingDonation
@@ -152,7 +164,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status:string) => {
     switch (status) {
       case "pending":
         return "warning";
@@ -165,7 +177,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status:string) => {
     switch (status) {
       case "pending":
         return "En attente";
@@ -178,7 +190,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value:number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",

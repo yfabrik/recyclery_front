@@ -42,6 +42,8 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import apiConfig from "../../config/api";
 
+import { fetchStores as fStore } from "../../services/api/store";
+import { createCreditNote, createRefund, getRefundForTransaction, getTransactions, getTranscationPostalStats, getTranscationStats } from "../../services/api/transactions";
 
 interface transcation{
     id?:number
@@ -64,9 +66,14 @@ created_at:Date
 created_by_name:string
 status:string
 }
+
+interface recyclerie{
+  id:number
+  is_active:boolean
+}
 export const SalesAnalyticsTab = () => {
   const [salesData, setSalesData] = useState<transcation[]>([]);
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<recyclerie[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     store_id: "",
@@ -130,10 +137,11 @@ export const SalesAnalyticsTab = () => {
   const fetchStores = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/stores", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStores(response.data.stores?.filter((store) => store.is_active) || []);
+      const response =await fStore()
+      //  await axios.get("/api/stores", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+      setStores(response.data.stores?.filter((store:recyclerie) => store.is_active) || []);
     } catch (error) {
       console.error("Erreur lors du chargement des magasins:", error);
       toast.error("Erreur lors du chargement des magasins");
@@ -155,28 +163,31 @@ export const SalesAnalyticsTab = () => {
 
       // Récupérer les transactions
       console.log(apiParams);
-      const transactionsResponse = await axios.get("/api/sales-transactions", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: apiParams,
-      });
+      const transactionsResponse = await getTransactions(apiParams)
+      //  await axios.get("/api/sales-transactions", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      //   params: apiParams,
+      // });
 
       // Récupérer les statistiques
-      const statsResponse = await axios.get(
-        "/api/sales-transactions/stats/summary",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: apiParams,
-        }
-      );
+      const statsResponse = await getTranscationStats(apiParams)
+      // await axios.get(
+      //   "/api/sales-transactions/stats/summary",
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //     params: apiParams,
+      //   }
+      // );
 
       // Récupérer les statistiques par code postal
-      const postalResponse = await axios.get(
-        "/api/sales-transactions/stats/postal-codes",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: apiParams,
-        }
-      );
+      const postalResponse = await getTranscationPostalStats(apiParams)
+      // await axios.get(
+      //   "/api/sales-transactions/stats/postal-codes",
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //     params: apiParams,
+      //   }
+      // );
 
       let transactions = transactionsResponse.data.transactions || [];
 
@@ -205,7 +216,7 @@ export const SalesAnalyticsTab = () => {
     }
   };
 
-  const handlePeriodChange = (period) => {
+  const handlePeriodChange = (period:string) => {
     const today = new Date();
     let date_from, date_to;
 
@@ -235,14 +246,14 @@ export const SalesAnalyticsTab = () => {
     }));
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount:number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
     }).format(amount || 0);
   };
 
-  const getPaymentMethodLabel = (method) => {
+  const getPaymentMethodLabel = (method:"cash"|"card"|"check") => {
     const labels = {
       cash: "Espèces",
       card: "Carte bancaire",
@@ -252,7 +263,7 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonctions de gestion des actions
-  const handleCreditNote = (transaction) => {
+  const handleCreditNote = (transaction:transcation) => {
     setSelectedTransactionForCredit(transaction);
     setCreditNoteForm({
       reason: "",
@@ -262,7 +273,7 @@ export const SalesAnalyticsTab = () => {
     setCreditNoteDialog(true);
   };
 
-  const handleReprintReceipt = (transactionId) => {
+  const handleReprintReceipt = (transactionId:number) => {
     // Fonction pour réimprimer le ticket de caisse
     toast.success(
       `Réimpression du ticket de caisse ${transactionId} en cours...`
@@ -270,7 +281,7 @@ export const SalesAnalyticsTab = () => {
     // Ici on pourrait ajouter la logique d'impression réelle
   };
 
-  const handleRefund = (transaction) => {
+  const handleRefund = (transaction:transcation) => {
     // Ouvrir la pop-up de remboursement avec les données de la transaction
     setSelectedTransaction(transaction);
     setRefundForm({
@@ -326,13 +337,14 @@ export const SalesAnalyticsTab = () => {
         notes: refundForm.notes,
       };
 
-      await axios.post(
-        `${apiConfig.baseURL}/api/sales-transactions/refund`,
-        refundData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await createRefund(refundData)
+      // await axios.post(
+      //   `${apiConfig.baseURL}/api/sales-transactions/refund`,
+      //   refundData,
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
       toast.success("Remboursement effectué avec succès");
       setRefundDialog(false);
@@ -368,12 +380,14 @@ export const SalesAnalyticsTab = () => {
     try {
       setLoadingRefunds(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${apiConfig.baseURL}/api/sales-transactions/${transactionId}/refunds`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+
+      const response = await getRefundForTransaction(transactionId)
+      // await axios.get(
+      //   `${apiConfig.baseURL}/api/sales-transactions/${transactionId}/refunds`,
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
       if (response.data.success) {
         setTransactionRefunds(response.data.refunds || []);
@@ -421,13 +435,14 @@ export const SalesAnalyticsTab = () => {
         notes: creditNoteForm.notes,
       };
 
-      await axios.post(
-        `${apiConfig.baseURL}/api/sales-transactions/credit-note`,
-        creditNoteData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await createCreditNote(creditNoteData)
+      // await axios.post(
+      //   `${apiConfig.baseURL}/api/sales-transactions/credit-note`,
+      //   creditNoteData,
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
       toast.success("Avoir créé avec succès");
       setCreditNoteDialog(false);
@@ -454,12 +469,13 @@ export const SalesAnalyticsTab = () => {
     try {
       const refundsPromises = transactions.map(async (transaction) => {
         try {
-          const response = await axios.get(
-            `${apiConfig.baseURL}/api/sales-transactions/${transaction.id}/refunds`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const response = await getRefundForTransaction(transaction.id)
+          //  await axios.get(
+          //   `${apiConfig.baseURL}/api/sales-transactions/${transaction.id}/refunds`,
+          //   {
+          //     headers: { Authorization: `Bearer ${token}` },
+          //   }
+          // );
           return {
             transactionId: transaction.id,
             refunds: response.data.success ? response.data.refunds : [],
@@ -599,7 +615,7 @@ export const SalesAnalyticsTab = () => {
                       date_from: e.target.value,
                     }))
                   }
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
@@ -611,7 +627,7 @@ export const SalesAnalyticsTab = () => {
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, date_to: e.target.value }))
                   }
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               </Grid>
             </>

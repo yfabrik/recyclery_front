@@ -28,8 +28,8 @@ import Labels from './pages/Labels';
 import PointOfSale from './pages/PointOfSale';
 import WasteManagement from './pages/WasteManagement';
 import EmployeeTools from './pages/EmployeeTools';
-import EmployeeManagement from './pages/EmployeeManagement';
-import TaskManagement from './pages/TaskManagement';
+import EmployeeManagement from './components/admin/config/EmployeeManagement';
+import TaskManagement from './components/admin/config/TaskManagement';
 import Planning from './pages/Planning';
 
 // Route protégée

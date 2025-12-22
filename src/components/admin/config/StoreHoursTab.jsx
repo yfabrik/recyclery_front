@@ -45,6 +45,9 @@ import {
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
+import { fetchStores as fStores } from '../../../services/api/store';
+import { createStoreHours, deleteStoreHours, fetchStoreHours as fStoreHours, updateStoreHours } from '../../../services/api/storeHours';
+
 const StoreHoursTab = () => {
   const [stores, setStores] = useState([]);
   const [storeHours, setStoreHours] = useState([]);
@@ -100,9 +103,10 @@ const StoreHoursTab = () => {
   const fetchStores = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/stores', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fStores()
+      // await axios.get('/api/stores', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       if (response.data.success) {
         setStores(response.data.stores || []);
@@ -117,9 +121,10 @@ const StoreHoursTab = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/store-hours', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fStoreHours()
+      //  await axios.get('/api/store-hours', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       if (response.data.success) {
         setStoreHours(response.data.storeHours || []);
@@ -459,15 +464,17 @@ const StoreHoursTab = () => {
       
       if (editingHours) {
         // Mise à jour
-        await axios.put(`/api/store-hours/${editingHours.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateStoreHours(editingHours.id,formData)
+        // await axios.put(`/api/store-hours/${editingHours.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires mis à jour avec succès');
       } else {
         // Création
-        await axios.post('/api/store-hours', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createStoreHours(formData)
+        // await axios.post('/api/store-hours', formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires créés avec succès');
       }
       
@@ -491,9 +498,10 @@ const StoreHoursTab = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ces horaires ?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`/api/store-hours/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await deleteStoreHours(id)
+        // await axios.delete(`/api/store-hours/${id}`, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires supprimés avec succès');
         fetchStoreHours();
       } catch (error) {
@@ -869,7 +877,7 @@ const StoreHoursTab = () => {
                         type="time"
                         value={formData.open_time}
                         onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
+                        slotProps={{ inputLabel: { shrink: true } }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12,sm:6}}>
@@ -880,7 +888,7 @@ const StoreHoursTab = () => {
                         type="time"
                         value={formData.close_time}
                         onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
+                        slotProps={{ inputLabel: { shrink: true } }}
                       />
                     </Grid>
                   </>
@@ -954,7 +962,7 @@ const StoreHoursTab = () => {
                 type="date"
                 value={reportOptions.start_date}
                 onChange={handleReportOptionsChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12,sm:6}}>
@@ -965,7 +973,7 @@ const StoreHoursTab = () => {
                 type="date"
                 value={reportOptions.end_date}
                 onChange={handleReportOptionsChange}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12}}>

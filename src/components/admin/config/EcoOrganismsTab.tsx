@@ -35,6 +35,13 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  createEcoOrganism,
+  deleteEcoOrganism,
+  fetchEcoOrganismsStats,
+  getEcoOrganisms,
+  updateEcoOrganism,
+} from "../../../services/api/ecoOrganism";
 
 interface ecoOrganism {
   id?: number;
@@ -71,7 +78,8 @@ export const EcoOrganismsTab = () => {
 
   const fetchEcoOrganisms = async () => {
     try {
-      const response = await axios.get("/api/eco-organisms");
+      const response = await getEcoOrganisms();
+      // await axios.get("/api/eco-organisms");
       setEcoOrganisms(response.data.eco_organisms || []);
     } catch (error) {
       console.error("Erreur lors du chargement des éco-organismes:", error);
@@ -83,7 +91,8 @@ export const EcoOrganismsTab = () => {
 
   const fetchEcoOrganismStats = async () => {
     try {
-      const response = await axios.get("/api/eco-organisms/stats/summary");
+      const response = await fetchEcoOrganismsStats();
+      // await axios.get("/api/eco-organisms/stats/summary");
       setEcoOrganismStats(response.data.stats);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
@@ -126,13 +135,16 @@ export const EcoOrganismsTab = () => {
 
   const handleSaveEcoOrganism = async () => {
     try {
-      const url = editingEcoOrganism
-        ? `/api/eco-organisms/${editingEcoOrganism.id}`
-        : "/api/eco-organisms";
+      editingEcoOrganism
+        ? await updateEcoOrganism(editingEcoOrganism.id, ecoOrganismForm)
+        : await createEcoOrganism(ecoOrganismForm);
+      // const url = editingEcoOrganism
+      //   ? `/api/eco-organisms/${editingEcoOrganism.id}`
+      //   : "/api/eco-organisms";
 
-      const method = editingEcoOrganism ? "put" : "post";
+      // const method = editingEcoOrganism ? "put" : "post";
 
-      await axios[method](url, ecoOrganismForm);
+      // await axios[method](url, ecoOrganismForm);
 
       toast.success(
         editingEcoOrganism
@@ -157,7 +169,8 @@ export const EcoOrganismsTab = () => {
     }
 
     try {
-      await axios.delete(`/api/eco-organisms/${id}`);
+      await deleteEcoOrganism(id)
+      // await axios.delete(`/api/eco-organisms/${id}`);
       toast.success("Éco-organisme supprimé avec succès");
       fetchEcoOrganisms();
       fetchEcoOrganismStats();

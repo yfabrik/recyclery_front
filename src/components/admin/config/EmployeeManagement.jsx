@@ -54,9 +54,10 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
-import EmployeeStoreAssignment from '../components/EmployeeStoreAssignment';
-import EmployeeWorkdays from '../components/EmployeeWorkdays';
+import { useAuth } from '../../../contexts/AuthContext';
+import EmployeeStoreAssignment from '../../EmployeeStoreAssignment';
+import EmployeeWorkdays from '../../EmployeeWorkdays';
+import { createUser, deleteUser, fetchUsers, updateUser } from '../../../services/api/users';
 
 const EmployeeManagement = () => {
   const { user } = useAuth();
@@ -118,9 +119,10 @@ const EmployeeManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fetchUsers()
+      // await axios.get('/api/users', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       // Filtrer pour ne garder que les employés (pas les admins)
       const employeeList = (response.data.users || []).filter(emp => 
@@ -208,18 +210,21 @@ const EmployeeManagement = () => {
       
       if (editingEmployee) {
         // Mise à jour
-        await axios.put(`/api/users/${editingEmployee.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateUser(editingEmployee.id,formData)
+        // await axios.put(`/api/users/${editingEmployee.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Employé mis à jour avec succès');
       } else {
         // Création
-        await axios.post('/api/users', {
-          ...formData,
-          password: 'password123' // Mot de passe par défaut
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createUser({...formData,password:"password123"})
+        // await axios.post('/api/users', {
+        //   ...formData,
+        //   //TODO FIXME FIXME FIXME TODO
+        //   password: 'password123' // Mot de passe par défaut ///////ARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRHHHHH
+        // }, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Employé créé avec succès');
       }
       
@@ -238,9 +243,10 @@ const EmployeeManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/users/${employeeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await deleteUser(employeeId)
+      // await axios.delete(`/api/users/${employeeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Employé supprimé avec succès');
       fetchEmployees();
     } catch (error) {

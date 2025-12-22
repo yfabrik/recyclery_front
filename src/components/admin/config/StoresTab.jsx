@@ -47,6 +47,9 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { createCaisse, createStore, deleteStore, fetchCaisses, updateStore,fetchStores as fStore } from '../../../services/api/store';
+import { createStoreHours, deleteStoreHours, updateStoreHours,fetchStoreHours as fStoreHours } from '../../../services/api/storeHours';
+import { fetchUsers as fUsers } from '../../../services/api/users';
 
 const StoresTab = () => {
   const [stores, setStores] = useState([]);
@@ -122,9 +125,10 @@ const StoresTab = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/stores', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fStore()
+      // await axios.get('/api/stores', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setStores(response.data.stores || []);
     } catch (error) {
       console.error('Erreur lors du chargement des magasins:', error);
@@ -137,9 +141,10 @@ const StoresTab = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response =await fUsers()
+      //  await axios.get('/api/users', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       // Filtrer pour ne garder que les managers et admins
       const managers = (response.data.users || []).filter(user => 
         user.role === 'manager' || user.role === 'admin'
@@ -154,9 +159,10 @@ const StoresTab = () => {
     try {
       setHoursLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/store-hours', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response =await fStoreHours()
+      //  await axios.get('/api/store-hours', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setStoreHours(response.data.storeHours || []);
     } catch (error) {
       console.error('Erreur lors du chargement des horaires:', error);
@@ -169,9 +175,10 @@ const StoresTab = () => {
   const fetchCashRegisters = async (storeId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/stores/${storeId}/cash-registers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fetchCaisses(storeId)
+      //  await axios.get(`/api/stores/${storeId}/cash-registers`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setCashRegisters(response.data.cash_registers || []);
     } catch (error) {
       console.error('Erreur lors du chargement des caisses:', error);
@@ -235,15 +242,17 @@ const StoresTab = () => {
       
       if (editingStore) {
         // Mise à jour
-        await axios.put(`/api/stores/${editingStore.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateStore(editingStore.id,formData)
+        // await axios.put(`/api/stores/${editingStore.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Magasin mis à jour avec succès');
       } else {
         // Création
-        await axios.post('/api/stores', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createStore(formData)
+        // await axios.post('/api/stores', formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Magasin créé avec succès');
       }
       
@@ -262,9 +271,10 @@ const StoresTab = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/stores/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await deleteStore(id)
+      // await axios.delete(`/api/stores/${id}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Magasin supprimé avec succès');
       fetchStores();
     } catch (error) {
@@ -294,11 +304,12 @@ const StoresTab = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`/api/stores/${selectedStore.id}/cash-registers`, {
-        name: newCashRegisterName
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await createCaisse(selectedStore.id,{name:newCashRegisterName})
+      // await axios.post(`/api/stores/${selectedStore.id}/cash-registers`, {
+      //   name: newCashRegisterName
+      // }, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Caisse créée avec succès');
       setNewCashRegisterName('');
       fetchCashRegisters(selectedStore.id);
@@ -366,14 +377,16 @@ const StoresTab = () => {
       const token = localStorage.getItem('token');
       
       if (editingHours) {
-        await axios.put(`/api/store-hours/${editingHours.id}`, hoursFormData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateStoreHours(editingHours.id,hoursFormData)
+        // await axios.put(`/api/store-hours/${editingHours.id}`, hoursFormData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires mis à jour avec succès');
       } else {
-        await axios.post('/api/store-hours', hoursFormData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createStoreHours(hoursFormData)
+        // await axios.post('/api/store-hours', hoursFormData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires créés avec succès');
       }
       
@@ -389,9 +402,10 @@ const StoresTab = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ces horaires ?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`/api/store-hours/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await deleteStoreHours(id)
+        // await axios.delete(`/api/store-hours/${id}`, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Horaires supprimés avec succès');
         fetchStoreHours();
       } catch (error) {
@@ -1216,7 +1230,7 @@ const StoresTab = () => {
                         type="time"
                         value={hoursFormData.open_time}
                         onChange={handleHoursInputChange}
-                        InputLabelProps={{ shrink: true }}
+                        slotProps={{ inputLabel: { shrink: true } }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12,sm:6}}>
@@ -1227,7 +1241,7 @@ const StoresTab = () => {
                         type="time"
                         value={hoursFormData.close_time}
                         onChange={handleHoursInputChange}
-                        InputLabelProps={{ shrink: true }}
+                        slotProps={{ inputLabel: { shrink: true } }}
                       />
                     </Grid>
                   </>

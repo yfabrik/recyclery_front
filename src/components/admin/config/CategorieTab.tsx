@@ -35,6 +35,7 @@ import DialogContent from "@mui/material/DialogContent";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { createCategory, deleteCategory, fetchCategoryIcons, updateCategory,fetchCategories as fCat } from "../../../services/api/categories";
 
 interface CategoryProps {
   id: number;
@@ -68,9 +69,7 @@ export const CategoriesTab = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fCat() 
 
       // Organiser les catégories en structure hiérarchique
       const allCategories = response.data.categories || [];
@@ -103,9 +102,7 @@ export const CategoriesTab = () => {
   const fetchAvailableIcons = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/categories/icons", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetchCategoryIcons() 
       const icons = response.data.icons || [];
       setAvailableIcons(
         icons.map((icon) => ({
@@ -153,14 +150,16 @@ export const CategoriesTab = () => {
       const token = localStorage.getItem("token");
 
       if (editingCategory) {
-        await axios.put(`/api/categories/${editingCategory.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await updateCategory(editingCategory.id,formData)
+        // await axios.put(`/api/categories/${editingCategory.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         toast.success("Catégorie mise à jour avec succès");
       } else {
-        await axios.post("/api/categories", formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await createCategory(formData)
+        // await axios.post("/api/categories", formData, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         toast.success("Catégorie créée avec succès");
       }
 
@@ -178,10 +177,7 @@ export const CategoriesTab = () => {
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
       try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`/api/categories/${category.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await deleteCategory(category.id)
         toast.success("Catégorie supprimée avec succès");
         fetchCategories();
       } catch (error) {
