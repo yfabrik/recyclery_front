@@ -36,6 +36,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollectionReceipt from '../components/CollectionReceipt';
+import { getCollectionSchedules } from '../services/api/collectionSchedules';
+import { fetchUsers } from '../services/api/users';
 
 const CollectionReceipts = () => {
   const { user } = useAuth();
@@ -64,11 +66,12 @@ const CollectionReceipts = () => {
 
   const fetchReceipts = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       // Pour l'instant, on récupère tous les plannings avec bordereaux
-      const response = await axios.get('/api/collection-schedules', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await getCollectionSchedules()
+      //  await axios.get('/api/collection-schedules', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       const schedulesWithReceipts = (response.data.schedules || []).filter(schedule => 
         schedule.status === 'completed' || schedule.receipt_number
@@ -85,10 +88,11 @@ const CollectionReceipts = () => {
 
   const fetchEmployees = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response =await fetchUsers()
+      //  await axios.get('/api/users', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       const filteredEmployees = (response.data.users || []).filter(emp => 
         emp.role === 'employee' || emp.role === 'manager'
       );

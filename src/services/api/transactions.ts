@@ -25,3 +25,5 @@ export const createRefund = (data)=>axiosInstance.post(`/api/sales-transactions/
 export const getRefundForTransaction=(id)=> axiosInstance.get(`/api/sales-transactions/${id}/refunds`)
 
 export const createCreditNote = (data)=>axiosInstance.post(`/api/sales-transactions/credit-note`,data)
+
+export const createSell = (data)=>axiosInstance.post('/api/sales-transactions',data)

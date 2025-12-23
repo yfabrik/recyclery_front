@@ -49,6 +49,9 @@ import { useAuth } from '../contexts/AuthContext';
 import NumericKeypad from '../components/NumericKeypad';
 import JsBarcode from 'jsbarcode';
 
+import { fetchCategories as fcat } from '../services/api/categories';
+import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
+
 const Labels = () => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
@@ -98,16 +101,17 @@ const Labels = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       
       if (filters.status) params.append('status', filters.status);
       if (filters.category_id) params.append('category_id', filters.category_id);
       if (filters.search) params.append('search', filters.search);
       
-      const response = await axios.get(`/api/labeled-items?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await getLabeledItems(params)
+      // await axios.get(`/api/labeled-items?${params}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       setItems(response.data.items || []);
     } catch (error) {
@@ -120,10 +124,11 @@ const Labels = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fcat()
+      // await axios.get('/api/categories', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       // Organiser les catégories comme dans les autres pages
       const allCategories = response.data.categories || [];
@@ -209,16 +214,19 @@ const Labels = () => {
       
       if (editingItem) {
         // Mise à jour
-        const response = await axios.put(`/api/labeled-items/${editingItem.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        
+        const response =await updateLabeledItem(editingItem.id,formData)
+        //  await axios.put(`/api/labeled-items/${editingItem.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         savedItem = response.data.item;
         toast.success('Article mis à jour avec succès');
       } else {
         // Création
-        const response = await axios.post('/api/labeled-items', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await createLabeledItem(formData)
+        // await axios.post('/api/labeled-items', formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         savedItem = response.data.item;
         toast.success('Article créé avec succès');
       }
@@ -244,10 +252,11 @@ const Labels = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/labeled-items/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      await deleteLabeledItem(id)
+      // await axios.delete(`/api/labeled-items/${id}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Article supprimé avec succès');
       fetchItems();
     } catch (error) {
@@ -262,10 +271,11 @@ const Labels = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/labeled-items/${id}/sell`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      await sellItem(id)
+      // await axios.post(`/api/labeled-items/${id}/sell`, {}, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Article marqué comme vendu');
       fetchItems();
     } catch (error) {

@@ -46,6 +46,10 @@ import { toast } from 'react-toastify';
 import NumericKeypad from '../components/NumericKeypad';
 import { useAuth } from '../contexts/AuthContext';
 
+import { fetchCategories as fcat } from '../services/api/categories';
+import { fetchCollectionPoints as fCollP } from '../services/api/collectionPoint'; 
+import { createArrival, getArrivals } from '../services/api/arrival';
+
 const Arrivals = () => {
   const { user } = useAuth();
   const [categories, setCategories] = useState([]);
@@ -93,10 +97,11 @@ const Arrivals = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fcat()
+      // await axios.get('/api/categories', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       // Organiser les catégories comme dans la page d'administration
       const allCategories = response.data.categories || [];
@@ -117,11 +122,12 @@ const Arrivals = () => {
 
   const fetchCollectionPoints = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/collection-points', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { active_only: 'true' }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fCollP({active_only: 'true'})
+      // await axios.get('/api/collection-points', {
+      //   headers: { Authorization: `Bearer ${token}` },
+      //   params: { active_only: 'true' }
+      // });
       setCollectionPoints(response.data.collection_points || []);
     } catch (error) {
       console.error('Erreur lors du chargement des points de collecte:', error);
@@ -130,12 +136,13 @@ const Arrivals = () => {
 
   const fetchTodaysArrivals = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const today = new Date().toISOString().split('T')[0];
-      const response = await axios.get('/api/arrivals', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { date_from: today, date_to: today }
-      });
+      const response = await getArrivals({ date_from: today, date_to: today })
+      // await axios.get('/api/arrivals', {
+      //   headers: { Authorization: `Bearer ${token}` },
+      //   params: { date_from: today, date_to: today }
+      // });
       setArrivals(response.data.arrivals || []);
     } catch (error) {
       console.error('Erreur lors du chargement des arrivages:', error);
@@ -196,7 +203,7 @@ const Arrivals = () => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       // Préparer les données selon le type de source
       let payload = { ...formData };
@@ -217,9 +224,10 @@ const Arrivals = () => {
         payload.source_details = 'Vide maison';
       }
 
-      const response = await axios.post('/api/arrivals', payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await createArrival(payload)
+      // await axios.post('/api/arrivals', payload, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       if (response.data.success) {
         toast.success(`Arrivage ${response.data.arrival.arrival_number} enregistré avec succès`);

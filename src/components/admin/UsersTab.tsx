@@ -3,7 +3,7 @@ import {
   CheckCircle,
   Edit,
   PersonAdd,
-  VpnKey
+  VpnKey,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -33,26 +33,36 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography
+  Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  createUser,
+  fetchUsers as fUsers,
+  getRoles,
+  getUsersStats,
+  updateUser,
+  updateUserPassword,
+  type userModel,
+} from "../../services/api/users";
+import { fetchStores as fStores } from "../../services/api/store";
 
 export const UsersTab = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<userModel[]>([]);
   const [roles, setRoles] = useState([]);
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userDialog, setUserDialog] = useState(false);
   const [passwordDialog, setPasswordDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingUser, setEditingUser] = useState<userModel|null>(null);
   const [userStats, setUserStats] = useState({
     total_users: 0,
     users_by_role: [],
     active_last_30_days: 0,
   });
-  const [userForm, setUserForm] = useState({
+  const [userForm, setUserForm] = useState<userModel>({
     username: "",
     email: "",
     password: "",
@@ -79,10 +89,11 @@ export const UsersTab = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("token");
+      const response = await fUsers();
+      //  await axios.get("/api/users", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setUsers(response.data.users || []);
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
@@ -94,10 +105,11 @@ export const UsersTab = () => {
 
   const fetchRoles = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/users/roles", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("token");
+      const response = await getRoles();
+      //  await axios.get("/api/users/roles", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setRoles(response.data.roles || []);
     } catch (error) {
       console.error("Erreur lors du chargement des rôles:", error);
@@ -106,10 +118,11 @@ export const UsersTab = () => {
 
   const fetchStores = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/stores", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("token");
+      const response = await fStores();
+      // await axios.get("/api/stores", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setStores(response.data.stores?.filter((store) => store.is_active) || []);
     } catch (error) {
       console.error("Erreur lors du chargement des magasins:", error);
@@ -118,17 +131,18 @@ export const UsersTab = () => {
 
   const fetchUserStats = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/users/stats", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("token");
+      const response = await getUsersStats();
+      // await axios.get("/api/users/stats", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
       setUserStats(response.data.stats || {});
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
-  const handleOpenUserDialog = (user = null) => {
+  const handleOpenUserDialog = (user:userModel|null = null) => {
     if (user) {
       setEditingUser(user);
       setUserForm({
@@ -177,16 +191,17 @@ export const UsersTab = () => {
 
   const handleSaveUser = async () => {
     try {
-      const token = localStorage.getItem("token");
+      // const token = localStorage.getItem("token");
 
       if (editingUser) {
         // Mise à jour
         const updateData = { ...userForm };
         delete updateData.password; // Ne pas envoyer le mot de passe lors de la mise à jour
 
-        await axios.put(`/api/users/${editingUser.id}`, updateData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await updateUser(editingUser.id, updateData);
+        //  axios.put(`/api/users/${editingUser.id}`, updateData, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         toast.success("Utilisateur mis à jour avec succès");
       } else {
         // Création
@@ -195,9 +210,10 @@ export const UsersTab = () => {
           return;
         }
 
-        await axios.post("/api/users", userForm, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await createUser(userForm);
+        // await axios.post("/api/users", userForm, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         toast.success("Utilisateur créé avec succès");
       }
 
@@ -244,17 +260,21 @@ export const UsersTab = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `/api/users/${editingUser.id}/password`,
-        {
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // const token = localStorage.getItem("token");
+      await updateUserPassword(editingUser.id, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      // await axios.put(
+      //   `/api/users/${editingUser.id}/password`,
+      //   {
+      //     currentPassword: passwordForm.currentPassword,
+      //     newPassword: passwordForm.newPassword,
+      //   },
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
       toast.success("Mot de passe mis à jour avec succès");
       handleClosePasswordDialog();
@@ -269,24 +289,26 @@ export const UsersTab = () => {
 
   const handleToggleUserStatus = async (user) => {
     try {
-      const token = localStorage.getItem("token");
+      // const token = localStorage.getItem("token");
       const newStatus = !user.is_active;
 
       if (newStatus) {
+        await updateUser(user.id,{is_active:newStatus})
         // Réactiver l'utilisateur
-        await axios.put(
-          `/api/users/${user.id}`,
-          { is_active: true },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        // await axios.put(
+        //   `/api/users/${user.id}`,
+        //   { is_active: true },
+        //   {
+        //     headers: { Authorization: `Bearer ${token}` },
+        //   }
+        // );
         toast.success("Utilisateur réactivé");
       } else {
         // Désactiver l'utilisateur
-        await axios.delete(`/api/users/${user.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await updateUser(user.id,{is_active:false})
+        // await axios.delete(`/api/users/${user.id}`, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         toast.success("Utilisateur désactivé");
       }
 

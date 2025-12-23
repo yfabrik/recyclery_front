@@ -135,7 +135,7 @@ export const EcoOrganismsTab = () => {
 
   const handleSaveEcoOrganism = async () => {
     try {
-      editingEcoOrganism
+      const response = editingEcoOrganism
         ? await updateEcoOrganism(editingEcoOrganism.id, ecoOrganismForm)
         : await createEcoOrganism(ecoOrganismForm);
       // const url = editingEcoOrganism

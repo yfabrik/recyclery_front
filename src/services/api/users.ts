@@ -1,6 +1,32 @@
 import axiosInstance from "./axios";
 
-export const fetchUsers = ()=> axiosInstance.get("/api/users")
-export const createUser = (data)=> axiosInstance.post("/api/users",data)
-export const updateUser = (id,data)=>axiosInstance.put(`/api/users/${id}`,data)
-export const deleteUser = (id)=>axiosInstance.delete(`/api/users/${id}`)
+export interface userModel {
+  id?: number;
+  username: string;
+  email: string;
+  password?: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  role: string;
+  recyclery_id?: number;
+  is_active: boolean;
+}
+
+export const fetchUsers = () => axiosInstance.get("/api/users");
+export const getEmployees = ()=>axiosInstance.get("/api/users/employee")
+
+export const createUser = (data: userModel) =>
+  axiosInstance.post("/api/users", data);
+export const updateUser = (id: number, data: userModel) =>
+  axiosInstance.put(`/api/users/${id}`, data);
+export const deleteUser = (id: number) =>
+  axiosInstance.delete(`/api/users/${id}`);
+
+export const updateUserPassword = (id: number, data: userModel) =>
+  axiosInstance.put(`/api/users/${id}/password`, data);
+
+
+
+export const getRoles = () => axiosInstance.get("/api/users/roles");
+export const getUsersStats = () => axiosInstance.get("/api/users/stats");

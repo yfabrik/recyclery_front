@@ -7,3 +7,12 @@ export const deleteStore =(id)=>axiosInstance.delete(`/api/stores/${id}`)
 
 export const fetchCaisses =(storeId:number)=> axiosInstance.get(`/api/stores/${storeId}/cash-registers`)
 export const createCaisse = (storeId,data)=>axiosInstance.post(`/api/stores/${storeId}/cash-registers`,data)
+export const fetchCaisses2 = (storeId)=>axiosInstance.get(`/api/cash-registers/store/${storeId}`)
+
+export const updateCaisse = (id,data)=>axiosInstance.put(`/api/cash-registers/${id}`,data)
+export const createCaisse2 = (data)=>axiosInstance.post('/api/cash-registers',data)
+export const getActiveCaisses = ()=>axiosInstance.get("/api/cash-sessions/active")
+export const deleteCaisse = (id)=>axiosInstance.delete(`/api/cash-registers/${id}`)
+
+export const OpenCaisse =(data)=>axiosInstance.post('/api/cash-sessions/open',data)
+export const closeCaisse = (id,data)=> axiosInstance.post(`/api/cash-sessions/${id}/close`,data)

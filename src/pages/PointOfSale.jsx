@@ -51,7 +51,10 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import NumericKeypad from '../components/NumericKeypad';
 import MoneyCounter from '../components/MoneyCounter';
-
+import { getActiveCaisses,fetchStores as fStores, fetchCaisses, OpenCaisse, closeCaisse } from '../services/api/store';
+import { fetchCategories as fcat } from '../services/api/categories';
+import { getItemFromBarcode } from '../services/api/labeledItems';
+import { createSell } from '../services/api/transactions';
 const PointOfSale = () => {
   const { user } = useAuth();
   const [activeSession, setActiveSession] = useState(null);
@@ -111,10 +114,11 @@ const PointOfSale = () => {
 
   const checkActiveSession = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/cash-sessions/active', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await getActiveCaisses()
+      //  await axios.get('/api/cash-sessions/active', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       if (response.data.session) {
         setActiveSession(response.data.session);
@@ -126,10 +130,11 @@ const PointOfSale = () => {
 
   const fetchStores = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/stores', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fStores()
+      // await axios.get('/api/stores', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setStores(response.data.stores?.filter(store => store.is_active) || []);
     } catch (error) {
       console.error('Erreur lors du chargement des magasins:', error);
@@ -138,10 +143,11 @@ const PointOfSale = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fcat()
+      // await axios.get('/api/categories', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
@@ -150,10 +156,11 @@ const PointOfSale = () => {
 
   const fetchCashRegisters = async (storeId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/cash-registers/store/${storeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fetchCaisses(storeId)
+      // await axios.get(`/api/cash-registers/store/${storeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setCashRegisters(response.data.data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des caisses:', error);
@@ -181,10 +188,11 @@ const PointOfSale = () => {
         return;
       }
 
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/cash-sessions/open', sessionData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await OpenCaisse(sessionData)
+      // await axios.post('/api/cash-sessions/open', sessionData, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       toast.success('Session ouverte avec succès');
       setOpenSessionDialog(false);
@@ -224,10 +232,11 @@ const PointOfSale = () => {
         return;
       }
 
-      const token = localStorage.getItem('token');
-      const response = await axios.put(`/api/cash-sessions/${activeSession.id}/close`, closingData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await closeCaisse(activeSession.id,closingData)
+      // await axios.put(`/api/cash-sessions/${activeSession.id}/close`, closingData, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       const { expected_amount, difference_amount } = response.data;
       
@@ -259,10 +268,11 @@ const PointOfSale = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/labeled-items/barcode/${scanInput}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await getItemFromBarcode(scanInput)
+      // await axios.get(`/api/labeled-items/barcode/${scanInput}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       const item = response.data.item;
       
@@ -410,9 +420,10 @@ const PointOfSale = () => {
         }))
       };
 
-      const response = await axios.post('/api/sales-transactions', transactionData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await createSell(transactionData)
+      // await axios.post('/api/sales-transactions', transactionData, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       toast.success('Vente enregistrée avec succès');
       

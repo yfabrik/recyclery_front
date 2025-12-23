@@ -1,6 +1,8 @@
 import axiosInstance from "./axios";
 
 export const getEcoOrganisms =()=> axiosInstance.get("/api/eco-organisms")
+export const getActiveEcoOrganisms =()=> axiosInstance.get("/api/eco-organisms/active")
+
 export const fetchEcoOrganismsStats = ()=>axiosInstance.get("/api/eco-organisms/stats/summary")
 
 export const createEcoOrganism = (data)=>axiosInstance.post("/api/eco-organisms",data)

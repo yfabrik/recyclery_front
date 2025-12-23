@@ -53,6 +53,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { createCaisse2, createStore, deleteCaisse, deleteStore, fetchCaisses, fetchCaisses2, fetchStores as fStore, updateCaisse, updateStore } from '../services/api/store';
 
 const Stores = () => {
   const { user, isAdmin } = useAuth();
@@ -84,10 +85,11 @@ const Stores = () => {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/stores', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fStore()
+      // await axios.get('/api/stores', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setStores(response.data.stores || []);
     } catch (error) {
       console.error('Erreur lors du chargement des magasins:', error);
@@ -116,19 +118,21 @@ const Stores = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       if (editingStore) {
         // Mise à jour
-        await axios.put(`/api/stores/${editingStore.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateStore(editingStore.id,data)
+        // await axios.put(`/api/stores/${editingStore.id}`, data, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Magasin mis à jour avec succès');
       } else {
         // Création
-        await axios.post('/api/stores', data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createStore(data)
+        // await axios.post('/api/stores', data, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Magasin créé avec succès');
       }
       
@@ -149,10 +153,11 @@ const Stores = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/stores/${storeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      await deleteStore(storeId)
+      // await axios.delete(`/api/stores/${storeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Magasin supprimé avec succès');
       fetchStores();
     } catch (error) {
@@ -167,10 +172,11 @@ const Stores = () => {
   const fetchCashRegisters = async (storeId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/cash-registers/store/${storeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fetchCaisses2(storeId)
+      //  await axios.get(`/api/cash-registers/store/${storeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setCashRegisters(response.data.data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des caisses:', error);
@@ -210,22 +216,27 @@ const Stores = () => {
   const onSubmitCashRegister = async (data) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       if (editingCashRegister) {
         // Mise à jour
-        await axios.put(`/api/cash-registers/${editingCashRegister.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateCaisse(editingCashRegister.id,data)
+        // await axios.put(`/api/cash-registers/${editingCashRegister.id}`, data, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Caisse mise à jour avec succès');
       } else {
-        // Création
-        await axios.post('/api/cash-registers', {
+        await createCaisse2({
           ...data,
           store_id: selectedStore.id
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        })
+        // Création
+        // await axios.post('/api/cash-registers', {
+        //   ...data,
+        //   store_id: selectedStore.id
+        // }, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Caisse créée avec succès');
       }
       
@@ -246,10 +257,11 @@ const Stores = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/cash-registers/${cashRegisterId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      await deleteCaisse(cashRegisterId)
+      // await axios.delete(`/api/cash-registers/${cashRegisterId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       toast.success('Caisse supprimée avec succès');
       fetchCashRegisters(selectedStore.id);
     } catch (error) {
