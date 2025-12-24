@@ -33,6 +33,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import {
   createCategory,
@@ -41,8 +42,6 @@ import {
   fetchCategoryIcons,
   updateCategory,
 } from "../../../services/api/categories";
-import { CategorieForm } from "../../forms/CategorieForm";
-import { Controller, useForm, useWatch } from "react-hook-form";
 
 interface CategoryProps {
   id: number;
@@ -122,7 +121,7 @@ export const CategoriesTab = () => {
       const response = await fetchCategoryIcons();
       const icons = response.data.icons || [];
       setAvailableIcons(
-        icons.map((icon) => ({
+        icons.map((icon:{name:string,label:string}) => ({
           name: icon,
           label: icon,
         }))
@@ -225,7 +224,7 @@ export const CategoriesTab = () => {
     }
   };
 
-  const getIconComponent = (iconName) => {
+  const getIconComponent = (iconName:string) => {
     // Import dynamique des icônes Material-UI
     const iconMap = {
       Category,
