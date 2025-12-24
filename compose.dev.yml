@@ -1,0 +1,50 @@
+services:
+  traefik:
+    image: traefik:v3.6.2
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    command:
+      # Core settings
+      - "--api.dashboard=true"
+      - "--api.insecure=true" # disable in production
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - recyclerie
+    restart: unless-stopped
+
+  recyclerie-ui:
+    #image: adapemont/recyclerie-ui
+    image: recycleriefront
+    networks:
+      - recyclerie
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.recyclerie-ui.rule=Host(`recyclerie.adapemont.fr`)"
+      - "traefik.http.services.recyclerie-ui.loadBalancer.server.port=80"
+      - "traefik.http.routers.recyclerie-ui.priority=1"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  recyclerie-api:
+    # image: adapemont/recyclerie-api
+    image: recyclerienewbackend
+    networks:
+      - recyclerie
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.recyclerie-api.rule=Host(`recyclerie.adapemont.fr`) && PathPrefix(`/api`)"
+      - "traefik.http.services.recyclerie-api.loadBalancer.server.port=5000"
+      - "traefik.http.routers.recyclerie-api.priority=2"
+    # volumes:
+    #   - ./databases:/home/node/app/databases/
+networks:
+  recyclerie:
+    driver: bridge
