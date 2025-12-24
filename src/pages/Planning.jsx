@@ -1,100 +1,69 @@
-import React, { useState, useEffect } from 'react';
 import {
+  AccessTime,
+  Add,
+  ArrowBackIos,
+  ArrowForwardIos,
+  Assignment,
+  Block,
+  CalendarToday,
+  CheckCircle,
+  Delete,
+  Edit,
+  Flag,
+  FlagOutlined,
+  LocalShipping,
+  LocationOn,
+  Person,
+  PersonAdd,
+  PersonOff,
+  PlayArrow,
+  PriorityHigh,
+  Save,
+  Settings,
+  Stop,
+  Store,
+  Task,
+  ViewDay,
+  ViewWeek,
+  Warning
+} from '@mui/icons-material';
+import {
+  Alert,
+  Avatar,
   Box,
-  Typography,
   Button,
   Card,
   CardContent,
-  CardActions,
+  CardHeader,
+  Chip,
+  CircularProgress,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
-  Select,
-  MenuItem,
+  DialogContent,
+  DialogTitle,
   FormControl,
-  InputLabel,
   Grid,
   IconButton,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Stack,
-  CardHeader,
-  Switch,
-  FormControlLabel,
-  Slider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  CircularProgress,
-  Container,
-  Paper,
-  Tabs,
-  Tab,
-  Tooltip,
+  InputLabel,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  Divider,
-  Alert
+  ListItemText,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material';
-import {
-  PlayArrow,
-  Pause,
-  Stop,
-  AccessTime,
-  LocationOn,
-  PriorityHigh,
-  People,
-  Person,
-  Work,
-  TrendingUp,
-  Dashboard,
-  ViewWeek,
-  CalendarMonth,
-  ViewDay,
-  Group,
-  Task,
-  Notifications,
-  Settings,
-  MoreVert,
-  DragIndicator,
-  Visibility,
-  VisibilityOff,
-  Star,
-  StarBorder,
-  Flag,
-  FlagOutlined,
-  Save,
-  ArrowBackIos,
-  Warning,
-  ArrowForwardIos,
-  CalendarToday,
-  Assignment,
-  Add,
-  Search,
-  Refresh,
-  Edit,
-  Delete,
-  Store,
-  PersonAdd,
-  PersonOff,
-  PersonAddDisabled,
-  Block,
-  CheckCircle,
-  LocalShipping
-} from '@mui/icons-material';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { fetchStores as fstore } from '../services/api/store';
+import { getEmployees } from '../services/api/users';
+import { createPlanning, deletePlanning, getAvailableUserForTask, getPlanning, updatePlanning } from '../services/api/planning';
+import { getTasks } from '../services/api/tasks';
+import { getCollectionSchedules } from '../services/api/collectionSchedules';
 
 const Planning = () => {
   const [schedules, setSchedules] = useState([]);
@@ -243,7 +212,8 @@ const Planning = () => {
       // Logs très visibles
       // Logs de débogage supprimés pour éviter la boucle infinie
       
-      const response = await axios.get('/api/planning', { params });
+      const response = await getPlanning(params)
+      // await axios.get('/api/planning', { params });
       // Logs de débogage supprimés pour éviter la boucle infinie
       
       if (response.data.success) {
@@ -312,7 +282,8 @@ const Planning = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get('/api/tasks');
+      const response = await getTasks()
+      //  await axios.get('/api/tasks');
       if (response.data.success) {
         // Filtrer les tâches pour ne garder que celles pertinentes pour le planning
         const allTasks = response.data.tasks || [];
@@ -327,8 +298,8 @@ const Planning = () => {
           return task.status === 'active';
         });
         
-        console.log('🔍 Tâches filtrées pour le planning:', filteredTasks.length);
-        console.log('🔍 Tâches disponibles:', filteredTasks.map(t => ({ id: t.id, name: t.name, category: t.category })));
+        // console.log('🔍 Tâches filtrées pour le planning:', filteredTasks.length);
+        // console.log('🔍 Tâches disponibles:', filteredTasks.map(t => ({ id: t.id, name: t.name, category: t.category })));
         
         setTasks(filteredTasks);
       } else {
@@ -342,7 +313,8 @@ const Planning = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get('/api/users/employees');
+      const response = await getEmployees()
+      // await axios.get('/api/users/employees');
       if (response.data.success) {
         setEmployees(response.data.employees || []);
       } else {
@@ -356,14 +328,15 @@ const Planning = () => {
 
   const fetchStores = async () => {
     try {
-      console.log('🏪 FETCHING STORES...');
-      const response = await axios.get('/api/stores');
-      console.log('🏪 Stores response:', response.data);
+      // console.log('🏪 FETCHING STORES...');
+      const response = await fstore()
+      // await axios.get('/api/stores');
+      // console.log('🏪 Stores response:', response.data);
       if (response.data.success) {
         setStores(response.data.stores || []);
-        console.log('🏪 Stores loaded:', response.data.stores?.length || 0);
+        // console.log('🏪 Stores loaded:', response.data.stores?.length || 0);
       } else {
-        console.log('❌ Stores API returned success: false');
+        // console.log('❌ Stores API returned success: false');
         setStores([]);
       }
     } catch (error) {
@@ -374,32 +347,24 @@ const Planning = () => {
 
   const fetchLocations = async () => {
     try {
-      console.log('📍 FETCHING LOCATIONS...');
       const response = await axios.get('/api/store-locations');
-      console.log('📍 Locations response:', response.data);
       if (response.data.locations) {
         setLocations(response.data.locations || []);
-        console.log('📍 Locations loaded:', response.data.locations?.length || 0);
       } else {
-        console.log('❌ Locations API returned no data');
         setLocations([]);
       }
-    } catch (error) {
-      console.error('❌ ERREUR lors du chargement des lieux:', error);
+    } catch () {
       setLocations([]);
     }
   };
 
   const fetchCollections = async () => {
     try {
-      console.log('📦 FETCHING COLLECTION SCHEDULES...');
-      const response = await axios.get('/api/collection-schedules');
-      console.log('📦 Collection Schedules response:', response.data);
+      const response = await getCollectionSchedules()
+      // await axios.get('/api/collection-schedules');
       if (response.data.schedules) {
         setCollections(response.data.schedules || []);
-        console.log('📦 Collection Schedules loaded:', response.data.schedules?.length || 0);
       } else {
-        console.log('❌ Collection Schedules API returned no data');
         setCollections([]);
       }
     } catch (error) {
@@ -471,8 +436,6 @@ const Planning = () => {
           setShowMissingEmployeesDialog(true);
         }
         
-        console.log('👥 Employés présents par magasin avec jours de travail:', employeesByStore);
-        console.log('⚠️ Employés manquants:', missingEmployeesList);
       }
     } catch (error) {
       console.error('❌ ERREUR lors du chargement des employés présents:', error);
@@ -708,11 +671,6 @@ const Planning = () => {
         };
       }
 
-      console.log('Données du planning à sauvegarder:', scheduleData);
-      console.log('FormData original:', formData);
-      console.log('🔍 DEBUG VENTE - selectedStore:', selectedStore);
-      console.log('🔍 DEBUG VENTE - scheduleData.store_id:', scheduleData.store_id);
-      console.log('🔍 DEBUG VENTE - scheduleData.task_id:', scheduleData.task_id);
 
       // Les conflits d'horaires sont maintenant gérés lors de l'assignation des employés
 
@@ -720,29 +678,24 @@ const Planning = () => {
 
       // Pas de conflit, procéder à la sauvegarde
       if (editingSchedule) {
-        console.log('Mise à jour du planning ID:', editingSchedule.id);
-        await axios.put(`/api/planning/${editingSchedule.id}`, scheduleData);
+        await updatePlanning(editingSchedule.id,scheduleData)
+        // await axios.put(`/api/planning/${editingSchedule.id}`, scheduleData);
         toast.success('Planning mis à jour avec succès');
       } else {
-        console.log('Création d\'un nouveau planning');
-        await axios.post('/api/planning', scheduleData);
+        await createPlanning(scheduleData)
+        // await axios.post('/api/planning', scheduleData);
         toast.success('Planning créé avec succès');
       }
 
       fetchSchedules();
       handleCloseDialog();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      console.error('Détails de l\'erreur:', error.response?.data);
-      console.error('Status:', error.response?.status);
-      console.error('Message:', error.response?.data?.message);
-      
+
       if (error.response?.status === 409) {
         const errorMessage = error.response?.data?.message || 'Conflit détecté';
         toast.error(`Conflit: ${errorMessage}`);
       } else if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.message || 'Données invalides';
-        console.error('Erreur 400 - Message complet:', errorMessage);
         toast.error(`Erreur de validation: ${errorMessage}`);
       } else if (error.response?.status === 401) {
         toast.error('Session expirée. Veuillez vous reconnecter.');
@@ -752,10 +705,13 @@ const Planning = () => {
     }
   };
 
+
+  //FIXME task et planning c'st le meme delete
   const handleDelete = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce planning ?')) {
       try {
-        await axios.delete(`/api/planning/${id}`);
+        await deletePlanning(id)
+        // await axios.delete(`/api/planning/${id}`);
         toast.success('Planning supprimé avec succès');
         fetchSchedules();
       } catch (error) {
@@ -768,7 +724,8 @@ const Planning = () => {
   const handleDeleteTask = async (schedule) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer la tâche "${schedule.task_name}" ?`)) {
       try {
-        await axios.delete(`/api/planning/${schedule.id}`);
+        await deletePlanning(schedule.id)
+        // await axios.delete(`/api/planning/${schedule.id}`);
         toast.success('Tâche supprimée avec succès');
         fetchSchedules();
       } catch (error) {
@@ -805,16 +762,13 @@ const Planning = () => {
       
       // UTILISER LE NOUVEL ENDPOINT BACKEND QUI GÈRE CORRECTEMENT LA DISPONIBILITÉ
       const apiBaseUrl = ""//import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+
       
-      console.log('🔍 Tentative de chargement des employés disponibles pour la tâche:', schedule.id);
-      console.log('🔑 Token présent:', !!token);
-      console.log('🌐 URL:', `${apiBaseUrl}/api/planning/${schedule.id}/available-employees`);
+      const availableEmployeesResponse = await getAvailableUserForTask(schedule.id)
+      // await axios.get(`${apiBaseUrl}/api/planning/${schedule.id}/available-employees`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
-      const availableEmployeesResponse = await axios.get(`${apiBaseUrl}/api/planning/${schedule.id}/available-employees`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('📊 Réponse reçue:', availableEmployeesResponse.status, availableEmployeesResponse.data);
       
       if (availableEmployeesResponse.data.success) {
         // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
@@ -828,9 +782,7 @@ const Planning = () => {
         // Récupérer aussi les employés déjà assignés à cette tâche
         setTaskAssignedEmployees(availableEmployeesResponse.data.employees.filter(emp => emp.already_assigned));
         
-        console.log('✅ Employés chargés avec statut de disponibilité correct depuis le backend');
-        console.log('👥 Nombre d\'employés:', employeesWithStatus.length);
-        console.log('🔒 Employés occupés:', employeesWithStatus.filter(emp => emp.is_assigned_to_task).length);
+
       } else {
         throw new Error('Erreur lors du chargement des employés disponibles');
       }
@@ -860,13 +812,11 @@ const Planning = () => {
       const token = localStorage.getItem('token');
       const apiBaseUrl =""// import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
       
-      console.log('🚛 Tentative de chargement des employés disponibles pour la collecte:', collection.id);
       
-      const availableEmployeesResponse = await axios.get(`${apiBaseUrl}/api/collection-schedules/${collection.id}/available-employees`, {
+      const availableEmployeesResponse =  await axios.get(`${apiBaseUrl}/api/collection-schedules/${collection.id}/available-employees`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('📊 Réponse reçue:', availableEmployeesResponse.status, availableEmployeesResponse.data);
       
       if (availableEmployeesResponse.data.success) {
         // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
@@ -886,17 +836,12 @@ const Planning = () => {
         } else {
           setCollectionAssignedEmployees([]);
         }
-        
-        console.log('✅ Employés chargés avec statut de disponibilité correct depuis le backend pour la collecte');
-        console.log('👥 Nombre d\'employés:', employeesWithStatus.length);
-        console.log('🔒 Employés occupés:', employeesWithStatus.filter(emp => emp.is_assigned_to_task).length);
       } else {
         throw new Error('Erreur lors du chargement des employés disponibles');
       }
       
       setOpenCollectionAssignmentDialog(true);
-    } catch (error) {
-      console.error('Erreur lors du chargement des employés pour la collecte:', error);
+    } catch () {
       toast.error('Erreur lors du chargement des employés');
     }
   };
@@ -1002,7 +947,7 @@ const Planning = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBaseUrl = "";
       await axios.post(`${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees`, {
         employee_id: employeeId
       }, {
@@ -1065,10 +1010,12 @@ const Planning = () => {
   const handleConfirmConflict = async () => {
     try {
       if (editingSchedule) {
-        await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
+        await updatePlanning(editingSchedule.id,pendingScheduleData)
+        // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
         toast.success('Planning mis à jour avec succès (conflit ignoré)');
       } else {
-        await axios.post('/api/planning', pendingScheduleData);
+        await createPlanning(pendingScheduleData)
+        // await axios.post('/api/planning', pendingScheduleData);
         toast.success('Planning créé avec succès (conflit ignoré)');
       }
       
@@ -1094,10 +1041,13 @@ const Planning = () => {
     if (pendingScheduleData) {
       try {
         if (editingSchedule) {
-          await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
+        await updatePlanning(editingSchedule.id,pendingScheduleData)
+
+          // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
           toast.success('Planning créé avec succès (malgré l\'absence de l\'employé)');
         } else {
-          await axios.post('/api/planning', pendingScheduleData);
+          await createPlanning(pendingScheduleData)
+          // await axios.post('/api/planning', pendingScheduleData);
           toast.success('Planning créé avec succès (malgré l\'absence de l\'employé)');
         }
         fetchSchedules();
@@ -1185,14 +1135,14 @@ const Planning = () => {
            schedule.task_id === null; // Les tâches d'ouverture n'ont pas de task_id
     
     // Log de débogage seulement pour les tâches Vente
-    if (isOpening && schedule.notes?.includes('Vente -')) {
-      console.log('🔍 VENTE TASK DETECTED:', {
-        task_name: schedule.task_name,
-        notes: schedule.notes,
-        task_id: schedule.task_id,
-        store_id: schedule.store_id
-      });
-    }
+    // if (isOpening && schedule.notes?.includes('Vente -')) {
+    //   console.log('🔍 VENTE TASK DETECTED:', {
+    //     task_name: schedule.task_name,
+    //     notes: schedule.notes,
+    //     task_id: schedule.task_id,
+    //     store_id: schedule.store_id
+    //   });
+    // }
     
     return isOpening;
   };
@@ -1220,14 +1170,14 @@ const Planning = () => {
            schedule.task_category === 'collection_operations';
     
     // Log de débogage pour les tâches de collecte
-    if (isCollection) {
-      console.log('🔍 COLLECTION TASK DETECTED:', {
-        task_name: schedule.task_name,
-        notes: schedule.notes,
-        task_category: schedule.task_category,
-        task_id: schedule.task_id
-      });
-    }
+    // if (isCollection) {
+    //   console.log('🔍 COLLECTION TASK DETECTED:', {
+    //     task_name: schedule.task_name,
+    //     notes: schedule.notes,
+    //     task_category: schedule.task_category,
+    //     task_id: schedule.task_id
+    //   });
+    // }
     
     return isCollection;
   };
@@ -1419,18 +1369,18 @@ const Planning = () => {
                scheduleDate.getFullYear() === currentDate.getFullYear();
         
         // Log de débogage pour les tâches de présence
-        if (schedule.task_name && schedule.task_name.includes('Présence')) {
-          console.log('🔍 TASK FILTERING:', {
-            task_name: schedule.task_name,
-            scheduled_date: schedule.scheduled_date,
-            scheduleDate: scheduleDate.toISOString(),
-            currentDate: currentDate.toISOString(),
-            matches: matches,
-            day: currentDate.getDate(),
-            month: currentDate.getMonth(),
-            year: currentDate.getFullYear()
-          });
-        }
+        // if (schedule.task_name && schedule.task_name.includes('Présence')) {
+        //   console.log('🔍 TASK FILTERING:', {
+        //     task_name: schedule.task_name,
+        //     scheduled_date: schedule.scheduled_date,
+        //     scheduleDate: scheduleDate.toISOString(),
+        //     currentDate: currentDate.toISOString(),
+        //     matches: matches,
+        //     day: currentDate.getDate(),
+        //     month: currentDate.getMonth(),
+        //     year: currentDate.getFullYear()
+        //   });
+        // }
         
         return matches;
       }) : [];
