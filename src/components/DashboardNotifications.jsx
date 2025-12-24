@@ -1,28 +1,22 @@
-import React from 'react';
 import {
-  Paper,
-  Typography,
+  CheckCircle,
+  Error,
+  Info,
+  Warning
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
+  Chip,
+  Divider,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Chip,
-  IconButton,
-  Divider,
-  Alert,
+  Paper,
+  Typography
 } from '@mui/material';
-import {
-  Warning,
-  Info,
-  CheckCircle,
-  Error,
-  Close,
-  LocalShipping,
-  VolunteerActivism,
-  Inventory,
-  Schedule,
-} from '@mui/icons-material';
+import React from 'react';
 
 const NotificationItem = ({ notification }) => {
   const getIcon = (type) => {

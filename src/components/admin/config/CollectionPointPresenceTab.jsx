@@ -43,7 +43,6 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { isParameter } from "typescript";
 import { fetchCollectionPoints as fCollectionPoints } from "../../../services/api/collectionPoint";
 import {
   createPointPresence,

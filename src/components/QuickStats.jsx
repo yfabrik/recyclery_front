@@ -1,20 +1,16 @@
-import React from 'react';
 import {
+  AttachMoney,
+  Inventory,
+  ShoppingCart
+} from '@mui/icons-material';
+import {
+  Box,
   Card,
   CardContent,
-  Typography,
-  Box,
   LinearProgress,
-  Chip,
   Stack,
+  Typography
 } from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
-  Inventory,
-  ShoppingCart,
-  AttachMoney,
-} from '@mui/icons-material';
 
 const QuickStat = ({ title, value, target, color = 'primary', icon }) => {
   const percentage = target ? (value / target) * 100 : 0;
