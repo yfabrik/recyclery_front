@@ -29,6 +29,7 @@ import {
   CircularProgress,
   Divider,
   Tooltip,
+  OutlinedInput,
 } from "@mui/material";
 import {
   Add,
@@ -640,13 +641,17 @@ const WasteManagement = () => {
                 }
                 slotProps={{ inputLabel: { shrink: true } }}
                 required
+                
               />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
-                <InputLabel>Type de sortie</InputLabel>
+                <InputLabel id="sortie_type">Type de sortie</InputLabel>
                 <Select
+                labelId="sortie_type"
+                label="Type de sortie"
+
                   value={disposalForm.disposal_type}
                   onChange={(e) =>
                     setDisposalForm((prev) => ({
