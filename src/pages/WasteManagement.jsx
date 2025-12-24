@@ -1,52 +1,44 @@
-import React, { useState, useEffect } from "react";
 import {
-  Container,
-  Typography,
+  Add,
+  Assessment,
+  Delete,
+  DeleteSweep,
+  Edit,
+  FilterList,
+  Nature,
+  TrendingUp
+} from "@mui/icons-material";
+import {
   Box,
-  Paper,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Button,
+  Chip,
+  CircularProgress,
+  Container,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
+  DialogContent,
+  DialogTitle,
   FormControl,
+  Grid,
+  IconButton,
   InputLabel,
-  Select,
   MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
-  Alert,
-  CircularProgress,
-  Divider,
+  TextField,
   Tooltip,
-  OutlinedInput,
+  Typography
 } from "@mui/material";
-import {
-  Add,
-  Edit,
-  Delete,
-  DeleteForever,
-  Visibility,
-  Assessment,
-  TrendingUp,
-  DateRange,
-  FilterList,
-  Nature,
-  LocalShipping,
-  DeleteSweep,
-} from "@mui/icons-material";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
 import NumericKeypad from "../components/NumericKeypad";
 import {
   fetchCategories as fcat,

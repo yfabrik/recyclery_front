@@ -10,16 +10,18 @@ import {
 } from "@mui/icons-material";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { CategoriesTab } from "./config/CategorieTab";
-import CollectionPointsTab from "../CollectionPointsTab";
-import StoresTab from "../StoresTab";
-import { EcoOrganismsTab } from "./EcoOrganismsTab";
-import EmployeeManagement from "../../pages/EmployeeManagement";
-import TaskManagement from "../../pages/TaskManagement";
-import StoreHoursTab from "../StoreHoursTab";
-import CollectionPointPresenceTab from "../CollectionPointPresenceTab";
+import CollectionPointsTab from "./config/CollectionPointsTab";
+import StoresTab from "./config/StoresTab";
+import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
+import EmployeeManagement from "./config/EmployeeManagement";
+import TaskManagement from "./config/TaskManagement";
+import StoreHoursTab from "./config/StoreHoursTab";
+import CollectionPointPresenceTab from "./config/CollectionPointPresenceTab";
 import { useState } from "react";
+import { Link, Route, Routes, useLocation } from "react-router";
 
 export const ConfigurationTab = () => {
+  const location = useLocation();
   const [tabValue, setTabValue] = useState(0);
 
   return (
@@ -38,6 +40,7 @@ export const ConfigurationTab = () => {
       </Box>
 
       <Tabs
+        // value={location.pathname}
         value={tabValue}
         onChange={(e, newValue) => setTabValue(newValue)}
         sx={{
@@ -65,6 +68,9 @@ export const ConfigurationTab = () => {
       >
         <Tab
           label="Catégories"
+          // value="categories"
+          // to="categories"
+          // component={Link}
           icon={<Category />}
           iconPosition="start"
           sx={{
@@ -73,6 +79,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Lieux de collecte"
+          // value="collect-point"
+          // to="collect-point"
+          // component={Link}
           icon={<LocationOn />}
           iconPosition="start"
           sx={{
@@ -81,6 +90,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Magasins"
+          // value="store"
+          // to="store"
+          // component={Link}
           icon={<Store />}
           iconPosition="start"
           sx={{
@@ -89,6 +101,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Éco-organismes"
+          // value="eco-orga"
+          // to="eco-orga"
+          // component={Link}
           icon={<Nature />}
           iconPosition="start"
           sx={{
@@ -97,6 +112,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Employés"
+          // value="employees"
+          // to="employees"
+          // component={Link}
           icon={<People />}
           iconPosition="start"
           sx={{
@@ -105,6 +123,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Tâches"
+          // value="tasks"
+          // to="tasks"
+          // component={Link}
           icon={<Work />}
           iconPosition="start"
           sx={{
@@ -113,6 +134,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Horaires des magasins"
+          // value="store-hour"
+          // to="store-hour"
+          // component={Link}
           icon={<AccessTime />}
           iconPosition="start"
           sx={{
@@ -121,6 +145,9 @@ export const ConfigurationTab = () => {
         />
         <Tab
           label="Horaires de présence"
+          // value="collect-presence"
+          // to="collect-presence"
+          // component={Link}
           icon={<Schedule />}
           iconPosition="start"
           sx={{
@@ -130,6 +157,20 @@ export const ConfigurationTab = () => {
       </Tabs>
 
       <Box sx={{ p: 3 }}>
+        {/* <Routes>
+          <Route index element={<CategoriesTab />}></Route>
+          <Route path="categories" element={<CategoriesTab />} />
+          <Route path="collect-point" element={<CollectionPointsTab />} />
+          <Route path="store" element={<StoresTab />} />
+          <Route path="eco-orga" element={<EcoOrganismsTab />} />
+          <Route path="employees" element={<EmployeeManagement />} />
+          <Route path="tasks" element={<TaskManagement />} />
+          <Route path="store-hour" element={<StoreHoursTab />} />
+          <Route
+            path="collect-presence"
+            element={<CollectionPointPresenceTab />}
+          />
+        </Routes> */}
         {tabValue === 0 && <CategoriesTab />}
         {tabValue === 1 && <CollectionPointsTab />}
         {tabValue === 2 && <StoresTab />}
