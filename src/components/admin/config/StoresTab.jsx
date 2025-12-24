@@ -124,7 +124,7 @@ const StoresTab = () => {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const response = await fStore()
       // await axios.get('/api/stores', {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -140,7 +140,7 @@ const StoresTab = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const response =await fUsers()
       //  await axios.get('/api/users', {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -158,7 +158,7 @@ const StoresTab = () => {
   const fetchStoreHours = async () => {
     try {
       setHoursLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const response =await fStoreHours()
       //  await axios.get('/api/store-hours', {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -174,7 +174,7 @@ const StoresTab = () => {
 
   const fetchCashRegisters = async (storeId) => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const response = await fetchCaisses(storeId)
       //  await axios.get(`/api/stores/${storeId}/cash-registers`, {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -238,7 +238,7 @@ const StoresTab = () => {
         return;
       }
 
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       if (editingStore) {
         // Mise à jour
@@ -270,7 +270,7 @@ const StoresTab = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       await deleteStore(id)
       // await axios.delete(`/api/stores/${id}`, {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -303,7 +303,7 @@ const StoresTab = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       await createCaisse(selectedStore.id,{name:newCashRegisterName})
       // await axios.post(`/api/stores/${selectedStore.id}/cash-registers`, {
       //   name: newCashRegisterName
@@ -374,7 +374,7 @@ const StoresTab = () => {
 
   const handleSaveHours = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       if (editingHours) {
         await updateStoreHours(editingHours.id,hoursFormData)
@@ -401,7 +401,7 @@ const StoresTab = () => {
   const handleDeleteHours = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ces horaires ?')) {
       try {
-        const token = localStorage.getItem('token');
+        // const token = localStorage.getItem('token');
         await deleteStoreHours(id)
         // await axios.delete(`/api/store-hours/${id}`, {
         //   headers: { Authorization: `Bearer ${token}` }

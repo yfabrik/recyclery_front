@@ -1,63 +1,49 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
+  AccessTime,
+  Add,
+  CalendarToday,
+  Delete,
+  Edit,
+  LocationOn,
+  Person,
+  Phone,
+  Refresh,
+  Schedule,
+  Search,
+  Store,
+  Work
+} from '@mui/icons-material';
+import {
+  Avatar,
   Box,
-  Paper,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip,
-  IconButton,
-  Avatar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Alert,
-  Stack,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
   Tooltip,
+  Typography
 } from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  Person,
-  Work,
-  Email,
-  Phone,
-  LocationOn,
-  CalendarToday,
-  AccessTime,
-  CheckCircle,
-  Warning,
-  Error,
-  Refresh,
-  Search,
-  FilterList,
-  Store,
-  Schedule,
-  Assignment,
-} from '@mui/icons-material';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
+import { createUser, deleteUser, fetchUsers, updateUser } from '../../../services/api/users';
 import EmployeeStoreAssignment from '../../EmployeeStoreAssignment';
 import EmployeeWorkdays from '../../EmployeeWorkdays';
-import { createUser, deleteUser, fetchUsers, updateUser } from '../../../services/api/users';
 
 const EmployeeManagement = () => {
   const { user } = useAuth();
@@ -118,7 +104,7 @@ const EmployeeManagement = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const response = await fetchUsers()
       // await axios.get('/api/users', {
       //   headers: { Authorization: `Bearer ${token}` }
@@ -206,7 +192,7 @@ const EmployeeManagement = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       if (editingEmployee) {
         // Mise à jour
@@ -242,7 +228,7 @@ const EmployeeManagement = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       await deleteUser(employeeId)
       // await axios.delete(`/api/users/${employeeId}`, {
       //   headers: { Authorization: `Bearer ${token}` }

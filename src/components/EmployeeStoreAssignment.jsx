@@ -1,36 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import {
+  Person,
+  Save,
+  Star,
+  Store
+} from '@mui/icons-material';
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  FormControlLabel,
   Checkbox,
-  Button,
-  Grid,
   Chip,
-  Alert,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
+  FormControlLabel,
+  Grid,
+  Typography
 } from '@mui/material';
-import {
-  Store,
-  Person,
-  Star,
-  Save,
-  Cancel,
-  Edit,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { fetchStores } from '../services/api/store';
+import { addAssignedStore, getAssignedStores, removeAssignedStores } from '../services/api/users';
 
 const EmployeeStoreAssignment = ({ employeeId, employeeName, onClose, onSave }) => {
   const [stores, setStores] = useState([]);
@@ -45,18 +35,20 @@ const EmployeeStoreAssignment = ({ employeeId, employeeName, onClose, onSave }) 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       // Récupérer tous les magasins
-      const storesResponse = await axios.get('/api/stores', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const storesResponse = await fetchStores()
+      //  axios.get('/api/stores', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setStores(storesResponse.data.stores || []);
       
       // Récupérer les affectations actuelles de l'employé
-      const assignmentsResponse = await axios.get(`/api/employee-stores/employee/${employeeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const assignmentsResponse = await getAssignedStores(employeeId)
+      // axios.get(`/api/employee-stores/employee/${employeeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       setAssignments(assignmentsResponse.data.assignments || []);
       
     } catch (error) {
@@ -98,22 +90,29 @@ const EmployeeStoreAssignment = ({ employeeId, employeeName, onClose, onSave }) 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       // Supprimer toutes les affectations existantes
-      await axios.delete(`/api/employee-stores/employee/${employeeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await removeAssignedStores(employeeId)
+      // await axios.delete(`/api/employee-stores/employee/${employeeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       // Créer les nouvelles affectations
       for (const assignment of assignments) {
-        await axios.post('/api/employee-stores', {
+        //TOOD c'est moche, l'url devrait avoir le employee id non ?
+        await addAssignedStore({
           employee_id: employeeId,
           store_id: assignment.store_id,
           is_primary: assignment.is_primary
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        })
+        // await axios.post('/api/employee-stores', {
+        //   employee_id: employeeId,
+        //   store_id: assignment.store_id,
+        //   is_primary: assignment.is_primary
+        // }, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
       }
       
       toast.success('Affectations mises à jour avec succès');

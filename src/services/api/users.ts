@@ -30,3 +30,11 @@ export const updateUserPassword = (id: number, data: userModel) =>
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");
 export const getUsersStats = () => axiosInstance.get("/api/users/stats");
+
+
+export const getAssignedStores = (employee_id)=>axiosInstance.get(`/api/employee-stores/employee/${employee_id}`)
+export const removeAssignedStores = (employee_id)=>axiosInstance.delete(`/api/employee-stores/employee/${employee_id}`)
+export const addAssignedStore = (data)=>axiosInstance.post('/api/employee-stores',data)
+
+export const getUserWorkdays = (id)=>axiosInstance.get(`/api/employee-workdays/employee/${id}`)
+export const addWorkdaysToUser = (id,data)=>axiosInstance.post(`/api/employee-workdays/employee/${id}`,data)

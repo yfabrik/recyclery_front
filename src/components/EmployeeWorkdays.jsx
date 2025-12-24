@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { addWorkdaysToUser, getUserWorkdays } from '../services/api/users';
 
 const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const [workdays, setWorkdays] = useState([]);
@@ -52,11 +53,12 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const fetchWorkdays = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
-      const response = await axios.get(`/api/employee-workdays/employee/${employeeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await getUserWorkdays(employeeId)
+      // await axios.get(`/api/employee-workdays/employee/${employeeId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       const existingWorkdays = response.data.workdays || [];
       
@@ -103,16 +105,18 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       // Filtrer seulement les jours de travail activés
       const activeWorkdays = workdays.filter(w => w.is_working);
-      
-      await axios.post(`/api/employee-workdays/employee/${employeeId}`, {
+      await addWorkdaysToUser(employeeId,{
         workdays: activeWorkdays
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      })
+      // await axios.post(`/api/employee-workdays/employee/${employeeId}`, {
+      //   workdays: activeWorkdays
+      // }, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       toast.success('Jours de travail mis à jour avec succès');
       onSave && onSave();

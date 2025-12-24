@@ -17,7 +17,9 @@ interface CollectionPointModel {
   //   Recyclery,: string;
 }
 interface CollectionPointFilters {
-  active_only: string;
+  filters:{
+    active_only: string;
+  }
 }
 export const fetchCollectionPoints = (filters: CollectionPointFilters|null) =>
   axiosInstance.get("/api/collection-points", { params: filters });

@@ -46,6 +46,9 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollectionReceipt from './CollectionReceipt';
 import DurationPicker from './DurationPicker';
+import { createCollectionSchedule, deleteCollectionSchedule, getCollectionSchedules, updateCollectionSchedule } from '../services/api/collectionSchedules';
+  import { fetchCollectionPoints as fCollectionPoints } from '../services/api/collectionPoint';
+import { fetchUsers } from '../services/api/users';
 
 // Configuration de moment en français
 moment.locale('fr');
@@ -101,17 +104,21 @@ const CollectionCalendar = () => {
 
   const fetchEvents = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD');
       const endOfMonth = moment(currentDate).endOf('month').format('YYYY-MM-DD');
       
-      const response = await axios.get('/api/collection-schedules', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
+      const response = getCollectionSchedules({
           date_from: startOfMonth,
           date_to: endOfMonth
-        }
-      });
+        })
+      // await axios.get('/api/collection-schedules', {
+      //   headers: { Authorization: `Bearer ${token}` },
+      //   params: {
+      //     date_from: startOfMonth,
+      //     date_to: endOfMonth
+      //   }
+      // });
       
       const schedules = response.data.schedules || [];
       const calendarEvents = schedules.map(schedule => ({
@@ -138,11 +145,12 @@ const CollectionCalendar = () => {
 
   const fetchCollectionPoints = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/collection-points', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { active_only: 'true' }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fCollectionPoints({active_only:"true"})
+      // await axios.get('/api/collection-points', {
+      //   headers: { Authorization: `Bearer ${token}` },
+      //   params: { active_only: 'true' }
+      // });
       setCollectionPoints(response.data.collection_points || []);
     } catch (error) {
       console.error('Erreur lors du chargement des points de collecte:', error);
@@ -151,10 +159,11 @@ const CollectionCalendar = () => {
 
   const fetchEmployees = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem('token');
+      const response = await fetchUsers()
+      // await axios.get('/api/users', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       const filteredEmployees = (response.data.users || []).filter(emp => 
         emp.role === 'employee' || emp.role === 'manager'
       );
@@ -256,14 +265,17 @@ const CollectionCalendar = () => {
       const token = localStorage.getItem('token');
       
       if (selectedEvent) {
-        await axios.put(`/api/collection-schedules/${selectedEvent.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateCollectionSchedule(selectedEvent.id,formData)
+        // await axios.put(`/api/collection-schedules/${selectedEvent.id}`, formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Collecte mise à jour avec succès');
       } else {
-        await axios.post('/api/collection-schedules', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createCollectionSchedule(formData)
+
+        // await axios.post('/api/collection-schedules', formData, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Collecte créée avec succès');
       }
       
@@ -279,10 +291,11 @@ const CollectionCalendar = () => {
     
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette collecte ?')) {
       try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/collection-schedules/${selectedEvent.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await deleteCollectionSchedule(selectedEvent.id)
+        // const token = localStorage.getItem('token');
+        // await axios.delete(`/api/collection-schedules/${selectedEvent.id}`, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // });
         toast.success('Collecte supprimée avec succès');
         handleCloseDialog();
         fetchEvents();
@@ -296,7 +309,7 @@ const CollectionCalendar = () => {
   const handleSyncWithPlanning = async () => {
     setSyncing(true);
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       
       // Forcer le rechargement des données
       await Promise.all([

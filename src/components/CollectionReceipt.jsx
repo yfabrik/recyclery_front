@@ -1,49 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
+  Add,
+  CalendarToday,
+  Close,
+  Delete,
+  DirectionsCar,
+  Download,
+  LocationOn,
+  Person,
+  Receipt,
+  Save,
+  Scale
+} from '@mui/icons-material';
+import {
   Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
   Grid,
-  TextField,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Divider,
-  IconButton,
-  Chip,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Receipt,
-  Print,
-  Download,
-  Add,
-  Delete,
-  Save,
-  Close,
-  Business,
-  LocationOn,
-  Person,
-  CalendarToday,
-  DirectionsCar,
-  Scale,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import axios from 'axios';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
+import { createCollectionReceipt, getCollectionReceipt } from '../services/api/collectionSchedules';
 
 const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
   const [receipt, setReceipt] = useState(null);
@@ -78,10 +75,11 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
     
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/collection-schedules/${schedule.id}/receipt`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+     const response =  await getCollectionReceipt(schedule.id)
+      // const token = localStorage.getItem('token');
+      // const response = await axios.get(`/api/collection-schedules/${schedule.id}/receipt`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
       
       if (response.data.success) {
         setReceipt(response.data.receipt);
@@ -149,7 +147,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const payload = {
         items_collected: items,
         total_weight: receiptData.total_weight,
@@ -159,9 +157,11 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
         donor_signature: receiptData.donor_signature
       };
 
-      const response = await axios.post(`/api/collection-schedules/${schedule.id}/receipt`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      
+      const response = await createCollectionReceipt(schedule.id,payload)
+      // await axios.post(`/api/collection-schedules/${schedule.id}/receipt`, payload, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
 
       if (response.data.success) {
         setReceipt(response.data.receipt);
