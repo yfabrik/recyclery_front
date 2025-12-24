@@ -353,7 +353,7 @@ const Planning = () => {
       } else {
         setLocations([]);
       }
-    } catch () {
+    } catch (e) {
       setLocations([]);
     }
   };
@@ -841,7 +841,7 @@ const Planning = () => {
       }
       
       setOpenCollectionAssignmentDialog(true);
-    } catch () {
+    } catch (e) {
       toast.error('Erreur lors du chargement des employés');
     }
   };
@@ -1095,18 +1095,18 @@ const Planning = () => {
       schedule.location_id?.toString() === selectedLocation.toString();
     
     // Log de débogage pour le filtrage
-    if (schedule.task_name?.includes('Vente') || schedule.notes?.includes('Vente')) {
-      console.log('🔍 VENTE TASK FILTERING:', {
-        task_name: schedule.task_name,
-        store_id: schedule.store_id,
-        selectedStore: selectedStore,
-        matchesStore: matchesStore,
-        matchesSearch,
-        matchesEmployee,
-        matchesStatus,
-        matchesCompleted
-      });
-    }
+    // if (schedule.task_name?.includes('Vente') || schedule.notes?.includes('Vente')) {
+    //   console.log('🔍 VENTE TASK FILTERING:', {
+    //     task_name: schedule.task_name,
+    //     store_id: schedule.store_id,
+    //     selectedStore: selectedStore,
+    //     matchesStore: matchesStore,
+    //     matchesSearch,
+    //     matchesEmployee,
+    //     matchesStatus,
+    //     matchesCompleted
+    //   });
+    // }
     
     // Log de débogage supprimé pour éviter la boucle infinie
     
