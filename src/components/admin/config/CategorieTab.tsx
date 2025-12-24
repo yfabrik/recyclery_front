@@ -28,14 +28,21 @@ import {
   Typography,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { createCategory, deleteCategory, fetchCategoryIcons, updateCategory,fetchCategories as fCat } from "../../../services/api/categories";
+import {
+  createCategory,
+  deleteCategory,
+  fetchCategories as fCat,
+  fetchCategoryIcons,
+  updateCategory,
+} from "../../../services/api/categories";
+import { CategorieForm } from "../../forms/CategorieForm";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 interface CategoryProps {
   id: number;
@@ -46,6 +53,16 @@ interface CategoryProps {
   subcategories?: CategoryProps[];
 }
 
+interface CategorieModel {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  createdAt: Date;
+  updatedAt: Date;
+  parent_id: number | null;
+}
+
 export const CategoriesTab = () => {
   const [categories, setCategories] = useState<CategoryProps[]>([]);
   const [availableIcons, setAvailableIcons] = useState([]);
@@ -53,12 +70,12 @@ export const CategoriesTab = () => {
   const [editingCategory, setEditingCategory] = useState<CategoryProps | null>(
     null
   );
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    icon: "",
-    parent_id: null,
-  });
+  // const [formData, setFormData] = useState({
+  //   name: "",
+  //   description: "",
+  //   icon: "",
+  //   parent_id: null,
+  // });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,8 +85,8 @@ export const CategoriesTab = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fCat() 
+      // const token = localStorage.getItem("token");
+      const response = await fCat();
 
       // Organiser les catégories en structure hiérarchique
       const allCategories = response.data.categories || [];
@@ -101,8 +118,8 @@ export const CategoriesTab = () => {
 
   const fetchAvailableIcons = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetchCategoryIcons() 
+      // const token = localStorage.getItem("token");
+      const response = await fetchCategoryIcons();
       const icons = response.data.icons || [];
       setAvailableIcons(
         icons.map((icon) => ({
@@ -115,26 +132,40 @@ export const CategoriesTab = () => {
     }
   };
 
+  const form = useForm<
+    Pick<CategorieModel, "name" | "description" | "icon" | "parent_id">
+  >({
+    defaultValues: { name: "", description: "", icon: "", parent_id: null },
+  });
+  const parent_id = useWatch({ control: form.control, name: "parent_id" });
+
   const handleOpenDialog = (
     category: CategoryProps | null = null,
     parentId = null
   ) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({
+      form.reset({
         name: category.name,
         description: category.description || "",
         icon: category.icon || "",
         parent_id: category.parent_id || null,
       });
+      // setFormData({
+      //   name: category.name,
+      //   description: category.description || "",
+      //   icon: category.icon || "",
+      //   parent_id: category.parent_id || null,
+      // });
     } else {
       setEditingCategory(null);
-      setFormData({
-        name: "",
-        description: "",
-        icon: "",
-        parent_id: parentId,
-      });
+      form.reset({ parent_id: parentId });
+      // setFormData({
+      //   name: "",
+      //   description: "",
+      //   icon: "",
+      //   parent_id: parentId,
+      // });
     }
     setOpenDialog(true);
   };
@@ -142,21 +173,27 @@ export const CategoriesTab = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingCategory(null);
-    setFormData({ name: "", description: "", icon: "", parent_id: null });
+    form.reset();
+    // setFormData({ name: "", description: "", icon: "", parent_id: null });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (
+    formData: Pick<
+      CategorieModel,
+      "name" | "description" | "icon" | "parent_id"
+    >
+  ) => {
     try {
-      const token = localStorage.getItem("token");
+      // const token = localStorage.getItem("token");
 
       if (editingCategory) {
-        await updateCategory(editingCategory.id,formData)
+        await updateCategory(editingCategory.id, formData);
         // await axios.put(`/api/categories/${editingCategory.id}`, formData, {
         //   headers: { Authorization: `Bearer ${token}` },
         // });
         toast.success("Catégorie mise à jour avec succès");
       } else {
-        await createCategory(formData)
+        await createCategory(formData);
         // await axios.post("/api/categories", formData, {
         //   headers: { Authorization: `Bearer ${token}` },
         // });
@@ -177,7 +214,7 @@ export const CategoriesTab = () => {
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
       try {
-        await deleteCategory(category.id)
+        await deleteCategory(category.id);
         toast.success("Catégorie supprimée avec succès");
         fetchCategories();
       } catch (error) {
@@ -340,23 +377,83 @@ export const CategoriesTab = () => {
         <DialogTitle>
           {editingCategory
             ? "Modifier la catégorie"
-            : formData.parent_id
+            : parent_id
             ? "Nouvelle sous-catégorie"
             : "Nouvelle catégorie"}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            {formData.parent_id && !editingCategory && (
+            {parent_id && !editingCategory && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie de :{" "}
                 <strong>
-                  {categories.find((cat) => cat.id === formData.parent_id)
-                    ?.name || "Catégorie parente"}
+                  {categories.find((cat) => cat.id === parent_id)?.name ||
+                    "Catégorie parente"}
                 </strong>
               </Alert>
             )}
+            {/* <CategorieForm formId="CategorieForm" icons={availableIcons} /> */}
 
-            <TextField
+            <form id="CategorieForm" onSubmit={form.handleSubmit(handleSave)}>
+              <Controller
+                name="name"
+                control={form.control}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    label="Nom de la catégorie"
+                    {...field}
+                    margin="normal"
+                    required
+                  />
+                )}
+              />
+              <Controller
+                name="description"
+                control={form.control}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    label="Nom de la catégorie"
+                    {...field}
+                    margin="normal"
+                    multiline
+                    rows={3}
+                  />
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel id="categorieIcon">Icône</InputLabel>
+                    <Select labelId="categorieIcon" label="Icône" {...field}>
+                      <MenuItem key="no-icon" value="">
+                        <em>Aucune icône</em>
+                      </MenuItem>
+                      {availableIcons.map((icon) => (
+                        <MenuItem key={icon.name} value={icon.name}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {getIconComponent(icon.name)}
+                            {icon.label}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              />
+            </form>
+
+            {/* <TextField
               fullWidth
               label="Nom de la catégorie"
               value={formData.name}
@@ -400,9 +497,9 @@ export const CategoriesTab = () => {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
 
-            {formData.parent_id && (
+            {parent_id && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie.
               </Alert>
@@ -414,13 +511,21 @@ export const CategoriesTab = () => {
             Annuler
           </Button>
           <Button
+            variant="contained"
+            startIcon={<Save />}
+            type="submit"
+            form="CategorieForm"
+          >
+            Sauvegarder
+          </Button>
+          {/* <Button
             onClick={handleSave}
             variant="contained"
             startIcon={<Save />}
             disabled={!formData.name.trim()}
           >
             Sauvegarder
-          </Button>
+          </Button> */}
         </DialogActions>
       </Dialog>
     </Box>
