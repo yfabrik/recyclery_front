@@ -14,7 +14,7 @@ export interface userModel {
 }
 
 export const fetchUsers = () => axiosInstance.get("/api/users");
-export const getEmployees = ()=>axiosInstance.get("/api/users/employee")
+export const getEmployees = ()=>axiosInstance.get("/api/users/employees")
 
 export const createUser = (data: userModel) =>
   axiosInstance.post("/api/users", data);

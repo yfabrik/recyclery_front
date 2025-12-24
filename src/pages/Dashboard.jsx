@@ -51,6 +51,7 @@ import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
 import dashboardService from "../services/dashboardService";
+import { getAllDashboardData, getStoreStats } from "../services/api/dashboard";
 
 // Composant de carte statistique amélioré
 // const StatCard = ({
@@ -343,11 +344,12 @@ const Dashboard = () => {
   const loadStoresStats = async () => {
     setStoresLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/dashboard/stores-stats", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // const token = localStorage.getItem("token");
+      // const response = await fetch("/api/dashboard/stores-stats", {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+      const data =  await getStoreStats() 
+      //await response.json();
 
       if (data.success) {
         setStoresStats(data.stores);
@@ -366,7 +368,8 @@ const Dashboard = () => {
 
       try {
         // Récupération des vraies données depuis l'API
-        const result = await dashboardService.getAllDashboardData();
+        const result = await getAllDashboardData()
+        //  await dashboardService.getAllDashboardData();
 
         if (result.success) {
           setStats(result.data.stats);
@@ -415,7 +418,8 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      const result = await dashboardService.getAllDashboardData();
+      const result = await getAllDashboardData()
+      // await dashboardService.getAllDashboardData();
 
       if (result.success) {
         setStats(result.data.stats);
