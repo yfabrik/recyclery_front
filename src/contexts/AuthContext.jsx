@@ -108,8 +108,8 @@ export const AuthProvider = ({ children }) => {
           },
         });
         console.log("profile", profileResponse);
-        setPermissions(profileResponse.permissions || []);
-        setPermissionsByModule(profileResponse.permissionsByModule || {});
+        setPermissions(profileResponse.data.permissions || []);
+        setPermissionsByModule(profileResponse.data.permissionsByModule || {});
       } catch (permError) {
         console.error("Erreur récupération permissions:", permError);
       }
