@@ -3186,7 +3186,7 @@ const tabValue =
             iconPosition="start"
             sx={{ minHeight: 72 }}
           />
-          <Tab
+          {/* <Tab
             component={Link}
             label="Logistique"
             value="/admin/logistic"
@@ -3194,7 +3194,7 @@ const tabValue =
             icon={<LocalShipping />}
             iconPosition="start"
             sx={{ minHeight: 72 }}
-          />
+          /> */}
           <Tab
             component={Link}
             label="Planning"
