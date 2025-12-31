@@ -52,7 +52,8 @@ import { createStoreHours, deleteStoreHours, updateStoreHours, fetchStoreHours a
 import { fetchUsers as fUsers } from '../../../services/api/users';
 import { StoreForm } from '../../forms/StoreForm';
 import { StoreOpeningForm } from '../../forms/StoreOpeningForm';
-import { DAYS_OF_WEEK as daysOfWeek,TIME_SLOTS as timeSlotOptions  } from '../../../interfaces/shared';
+import { DAYS_OF_WEEK as daysOfWeek, TIME_SLOTS as timeSlotOptions } from '../../../interfaces/shared';
+import { StoreOpen } from '../../StoreOpen';
 
 
 
@@ -688,7 +689,10 @@ const StoresTab = () => {
                 }, {})
               ).map(([storeId, hours]) => (
                 <Grid size={{ xs: 12, md: 6 }} key={storeId}>
-                  <Card>
+                  <StoreOpen store={stores.find(s => s.id === parseInt(storeId))} hours={hours} handleOpenHoursDialog={handleOpenHoursDialog} handleDeleteHours={handleDeleteHours} />
+
+
+                  {/* <Card>
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                         <Store color="primary" />
@@ -767,7 +771,7 @@ const StoresTab = () => {
                         </Table>
                       </TableContainer>
                     </CardContent>
-                  </Card>
+                  </Card> */}
                 </Grid>
               ))}
             </Grid>
@@ -942,17 +946,19 @@ const StoresTab = () => {
 
       {/* Dialog de gestion des caisses */}
       <Dialog open={cashRegistersDialog} onClose={handleCloseCashRegisters} maxWidth="sm" fullWidth>
-            <DialogTitle>
-              Caisses - {selectedStore?.name}
-            </DialogTitle>
-            <DialogContent>
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Nom de la nouvelle caisse"
-                  value={newCashRegisterName}
-                  onChange={(e) => setNewCashRegisterName(e.target.value)}
-                  slotProps={{input:{ endAdornment: (
+        <DialogTitle>
+          Caisses - {selectedStore?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              fullWidth
+              label="Nom de la nouvelle caisse"
+              value={newCashRegisterName}
+              onChange={(e) => setNewCashRegisterName(e.target.value)}
+              slotProps={{
+                input: {
+                  endAdornment: (
                     <Button
                       variant="contained"
                       size="small"
@@ -961,49 +967,51 @@ const StoresTab = () => {
                     >
                       Ajouter
                     </Button>
-                  )}}}
-                  
-                />
-              </Box>
+                  )
+                }
+              }}
 
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Nom</TableCell>
-                      <TableCell>Sessions</TableCell>
-                      <TableCell>Dernière utilisation</TableCell>
+            />
+          </Box>
+
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nom</TableCell>
+                  <TableCell>Sessions</TableCell>
+                  <TableCell>Dernière utilisation</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cashRegisters.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      Aucune caisse
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  cashRegisters.map((register) => (
+                    <TableRow key={register.id}>
+                      <TableCell>{register.name}</TableCell>
+                      <TableCell>{register.sessions_count || 0}</TableCell>
+                      <TableCell>
+                        {register.last_session_date ?
+                          new Date(register.last_session_date).toLocaleDateString() :
+                          'Jamais'
+                        }
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {cashRegisters.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          Aucune caisse
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      cashRegisters.map((register) => (
-                        <TableRow key={register.id}>
-                          <TableCell>{register.name}</TableCell>
-                          <TableCell>{register.sessions_count || 0}</TableCell>
-                          <TableCell>
-                            {register.last_session_date ?
-                              new Date(register.last_session_date).toLocaleDateString() :
-                              'Jamais'
-                            }
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseCashRegisters}>Fermer</Button>
-            </DialogActions>
-          </Dialog>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCashRegisters}>Fermer</Button>
+        </DialogActions>
+      </Dialog>
 
 
       {/* Dialog de création/édition de magasin */}
@@ -1033,7 +1041,7 @@ const StoresTab = () => {
         </DialogTitle>
         <DialogContent>
           <StoreOpeningForm formId='openHours' onSubmit={handleSaveHours} stores={stores} defaultValues={editingHours} />
-          
+
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseHoursDialog}>Annuler</Button>

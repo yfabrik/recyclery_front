@@ -15,6 +15,8 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+
+import { DAYS_OF_WEEK as daysOfWeek} from "../interfaces/shared";
 interface Hours {
   id: number;
   day_of_week: string;
@@ -35,21 +37,13 @@ interface StoreOpenProps {
   handleDeleteHours: (hourId: number) => void;
   hours: Hours[];
 }
-export const storeOpen = ({
+export const StoreOpen = ({
   store,
   hours,
   handleOpenHoursDialog,
   handleDeleteHours,
 }: StoreOpenProps) => {
-  const daysOfWeek = [
-    { value: "monday", label: "Lundi" },
-    { value: "tuesday", label: "Mardi" },
-    { value: "wednesday", label: "Mercredi" },
-    { value: "thursday", label: "Jeudi" },
-    { value: "friday", label: "Vendredi" },
-    { value: "saturday", label: "Samedi" },
-    { value: "sunday", label: "Dimanche" },
-  ];
+
   return (
     <Card>
       <CardHeader
@@ -94,14 +88,14 @@ export const storeOpen = ({
               {hours
                 .sort(
                   (a, b) =>
-                    daysOfWeek.findIndex((d) => d.value === a.day_of_week) -
-                    daysOfWeek.findIndex((d) => d.value === b.day_of_week)
+                    daysOfWeek.findIndex((d) => d.key === a.day_of_week) -
+                    daysOfWeek.findIndex((d) => d.key === b.day_of_week)
                 )
                 .map((hour) => (
                   <TableRow key={hour.id}>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                        {daysOfWeek.find((d) => d.value === hour.day_of_week)
+                        {daysOfWeek.find((d) => d.key === hour.day_of_week)
                           ?.label || hour.day_of_week}
                       </Typography>
                     </TableCell>

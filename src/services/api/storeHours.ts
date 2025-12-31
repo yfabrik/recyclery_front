@@ -6,4 +6,4 @@ export const updateStoreHours = (id, data) =>
 export const createStoreHours = (data) =>
   axiosInstance.post("/api/store-hours", data);
 export const deleteStoreHours = (id) =>
-  axiosInstance.put(`/api/store-hours/${id}`);
+  axiosInstance.delete(`/api/store-hours/${id}`);
