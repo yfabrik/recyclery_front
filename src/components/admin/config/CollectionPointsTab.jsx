@@ -61,6 +61,7 @@ import {
   fetchCollectionPointPresence,
   updatePointPresence,
 } from "../../../services/api/collectionPointPresence";
+import { CollectionPointForm } from "../../forms/CollectionPointForm";
 
 const CollectionPointsTab = () => {
   const [collectionPoints, setCollectionPoints] = useState([]);
@@ -75,19 +76,19 @@ const CollectionPointsTab = () => {
   const [presenceLoading, setPresenceLoading] = useState(false);
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
   const [editingPresence, setEditingPresence] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    city: "",
-    postal_code: "",
-    contact_person: "",
-    contact_phone: "",
-    contact_email: "",
-    type: "standard",
-    notes: "",
-    is_active: true,
-    recyclery_id: null,
-  });
+  // const [formData, setFormData] = useState({
+  //   name: "",
+  //   address: "",
+  //   city: "",
+  //   postal_code: "",
+  //   contact_person: "",
+  //   contact_phone: "",
+  //   contact_email: "",
+  //   type: "standard",
+  //   notes: "",
+  //   is_active: true,
+  //   recyclery_id: null,
+  // });
 
   const [presenceFormData, setPresenceFormData] = useState({
     collection_point_id: "",
@@ -107,11 +108,9 @@ const CollectionPointsTab = () => {
 
   const fetchCollectionPoints = async () => {
     try {
-      const token = localStorage.getItem("token");
+
       const response = await fCol()
-      //  axios.get("/api/collection-points", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+
       setCollectionPoints(response.data.collection_points || []);
     } catch (error) {
       toast.error("Erreur lors du chargement des points de collecte");
@@ -123,11 +122,9 @@ const CollectionPointsTab = () => {
 
   const fetchRecycleries = async () => {
     try {
-      const token = localStorage.getItem("token");
+
       const response = await fetchStores();
-      // axios.get('/api/recycleries', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+
       setRecycleries(response.data.recycleries || []);
     } catch (error) {
       console.error("Erreur lors du chargement des recycleries:", error);
@@ -135,38 +132,39 @@ const CollectionPointsTab = () => {
   };
 
   const handleOpenDialog = (point = null) => {
-    if (point) {
       setEditingPoint(point);
-      setFormData({
-        name: point.name || "",
-        address: point.address || "",
-        city: point.city || "",
-        postal_code: point.postal_code || "",
-        contact_person: point.contact_person || "",
-        contact_phone: point.contact_phone || "",
-        contact_email: point.contact_email || "",
-        type: point.type || "standard",
-        notes: point.notes || "",
-        is_active:
-          point.is_active !== undefined ? Boolean(point.is_active) : true,
-        recyclery_id: point.recyclery_id || null,
-      });
-    } else {
-      setEditingPoint(null);
-      setFormData({
-        name: "",
-        address: "",
-        city: "",
-        postal_code: "",
-        contact_person: "",
-        contact_phone: "",
-        contact_email: "",
-        type: "standard",
-        notes: "",
-        is_active: true,
-        recyclery_id: null,
-      });
-    }
+    // if (point) {
+    //   setEditingPoint(point);
+    //   setFormData({
+    //     name: point.name || "",
+    //     address: point.address || "",
+    //     city: point.city || "",
+    //     postal_code: point.postal_code || "",
+    //     contact_person: point.contact_person || "",
+    //     contact_phone: point.contact_phone || "",
+    //     contact_email: point.contact_email || "",
+    //     type: point.type || "standard",
+    //     notes: point.notes || "",
+    //     is_active:
+    //       point.is_active !== undefined ? Boolean(point.is_active) : true,
+    //     recyclery_id: point.recyclery_id || null,
+    //   });
+    // } else {
+    //   setEditingPoint(null);
+    //   setFormData({
+    //     name: "",
+    //     address: "",
+    //     city: "",
+    //     postal_code: "",
+    //     contact_person: "",
+    //     contact_phone: "",
+    //     contact_email: "",
+    //     type: "standard",
+    //     notes: "",
+    //     is_active: true,
+    //     recyclery_id: null,
+    //   });
+    // }
     setOpenDialog(true);
   };
 
@@ -175,35 +173,31 @@ const CollectionPointsTab = () => {
     setEditingPoint(null);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  // const handleInputChange = (e) => {
+  //   const { name, value, type, checked } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: type === "checkbox" ? checked : value,
+  //   }));
+  // };
 
-  const handleSave = async () => {
+  const handleSave = async (data) => {
+
     try {
-      const token = localStorage.getItem("token");
-
-      if (editingPoint) {
-        await updateCollectionPoint(editingPoint.id, formData);
-        // axios.put(`/api/collection-points/${editingPoint.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+      //FIXME
+      //faudrait pas faire data = {...editing,...data} ?
+      if (editingPoint?.id) {
+        await updateCollectionPoint(editingPoint.id, data);
         toast.success("Point de collecte mis à jour avec succès");
       } else {
-        await createCollectionPoint(formData);
-        //  axios.post('/api/collection-points', formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+        await createCollectionPoint(data);
         toast.success("Point de collecte créé avec succès");
       }
 
       handleCloseDialog();
       fetchCollectionPoints();
     } catch (error) {
+      console.log(error)
       toast.error(
         error.response?.data?.error || "Erreur lors de la sauvegarde"
       );
@@ -215,11 +209,9 @@ const CollectionPointsTab = () => {
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${point.name}" ?`)
     ) {
       try {
-        const token = localStorage.getItem("token");
+
         await deleteCollectionPoint(point.id);
-        // axios.delete(`/api/collection-points/${point.id}`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+
         toast.success("Point de collecte supprimé avec succès");
         fetchCollectionPoints();
       } catch (error) {
@@ -258,12 +250,8 @@ const CollectionPointsTab = () => {
   const fetchPresenceData = async () => {
     try {
       setPresenceLoading(true);
-      const token = localStorage.getItem("token");
       const response = await fetchCollectionPointPresence();
-      // axios.get('/api/collection-point-presence', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      setPresenceData(response.data.presence || []);
+      setPresenceData(response.data.presence_hours || []);
     } catch (error) {
       console.error("Erreur lors du chargement de la présence:", error);
       toast.error("Erreur lors du chargement de la présence");
@@ -323,19 +311,15 @@ const CollectionPointsTab = () => {
 
   const handleSavePresence = async () => {
     try {
-      const token = localStorage.getItem("token");
+
 
       if (editingPresence) {
         await updatePointPresence(editingPresence.id, presenceFormData);
-        // axios.put(`/api/collection-point-presence/${editingPresence.id}`, presenceFormData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+
         toast.success("Présence mise à jour avec succès");
       } else {
         await createPointPresence(presenceFormData);
-        // await axios.post('/api/collection-point-presence', presenceFormData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+
         toast.success("Présence créée avec succès");
       }
 
@@ -350,11 +334,7 @@ const CollectionPointsTab = () => {
   const handleDeletePresence = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette présence ?")) {
       try {
-        const token = localStorage.getItem("token");
         await deletePointPresence();
-        // await axios.delete(`/api/collection-point-presence/${id}`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
         toast.success("Présence supprimée avec succès");
         fetchPresenceData();
       } catch (error) {
@@ -521,7 +501,8 @@ const CollectionPointsTab = () => {
                 : "Nouveau Point de Collecte"}
             </DialogTitle>
             <DialogContent>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
+              <CollectionPointForm formId="collectionPointForm" recycleries={recycleries} onSubmit={handleSave} defaultValues={editingPoint} />
+              {/* <Grid container spacing={2} sx={{ mt: 1 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
@@ -651,19 +632,22 @@ const CollectionPointsTab = () => {
                     label="Point actif"
                   />
                 </Grid>
-              </Grid>
+              </Grid> */}
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDialog}>Annuler</Button>
               <Button
-                onClick={handleSave}
+                // onClick={handleSave}
+                type="submit"
+                form="collectionPointForm"
                 variant="contained"
-                disabled={
-                  !formData.name ||
-                  !formData.address ||
-                  !formData.city ||
-                  !formData.postal_code
-                }
+                //TODO
+                // disabled={
+                //   !formData.name ||
+                //   !formData.address ||
+                //   !formData.city ||
+                //   !formData.postal_code
+                // }
               >
                 {editingPoint ? "Mettre à jour" : "Créer"}
               </Button>
@@ -734,7 +718,7 @@ const CollectionPointsTab = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {new Date(presence.date).toLocaleDateString()}
+                          {new Date(presence.day_of_week).toLocaleDateString()}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -744,7 +728,7 @@ const CollectionPointsTab = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {presence.employee_name}
+                          {presence.employee_name||"aucun"}
                         </Typography>
                       </TableCell>
                       <TableCell>
