@@ -11,17 +11,18 @@ import {
   Check,
 } from '@mui/icons-material';
 
-const NumericKeypad = ({ 
-  value, 
-  onChange, 
-  onClose, 
+
+const NumericKeypad = ({
+  value,
+  onChange,
+  onClose,
   maxValue = 9999,
   decimalPlaces = 1,
   unit = 'kg'
 }) => {
   const handleNumberClick = (number) => {
     const currentValue = value.toString();
-    
+
     // Si c'est "0", remplacer par le nouveau chiffre
     if (currentValue === '0') {
       onChange(number.toString());
@@ -47,7 +48,7 @@ const NumericKeypad = ({
 
     const newValue = currentValue + number.toString();
     const numericValue = parseFloat(newValue);
-    
+
     if (numericValue <= maxValue) {
       onChange(newValue);
     }
@@ -74,11 +75,11 @@ const NumericKeypad = ({
   return (
     <Box sx={{ minWidth: 280 }}>
       {/* Affichage de la valeur */}
-      <Box 
-        sx={{ 
-          mb: 3, 
-          p: 3, 
-          backgroundColor: '#f8f9fa', 
+      <Box
+        sx={{
+          mb: 3,
+          p: 3,
+          backgroundColor: '#f8f9fa',
           borderRadius: 2,
           border: '2px solid #e3f2fd',
           textAlign: 'center'
@@ -95,65 +96,39 @@ const NumericKeypad = ({
       {/* Clavier numérique */}
       <Grid container spacing={1}>
         {/* Ligne 1: 7, 8, 9 */}
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(7)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            7
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(8)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            8
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(9)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            9
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
+        {
+          [7, 8, 9].map(numero =>
+            <Grid size={{ xs: 3 }}>
+              <Button
+                key={numero}
+                fullWidth
+                variant="outlined"
+                size="large"
+                onClick={() => handleNumberClick( numero )}
+                sx={{
+                  minHeight: 50,
+                  fontSize: '1.3rem',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#e3f2fd' }
+                }}
+              >
+                {numero}
+              </Button>
+            </Grid>
+          )
+        }
+
+        <Grid size={{ xs: 3 }}>
           <Button
             fullWidth
             variant="outlined"
             size="large"
             onClick={handleBackspace}
-            sx={{ 
+            sx={{
               minHeight: 50,
               color: 'error.main',
               borderColor: 'error.main',
-              '&:hover': { 
+              '&:hover': {
                 backgroundColor: '#ffebee',
                 borderColor: 'error.main'
               }
@@ -162,67 +137,40 @@ const NumericKeypad = ({
             <Backspace />
           </Button>
         </Grid>
-
         {/* Ligne 2: 4, 5, 6 */}
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(4)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            4
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(5)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            5
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(6)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            6
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
+        {
+          [4, 5, 6].map(numero =>
+            <Grid size={{ xs: 3 }}>
+              <Button
+                key={numero}
+                fullWidth
+                variant="outlined"
+                size="large"
+                onClick={() => handleNumberClick( numero )}
+                sx={{
+                  minHeight: 50,
+                  fontSize: '1.3rem',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#e3f2fd' }
+                }}
+              >
+                {numero}
+              </Button>
+            </Grid>
+          )
+        }
+
+        <Grid size={{ xs: 3 }}>
           <Button
             fullWidth
             variant="outlined"
             size="large"
             onClick={handleClear}
-            sx={{ 
+            sx={{
               minHeight: 50,
               color: 'warning.main',
               borderColor: 'warning.main',
-              '&:hover': { 
+              '&:hover': {
                 backgroundColor: '#fff3e0',
                 borderColor: 'warning.main'
               }
@@ -233,67 +181,41 @@ const NumericKeypad = ({
         </Grid>
 
         {/* Ligne 3: 1, 2, 3 */}
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(1)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            1
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(2)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            2
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => handleNumberClick(3)}
-            sx={{ 
-              minHeight: 50, 
-              fontSize: '1.3rem',
-              fontWeight: 600,
-              '&:hover': { backgroundColor: '#e3f2fd' }
-            }}
-          >
-            3
-          </Button>
-        </Grid>
-        <Grid size={{ xs:3}}>
+        {
+          [1, 2, 3].map(numero =>
+            <Grid size={{ xs: 3 }}>
+              <Button
+                key={numero}
+                fullWidth
+                variant="outlined"
+                size="large"
+                onClick={() => handleNumberClick( numero )}
+                sx={{
+                  minHeight: 50,
+                  fontSize: '1.3rem',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#e3f2fd' }
+                }}
+              >
+                {numero}
+              </Button>
+            </Grid>
+          )
+        }
+
+        <Grid size={{ xs: 3 }}>
           {/* Espace réservé */}
         </Grid>
 
         {/* Ligne 4: 0, . */}
-        <Grid size={{ xs:6}}>
+        <Grid size={{ xs: 6 }}>
           <Button
             fullWidth
             variant="outlined"
             size="large"
             onClick={() => handleNumberClick(0)}
-            sx={{ 
-              minHeight: 50, 
+            sx={{
+              minHeight: 50,
               fontSize: '1.3rem',
               fontWeight: 600,
               '&:hover': { backgroundColor: '#e3f2fd' }
@@ -302,14 +224,14 @@ const NumericKeypad = ({
             0
           </Button>
         </Grid>
-        <Grid size={{ xs:3}}>
+        <Grid size={{ xs: 3 }}>
           <Button
             fullWidth
             variant="outlined"
             size="large"
             onClick={() => handleNumberClick('.')}
-            sx={{ 
-              minHeight: 50, 
+            sx={{
+              minHeight: 50,
               fontSize: '1.3rem',
               fontWeight: 600,
               '&:hover': { backgroundColor: '#e3f2fd' }
@@ -318,7 +240,7 @@ const NumericKeypad = ({
             ,
           </Button>
         </Grid>
-        <Grid size={{ xs:3}}>
+        <Grid size={{ xs: 3 }}>
           {/* Espace pour l'alignement */}
         </Grid>
       </Grid>
@@ -330,24 +252,24 @@ const NumericKeypad = ({
         </Typography>
         <Grid container spacing={1}>
           {[0.5, 1, 2, 5, 10, 20].map((weight) => (
-            <Grid size={{xs:2}} key={weight}>
+            <Grid size={{ xs: 2 }} key={weight}>
               <Button
                 fullWidth
                 variant="text"
                 size="small"
                 onClick={() => onChange(weight.toString())}
-                sx={{ 
+                sx={{
                   minHeight: 35,
                   fontSize: '0.8rem',
                   color: 'primary.main',
                   border: '1px solid transparent',
-                  '&:hover': { 
+                  '&:hover': {
                     backgroundColor: '#e3f2fd',
                     border: '1px solid #1976d2'
                   }
                 }}
               >
-                {weight}kg
+                {weight}{unit}
               </Button>
             </Grid>
           ))}
@@ -360,7 +282,7 @@ const NumericKeypad = ({
           variant="outlined"
           onClick={onClose}
           startIcon={<Check />}
-          sx={{ 
+          sx={{
             minWidth: 120,
             '&:hover': { backgroundColor: '#e8f5e8' }
           }}
