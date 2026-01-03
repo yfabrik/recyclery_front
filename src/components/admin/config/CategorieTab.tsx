@@ -42,31 +42,15 @@ import {
   fetchCategoryIcons,
   updateCategory,
 } from "../../../services/api/categories";
+import { CategorieForm } from "../../forms/CategorieForm";
+import type { CategoryModel } from "../../../interfaces/Models";
 
-interface CategoryProps {
-  id: number;
-  name: string;
-  description: string;
-  icon?: string;
-  parent_id?: number;
-  subcategories?: CategoryProps[];
-}
-
-interface CategorieModel {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  createdAt: Date;
-  updatedAt: Date;
-  parent_id: number | null;
-}
 
 export const CategoriesTab = () => {
-  const [categories, setCategories] = useState<CategoryProps[]>([]);
-  const [availableIcons, setAvailableIcons] = useState([]);
+  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  const [availableIcons, setAvailableIcons] = useState<{ name: string, label: string }[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryProps | null>(
+  const [editingCategory, setEditingCategory] = useState<CategoryModel | Pick<CategoryModel, "parent_id"> | null>(
     null
   );
   // const [formData, setFormData] = useState({
@@ -84,24 +68,24 @@ export const CategoriesTab = () => {
 
   const fetchCategories = async () => {
     try {
-      // const token = localStorage.getItem("token");
       const response = await fCat();
+      //TODO make a where parent_id null, include subcategorie dans la request 
 
       // Organiser les catégories en structure hiérarchique
       const allCategories = response.data.categories || [];
       const mainCategories = allCategories.filter(
-        (cat: CategoryProps) => !cat.parent_id
+        (cat: CategoryModel) => !cat.parent_id
       );
       const subcategories = allCategories.filter(
-        (cat: CategoryProps) => cat.parent_id
+        (cat: CategoryModel) => cat.parent_id
       );
 
       // Ajouter les sous-catégories à leurs catégories parentes
       const organizedCategories = mainCategories.map(
-        (category: CategoryProps) => ({
+        (category: CategoryModel) => ({
           ...category,
           subcategories: subcategories.filter(
-            (sub: CategoryProps) => sub.parent_id === category.id
+            (sub: CategoryModel) => sub.parent_id === category.id
           ),
         })
       );
@@ -117,11 +101,10 @@ export const CategoriesTab = () => {
 
   const fetchAvailableIcons = async () => {
     try {
-      // const token = localStorage.getItem("token");
       const response = await fetchCategoryIcons();
       const icons = response.data.icons || [];
       setAvailableIcons(
-        icons.map((icon:{name:string,label:string}) => ({
+        icons.map((icon: { name: string, label: string }) => ({
           name: icon,
           label: icon,
         }))
@@ -131,25 +114,25 @@ export const CategoriesTab = () => {
     }
   };
 
-  const form = useForm<
-    Pick<CategorieModel, "name" | "description" | "icon" | "parent_id">
-  >({
-    defaultValues: { name: "", description: "", icon: "", parent_id: null },
-  });
-  const parent_id = useWatch({ control: form.control, name: "parent_id" });
+  // const form = useForm<
+  //   Pick<CategorieModel, "name" | "description" | "icon" | "parent_id">
+  // >({
+  //   defaultValues: { name: "", description: "", icon: "", parent_id: null },
+  // });
+  // const parent_id = useWatch({ control: form.control, name: "parent_id" });
 
   const handleOpenDialog = (
-    category: CategoryProps | null = null,
-    parentId = null
+    category: CategoryModel | null = null,
+    parent_id: number | null = null
   ) => {
     if (category) {
       setEditingCategory(category);
-      form.reset({
-        name: category.name,
-        description: category.description || "",
-        icon: category.icon || "",
-        parent_id: category.parent_id || null,
-      });
+      // form.reset({
+      //   name: category.name,
+      //   description: category.description || "",
+      //   icon: category.icon || "",
+      //   parent_id: category.parent_id || null,
+      // });
       // setFormData({
       //   name: category.name,
       //   description: category.description || "",
@@ -157,8 +140,8 @@ export const CategoriesTab = () => {
       //   parent_id: category.parent_id || null,
       // });
     } else {
-      setEditingCategory(null);
-      form.reset({ parent_id: parentId });
+      setEditingCategory(parent_id ? { parent_id: parent_id } : null);
+      // form.reset({ parent_id: parentId });
       // setFormData({
       //   name: "",
       //   description: "",
@@ -172,43 +155,32 @@ export const CategoriesTab = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingCategory(null);
-    form.reset();
+    // form.reset();
     // setFormData({ name: "", description: "", icon: "", parent_id: null });
   };
 
   const handleSave = async (
-    formData: Pick<
-      CategorieModel,
-      "name" | "description" | "icon" | "parent_id"
-    >
+    formData: CategoryModel
   ) => {
     try {
-      // const token = localStorage.getItem("token");
-
-      if (editingCategory) {
+      if (editingCategory?.id) {
         await updateCategory(editingCategory.id, formData);
-        // await axios.put(`/api/categories/${editingCategory.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
         toast.success("Catégorie mise à jour avec succès");
       } else {
         await createCategory(formData);
-        // await axios.post("/api/categories", formData, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
         toast.success("Catégorie créée avec succès");
       }
 
       handleCloseDialog();
       fetchCategories();
-    } catch (error) {
+    } catch (error:) {
       toast.error(
         error.response?.data?.error || "Erreur lors de la sauvegarde"
       );
     }
   };
 
-  const handleDelete = async (category: CategoryProps) => {
+  const handleDelete = async (category: CategoryModel) => {
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
@@ -224,7 +196,7 @@ export const CategoriesTab = () => {
     }
   };
 
-  const getIconComponent = (iconName:string) => {
+  const getIconComponent = (iconName: string) => {
     // Import dynamique des icônes Material-UI
     const iconMap = {
       Category,
@@ -239,7 +211,7 @@ export const CategoriesTab = () => {
   };
 
   const renderCategoryCard = (
-    category: CategoryProps,
+    category: CategoryModel,
     isSubcategory = false
   ) => (
     <Card
@@ -374,26 +346,26 @@ export const CategoriesTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingCategory
+          {editingCategory?.id
             ? "Modifier la catégorie"
-            : parent_id
-            ? "Nouvelle sous-catégorie"
-            : "Nouvelle catégorie"}
+            : editingCategory?.parent_id
+              ? "Nouvelle sous-catégorie"
+              : "Nouvelle catégorie"}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            {parent_id && !editingCategory && (
+            {editingCategory?.parent_id && !editingCategory?.id && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie de :{" "}
                 <strong>
-                  {categories.find((cat) => cat.id === parent_id)?.name ||
+                  {categories.find((cat) => cat.id === editingCategory.parent_id)?.name ||
                     "Catégorie parente"}
                 </strong>
               </Alert>
             )}
-            {/* <CategorieForm formId="CategorieForm" icons={availableIcons} /> */}
+            <CategorieForm formId="CategorieForm" icons={availableIcons} onSubmit={handleSave} defaultValues={editingCategory} />
 
-            <form id="CategorieForm" onSubmit={form.handleSubmit(handleSave)}>
+            {/* <form id="CategorieForm" onSubmit={form.handleSubmit(handleSave)}>
               <Controller
                 name="name"
                 control={form.control}
@@ -450,7 +422,7 @@ export const CategoriesTab = () => {
                   </FormControl>
                 )}
               />
-            </form>
+            </form> */}
 
             {/* <TextField
               fullWidth
@@ -498,11 +470,11 @@ export const CategoriesTab = () => {
               </Select>
             </FormControl> */}
 
-            {parent_id && (
+            {/* {parent_id && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie.
               </Alert>
-            )}
+            )} */}
           </Box>
         </DialogContent>
         <DialogActions>
