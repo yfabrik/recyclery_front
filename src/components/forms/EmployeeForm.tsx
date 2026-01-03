@@ -4,16 +4,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  FormControlLabel,
   Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  Switch,
-  TextField,
+  MenuItem
 } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { FormInput, FormSelect, FormSwitch } from "./FormBase";
 
 interface EmployeeFormProps {
   userDialog: boolean;
@@ -43,10 +38,7 @@ export const EmployeeForm = ({
 }: EmployeeFormProps) => {
   const {
     control,
-    register,
-    setValue,
     handleSubmit,
-    formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
       nom: "t",
@@ -68,111 +60,74 @@ export const EmployeeForm = ({
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name="username"
-                control={control}
-                render={({ field }) => (
-                  <TextField fullWidth label="Nom d'utilisateur *" {...field} />
-                )}
-              />
+              <FormInput name="username"
+                control={control} label="Nom d'utilisateur *" />
+
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name="email"
+              <FormInput name="email"
                 control={control}
-                render={({ field }) => (
-                  <TextField fullWidth label="Email*" {...field} />
-                )}
-              />
+                label="Email*"
+                extra={{ type: "email" }} />
+
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name="prenom"
+              <FormInput name="prenom"
                 control={control}
-                render={({ field }) => (
-                  <TextField fullWidth label="Prénom" {...field} />
-                )}
-              />
+                label="Prénom" />
+
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name="nom"
+              <FormInput name="nom"
                 control={control}
-                render={({ field }) => (
-                  <TextField fullWidth label="Nom" {...field} />
-                )}
-              />
+                label="Nom" />
+
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Controller
-                name="phone"
+              <FormInput name="phone"
                 control={control}
-                render={({ field }) => (
-                  <TextField fullWidth label="Téléphone" {...field} />
-                )}
-              />
+                label="Téléphone" />
+
             </Grid>
             {!editingUser && (
               <Grid size={{ xs: 12, md: 6 }}>
-                <Controller
-                  name="password"
+                <FormInput name="password"
                   control={control}
-                  render={({ field }) => (
-                    <TextField fullWidth label="Mot de passe *" {...field} />
-                  )}
-                />
+                  label="Mot de passe *" />
+
               </Grid>
             )}
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel id="role">Rôle *</InputLabel>
-                <Controller
-                  name="role"
-                  control={control}
-                  render={({ field }) => (
-                    <Select labelId="role" label="Rôle *" {...field}>
-                      {roles.map((role) => (
-                        <MenuItem key={role.name} value={role.name}>
-                          {role.display_name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-              </FormControl>
+              <FormSelect name="role"
+                label="Rôle *"
+                control={control}>
+                {roles.map((role) => (
+                  <MenuItem key={role.name} value={role.name}>
+                    {role.display_name}
+                  </MenuItem>
+                ))}
+              </FormSelect>
+
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel id="magasin">Magasin</InputLabel>
-                <Controller
-                  name="store"
-                  control={control}
-                  render={({ field }) => (
-                    <Select label="Magasin" labelId="magasin" {...field}>
-                      <MenuItem key="no-store" value="">
-                        Aucun magasin assigné
-                      </MenuItem>
-                      {stores.map((store) => (
-                        <MenuItem key={store.id} value={store.id}>
-                          {store.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-              </FormControl>
+              <FormSelect name="store"
+                label="Magasin"
+                control={control}>
+                <MenuItem key="no-store" value="">
+                  Aucun magasin assigné
+                </MenuItem>
+                {stores.map((store) => (
+                  <MenuItem key={store.id} value={store.id}>
+                    {store.name}
+                  </MenuItem>
+                ))}
+              </FormSelect>
+
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Controller
-                name="active"
-                control={control}
-                render={({ field }) => (
-                  <FormControlLabel
-                    control={<Switch {...field} checked={field.value} />}
-                    label="Utilisateur actif"
-                  />
-                )}
-              />
+              <FormSwitch name="active"
+                control={control} label="Utilisateur actif" />
+
             </Grid>
           </Grid>
         </DialogContent>
@@ -183,6 +138,6 @@ export const EmployeeForm = ({
           </Button>
         </DialogActions>
       </form>
-    </Dialog>
+    </Dialog >
   );
 };
