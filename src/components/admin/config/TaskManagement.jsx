@@ -146,12 +146,7 @@ const TaskManagement = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem('token');
       const response = await getTasks()
-      // await axios.get('/api/tasks', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
       // S'assurer que les champs JSON sont correctement parsés
       const baseTasks = (response.data.tasks || []).map(task => ({
         ...task,
@@ -166,9 +161,6 @@ const TaskManagement = () => {
         baseTasks.map(async (task) => {
           try {
             const employeesResponse = await getEmployeesForTask(task.id)
-            // await axios.get(`/api/tasks/${task.id}/employees`, {
-            //   headers: { Authorization: `Bearer ${token}` }
-            // });
             return {
               ...task,
               assigned_employees: employeesResponse.data.employees || []
@@ -194,14 +186,11 @@ const TaskManagement = () => {
 
   const fetchEmployees = async () => {
     try {
-      // const token = localStorage.getItem('token');
-      const response = await getEmployees()
-      // await axios.get('/api/users/employees', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+
+      const response = await fetchUsers({role:"employee"})
       
       if (response.data.success) {
-        setEmployees(response.data.employees || []);
+        setEmployees(response.data.users || []);
       } else {
         setEmployees([]);
       }

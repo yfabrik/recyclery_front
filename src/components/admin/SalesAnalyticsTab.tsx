@@ -44,6 +44,7 @@ import apiConfig from "../../config/api";
 
 import { fetchStores as fStore } from "../../services/api/store";
 import { createCreditNote, createRefund, getRefundForTransaction, getTransactions, getTranscationPostalStats, getTranscationStats } from "../../services/api/transactions";
+import type { StoreModel } from "../../interfaces/Models";
 
 interface transcation{
     id?:number
@@ -67,13 +68,10 @@ created_by_name:string
 status:string
 }
 
-interface recyclerie{
-  id:number
-  is_active:boolean
-}
+
 export const SalesAnalyticsTab = () => {
   const [salesData, setSalesData] = useState<transcation[]>([]);
-  const [stores, setStores] = useState<recyclerie[]>([]);
+  const [stores, setStores] = useState<StoreModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     store_id: "",
@@ -136,12 +134,10 @@ export const SalesAnalyticsTab = () => {
 
   const fetchStores = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response =await fStore()
-      //  await axios.get("/api/stores", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      setStores(response.data.stores?.filter((store:recyclerie) => store.is_active) || []);
+
+      const response =await fStore({active:1})
+
+      setStores(response.data.stores);
     } catch (error) {
       console.error("Erreur lors du chargement des magasins:", error);
       toast.error("Erreur lors du chargement des magasins");
@@ -151,8 +147,6 @@ export const SalesAnalyticsTab = () => {
   const fetchSalesData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-
       // Préparer les paramètres pour l'API (sans transaction_number pour l'instant)
       const apiParams = {
         store_id: filters.store_id,
@@ -162,32 +156,11 @@ export const SalesAnalyticsTab = () => {
       };
 
       // Récupérer les transactions
-      console.log(apiParams);
       const transactionsResponse = await getTransactions(apiParams)
-      //  await axios.get("/api/sales-transactions", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      //   params: apiParams,
-      // });
-
       // Récupérer les statistiques
       const statsResponse = await getTranscationStats(apiParams)
-      // await axios.get(
-      //   "/api/sales-transactions/stats/summary",
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //     params: apiParams,
-      //   }
-      // );
-
       // Récupérer les statistiques par code postal
       const postalResponse = await getTranscationPostalStats(apiParams)
-      // await axios.get(
-      //   "/api/sales-transactions/stats/postal-codes",
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //     params: apiParams,
-      //   }
-      // );
 
       let transactions = transactionsResponse.data.transactions || [];
 
@@ -207,7 +180,7 @@ export const SalesAnalyticsTab = () => {
       setPostalCodeStats(postalResponse.data.postal_codes || []);
 
       // Récupérer les remboursements pour toutes les transactions
-      await fetchAllTransactionRefunds(transactions, token);
+      await fetchAllTransactionRefunds(transactions);
     } catch (error) {
       console.error("Erreur lors du chargement des données de vente:", error);
       toast.error("Erreur lors du chargement des données");
@@ -324,7 +297,6 @@ export const SalesAnalyticsTab = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
       const refundData = {
         transaction_id: selectedTransaction.id,
         refund_type: refundForm.refund_type,
@@ -338,13 +310,6 @@ export const SalesAnalyticsTab = () => {
       };
 
       await createRefund(refundData)
-      // await axios.post(
-      //   `${apiConfig.baseURL}/api/sales-transactions/refund`,
-      //   refundData,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
 
       toast.success("Remboursement effectué avec succès");
       setRefundDialog(false);
@@ -379,16 +344,8 @@ export const SalesAnalyticsTab = () => {
   const fetchTransactionRefunds = async (transactionId) => {
     try {
       setLoadingRefunds(true);
-      const token = localStorage.getItem("token");
 
       const response = await getRefundForTransaction(transactionId)
-      // await axios.get(
-      //   `${apiConfig.baseURL}/api/sales-transactions/${transactionId}/refunds`,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
-
       if (response.data.success) {
         setTransactionRefunds(response.data.refunds || []);
       }
@@ -427,7 +384,6 @@ export const SalesAnalyticsTab = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
       const creditNoteData = {
         transaction_id: selectedTransactionForCredit.id,
         reason: creditNoteForm.reason,
@@ -436,13 +392,7 @@ export const SalesAnalyticsTab = () => {
       };
 
       await createCreditNote(creditNoteData)
-      // await axios.post(
-      //   `${apiConfig.baseURL}/api/sales-transactions/credit-note`,
-      //   creditNoteData,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
+
 
       toast.success("Avoir créé avec succès");
       setCreditNoteDialog(false);
@@ -465,17 +415,12 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonction pour récupérer tous les remboursements des transactions
-  const fetchAllTransactionRefunds = async (transactions, token) => {
+  const fetchAllTransactionRefunds = async (transactions) => {
     try {
       const refundsPromises = transactions.map(async (transaction) => {
         try {
           const response = await getRefundForTransaction(transaction.id)
-          //  await axios.get(
-          //   `${apiConfig.baseURL}/api/sales-transactions/${transaction.id}/refunds`,
-          //   {
-          //     headers: { Authorization: `Bearer ${token}` },
-          //   }
-          // );
+
           return {
             transactionId: transaction.id,
             refunds: response.data.success ? response.data.refunds : [],

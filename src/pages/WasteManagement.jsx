@@ -44,7 +44,7 @@ import {
   fetchCategories as fcat,
   getSubcategories,
 } from "../services/api/categories";
-import { getActiveEcoOrganisms } from "../services/api/ecoOrganism";
+import { getActiveEcoOrganisms, getEcoOrganisms } from "../services/api/ecoOrganism";
 import {
   createWaste,
   deleteWaste,
@@ -147,8 +147,7 @@ const WasteManagement = () => {
 
   const fetchEcoOrganisms = async () => {
     try {
-      const response = await getActiveEcoOrganisms();
-      //  axios.get('/api/eco-organisms/active');
+      const response = await getEcoOrganisms({active:1})
       setEcoOrganisms(response.data.eco_organisms || []);
     } catch (error) {
       console.error("Erreur lors du chargement des éco-organismes:", error);

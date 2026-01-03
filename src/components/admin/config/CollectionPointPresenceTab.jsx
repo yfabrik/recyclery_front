@@ -52,6 +52,7 @@ import {
   updatePointPresence,
 } from "../../../services/api/collectionPointPresence";
 import { fetchStores as fStores } from "../../../services/api/store";
+import { DAYS_OF_WEEK as dayOptions ,TIME_SLOTS as timeSlotOptions } from "../../../interfaces/shared";
 
 const CollectionPointPresenceTab = () => {
   const [presenceHours, setPresenceHours] = useState([]);
@@ -75,22 +76,22 @@ const CollectionPointPresenceTab = () => {
     notes: "",
   });
 
-  const dayOptions = [
-    { value: "monday", label: "Lundi" },
-    { value: "tuesday", label: "Mardi" },
-    { value: "wednesday", label: "Mercredi" },
-    { value: "thursday", label: "Jeudi" },
-    { value: "friday", label: "Vendredi" },
-    { value: "saturday", label: "Samedi" },
-    { value: "sunday", label: "Dimanche" },
-  ];
+  // const dayOptions = [
+  //   { value: "monday", label: "Lundi" },
+  //   { value: "tuesday", label: "Mardi" },
+  //   { value: "wednesday", label: "Mercredi" },
+  //   { value: "thursday", label: "Jeudi" },
+  //   { value: "friday", label: "Vendredi" },
+  //   { value: "saturday", label: "Samedi" },
+  //   { value: "sunday", label: "Dimanche" },
+  // ];
 
-  const timeSlotOptions = [
-    { value: "Présence", label: "Présence" },
-    { value: "Matin", label: "Matin" },
-    { value: "Après-midi", label: "Après-midi" },
-    { value: "Soir", label: "Soir" },
-  ];
+  // const timeSlotOptions = [
+  //   { value: "Présence", label: "Présence" },
+  //   { value: "Matin", label: "Matin" },
+  //   { value: "Après-midi", label: "Après-midi" },
+  //   { value: "Soir", label: "Soir" },
+  // ];
 
   useEffect(() => {
     fetchPresenceHours();
@@ -113,13 +114,6 @@ const CollectionPointPresenceTab = () => {
         collectionPointId && collectionPointId !== ""
           ? await fetchPresenceForPoint(collectionPointId)
           : await fetchCollectionPointPresence();
-      // const url = collectionPointId && collectionPointId !== ''
-      //   ? `/api/collection-point-presence/collection-point/${collectionPointId}`
-      //   : '/api/collection-point-presence';
-
-      // console.log('🔍 Récupération des jours de présence:', { collectionPointId, url });
-
-      // const response = await axios.get(url);
 
       if (response.data.success) {
         setPresenceHours(response.data.presence_hours || []);
@@ -137,10 +131,9 @@ const CollectionPointPresenceTab = () => {
   const fetchCollectionPoints = async () => {
     try {
       const response = await fCollectionPoints();
-      // await axios.get('/api/collection-points');
-      if (response.data.success) {
+     
         setCollectionPoints(response.data.collection_points || []);
-      }
+
     } catch (error) {
       toast.error("Erreur lors du chargement des points de collecte");
     }
@@ -149,10 +142,9 @@ const CollectionPointPresenceTab = () => {
   const fetchStores = async () => {
     try {
       const response = await fStores();
-      // await axios.get("/api/stores");
-      if (response.data.success) {
+   
         setStores(response.data.stores || []);
-      }
+
     } catch (error) {
       toast.error("Erreur lors du chargement des magasins");
     }
@@ -206,14 +198,9 @@ const CollectionPointPresenceTab = () => {
     try {
       if (editingPresence) {
         await updatePointPresence(editingPresence.id, formData);
-        // await axios.put(
-        //   `/api/collection-point-presence/${editingPresence.id}`,
-        //   formData
-        // );
         toast.success("Jours de présence mis à jour avec succès");
       } else {
         await createPointPresence(formData);
-        // await axios.post("/api/collection-point-presence", formData);
         toast.success("Jours de présence créés avec succès");
       }
 
@@ -237,7 +224,6 @@ const CollectionPointPresenceTab = () => {
     ) {
       try {
         await deletePointPresence(id);
-        // await axios.delete(`/api/collection-point-presence/${id}`);
         toast.success("Jours de présence supprimés avec succès");
         fetchPresenceHours(selectedCollectionPoint);
       } catch (error) {
@@ -609,7 +595,7 @@ const CollectionPointPresenceTab = () => {
                   label="Jour de la semaine"
                 >
                   {dayOptions.map((day) => (
-                    <MenuItem key={day.value} value={day.value}>
+                    <MenuItem key={day.key} value={day.label}>
                       {day.label}
                     </MenuItem>
                   ))}

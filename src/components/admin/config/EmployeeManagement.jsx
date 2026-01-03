@@ -104,17 +104,8 @@ const EmployeeManagement = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem('token');
-      const response = await fetchUsers()
-      // await axios.get('/api/users', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
-      // Filtrer pour ne garder que les employés (pas les admins)
-      const employeeList = (response.data.users || []).filter(emp => 
-        emp.role !== 'admin'
-      );
-      setEmployees(employeeList);
+      const response = await fetchUsers({role:"employee"})
+      setEmployees(response.data.users);
     } catch (error) {
       console.error('Erreur lors du chargement des employés:', error);
       toast.error('Erreur lors du chargement des employés');
@@ -228,11 +219,8 @@ const EmployeeManagement = () => {
     }
 
     try {
-      // const token = localStorage.getItem('token');
+
       await deleteUser(employeeId)
-      // await axios.delete(`/api/users/${employeeId}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
       toast.success('Employé supprimé avec succès');
       fetchEmployees();
     } catch (error) {

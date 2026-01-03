@@ -1,3 +1,4 @@
+import type { ArrivalModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
 interface ArrivalFilters {
@@ -5,7 +6,7 @@ interface ArrivalFilters {
   date_to: string;
 }
 
-export const getArrivals = (filters:ArrivalFilters|null) =>
+export const getArrivals = (filters: ArrivalFilters | null=null) =>
   axiosInstance.get("/api/arrivals", { params: filters });
 
-export const createArrival = (data)=> axiosInstance.post("/api/arrivals",data)
+export const createArrival = (data: ArrivalModel) => axiosInstance.post("/api/arrivals", data)

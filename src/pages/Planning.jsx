@@ -60,7 +60,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { fetchStores as fstore } from '../services/api/store';
-import { getEmployees } from '../services/api/users';
+import { fetchUsers, getEmployees } from '../services/api/users';
 import { createPlanning, deletePlanning, getAvailableUserForTask, getPlanning, updatePlanning } from '../services/api/planning';
 import { getTasks } from '../services/api/tasks';
 import { getCollectionSchedules } from '../services/api/collectionSchedules';
@@ -313,10 +313,9 @@ const Planning = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await getEmployees()
-      // await axios.get('/api/users/employees');
+      const response = await fetchUsers({role:'employee'})
       if (response.data.success) {
-        setEmployees(response.data.employees || []);
+        setEmployees(response.data.users || []);
       } else {
         setEmployees([]);
       }
@@ -1318,7 +1317,7 @@ const Planning = () => {
   };
 
   const renderViewSelector = () => (
-    <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box sx={{ display: 'flex', gap: 1, }}>
       {viewModes.map((view) => (
         <Box
           key={view.value}

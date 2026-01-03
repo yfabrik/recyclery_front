@@ -1,27 +1,10 @@
+import type { CollectionPointModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-interface CollectionPointModel {
-  id?: number;
-  name: string;
-  address: string;
-  city: string;
-  postal_code: string;
-  contact_person: string;
-  contact_phone: string;
-  contact_email: string;
-  type: string;
-  notes: string;
-  is_active: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-  recyclery_id?: number;
-  //   Recyclery,: string;
-}
+
 interface CollectionPointFilters {
-  filters:{
-    active_only: string;
-  }
+    active_only?: string;
 }
-export const fetchCollectionPoints = (filters: CollectionPointFilters|null) =>
+export const fetchCollectionPoints = (filters: CollectionPointFilters|null=null) =>
   axiosInstance.get("/api/collection-points", { params: filters });
 
 export const createCollectionPoint = (data: CollectionPointModel) =>

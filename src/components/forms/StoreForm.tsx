@@ -19,21 +19,7 @@ const schema = z.object({
 });
 
 type Schema = z.infer<typeof schema>
-interface StoreModel {
 
-    employees: Array<number>
-    // manager?: number
-    manager_id: string
-    caisses: []
-    name: string
-    address: string
-    phone: string
-    email: string
-    city: string
-    postal_code: string
-    is_active: boolean
-
-}
 export const StoreForm = ({ formId, onSubmit, users, defaultValues }: BaseFormProps<Schema> & { users: Array<{ id: number, username: string, role: string }> }) => {
     const form = useForm(
         {

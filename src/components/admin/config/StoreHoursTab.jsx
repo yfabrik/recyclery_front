@@ -47,6 +47,7 @@ import axios from 'axios';
 
 import { fetchStores as fStores } from '../../../services/api/store';
 import { createStoreHours, deleteStoreHours, fetchStoreHours as fStoreHours, updateStoreHours } from '../../../services/api/storeHours';
+import { DAYS_OF_WEEK as daysOfWeek ,TIME_SLOTS as timeSlots} from '../../../interfaces/shared';
 
 const StoreHoursTab = () => {
   const [stores, setStores] = useState([]);
@@ -76,24 +77,24 @@ const StoreHoursTab = () => {
     notes: ''
   });
 
-  const daysOfWeek = [
-    { value: 'monday', label: 'Lundi' },
-    { value: 'tuesday', label: 'Mardi' },
-    { value: 'wednesday', label: 'Mercredi' },
-    { value: 'thursday', label: 'Jeudi' },
-    { value: 'friday', label: 'Vendredi' },
-    { value: 'saturday', label: 'Samedi' },
-    { value: 'sunday', label: 'Dimanche' }
-  ];
+  // const daysOfWeek = [
+  //   { value: 'monday', label: 'Lundi' },
+  //   { value: 'tuesday', label: 'Mardi' },
+  //   { value: 'wednesday', label: 'Mercredi' },
+  //   { value: 'thursday', label: 'Jeudi' },
+  //   { value: 'friday', label: 'Vendredi' },
+  //   { value: 'saturday', label: 'Samedi' },
+  //   { value: 'sunday', label: 'Dimanche' }
+  // ];
 
-  const timeSlots = [
-    { value: 'Ouverture', label: 'Ouverture générale' },
-    { value: 'Matin', label: 'Matin (9h-12h)' },
-    { value: 'Après-midi', label: 'Après-midi (14h-18h)' },
-    { value: 'Soirée', label: 'Soirée (18h-21h)' },
-    { value: 'Pause déjeuner', label: 'Pause déjeuner' },
-    { value: 'Autre', label: 'Autre créneau' }
-  ];
+  // const timeSlots = [
+  //   { value: 'Ouverture', label: 'Ouverture générale' },
+  //   { value: 'Matin', label: 'Matin (9h-12h)' },
+  //   { value: 'Après-midi', label: 'Après-midi (14h-18h)' },
+  //   { value: 'Soirée', label: 'Soirée (18h-21h)' },
+  //   { value: 'Pause déjeuner', label: 'Pause déjeuner' },
+  //   { value: 'Autre', label: 'Autre créneau' }
+  // ];
 
   useEffect(() => {
     fetchStores();
@@ -102,12 +103,7 @@ const StoreHoursTab = () => {
 
   const fetchStores = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fStores()
-      // await axios.get('/api/stores', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
       if (response.data.success) {
         setStores(response.data.stores || []);
       }
@@ -120,12 +116,7 @@ const StoreHoursTab = () => {
   const fetchStoreHours = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const response = await fStoreHours()
-      //  await axios.get('/api/store-hours', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
       if (response.data.success) {
         setStoreHours(response.data.storeHours || []);
       }
@@ -431,10 +422,6 @@ const StoreHoursTab = () => {
     }
   };
 
-  const getDayOfWeekFromDate = (date) => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return days[date.getDay()];
-  };
 
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(`2000-01-01T${startTime}`);
@@ -452,29 +439,14 @@ const StoreHoursTab = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        toast.error('Vous devez être connecté pour effectuer cette action');
-        return;
-      }
-      
-      console.log('Données à envoyer:', formData);
-      console.log('Token utilisé:', token ? 'Présent' : 'Absent');
       
       if (editingHours) {
         // Mise à jour
         await updateStoreHours(editingHours.id,formData)
-        // await axios.put(`/api/store-hours/${editingHours.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
         toast.success('Horaires mis à jour avec succès');
       } else {
         // Création
         await createStoreHours(formData)
-        // await axios.post('/api/store-hours', formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
         toast.success('Horaires créés avec succès');
       }
       
@@ -499,9 +471,6 @@ const StoreHoursTab = () => {
       try {
         const token = localStorage.getItem('token');
         await deleteStoreHours(id)
-        // await axios.delete(`/api/store-hours/${id}`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
         toast.success('Horaires supprimés avec succès');
         fetchStoreHours();
       } catch (error) {

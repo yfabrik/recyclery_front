@@ -1,10 +1,15 @@
+import type { EcoOrgModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
-export const getEcoOrganisms =()=> axiosInstance.get("/api/eco-organisms")
-export const getActiveEcoOrganisms =()=> axiosInstance.get("/api/eco-organisms/active")
+interface EcoOrgFilters{
+    active?:0|1
+}
+
+export const getEcoOrganisms =(filters:EcoOrgFilters|null=null)=> axiosInstance.get("/api/eco-organisms",{params:filters})
+// export const getActiveEcoOrganisms =()=> axiosInstance.get("/api/eco-organisms/active")
 
 export const fetchEcoOrganismsStats = ()=>axiosInstance.get("/api/eco-organisms/stats/summary")
 
-export const createEcoOrganism = (data)=>axiosInstance.post("/api/eco-organisms",data)
-export const updateEcoOrganism = (id,data)=>axiosInstance.put(`/api/eco-organisms/${id}`,data)
-export const deleteEcoOrganism = (id)=>axiosInstance.delete(`/api/eco-organisms/${id}`)
+export const createEcoOrganism = (data:EcoOrgModel)=>axiosInstance.post("/api/eco-organisms",data)
+export const updateEcoOrganism = (id:number,data:EcoOrgModel)=>axiosInstance.put(`/api/eco-organisms/${id}`,data)
+export const deleteEcoOrganism = (id:number)=>axiosInstance.delete(`/api/eco-organisms/${id}`)

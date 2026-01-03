@@ -35,22 +35,12 @@ const EmployeeStoreAssignment = ({ employeeId, employeeName, onClose, onSave }) 
   const fetchData = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem('token');
-      
       // Récupérer tous les magasins
       const storesResponse = await fetchStores()
-      //  axios.get('/api/stores', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      setStores(storesResponse.data.stores || []);
-      
+      setStores(storesResponse.data.stores || []); 
       // Récupérer les affectations actuelles de l'employé
       const assignmentsResponse = await getAssignedStores(employeeId)
-      // axios.get(`/api/employee-stores/employee/${employeeId}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      setAssignments(assignmentsResponse.data.assignments || []);
-      
+      setAssignments(assignmentsResponse.data.assignments || []);    
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       toast.error('Erreur lors du chargement des données');
