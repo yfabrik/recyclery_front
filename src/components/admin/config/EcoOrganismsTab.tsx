@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import axios from "axios";
+
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -42,25 +42,18 @@ import {
   getEcoOrganisms,
   updateEcoOrganism,
 } from "../../../services/api/ecoOrganism";
+import { StatCard } from "../../StatCard";
+import type { EcoOrgModel } from "../../../interfaces/Models";
 
-interface ecoOrganism {
-  id?: number;
-  name: string;
-  description: string;
-  contact_email: string;
-  contact_phone: string;
-  address: string;
-  website: string;
-  is_active: boolean;
-}
+
 
 export const EcoOrganismsTab = () => {
-  const [ecoOrganisms, setEcoOrganisms] = useState<ecoOrganism[]>([]);
+  const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
   const [editingEcoOrganism, setEditingEcoOrganism] =
-    useState<ecoOrganism | null>(null);
-  const [ecoOrganismForm, setEcoOrganismForm] = useState<ecoOrganism>({
+    useState<EcoOrgModel | null>(null);
+  const [ecoOrganismForm, setEcoOrganismForm] = useState<EcoOrgModel>({
     name: "",
     description: "",
     contact_email: "",
@@ -79,7 +72,6 @@ export const EcoOrganismsTab = () => {
   const fetchEcoOrganisms = async () => {
     try {
       const response = await getEcoOrganisms();
-      // await axios.get("/api/eco-organisms");
       setEcoOrganisms(response.data.eco_organisms || []);
     } catch (error) {
       console.error("Erreur lors du chargement des éco-organismes:", error);
@@ -92,7 +84,6 @@ export const EcoOrganismsTab = () => {
   const fetchEcoOrganismStats = async () => {
     try {
       const response = await fetchEcoOrganismsStats();
-      // await axios.get("/api/eco-organisms/stats/summary");
       setEcoOrganismStats(response.data.stats);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
@@ -100,7 +91,7 @@ export const EcoOrganismsTab = () => {
   };
 
   const handleOpenEcoOrganismDialog = (
-    ecoOrganism: ecoOrganism | null = null
+    ecoOrganism: EcoOrgModel | null = null
   ) => {
     if (ecoOrganism) {
       setEditingEcoOrganism(ecoOrganism);
@@ -138,13 +129,7 @@ export const EcoOrganismsTab = () => {
       const response = editingEcoOrganism
         ? await updateEcoOrganism(editingEcoOrganism.id, ecoOrganismForm)
         : await createEcoOrganism(ecoOrganismForm);
-      // const url = editingEcoOrganism
-      //   ? `/api/eco-organisms/${editingEcoOrganism.id}`
-      //   : "/api/eco-organisms";
 
-      // const method = editingEcoOrganism ? "put" : "post";
-
-      // await axios[method](url, ecoOrganismForm);
 
       toast.success(
         editingEcoOrganism
@@ -170,7 +155,6 @@ export const EcoOrganismsTab = () => {
 
     try {
       await deleteEcoOrganism(id)
-      // await axios.delete(`/api/eco-organisms/${id}`);
       toast.success("Éco-organisme supprimé avec succès");
       fetchEcoOrganisms();
       fetchEcoOrganismStats();
@@ -215,69 +199,22 @@ export const EcoOrganismsTab = () => {
       {ecoOrganismStats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Total Éco-organismes
-                    </Typography>
-                    <Typography variant="h4">
-                      {ecoOrganismStats.total_eco_organisms || 0}
-                    </Typography>
-                  </Box>
-                  <Nature color="primary" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title=" Total Éco-organismes" value={ecoOrganismStats.total_eco_organisms}>
+              <Nature color="primary" sx={{ fontSize: 40 }} />
+            </StatCard>
+
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Actifs
-                    </Typography>
-                    <Typography variant="h4">
-                      {ecoOrganismStats.active_eco_organisms || 0}
-                    </Typography>
-                  </Box>
-                  <CheckCircle color="success" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title=" Actifs" value={ecoOrganismStats.active_eco_organisms} >
+              <CheckCircle color="success" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Inactifs
-                    </Typography>
-                    <Typography variant="h4">
-                      {ecoOrganismStats.inactive_eco_organisms || 0}
-                    </Typography>
-                  </Box>
-                  <Block color="error" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title="Inactifs" value={ecoOrganismStats.inactive_eco_organisms}>
+              <Block color="error" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
         </Grid>
       )}

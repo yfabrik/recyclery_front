@@ -48,6 +48,7 @@ import {
   type userModel,
 } from "../../services/api/users";
 import { fetchStores as fStores } from "../../services/api/store";
+import { StatCardNoIcon } from "../StatCard";
 
 export const UsersTab = () => {
   const [users, setUsers] = useState<userModel[]>([]);
@@ -56,7 +57,7 @@ export const UsersTab = () => {
   const [loading, setLoading] = useState(true);
   const [userDialog, setUserDialog] = useState(false);
   const [passwordDialog, setPasswordDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<userModel|null>(null);
+  const [editingUser, setEditingUser] = useState<userModel | null>(null);
   const [userStats, setUserStats] = useState({
     total_users: 0,
     users_by_role: [],
@@ -89,11 +90,7 @@ export const UsersTab = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem("token");
       const response = await fUsers();
-      //  await axios.get("/api/users", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
       setUsers(response.data.users || []);
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
@@ -105,11 +102,9 @@ export const UsersTab = () => {
 
   const fetchRoles = async () => {
     try {
-      // const token = localStorage.getItem("token");
+
       const response = await getRoles();
-      //  await axios.get("/api/users/roles", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+
       setRoles(response.data.roles || []);
     } catch (error) {
       console.error("Erreur lors du chargement des rôles:", error);
@@ -118,12 +113,9 @@ export const UsersTab = () => {
 
   const fetchStores = async () => {
     try {
-      // const token = localStorage.getItem("token");
-      const response = await fStores();
-      // await axios.get("/api/stores", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      setStores(response.data.stores?.filter((store) => store.is_active) || []);
+      const response = await fStores({ active: 1 });
+
+      setStores(response.data.stores);
     } catch (error) {
       console.error("Erreur lors du chargement des magasins:", error);
     }
@@ -131,18 +123,15 @@ export const UsersTab = () => {
 
   const fetchUserStats = async () => {
     try {
-      // const token = localStorage.getItem("token");
+
       const response = await getUsersStats();
-      // await axios.get("/api/users/stats", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
       setUserStats(response.data.stats || {});
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
-  const handleOpenUserDialog = (user:userModel|null = null) => {
+  const handleOpenUserDialog = (user: userModel | null = null) => {
     if (user) {
       setEditingUser(user);
       setUserForm({
@@ -191,7 +180,6 @@ export const UsersTab = () => {
 
   const handleSaveUser = async () => {
     try {
-      // const token = localStorage.getItem("token");
 
       if (editingUser) {
         // Mise à jour
@@ -199,9 +187,7 @@ export const UsersTab = () => {
         delete updateData.password; // Ne pas envoyer le mot de passe lors de la mise à jour
 
         await updateUser(editingUser.id, updateData);
-        //  axios.put(`/api/users/${editingUser.id}`, updateData, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
+
         toast.success("Utilisateur mis à jour avec succès");
       } else {
         // Création
@@ -211,9 +197,7 @@ export const UsersTab = () => {
         }
 
         await createUser(userForm);
-        // await axios.post("/api/users", userForm, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
+
         toast.success("Utilisateur créé avec succès");
       }
 
@@ -265,16 +249,6 @@ export const UsersTab = () => {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      // await axios.put(
-      //   `/api/users/${editingUser.id}/password`,
-      //   {
-      //     currentPassword: passwordForm.currentPassword,
-      //     newPassword: passwordForm.newPassword,
-      //   },
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
 
       toast.success("Mot de passe mis à jour avec succès");
       handleClosePasswordDialog();
@@ -282,33 +256,24 @@ export const UsersTab = () => {
       console.error("Erreur lors du changement de mot de passe:", error);
       toast.error(
         error.response?.data?.error ||
-          "Erreur lors du changement de mot de passe"
+        "Erreur lors du changement de mot de passe"
       );
     }
   };
 
   const handleToggleUserStatus = async (user) => {
     try {
-      // const token = localStorage.getItem("token");
+
       const newStatus = !user.is_active;
 
       if (newStatus) {
-        await updateUser(user.id,{is_active:newStatus})
+        await updateUser(user.id, { is_active: newStatus })
         // Réactiver l'utilisateur
-        // await axios.put(
-        //   `/api/users/${user.id}`,
-        //   { is_active: true },
-        //   {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }
-        // );
         toast.success("Utilisateur réactivé");
       } else {
         // Désactiver l'utilisateur
-        await updateUser(user.id,{is_active:false})
-        // await axios.delete(`/api/users/${user.id}`, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
+        await updateUser(user.id, { is_active: false })
+
         toast.success("Utilisateur désactivé");
       }
 
@@ -384,42 +349,15 @@ export const UsersTab = () => {
       {/* Statistiques des utilisateurs */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                {userStats.total_users}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Utilisateurs actifs
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCardNoIcon title="Utilisateurs actifs" value={userStats.total_users} color="primary" />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="success.main" fontWeight="bold">
-                {userStats.active_last_30_days}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Connectés (30j)
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCardNoIcon title=" Connectés (30j)" value={userStats.active_last_30_days} color="success.main" />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="info.main" fontWeight="bold">
-                {userStats.users_by_role?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Rôles différents
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCardNoIcon title=" Rôles différents" value={userStats.users_by_role?.length} color="info.main" />
         </Grid>
       </Grid>
 

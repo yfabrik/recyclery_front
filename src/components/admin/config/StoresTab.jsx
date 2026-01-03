@@ -54,6 +54,7 @@ import { StoreForm } from '../../forms/StoreForm';
 import { StoreOpeningForm } from '../../forms/StoreOpeningForm';
 import { DAYS_OF_WEEK as daysOfWeek, TIME_SLOTS as timeSlotOptions } from '../../../interfaces/shared';
 import { StoreOpen } from '../../StoreOpen';
+import { StatCardNoIcon } from '../../StatCard';
 
 
 
@@ -348,7 +349,7 @@ const StoresTab = () => {
 
   const handleSaveHours = async (data) => {
     try {
-      if (editingHours.id) {
+      if (editingHours?.id) {
         await updateStoreHours(editingHours.id, data)
         toast.success('Horaires mis à jour avec succès');
       } else {
@@ -501,40 +502,14 @@ const StoresTab = () => {
           {/* Statistiques rapides */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary">
-                    {stores.length}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Magasins total
-                  </Typography>
-                </CardContent>
-              </Card>
+              <StatCardNoIcon title="Magasins total" value= {stores.length} color="primary"/>
+              
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main">
-                    {stores.filter(store => store.is_active).length}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Magasins actifs
-                  </Typography>
-                </CardContent>
-              </Card>
+              <StatCardNoIcon title="Magasins actifs" value={stores.filter(store => store.is_active).length} color='success.main'/> 
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main">
-                    {stores.reduce((sum, store) => sum + (store.cash_registers_count || 0), 0)}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Caisses total
-                  </Typography>
-                </CardContent>
-              </Card>
+            <StatCardNoIcon title="Caisses total" value={stores.reduce((sum, store) => sum + (store.cash_registers_count || 0), 0)} color='info.main'/> 
             </Grid>
           </Grid>
 

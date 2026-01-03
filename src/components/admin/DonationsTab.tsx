@@ -37,39 +37,32 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { createDonation, getDonations, getDonationsStats, updateDonation } from "../../services/api/donations";
+import { StatCard } from "../StatCard";
+import type { DonModel } from "../../interfaces/Models";
 
 
-interface donStats{
-total_donations:number
-pending_donations:number
-accepted_donations:number
-rejected_donations:number
-total_estimated_value:number
+interface donStats {
+  total_donations: number
+  pending_donations: number
+  accepted_donations: number
+  rejected_donations: number
+  total_estimated_value: number
 }
-interface donation {
-  id?: number;
-  donor_name: string;
-  donor_contact: string;
-  item_description: string;
-  estimated_value: string;
-  status: string;
-  created_at?:Date
-  received_by_name?:string
-}
+
 
 export const DonationsTab = () => {
-  const [donations, setDonations] = useState<donation[]>([]);
+  const [donations, setDonations] = useState<DonModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [donationDialog, setDonationDialog] = useState(false);
-  const [editingDonation, setEditingDonation] = useState<donation | null>(null);
-  const [donationForm, setDonationForm] = useState<donation>({
+  const [editingDonation, setEditingDonation] = useState<DonModel | null>(null);
+  const [donationForm, setDonationForm] = useState<DonModel>({
     donor_name: "",
     donor_contact: "",
     item_description: "",
     estimated_value: "",
     status: "pending",
   });
-  const [donationStats, setDonationStats] = useState<donStats|null>(null);
+  const [donationStats, setDonationStats] = useState<donStats | null>(null);
 
   useEffect(() => {
     fetchDonations();
@@ -78,11 +71,7 @@ export const DonationsTab = () => {
 
   const fetchDonations = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await getDonations() 
-      // await axios.get("/api/donations", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+      const response = await getDonations()
       setDonations(response.data.donations || []);
     } catch (error) {
       console.error("Erreur lors du chargement des dons:", error);
@@ -94,18 +83,16 @@ export const DonationsTab = () => {
 
   const fetchDonationStats = async () => {
     try {
-      const token = localStorage.getItem("token");
+
       const response = await getDonationsStats()
-      // await axios.get("/api/donations/stats", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+
       setDonationStats(response.data.stats);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
-  const handleOpenDonationDialog = (donation: donation | null = null) => {
+  const handleOpenDonationDialog = (donation: DonModel | null = null) => {
     if (donation) {
       setEditingDonation(donation);
       setDonationForm({
@@ -135,7 +122,7 @@ export const DonationsTab = () => {
 
   const handleSaveDonation = async () => {
     try {
-      editingDonation ? await updateDonation(editingDonation.id,donationForm):await createDonation(donationForm)
+      editingDonation ? await updateDonation(editingDonation.id, donationForm) : await createDonation(donationForm)
       // const token = localStorage.getItem("token");
       // const url = editingDonation
       //   ? `/api/donations/${editingDonation.id}`
@@ -164,7 +151,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const getStatusColor = (status:string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
         return "warning";
@@ -177,7 +164,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const getStatusLabel = (status:string) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case "pending":
         return "En attente";
@@ -190,7 +177,7 @@ export const DonationsTab = () => {
     }
   };
 
-  const formatCurrency = (value:number) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
@@ -211,96 +198,24 @@ export const DonationsTab = () => {
       {donationStats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Total Dons
-                    </Typography>
-                    <Typography variant="h4">
-                      {donationStats.total_donations || 0}
-                    </Typography>
-                  </Box>
-                  <CardGiftcard color="primary" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title="Total Dons" value={donationStats.total_donations} >
+              <CardGiftcard color="primary" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      En Attente
-                    </Typography>
-                    <Typography variant="h4">
-                      {donationStats.pending_donations || 0}
-                    </Typography>
-                  </Box>
-                  <Schedule color="warning" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title="En Attente" value={donationStats.pending_donations}>
+            <Schedule color="warning" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Acceptés
-                    </Typography>
-                    <Typography variant="h4">
-                      {donationStats.accepted_donations || 0}
-                    </Typography>
-                  </Box>
-                  <CheckCircle color="success" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title="Acceptés"value={donationStats.accepted_donations }>
+            <CheckCircle color="success" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Valeur Estimée
-                    </Typography>
-                    <Typography variant="h4">
-                      {formatCurrency(donationStats.total_estimated_value)}
-                    </Typography>
-                  </Box>
-                  <TrendingUp color="info" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard title="Valeur Estimée" value={formatCurrency(donationStats.total_estimated_value)} >
+            <TrendingUp color="info" sx={{ fontSize: 40 }} />
+            </StatCard>
           </Grid>
         </Grid>
       )}

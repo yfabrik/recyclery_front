@@ -51,6 +51,7 @@ import JsBarcode from 'jsbarcode';
 
 import { fetchCategories as fcat } from '../services/api/categories';
 import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
+import { StatCardNoIcon } from '../components/StatCard';
 
 const Labels = () => {
   const { user } = useAuth();
@@ -103,16 +104,16 @@ const Labels = () => {
       setLoading(true);
       // const token = localStorage.getItem('token');
       const params = new URLSearchParams();
-      
+
       if (filters.status) params.append('status', filters.status);
       if (filters.category_id) params.append('category_id', filters.category_id);
       if (filters.search) params.append('search', filters.search);
-      
+
       const response = await getLabeledItems(params)
       // await axios.get(`/api/labeled-items?${params}`, {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
-      
+
       setItems(response.data.items || []);
     } catch (error) {
       console.error('Erreur lors du chargement des articles:', error);
@@ -129,17 +130,17 @@ const Labels = () => {
       // await axios.get('/api/categories', {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
-      
+
       // Organiser les catégories comme dans les autres pages
       const allCategories = response.data.categories || [];
       const mainCategories = allCategories.filter(cat => !cat.parent_id);
       const subcategories = allCategories.filter(cat => cat.parent_id);
-      
+
       const organizedCategories = mainCategories.map(category => ({
         ...category,
         subcategories: subcategories.filter(sub => sub.parent_id === category.id)
       }));
-      
+
       setCategories(organizedCategories);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
@@ -211,11 +212,11 @@ const Labels = () => {
 
       const token = localStorage.getItem('token');
       let savedItem = null;
-      
+
       if (editingItem) {
         // Mise à jour
-        
-        const response =await updateLabeledItem(editingItem.id,formData)
+
+        const response = await updateLabeledItem(editingItem.id, formData)
         //  await axios.put(`/api/labeled-items/${editingItem.id}`, formData, {
         //   headers: { Authorization: `Bearer ${token}` }
         // });
@@ -230,14 +231,14 @@ const Labels = () => {
         savedItem = response.data.item;
         toast.success('Article créé avec succès');
       }
-      
+
       // Impression automatique si activée
       if (formData.autoPrint && savedItem) {
         setTimeout(() => {
           printLabel(savedItem);
         }, 500); // Petit délai pour s'assurer que l'article est bien créé
       }
-      
+
       handleCloseDialog();
       fetchItems();
     } catch (error) {
@@ -297,7 +298,7 @@ const Labels = () => {
 
   const printLabel = (item) => {
     const barcodeImage = generateBarcode(item.barcode);
-    
+
     const printWindow = window.open('', '', 'width=400,height=600');
     printWindow.document.write(`
       <html>
@@ -359,7 +360,7 @@ const Labels = () => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.print();
   };
@@ -385,60 +386,24 @@ const Labels = () => {
 
       {/* Statistiques rapides */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12,sm:6,md:3}} >
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="primary">
-                {items.filter(item => item.status === 'available').length}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Articles disponibles
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
+          <StatCardNoIcon title='Articles disponibles' value={items.filter(item => item.status === 'available').length} color="primary" />
         </Grid>
-        <Grid size={{ xs: 12,sm:6,md:3}}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="success.main">
-                {items.filter(item => item.status === 'sold').length}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Articles vendus
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCardNoIcon title='Articles vendus' value={items.filter(item => item.status === 'sold').length} color="success.main" />
         </Grid>
-        <Grid size={{ xs: 12,sm:6,md:3}}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="warning.main">
-                {items.filter(item => item.status === 'reserved').length}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Articles réservés
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCardNoIcon title='Articles réservés' value={items.filter(item => item.status === 'reserved').length} color="warning" />
         </Grid>
-        <Grid size={{ xs: 12,sm:6,md:3}}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="info.main">
-                {items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)} €
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Valeur totale stock
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCardNoIcon title='Valeur totale stock' value={` ${items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)} €`} color="info" />
         </Grid>
       </Grid>
 
       {/* Filtres */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12,md:4}}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               placeholder="Rechercher par nom, description ou code-barres..."
@@ -449,7 +414,7 @@ const Labels = () => {
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12,md:3}}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Statut</InputLabel>
               <Select
@@ -466,7 +431,7 @@ const Labels = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12,md:3}}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Catégorie</InputLabel>
               <Select
@@ -483,7 +448,7 @@ const Labels = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12,md:2}}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <Button
               fullWidth
               variant="outlined"
@@ -604,7 +569,7 @@ const Labels = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required>
                 <InputLabel>Catégories</InputLabel>
                 <Select
@@ -620,7 +585,7 @@ const Labels = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Sous-catégories</InputLabel>
                 <Select
@@ -639,7 +604,7 @@ const Labels = () => {
               </FormControl>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Poids (kg)"
@@ -649,8 +614,8 @@ const Labels = () => {
                   startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
                   readOnly: true,
                 }}
-                sx={{ 
-                  '& .MuiInputBase-input': { 
+                sx={{
+                  '& .MuiInputBase-input': {
                     cursor: 'pointer',
                     backgroundColor: '#f8f9fa'
                   }
@@ -659,7 +624,7 @@ const Labels = () => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -670,8 +635,8 @@ const Labels = () => {
                   startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
                   readOnly: true,
                 }}
-                sx={{ 
-                  '& .MuiInputBase-input': { 
+                sx={{
+                  '& .MuiInputBase-input': {
                     cursor: 'pointer',
                     backgroundColor: '#f8f9fa'
                   }
@@ -680,7 +645,7 @@ const Labels = () => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>État</InputLabel>
                 <Select
@@ -697,7 +662,7 @@ const Labels = () => {
               </FormControl>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Emplacement"
@@ -707,7 +672,7 @@ const Labels = () => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12}}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -719,10 +684,10 @@ const Labels = () => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12}}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 2,
                 p: 2,
                 backgroundColor: '#f8f9fa',

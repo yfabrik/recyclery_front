@@ -9,7 +9,7 @@ interface StatCardProps {
   subtitle: string;
   trend: string;
   trendValue: number;
-  onClick: React.MouseEventHandler<HTMLDivElement>
+  // onClick: React.MouseEventHandler<HTMLDivElement>
 }
 export const StatCard = ({
   title,
@@ -19,21 +19,21 @@ export const StatCard = ({
   subtitle,
   trend,
   trendValue,
-  onClick,
+  // onClick,
 }: StatCardProps) => (
   <Card
     sx={{
       height: "100%",
-      cursor: onClick ? "pointer" : "default",
+      // cursor: onClick ? "pointer" : "default",
       transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-      "&:hover": onClick
-        ? {
-            transform: "translateY(-4px)",
-            boxShadow: 4,
-          }
-        : {},
+      // "&:hover": onClick
+      //   ? {
+      //       transform: "translateY(-4px)",
+      //       boxShadow: 4,
+      //     }
+      //   : {},
     }}
-    onClick={onClick}
+    // onClick={onClick}
   >
     <CardContent>
       <Box
