@@ -3100,12 +3100,12 @@ const Admin = () => {
   // const handleTabChange = (event, newValue) => {
   //   setTabValue(newValue);
   // };
-const location = useLocation();
+  const location = useLocation();
 
-const tabValue =
-  location.pathname === "/admin"
-    ? "/admin/config"
-    : location.pathname;
+  const tabValue =
+    location.pathname === "/admin"
+      ? "/admin/config"
+      : location.pathname;
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -3218,8 +3218,9 @@ const tabValue =
         <Divider />
 
         <Box sx={{ p: 3 }}>
+          {/* FIXME y'a une erreur quand on essai d'aller juste sur /admin */}
           <Routes>
-            <Route index element={<Navigate to="/admin/config" replace/>}></Route>
+            <Route index element={<Navigate to="/admin/config" replace />} />
             <Route path="config/*" element={<ConfigurationTab />} />
             <Route path="sales" element={<SalesAnalyticsTab />} />
             <Route path="don" element={<DonationsTab />} />

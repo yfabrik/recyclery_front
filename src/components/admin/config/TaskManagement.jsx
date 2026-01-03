@@ -49,7 +49,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
 import { addEmployeeToTask, createTask, deleteTask, getEmployeesForTask, getTasks, removeEmployeeFromTask, updateTask } from '../../../services/api/tasks';
-import { fetchUsers, getEmployees } from '../../../services/api/users';
+import { fetchUsers } from '../../../services/api/users';
 
 const TaskManagement = () => {
   const { user } = useAuth();

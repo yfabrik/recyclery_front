@@ -60,7 +60,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { fetchStores as fstore } from '../services/api/store';
-import { fetchUsers, getEmployees } from '../services/api/users';
+import { fetchUsers } from '../services/api/users';
 import { createPlanning, deletePlanning, getAvailableUserForTask, getPlanning, updatePlanning } from '../services/api/planning';
 import { getTasks } from '../services/api/tasks';
 import { getCollectionSchedules } from '../services/api/collectionSchedules';

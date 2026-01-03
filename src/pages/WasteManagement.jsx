@@ -28,7 +28,7 @@ import {
   Paper,
   Select,
   Table,
-  TableBody,
+  TableBody, 
   TableCell,
   TableContainer,
   TableHead,
@@ -44,7 +44,7 @@ import {
   fetchCategories as fcat,
   getSubcategories,
 } from "../services/api/categories";
-import { getActiveEcoOrganisms, getEcoOrganisms } from "../services/api/ecoOrganism";
+import { getEcoOrganisms } from "../services/api/ecoOrganism";
 import {
   createWaste,
   deleteWaste,

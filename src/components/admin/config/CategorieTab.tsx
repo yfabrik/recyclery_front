@@ -173,7 +173,7 @@ export const CategoriesTab = () => {
 
       handleCloseDialog();
       fetchCategories();
-    } catch (error:) {
+    } catch (error) {
       toast.error(
         error.response?.data?.error || "Erreur lors de la sauvegarde"
       );
