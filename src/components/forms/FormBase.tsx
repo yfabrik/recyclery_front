@@ -1,11 +1,17 @@
-import { FormControl, FormControlLabel, FormHelperText, InputLabel, Select, Switch, TextField } from "@mui/material"
+import { FormControl, FormControlLabel, FormHelperText, InputLabel, Select, Switch, TextField, type TextFieldProps } from "@mui/material"
 import type { ReactNode } from "react"
 import { Controller, type ControllerProps, type FieldPath, type FieldValues, type SubmitHandler } from "react-hook-form"
+
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 export interface BaseFormProps<T> {
     formId: string;
     defaultValues?: T
     onSubmit: SubmitHandler<T>;
+
 }
 
 
@@ -16,7 +22,7 @@ interface FormControlProps<TFieldValues extends FieldValues = FieldValues,
     name: TName
     label: string
     children?: ReactNode
-    extra?: {}
+    extra?: TextFieldProps
 }
 
 
@@ -57,7 +63,7 @@ export const FormSwitch = <TFieldValues extends FieldValues = FieldValues,
                         <Switch
                             {...field}
                             checked={field.value}
-                            // onChange={field.onChange}
+                        // onChange={field.onChange}
                         />
                     }
                     label={label}
@@ -74,7 +80,7 @@ export const FormSelect = <TFieldValues extends FieldValues = FieldValues,
         <Controller
             name={name}
             control={control}
-            render={({ field,fieldState }) => (
+            render={({ field, fieldState }) => (
                 <FormControl fullWidth>
                     <InputLabel id={`${name}_label`}>{label}</InputLabel>
                     <Select
@@ -86,10 +92,56 @@ export const FormSelect = <TFieldValues extends FieldValues = FieldValues,
                         {children}
 
                     </Select>
-                    {fieldState.invalid && <FormHelperText>{fieldState.error?.message}</FormHelperText> }
+                    {fieldState.invalid && <FormHelperText>{fieldState.error?.message}</FormHelperText>}
                 </FormControl>
 
             )}
         />
     )
 }
+
+export const FormDate = <TFieldValues extends FieldValues = FieldValues,
+    TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+    TTransformedValues = TFieldValues>({ name, control, label }: FormControlProps<TFieldValues, TName, TTransformedValues>) => {
+    return (
+
+        <Controller
+            name={name}
+            control={control}
+            render={({ field, fieldState }) => (
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker label={label} slotProps={{
+                        textField: {
+                            helperText: fieldState.invalid && fieldState.error?.message
+                        }
+                    }}
+                        {...field} />
+                </LocalizationProvider>
+            )}
+        />
+    );
+}
+
+
+export const FormTime = <TFieldValues extends FieldValues = FieldValues,
+    TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+    TTransformedValues = TFieldValues>({ name, control, label }: FormControlProps<TFieldValues, TName, TTransformedValues>) => {
+    return (
+
+        <Controller
+            name={name}
+            control={control}
+            render={({ field, fieldState }) => (
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <TimePicker label={label} slotProps={{
+                        textField: {
+                            helperText: fieldState.invalid && fieldState.error?.message
+                        }
+                    }}
+                        {...field} />
+                </LocalizationProvider>
+            )}
+        />
+    );
+}
+
