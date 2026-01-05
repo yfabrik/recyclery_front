@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
+
 interface CategorieFormProps extends BaseFormProps<Schema> {
   icons: Array<{ name: string; label: string }>;
   
@@ -15,7 +16,7 @@ const schema = z.object({
   name: z.string().trim().nonempty(),
   description: z.string().nullable(),
   icon: z.string().nullable(),
-  parent_id:z.string().nullable()
+  parent_id:z.coerce.number().nullable()
 })
 
 type Schema = z.infer<typeof schema>
@@ -28,11 +29,12 @@ export const CategorieForm = ({
 
 }: CategorieFormProps) => {
   const form = useForm({
-    defaultValues: defaultValues ?? {
+    defaultValues:  {
       name: "",
       description: "",
       icon: "",
       parent_id: null,
+      ...(defaultValues??{})
     },
     resolver: zodResolver(schema),
   });
