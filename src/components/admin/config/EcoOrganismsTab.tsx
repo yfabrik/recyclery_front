@@ -44,8 +44,7 @@ import {
 } from "../../../services/api/ecoOrganism";
 import { StatCard } from "../../StatCard";
 import type { EcoOrgModel } from "../../../interfaces/Models";
-
-
+import { EcoOrganismForm } from "../../forms/EcoOrganismForm";
 
 export const EcoOrganismsTab = () => {
   const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
@@ -53,15 +52,15 @@ export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
   const [editingEcoOrganism, setEditingEcoOrganism] =
     useState<EcoOrgModel | null>(null);
-  const [ecoOrganismForm, setEcoOrganismForm] = useState<EcoOrgModel>({
-    name: "",
-    description: "",
-    contact_email: "",
-    contact_phone: "",
-    address: "",
-    website: "",
-    is_active: true,
-  });
+  // const [ecoOrganismForm, setEcoOrganismForm] = useState<EcoOrgModel>({
+  //   name: "",
+  //   description: "",
+  //   contact_email: "",
+  //   contact_phone: "",
+  //   address: "",
+  //   website: "",
+  //   is_active: true,
+  // });
   const [ecoOrganismStats, setEcoOrganismStats] = useState(null);
 
   useEffect(() => {
@@ -93,29 +92,31 @@ export const EcoOrganismsTab = () => {
   const handleOpenEcoOrganismDialog = (
     ecoOrganism: EcoOrgModel | null = null
   ) => {
-    if (ecoOrganism) {
       setEditingEcoOrganism(ecoOrganism);
-      setEcoOrganismForm({
-        name: ecoOrganism.name,
-        description: ecoOrganism.description || "",
-        contact_email: ecoOrganism.contact_email || "",
-        contact_phone: ecoOrganism.contact_phone || "",
-        address: ecoOrganism.address || "",
-        website: ecoOrganism.website || "",
-        is_active: ecoOrganism.is_active,
-      });
-    } else {
-      setEditingEcoOrganism(null);
-      setEcoOrganismForm({
-        name: "",
-        description: "",
-        contact_email: "",
-        contact_phone: "",
-        address: "",
-        website: "",
-        is_active: true,
-      });
-    }
+
+    // if (ecoOrganism) {
+    //   setEditingEcoOrganism(ecoOrganism);
+    //   setEcoOrganismForm({
+    //     name: ecoOrganism.name,
+    //     description: ecoOrganism.description || "",
+    //     contact_email: ecoOrganism.contact_email || "",
+    //     contact_phone: ecoOrganism.contact_phone || "",
+    //     address: ecoOrganism.address || "",
+    //     website: ecoOrganism.website || "",
+    //     is_active: ecoOrganism.is_active,
+    //   });
+    // } else {
+    //   setEditingEcoOrganism(null);
+    //   setEcoOrganismForm({
+    //     name: "",
+    //     description: "",
+    //     contact_email: "",
+    //     contact_phone: "",
+    //     address: "",
+    //     website: "",
+    //     is_active: true,
+    //   });
+    // }
     setEcoOrganismDialog(true);
   };
 
@@ -124,12 +125,11 @@ export const EcoOrganismsTab = () => {
     setEditingEcoOrganism(null);
   };
 
-  const handleSaveEcoOrganism = async () => {
+  const handleSaveEcoOrganism = async (data) => {
     try {
-      const response = editingEcoOrganism
-        ? await updateEcoOrganism(editingEcoOrganism.id, ecoOrganismForm)
-        : await createEcoOrganism(ecoOrganismForm);
-
+      const response = editingEcoOrganism?.id
+        ? await updateEcoOrganism(editingEcoOrganism.id, data)
+        : await createEcoOrganism(data);
 
       toast.success(
         editingEcoOrganism
@@ -154,7 +154,7 @@ export const EcoOrganismsTab = () => {
     }
 
     try {
-      await deleteEcoOrganism(id)
+      await deleteEcoOrganism(id);
       toast.success("Éco-organisme supprimé avec succès");
       fetchEcoOrganisms();
       fetchEcoOrganismStats();
@@ -199,20 +199,28 @@ export const EcoOrganismsTab = () => {
       {ecoOrganismStats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <StatCard title=" Total Éco-organismes" value={ecoOrganismStats.total_eco_organisms}>
+            <StatCard
+              title=" Total Éco-organismes"
+              value={ecoOrganismStats.total_eco_organisms}
+            >
               <Nature color="primary" sx={{ fontSize: 40 }} />
             </StatCard>
-
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
-            <StatCard title=" Actifs" value={ecoOrganismStats.active_eco_organisms} >
+            <StatCard
+              title=" Actifs"
+              value={ecoOrganismStats.active_eco_organisms}
+            >
               <CheckCircle color="success" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
-            <StatCard title="Inactifs" value={ecoOrganismStats.inactive_eco_organisms}>
+            <StatCard
+              title="Inactifs"
+              value={ecoOrganismStats.inactive_eco_organisms}
+            >
               <Block color="error" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
@@ -318,118 +326,16 @@ export const EcoOrganismsTab = () => {
             : "Nouvel Éco-organisme"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Nom *"
-                value={ecoOrganismForm.name}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
-                }
-                required
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
-                rows={3}
-                value={ecoOrganismForm.description}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Email de contact"
-                type="email"
-                value={ecoOrganismForm.contact_email}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    contact_email: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Téléphone"
-                value={ecoOrganismForm.contact_phone}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    contact_phone: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Adresse"
-                multiline
-                rows={2}
-                value={ecoOrganismForm.address}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    address: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Site Web"
-                value={ecoOrganismForm.website}
-                onChange={(e) =>
-                  setEcoOrganismForm((prev) => ({
-                    ...prev,
-                    website: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={ecoOrganismForm.is_active}
-                    onChange={(e) =>
-                      setEcoOrganismForm((prev) => ({
-                        ...prev,
-                        is_active: e.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Éco-organisme actif"
-              />
-            </Grid>
-          </Grid>
+          <EcoOrganismForm
+            formId="ecoOrgForm"
+            onSubmit={handleSaveEcoOrganism}
+            defaultValues={editingEcoOrganism}
+          />
+          
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEcoOrganismDialog}>Annuler</Button>
-          <Button onClick={handleSaveEcoOrganism} variant="contained">
+          <Button form="ecoOrgForm" variant="contained" type="submit">
             {editingEcoOrganism ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
