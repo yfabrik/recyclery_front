@@ -76,8 +76,10 @@ const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
       onClose={onClose} 
       maxWidth="md" 
       fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3 }
+      slotProps={{
+        paper: {
+          sx: { borderRadius: 3 }
+        }
       }}
     >
       <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
@@ -88,7 +90,6 @@ const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
           </Typography>
         </Box>
       </DialogTitle>
-      
       <DialogContent sx={{ p: 3 }}>
         {/* Durée sélectionnée */}
         <Paper 
@@ -216,7 +217,6 @@ const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
           </Typography>
         </Box>
       </DialogContent>
-      
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button onClick={onClose} variant="outlined">
           Annuler

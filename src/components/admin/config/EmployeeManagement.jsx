@@ -293,7 +293,6 @@ const EmployeeManagement = () => {
           Nouvel Employé
         </Button>
       </Box>
-
       {/* Filtres et recherche */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -303,8 +302,10 @@ const EmployeeManagement = () => {
               placeholder="Rechercher un employé..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+              slotProps={{
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }
               }}
             />
           </Grid>
@@ -351,7 +352,6 @@ const EmployeeManagement = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Liste des employés */}
       <Grid container spacing={3}>
         {filteredEmployees.map((employee) => (
@@ -495,7 +495,6 @@ const EmployeeManagement = () => {
           </Grid>
         ))}
       </Grid>
-
       {filteredEmployees.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="h6" color="textSecondary">
@@ -509,7 +508,6 @@ const EmployeeManagement = () => {
           </Typography>
         </Box>
       )}
-
       {/* Dialog de création/édition */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -573,8 +571,10 @@ const EmployeeManagement = () => {
                 type="number"
                 value={formData.contract_hours}
                 onChange={handleInputChange}
-                inputProps={{ min: 1, max: 60 }}
                 helperText="Nombre d'heures par semaine (défaut: 35h)"
+                slotProps={{
+                  htmlInput: { min: 1, max: 60 }
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12,sm:6}}>
@@ -597,7 +597,6 @@ const EmployeeManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog d'affectation aux magasins */}
       <Dialog 
         open={openStoreAssignmentDialog} 
@@ -622,7 +621,6 @@ const EmployeeManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-
       {/* Dialog de gestion des jours de travail */}
       <Dialog 
         open={openWorkdaysDialog} 

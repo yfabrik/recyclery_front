@@ -383,7 +383,6 @@ const Labels = () => {
           Nouvel Article
         </Button>
       </Box>
-
       {/* Statistiques rapides */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }} >
@@ -399,7 +398,6 @@ const Labels = () => {
           <StatCardNoIcon title='Valeur totale stock' value={` ${items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)} €`} color="info" />
         </Grid>
       </Grid>
-
       {/* Filtres */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -409,8 +407,10 @@ const Labels = () => {
               placeholder="Rechercher par nom, description ou code-barres..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+              slotProps={{
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }
               }}
             />
           </Grid>
@@ -460,7 +460,6 @@ const Labels = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Table des articles */}
       <TableContainer component={Paper}>
         <Table>
@@ -561,7 +560,6 @@ const Labels = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
       {/* Dialog de création/édition */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -610,10 +608,6 @@ const Labels = () => {
                 label="Poids (kg)"
                 value={formData.weight}
                 onClick={() => setShowWeightKeypad(true)}
-                InputProps={{
-                  startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
-                  readOnly: true,
-                }}
                 sx={{
                   '& .MuiInputBase-input': {
                     cursor: 'pointer',
@@ -621,6 +615,12 @@ const Labels = () => {
                   }
                 }}
                 placeholder="Cliquez pour saisir"
+                slotProps={{
+                  input: {
+                    startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
+                    readOnly: true,
+                  }
+                }}
               />
             </Grid>
 
@@ -631,10 +631,6 @@ const Labels = () => {
                 label="Prix de vente (€)"
                 value={formData.price}
                 onClick={() => setShowPriceKeypad(true)}
-                InputProps={{
-                  startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
-                  readOnly: true,
-                }}
                 sx={{
                   '& .MuiInputBase-input': {
                     cursor: 'pointer',
@@ -642,6 +638,12 @@ const Labels = () => {
                   }
                 }}
                 placeholder="Cliquez pour saisir"
+                slotProps={{
+                  input: {
+                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
+                    readOnly: true,
+                  }
+                }}
               />
             </Grid>
 
@@ -719,7 +721,6 @@ const Labels = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Modale pavé numérique pour le poids */}
       <Dialog open={showWeightKeypad} onClose={() => setShowWeightKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du poids</DialogTitle>
@@ -734,7 +735,6 @@ const Labels = () => {
           />
         </DialogContent>
       </Dialog>
-
       {/* Modale pavé numérique pour le prix */}
       <Dialog open={showPriceKeypad} onClose={() => setShowPriceKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du prix</DialogTitle>

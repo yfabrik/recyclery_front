@@ -112,13 +112,6 @@ const Register = () => {
               name="username"
               autoComplete="username"
               autoFocus
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
               {...register('username', {
                 required: 'Le nom d\'utilisateur est requis',
                 minLength: {
@@ -128,7 +121,15 @@ const Register = () => {
               })}
               error={!!errors.username}
               helperText={errors.username?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person />
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <TextField
               margin="normal"
@@ -139,13 +140,6 @@ const Register = () => {
               name="email"
               autoComplete="email"
               type="email"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email />
-                  </InputAdornment>
-                ),
-              }}
               {...register('email', {
                 required: 'L\'email est requis',
                 pattern: {
@@ -155,7 +149,15 @@ const Register = () => {
               })}
               error={!!errors.email}
               helperText={errors.email?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <TextField
               margin="normal"
@@ -166,24 +168,6 @@ const Register = () => {
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="new-password"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
               {...register('password', {
                 required: 'Le mot de passe est requis',
                 minLength: {
@@ -193,7 +177,26 @@ const Register = () => {
               })}
               error={!!errors.password}
               helperText={errors.password?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <TextField
               margin="normal"
@@ -204,13 +207,6 @@ const Register = () => {
               type="password"
               id="confirmPassword"
               autoComplete="new-password"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock />
-                  </InputAdornment>
-                ),
-              }}
               {...register('confirmPassword', {
                 required: 'Veuillez confirmer votre mot de passe',
                 validate: value =>
@@ -218,7 +214,15 @@ const Register = () => {
               })}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <FormControl fullWidth margin="normal">
               <InputLabel id="role-label">Rôle</InputLabel>

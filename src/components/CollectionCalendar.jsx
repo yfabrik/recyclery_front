@@ -505,7 +505,6 @@ const CollectionCalendar = () => {
           timeslots={2}
         /> */}
       </Paper>
-
       {/* Dialog de création/édition */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -596,8 +595,10 @@ const CollectionCalendar = () => {
                 value={formData.vehicle}
                 onChange={handleInputChange}
                 placeholder="ex: Camionnette 01"
-                InputProps={{
-                  startAdornment: <DirectionsCar sx={{ mr: 1, color: 'text.secondary' }} />
+                slotProps={{
+                  input: {
+                    startAdornment: <DirectionsCar sx={{ mr: 1, color: 'text.secondary' }} />
+                  }
                 }}
               />
             </Grid>
@@ -609,23 +610,25 @@ const CollectionCalendar = () => {
                 name="estimated_duration"
                 value={formData.estimated_duration}
                 onChange={handleInputChange}
-                inputProps={{ min: 15, max: 480 }}
-                InputProps={{
-                  startAdornment: <Schedule sx={{ mr: 1, color: 'text.secondary' }} />,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => setShowDurationPicker(true)}
-                        startIcon={<Schedule />}
-                      >
-                        Sélecteur
-                      </Button>
-                    </InputAdornment>
-                  )
-                }}
-              />
+                slotProps={{
+                  input: {
+                    startAdornment: <Schedule sx={{ mr: 1, color: 'text.secondary' }} />,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setShowDurationPicker(true)}
+                          startIcon={<Schedule />}
+                        >
+                          Sélecteur
+                        </Button>
+                      </InputAdornment>
+                    )
+                  },
+
+                  htmlInput: { min: 15, max: 480 }
+                }} />
             </Grid>
             <Grid size={{ xs: 12}}>
               <TextField
@@ -675,7 +678,6 @@ const CollectionCalendar = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog de bordereau */}
       <CollectionReceipt
         open={receiptDialog}
@@ -683,7 +685,6 @@ const CollectionCalendar = () => {
         schedule={selectedScheduleForReceipt}
         onSaved={handleReceiptSaved}
       />
-
       {/* Sélecteur de durée */}
       <DurationPicker
         open={showDurationPicker}

@@ -531,7 +531,6 @@ const PointOfSale = () => {
             Ouvrir une Caisse
           </Button>
         </Paper>
-
         {/* Dialog d'ouverture de session */}
         <Dialog open={openSessionDialog} onClose={() => setOpenSessionDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Ouverture de Caisse</DialogTitle>
@@ -579,26 +578,28 @@ const PointOfSale = () => {
                   label="Fonds de caisse (€)"
                   value={sessionData.opening_amount}
                   onClick={() => setShowOpeningKeypad(true)}
-                  InputProps={{
-                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
-                    readOnly: true,
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => setShowMoneyCounter(true)}
-                          startIcon={<AttachMoney />}
-                        >
-                          Compteur
-                        </Button>
-                      </InputAdornment>
-                    )
-                  }}
                   sx={{ 
                     '& .MuiInputBase-input': { 
                       cursor: 'pointer',
                       backgroundColor: '#f8f9fa'
+                    }
+                  }}
+                  slotProps={{
+                    input: {
+                      startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setShowMoneyCounter(true)}
+                            startIcon={<AttachMoney />}
+                          >
+                            Compteur
+                          </Button>
+                        </InputAdornment>
+                      )
                     }
                   }}
                 />
@@ -623,7 +624,6 @@ const PointOfSale = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
         {/* Pavé numérique pour fonds de caisse */}
         <Dialog open={showOpeningKeypad} onClose={() => setShowOpeningKeypad(false)} maxWidth="xs" fullWidth>
           <DialogTitle sx={{ textAlign: 'center' }}>Fonds de caisse</DialogTitle>
@@ -638,7 +638,6 @@ const PointOfSale = () => {
             />
           </DialogContent>
         </Dialog>
-
         {/* Dialog compteur de pièces et billets */}
         <Dialog 
           open={showMoneyCounter} 
@@ -702,7 +701,6 @@ const PointOfSale = () => {
           </Grid>
         </Grid>
       </Paper>
-
       <Grid container spacing={2}>
         {/* Scanner et panier */}
         <Grid size={{ xs: 12,lg:8}}>
@@ -718,8 +716,10 @@ const PointOfSale = () => {
                 value={scanInput}
                 onChange={(e) => setScanInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleScanProduct()}
-                InputProps={{
-                  startAdornment: <QrCodeScanner sx={{ mr: 1, color: 'text.secondary' }} />
+                slotProps={{
+                  input: {
+                    startAdornment: <QrCodeScanner sx={{ mr: 1, color: 'text.secondary' }} />
+                  }
                 }}
               />
               <Button
@@ -883,7 +883,6 @@ const PointOfSale = () => {
           </Paper>
         </Grid>
       </Grid>
-
       {/* Dialog d'article manuel */}
       <Dialog open={manualItemDialog} onClose={() => setManualItemDialog(false)} maxWidth="md" fullWidth>
         <DialogTitle>Ajouter un Article Manuel</DialogTitle>
@@ -937,10 +936,6 @@ const PointOfSale = () => {
                 label="Poids (kg) - Optionnel"
                 value={manualItemData.weight}
                 onClick={() => setShowManualWeightKeypad(true)}
-                InputProps={{
-                  startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
-                  readOnly: true,
-                }}
                 sx={{ 
                   '& .MuiInputBase-input': { 
                     cursor: 'pointer',
@@ -948,6 +943,12 @@ const PointOfSale = () => {
                   }
                 }}
                 placeholder="Cliquez pour saisir"
+                slotProps={{
+                  input: {
+                    startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
+                    readOnly: true,
+                  }
+                }}
               />
             </Grid>
             
@@ -958,10 +959,6 @@ const PointOfSale = () => {
                 label="Prix de vente (€)"
                 value={manualItemData.price}
                 onClick={() => setShowManualPriceKeypad(true)}
-                InputProps={{
-                  startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
-                  readOnly: true,
-                }}
                 sx={{ 
                   '& .MuiInputBase-input': { 
                     cursor: 'pointer',
@@ -969,6 +966,12 @@ const PointOfSale = () => {
                   }
                 }}
                 placeholder="Cliquez pour saisir"
+                slotProps={{
+                  input: {
+                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
+                    readOnly: true,
+                  }
+                }}
               />
             </Grid>
             
@@ -1026,7 +1029,6 @@ const PointOfSale = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Pavé numérique pour poids manuel */}
       <Dialog open={showManualWeightKeypad} onClose={() => setShowManualWeightKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Poids de l'article</DialogTitle>
@@ -1041,7 +1043,6 @@ const PointOfSale = () => {
           />
         </DialogContent>
       </Dialog>
-
       {/* Pavé numérique pour prix manuel */}
       <Dialog open={showManualPriceKeypad} onClose={() => setShowManualPriceKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Prix de vente</DialogTitle>
@@ -1056,7 +1057,6 @@ const PointOfSale = () => {
           />
         </DialogContent>
       </Dialog>
-
       {/* Dialog de fermeture de session */}
       <Dialog open={closeSessionDialog} onClose={() => setCloseSessionDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Fermeture de Caisse</DialogTitle>
@@ -1073,22 +1073,6 @@ const PointOfSale = () => {
                 label="Montant en caisse (€)"
                 value={closingData.closing_amount}
                 onClick={() => setShowClosingKeypad(true)}
-                InputProps={{
-                  startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
-                  readOnly: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => setShowClosingMoneyCounter(true)}
-                        startIcon={<AttachMoney />}
-                      >
-                        Compteur
-                      </Button>
-                    </InputAdornment>
-                  )
-                }}
                 sx={{ 
                   '& .MuiInputBase-input': { 
                     cursor: 'pointer',
@@ -1096,6 +1080,24 @@ const PointOfSale = () => {
                   }
                 }}
                 helperText="Comptez l'argent physiquement présent dans la caisse"
+                slotProps={{
+                  input: {
+                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setShowClosingMoneyCounter(true)}
+                          startIcon={<AttachMoney />}
+                        >
+                          Compteur
+                        </Button>
+                      </InputAdornment>
+                    )
+                  }
+                }}
               />
             </Grid>
             
@@ -1118,7 +1120,6 @@ const PointOfSale = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Pavé numérique pour fermeture */}
       <Dialog open={showClosingKeypad} onClose={() => setShowClosingKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Montant en caisse</DialogTitle>
@@ -1133,7 +1134,6 @@ const PointOfSale = () => {
           />
         </DialogContent>
       </Dialog>
-
       {/* Dialog compteur de pièces et billets pour fermeture */}
       <Dialog 
         open={showClosingMoneyCounter} 
@@ -1163,7 +1163,6 @@ const PointOfSale = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog de paiement */}
       <Dialog open={paymentDialog} onClose={() => setPaymentDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Encaissement</DialogTitle>
@@ -1198,11 +1197,13 @@ const PointOfSale = () => {
                 value={paymentData.payment_amount}
                 onChange={(e) => setPaymentData(prev => ({...prev, payment_amount: e.target.value}))}
                 type="number"
-                inputProps={{ min: 0, step: 0.01 }}
-                InputProps={{
-                  startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />
-                }}
-              />
+                slotProps={{
+                  input: {
+                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />
+                  },
+
+                  htmlInput: { min: 0, step: 0.01 }
+                }} />
             </Grid>
             
             {parseFloat(paymentData.payment_amount) > getCartTotal() && (

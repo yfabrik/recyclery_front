@@ -192,7 +192,6 @@ const CollectionReceipts = () => {
           Gestion et consultation des bordereaux de collecte
         </Typography>
       </Box>
-
       {/* Filtres */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -207,8 +206,10 @@ const CollectionReceipts = () => {
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               placeholder="Point de collecte, employé, n° bordereau..."
-              InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+              slotProps={{
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }
               }}
             />
           </Grid>
@@ -283,7 +284,6 @@ const CollectionReceipts = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Statistiques */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12,md:3}}>
@@ -327,7 +327,6 @@ const CollectionReceipts = () => {
           </Paper>
         </Grid>
       </Grid>
-
       {/* Tableau des bordereaux */}
       <Paper>
         <TableContainer>
@@ -420,7 +419,6 @@ const CollectionReceipts = () => {
           </Table>
         </TableContainer>
       </Paper>
-
       {/* Dialog de bordereau */}
       <CollectionReceipt
         open={receiptDialog}

@@ -324,11 +324,12 @@ const WasteManagement = () => {
       <Typography variant="h4" gutterBottom>
         🗑️ Gestion des Déchets
       </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
+      <Typography variant="body1" color="text.secondary" sx={{
+        marginBottom: "16px"
+      }}>
         Suivez et gérez les sorties de déchets vers les éco-organismes et
         déchetteries
       </Typography>
-
       {/* Statistiques */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -421,7 +422,6 @@ const WasteManagement = () => {
           </Grid>
         </Grid>
       )}
-
       {/* Actions et filtres */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box
@@ -521,7 +521,6 @@ const WasteManagement = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Table des sorties de déchets */}
       <Paper>
         <TableContainer>
@@ -603,7 +602,6 @@ const WasteManagement = () => {
           </Table>
         </TableContainer>
       </Paper>
-
       {/* Dialogue de création/modification */}
       <Dialog
         open={disposalDialog}
@@ -750,14 +748,16 @@ const WasteManagement = () => {
                 }
                 onClick={() => setShowWeightKeypad(true)}
                 required
-                InputProps={{
-                  readOnly: true,
-                }}
                 sx={{
                   cursor: "pointer",
                   "& .MuiInputBase-input": {
                     cursor: "pointer",
                   },
+                }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  }
                 }}
               />
             </Grid>
@@ -846,7 +846,6 @@ const WasteManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Pavé numérique pour le poids */}
       <Dialog
         open={showWeightKeypad}

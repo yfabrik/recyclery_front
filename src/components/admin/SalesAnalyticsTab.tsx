@@ -487,7 +487,6 @@ export const SalesAnalyticsTab = () => {
           {loading ? "Chargement..." : "Actualiser"}
         </Button>
       </Box>
-
       {/* Filtres */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography
@@ -593,21 +592,23 @@ export const SalesAnalyticsTab = () => {
               placeholder="Ex: 20231215-001"
               variant="outlined"
               size="small"
-              InputProps={{
-                endAdornment: filters.transaction_number && (
-                  <IconButton
-                    size="small"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        transaction_number: "",
-                      }))
-                    }
-                    edge="end"
-                  >
-                    <Clear />
-                  </IconButton>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: filters.transaction_number && (
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          transaction_number: "",
+                        }))
+                      }
+                      edge="end"
+                    >
+                      <Clear />
+                    </IconButton>
+                  ),
+                }
               }}
             />
           </Grid>
@@ -641,7 +642,6 @@ export const SalesAnalyticsTab = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Statistiques principales */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -714,7 +714,6 @@ export const SalesAnalyticsTab = () => {
           </Card>
         </Grid>
       </Grid>
-
       {/* Répartition par mode de paiement et codes postaux */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {/* Répartition par mode de paiement */}
@@ -829,7 +828,6 @@ export const SalesAnalyticsTab = () => {
           </Grid>
         )}
       </Grid>
-
       {/* Liste des transactions */}
       <Card>
         <CardContent>
@@ -1069,7 +1067,6 @@ export const SalesAnalyticsTab = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Pop-up de remboursement */}
       <Dialog
         open={refundDialog}
@@ -1164,14 +1161,16 @@ export const SalesAnalyticsTab = () => {
                     onChange={(e) =>
                       handleRefundFormChange("refund_amount", e.target.value)
                     }
-                    inputProps={{
-                      min: 0.01,
-                      max: selectedTransaction.total_amount,
-                      step: 0.01,
-                    }}
                     helperText={`Maximum: ${formatCurrency(
                       selectedTransaction.total_amount
                     )}`}
+                    slotProps={{
+                      htmlInput: {
+                        min: 0.01,
+                        max: selectedTransaction.total_amount,
+                        step: 0.01,
+                      }
+                    }}
                   />
                 </Grid>
               )}
@@ -1273,7 +1272,6 @@ export const SalesAnalyticsTab = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog des détails de transaction */}
       <Dialog
         open={transactionDetailsDialog}
@@ -1569,7 +1567,6 @@ export const SalesAnalyticsTab = () => {
           <Button onClick={handleCloseTransactionDetailsDialog}>Fermer</Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog de création d'avoir */}
       <Dialog
         open={creditNoteDialog}
@@ -1674,14 +1671,16 @@ export const SalesAnalyticsTab = () => {
                   onChange={(e) =>
                     handleCreditNoteFormChange("credit_amount", e.target.value)
                   }
-                  inputProps={{
-                    min: 0.01,
-                    max: selectedTransactionForCredit.total_amount,
-                    step: 0.01,
-                  }}
                   helperText={`Maximum: ${formatCurrency(
                     selectedTransactionForCredit.total_amount
                   )}`}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0.01,
+                      max: selectedTransactionForCredit.total_amount,
+                      step: 0.01,
+                    }
+                  }}
                 />
               </Grid>
 

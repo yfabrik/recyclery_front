@@ -288,7 +288,6 @@ const Stores = () => {
           </Button>
         )}
       </Box>
-
       {/* Onglets */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
@@ -296,7 +295,6 @@ const Stores = () => {
           <Tab label="Gestion des Caisses" />
         </Tabs>
       </Box>
-
       {/* Contenu des onglets */}
       {tabValue === 0 && (
         <Box>
@@ -343,7 +341,9 @@ const Stores = () => {
                             </ListItemAvatar>
                             <ListItemText 
                               primary={store.address}
-                              primaryTypographyProps={{ variant: 'body2' }}
+                              slotProps={{
+                                primary: { variant: 'body2' }
+                              }}
                             />
                           </ListItem>
                         )}
@@ -355,7 +355,9 @@ const Stores = () => {
                             </ListItemAvatar>
                             <ListItemText 
                               primary={store.phone}
-                              primaryTypographyProps={{ variant: 'body2' }}
+                              slotProps={{
+                                primary: { variant: 'body2' }
+                              }}
                             />
                           </ListItem>
                         )}
@@ -367,7 +369,9 @@ const Stores = () => {
                             </ListItemAvatar>
                             <ListItemText 
                               primary={store.email}
-                              primaryTypographyProps={{ variant: 'body2' }}
+                              slotProps={{
+                                primary: { variant: 'body2' }
+                              }}
                             />
                           </ListItem>
                         )}
@@ -409,7 +413,6 @@ const Stores = () => {
           </Grid>
         </Box>
       )}
-
       {tabValue === 1 && (
         <Box>
           {!selectedStore ? (
@@ -557,7 +560,6 @@ const Stores = () => {
           )}
         </Box>
       )}
-
       {/* Dialog pour créer/modifier un magasin */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -623,7 +625,6 @@ const Stores = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog pour créer/modifier une caisse */}
       <Dialog open={openCashRegisterDialog} onClose={handleCloseCashRegisterDialog} maxWidth="sm" fullWidth>
         <DialogTitle>

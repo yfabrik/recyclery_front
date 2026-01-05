@@ -95,7 +95,6 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
         <AttachMoney color="primary" />
         Comptage de la caisse
       </Typography>
-      
       <Grid container spacing={2}>
         {/* Pièces */}
         <Grid size={{ xs: 12, md: 6}}>
@@ -139,11 +138,13 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
                       size="small"
                       value={counts[denom.value] || 0}
                       onChange={(e) => setCount(denom.value, e.target.value)}
-                      inputProps={{ 
-                        style: { textAlign: 'center', width: 50 },
-                        min: 0
-                      }}
                       type="number"
+                      slotProps={{
+                        htmlInput: { 
+                          style: { textAlign: 'center', width: 50 },
+                          min: 0
+                        }
+                      }}
                     />
                     <IconButton
                       size="small"
@@ -214,11 +215,13 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
                       size="small"
                       value={counts[denom.value] || 0}
                       onChange={(e) => setCount(denom.value, e.target.value)}
-                      inputProps={{ 
-                        style: { textAlign: 'center', width: 50 },
-                        min: 0
-                      }}
                       type="number"
+                      slotProps={{
+                        htmlInput: { 
+                          style: { textAlign: 'center', width: 50 },
+                          min: 0
+                        }
+                      }}
                     />
                     <IconButton
                       size="small"
@@ -247,7 +250,6 @@ const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
           </Card>
         </Grid>
       </Grid>
-
       {/* Total général */}
       <Paper 
         elevation={3} 

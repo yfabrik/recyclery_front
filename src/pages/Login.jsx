@@ -104,13 +104,6 @@ const Login = () => {
               autoComplete="email"
               autoFocus
               type="email"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email />
-                  </InputAdornment>
-                ),
-              }}
               {...register('email', {
                 required: 'L\'email est requis',
                 pattern: {
@@ -120,7 +113,15 @@ const Login = () => {
               })}
               error={!!errors.email}
               helperText={errors.email?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <TextField
               margin="normal"
@@ -131,24 +132,6 @@ const Login = () => {
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
               {...register('password', {
                 required: 'Le mot de passe est requis',
                 minLength: {
@@ -158,7 +141,26 @@ const Login = () => {
               })}
               error={!!errors.password}
               helperText={errors.password?.message}
-            />
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
+              }} />
 
             <Button
               type="submit"

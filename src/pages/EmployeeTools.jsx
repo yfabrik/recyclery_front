@@ -208,14 +208,12 @@ const EmployeeTools = () => {
           Ces outils vous aideront dans vos tâches de reconnaissance, traduction, calculs et recherches.
         </Typography>
       </Box>
-
       <Alert severity="info" sx={{ mb: 4 }}>
         <Typography variant="body2">
           <strong>💡 Astuce :</strong> Tous ces outils s'ouvrent dans un nouvel onglet pour ne pas interrompre votre travail.
           Vous pouvez les utiliser simultanément avec l'application de recyclerie.
         </Typography>
       </Alert>
-
       {categories.map((category) => (
         <Box key={category} sx={{ mb: 4 }}>
           <Typography variant="h5" component="h2" gutterBottom sx={{ 
@@ -284,7 +282,9 @@ const EmployeeTools = () => {
                             </ListItemIcon>
                             <ListItemText 
                               primary={feature}
-                              primaryTypographyProps={{ variant: 'caption' }}
+                              slotProps={{
+                                primary: { variant: 'caption' }
+                              }}
                             />
                           </ListItem>
                         ))}
@@ -295,7 +295,9 @@ const EmployeeTools = () => {
                             </ListItemIcon>
                             <ListItemText 
                               primary={`+${tool.features.length - 3} autres fonctionnalités`}
-                              primaryTypographyProps={{ variant: 'caption' }}
+                              slotProps={{
+                                primary: { variant: 'caption' }
+                              }}
                             />
                           </ListItem>
                         )}
@@ -335,7 +337,6 @@ const EmployeeTools = () => {
           </Grid>
         </Box>
       ))}
-
       {/* Dialog pour les instructions */}
       <Dialog 
         open={showToolDialog} 

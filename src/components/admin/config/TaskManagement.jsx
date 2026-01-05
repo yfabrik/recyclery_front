@@ -460,7 +460,6 @@ const TaskManagement = () => {
           Nouvelle Tâche
         </Button>
       </Box>
-
       {/* Filtres et recherche */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -470,8 +469,10 @@ const TaskManagement = () => {
               placeholder="Rechercher une tâche..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+              slotProps={{
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }
               }}
             />
           </Grid>
@@ -521,7 +522,6 @@ const TaskManagement = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Liste des tâches */}
       <Grid container spacing={3}>
         {filteredTasks.map((task) => {
@@ -685,7 +685,6 @@ const TaskManagement = () => {
           );
         })}
       </Grid>
-
       {filteredTasks.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="h6" color="textSecondary">
@@ -699,7 +698,6 @@ const TaskManagement = () => {
           </Typography>
         </Box>
       )}
-
       {/* Dialog de création/édition */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -780,7 +778,9 @@ const TaskManagement = () => {
                 type="number"
                 value={formData.estimated_duration}
                 onChange={handleInputChange}
-                inputProps={{ min: 15, max: 480 }}
+                slotProps={{
+                  htmlInput: { min: 15, max: 480 }
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12,sm:6}}>
@@ -897,7 +897,6 @@ const TaskManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialogue d'assignation des employés */}
       <Dialog open={openAssignmentDialog} onClose={handleCloseAssignmentDialog} maxWidth="md" fullWidth>
         <DialogTitle>

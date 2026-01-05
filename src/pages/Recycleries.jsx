@@ -294,7 +294,6 @@ const Recycleries = () => {
           </Button>
         )}
       </Box>
-
       {/* Liste des recycleries */}
       <Grid container spacing={3}>
         {recycleries.map((recyclery) => (
@@ -327,7 +326,9 @@ const Recycleries = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={recyclery.address}
-                      primaryTypographyProps={{ variant: "body2" }}
+                      slotProps={{
+                        primary: { variant: "body2" }
+                      }}
                     />
                   </ListItem>
 
@@ -337,7 +338,9 @@ const Recycleries = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={recyclery.phone}
-                      primaryTypographyProps={{ variant: "body2" }}
+                      slotProps={{
+                        primary: { variant: "body2" }
+                      }}
                     />
                   </ListItem>
 
@@ -347,7 +350,9 @@ const Recycleries = () => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={recyclery.email}
-                      primaryTypographyProps={{ variant: "body2" }}
+                      slotProps={{
+                        primary: { variant: "body2" }
+                      }}
                     />
                   </ListItem>
 
@@ -359,9 +364,10 @@ const Recycleries = () => {
                       <ListItemText
                         primary={recyclery.manager_name}
                         secondary="Gestionnaire"
-                        primaryTypographyProps={{ variant: "body2" }}
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
+                        slotProps={{
+                          primary: { variant: "body2" },
+                          secondary: { variant: "caption" }
+                        }} />
                     </ListItem>
                   )}
                 </List>
@@ -437,7 +443,6 @@ const Recycleries = () => {
           </Grid>
         ))}
       </Grid>
-
       {/* Dialog pour créer/modifier une recyclerie */}
       <Dialog
         open={openDialog}

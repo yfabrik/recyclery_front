@@ -229,7 +229,9 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
       onClose={onClose} 
       maxWidth="lg" 
       fullWidth
-      PaperProps={{ sx: { minHeight: '80vh' } }}
+      slotProps={{
+        paper: { sx: { minHeight: '80vh' } }
+      }}
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -260,7 +262,6 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
           </Box>
         </Box>
       </DialogTitle>
-
       <DialogContent>
         <Box ref={receiptRef} sx={{ p: 2, backgroundColor: 'white' }}>
           {/* En-tête du bordereau */}
@@ -393,7 +394,9 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       value={newItem.quantity}
                       onChange={(e) => setNewItem({...newItem, quantity: parseInt(e.target.value) || 1})}
                       size="small"
-                      inputProps={{ min: 1 }}
+                      slotProps={{
+                        htmlInput: { min: 1 }
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 6, md:1}}>
@@ -404,7 +407,9 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                       value={newItem.weight}
                       onChange={(e) => setNewItem({...newItem, weight: e.target.value})}
                       size="small"
-                      inputProps={{ min: 0, step: 0.1 }}
+                      slotProps={{
+                        htmlInput: { min: 0, step: 0.1 }
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12,md:2}}>
@@ -523,8 +528,10 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
                     type="number"
                     value={receiptData.total_weight}
                     onChange={(e) => setReceiptData({...receiptData, total_weight: e.target.value})}
-                    inputProps={{ min: 0, step: 0.1 }}
                     size="small"
+                    slotProps={{
+                      htmlInput: { min: 0, step: 0.1 }
+                    }}
                   />
                 ) : (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -595,7 +602,6 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
           </Paper>
         </Box>
       </DialogContent>
-
       <DialogActions>
         <Button onClick={onClose} startIcon={<Close />}>
           Fermer

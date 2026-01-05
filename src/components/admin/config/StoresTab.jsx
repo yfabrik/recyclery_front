@@ -489,13 +489,11 @@ const StoresTab = () => {
           Nouveau Magasin
         </Button>
       </Box>
-
       <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
         <Tab label="Liste des Magasins" icon={<Store />} iconPosition="start" />
         <Tab label="Horaires d'Ouverture" icon={<AccessTime />} iconPosition="start" />
         {/* <Tab label="Lieux" icon={<LocationOn />} iconPosition="start" /> */}
       </Tabs>
-
       {/* Contenu des onglets */}
       {tabValue === 0 && (
         <>
@@ -627,7 +625,6 @@ const StoresTab = () => {
 
         </>
       )}
-
       {/* Onglet Horaires d'ouverture */}
       {tabValue === 1 && (
         <Box>
@@ -753,9 +750,8 @@ const StoresTab = () => {
           )}
         </Box>
       )}
-
       {/* Onglet Lieux */}
-      {tabValue === 2 && (<></>
+      {tabValue === 2 && ((<></>)
         // <Box>
         //   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         //     <Typography variant="h6">
@@ -842,7 +838,6 @@ const StoresTab = () => {
         //   )}
         // </Box>
       )}
-
       {/* Dialog de création/édition des lieux */}
       {/* <Dialog open={locationDialogOpen} onClose={handleCloseLocationDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -918,7 +913,6 @@ const StoresTab = () => {
           </Button>
         </DialogActions>
       </Dialog> */}
-
       {/* Dialog de gestion des caisses */}
       <Dialog open={cashRegistersDialog} onClose={handleCloseCashRegisters} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -987,8 +981,6 @@ const StoresTab = () => {
           <Button onClick={handleCloseCashRegisters}>Fermer</Button>
         </DialogActions>
       </Dialog>
-
-
       {/* Dialog de création/édition de magasin */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -1005,7 +997,6 @@ const StoresTab = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog de création/édition des horaires */}
       <Dialog open={hoursDialogOpen} onClose={handleCloseHoursDialog} maxWidth="md" fullWidth>
         <DialogTitle>

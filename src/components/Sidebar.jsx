@@ -115,9 +115,7 @@ const Sidebar = ({ open, onClose }) => {
           </Typography>
         </Box>
       </Toolbar>
-      
       <Divider />
-
       {/* Informations utilisateur */}
       <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
         <Typography variant="subtitle2" gutterBottom>
@@ -132,9 +130,7 @@ const Sidebar = ({ open, onClose }) => {
           variant="outlined"
         />
       </Box>
-
       <Divider />
-
       {/* Menu de navigation */}
       {menuSections.map((section) => (
         <Box key={section.title}>
@@ -184,9 +180,11 @@ const Sidebar = ({ open, onClose }) => {
                       </ListItemIcon>
                       <ListItemText 
                         primary={item.label}
-                        primaryTypographyProps={{
-                          fontSize: '0.9rem',
-                          fontWeight: active ? 'medium' : 'normal'
+                        slotProps={{
+                          primary: {
+                            fontSize: '0.9rem',
+                            fontWeight: active ? 'medium' : 'normal'
+                          }
                         }}
                       />
                     </ListItemButton>
