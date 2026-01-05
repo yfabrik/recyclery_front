@@ -24,7 +24,7 @@ const schema = z.object({
     z.literal(""),
   ]),
   contact_email: z.union([z.email(), z.literal("")]),
-  type: z.string(),
+  // type: z.string(),
   notes: z.string(),
   is_active: z.boolean(),
   recyclery_id: z.coerce.number().nullable(),
@@ -47,7 +47,7 @@ export const CollectionPointForm = ({
       contact_person: "",
       contact_phone: "",
       contact_email: "",
-      type: "standard",
+      // type: "standard",
       notes: "",
       is_active: true,
       recyclery_id: "",
@@ -63,14 +63,14 @@ export const CollectionPointForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect control={form.control} label="Type" name="type">
+          {/* <FormSelect control={form.control} label="Type" name="type">
             <MenuItem value="standard">Standard</MenuItem>
             <MenuItem value="enterprise">Entreprise</MenuItem>
             <MenuItem value="association">Association</MenuItem>
             <MenuItem value="school">École</MenuItem>
             <MenuItem value="hospital">Hôpital</MenuItem>
             <MenuItem value="other">Autre</MenuItem>
-          </FormSelect>
+          </FormSelect> */}
         </Grid>
         <Grid size={{ xs: 12 }}>
           <FormInput
