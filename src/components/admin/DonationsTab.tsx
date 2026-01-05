@@ -10,58 +10,54 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { createDonation, getDonations, getDonationsStats, updateDonation } from "../../services/api/donations";
-import { StatCard } from "../StatCard";
 import type { DonModel } from "../../interfaces/Models";
-
+import {
+  createDonation,
+  getDonations,
+  getDonationsStats,
+  updateDonation,
+} from "../../services/api/donations";
+import { DonForm } from "../forms/DonForm";
+import { StatCard } from "../StatCard";
 
 interface donStats {
-  total_donations: number
-  pending_donations: number
-  accepted_donations: number
-  rejected_donations: number
-  total_estimated_value: number
+  total_donations: number;
+  pending_donations: number;
+  accepted_donations: number;
+  rejected_donations: number;
+  total_estimated_value: number;
 }
-
 
 export const DonationsTab = () => {
   const [donations, setDonations] = useState<DonModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [donationDialog, setDonationDialog] = useState(false);
   const [editingDonation, setEditingDonation] = useState<DonModel | null>(null);
-  const [donationForm, setDonationForm] = useState<DonModel>({
-    donor_name: "",
-    donor_contact: "",
-    item_description: "",
-    estimated_value: "",
-    status: "pending",
-  });
+  // const [donationForm, setDonationForm] = useState<DonModel>({
+  //   donor_name: "",
+  //   donor_contact: "",
+  //   item_description: "",
+  //   estimated_value: "",
+  //   status: "pending",
+  // });
   const [donationStats, setDonationStats] = useState<donStats | null>(null);
 
   useEffect(() => {
@@ -71,7 +67,7 @@ export const DonationsTab = () => {
 
   const fetchDonations = async () => {
     try {
-      const response = await getDonations()
+      const response = await getDonations();
       setDonations(response.data.donations || []);
     } catch (error) {
       console.error("Erreur lors du chargement des dons:", error);
@@ -83,8 +79,7 @@ export const DonationsTab = () => {
 
   const fetchDonationStats = async () => {
     try {
-
-      const response = await getDonationsStats()
+      const response = await getDonationsStats();
 
       setDonationStats(response.data.stats);
     } catch (error) {
@@ -93,25 +88,27 @@ export const DonationsTab = () => {
   };
 
   const handleOpenDonationDialog = (donation: DonModel | null = null) => {
-    if (donation) {
-      setEditingDonation(donation);
-      setDonationForm({
-        donor_name: donation.donor_name || "",
-        donor_contact: donation.donor_contact || "",
-        item_description: donation.item_description || "",
-        estimated_value: donation.estimated_value?.toString() || "",
-        status: donation.status || "pending",
-      });
-    } else {
-      setEditingDonation(null);
-      setDonationForm({
-        donor_name: "",
-        donor_contact: "",
-        item_description: "",
-        estimated_value: "",
-        status: "pending",
-      });
-    }
+    setEditingDonation(donation);
+
+    // if (donation) {
+    //   setEditingDonation(donation);
+    //   setDonationForm({
+    //     donor_name: donation.donor_name || "",
+    //     donor_contact: donation.donor_contact || "",
+    //     item_description: donation.item_description || "",
+    //     estimated_value: donation.estimated_value?.toString() || "",
+    //     status: donation.status || "pending",
+    //   });
+    // } else {
+    //   setEditingDonation(null);
+    //   setDonationForm({
+    //     donor_name: "",
+    //     donor_contact: "",
+    //     item_description: "",
+    //     estimated_value: "",
+    //     status: "pending",
+    //   });
+    // }
     setDonationDialog(true);
   };
 
@@ -120,9 +117,11 @@ export const DonationsTab = () => {
     setEditingDonation(null);
   };
 
-  const handleSaveDonation = async () => {
+  const handleSaveDonation = async (data) => {
     try {
-      editingDonation ? await updateDonation(editingDonation.id, donationForm) : await createDonation(donationForm)
+      const result = editingDonation?.id
+        ? await updateDonation(editingDonation.id, data)
+        : await createDonation(data);
       // const token = localStorage.getItem("token");
       // const url = editingDonation
       //   ? `/api/donations/${editingDonation.id}`
@@ -198,23 +197,29 @@ export const DonationsTab = () => {
       {donationStats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="Total Dons" value={donationStats.total_donations} >
+            <StatCard title="Total Dons" value={donationStats.total_donations}>
               <CardGiftcard color="primary" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="En Attente" value={donationStats.pending_donations}>
-            <Schedule color="warning" sx={{ fontSize: 40 }} />
+            <StatCard
+              title="En Attente"
+              value={donationStats.pending_donations}
+            >
+              <Schedule color="warning" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="Acceptés"value={donationStats.accepted_donations }>
-            <CheckCircle color="success" sx={{ fontSize: 40 }} />
+            <StatCard title="Acceptés" value={donationStats.accepted_donations}>
+              <CheckCircle color="success" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="Valeur Estimée" value={formatCurrency(donationStats.total_estimated_value)} >
-            <TrendingUp color="info" sx={{ fontSize: 40 }} />
+            <StatCard
+              title="Valeur Estimée"
+              value={formatCurrency(donationStats.total_estimated_value)}
+            >
+              <TrendingUp color="info" sx={{ fontSize: 40 }} />
             </StatCard>
           </Grid>
         </Grid>
@@ -314,88 +319,15 @@ export const DonationsTab = () => {
           {editingDonation ? "Modifier le Don" : "Nouveau Don"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Nom du Bénéficiaire"
-                value={donationForm.donor_name}
-                onChange={(e) =>
-                  setDonationForm((prev) => ({
-                    ...prev,
-                    donor_name: e.target.value,
-                  }))
-                }
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Contact (email/téléphone)"
-                value={donationForm.donor_contact}
-                onChange={(e) =>
-                  setDonationForm((prev) => ({
-                    ...prev,
-                    donor_contact: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Description du Don"
-                value={donationForm.item_description}
-                onChange={(e) =>
-                  setDonationForm((prev) => ({
-                    ...prev,
-                    item_description: e.target.value,
-                  }))
-                }
-                multiline
-                rows={3}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Valeur Estimée (€)"
-                type="number"
-                value={donationForm.estimated_value}
-                onChange={(e) =>
-                  setDonationForm((prev) => ({
-                    ...prev,
-                    estimated_value: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Statut</InputLabel>
-                <Select
-                  value={donationForm.status}
-                  onChange={(e) =>
-                    setDonationForm((prev) => ({
-                      ...prev,
-                      status: e.target.value,
-                    }))
-                  }
-                  label="Statut"
-                >
-                  <MenuItem value="pending">En Attente</MenuItem>
-                  <MenuItem value="accepted">Accepté</MenuItem>
-                  <MenuItem value="rejected">Refusé</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+          <DonForm
+            formId="donForm"
+            onSubmit={handleSaveDonation}
+            defaultValues={editingDonation}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDonationDialog}>Annuler</Button>
-          <Button onClick={handleSaveDonation} variant="contained">
+          <Button type="submit" form="donForm" variant="contained">
             {editingDonation ? "Mettre à jour" : "Enregistrer"}
           </Button>
         </DialogActions>
