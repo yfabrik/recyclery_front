@@ -5,13 +5,14 @@ import { FormInput, FormSwitch, type BaseFormProps } from "./FormBase";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
+import { phoneSchema } from "../../interfaces/ZodTypes";
 
 const schema = z.object({
   name: z.string().nonempty(),
   description: z.string(),
   contact_email: z.union([z.email(), z.literal("")]),
   contact_phone: z.union([
-    z.string().regex(/^(0|(\+[0-9]{2}[. -]?))[1-9]([. -]?[0-9][0-9]){4}$/),
+    phoneSchema,
     z.literal(""),
   ]),
   address: z.string(),

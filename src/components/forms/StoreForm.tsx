@@ -4,6 +4,7 @@ import { FormInput, FormSelect, FormSwitch, type BaseFormProps } from "./FormBas
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
+import { phoneSchema } from "../../interfaces/ZodTypes";
 
 
 
@@ -13,8 +14,8 @@ const schema = z.object({
     address: z.string(),
     city: z.string(),
     postal_code: z.string(),
-    phone: z.string(),
-    email: z.string(),
+    phone: phoneSchema,
+    email: z.email(),
     is_active: z.boolean(),
 });
 
