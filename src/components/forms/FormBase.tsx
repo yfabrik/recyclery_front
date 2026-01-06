@@ -22,7 +22,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-
+import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
+import dayjs from "dayjs";
 export interface BaseFormProps<T> {
   formId: string;
   defaultValues?: T;
@@ -184,12 +185,20 @@ export const FormTime = <
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <TimePicker
             label={label}
+            ampm={false}
+            viewRenderers={{
+              hours: renderTimeViewClock,
+              minutes: renderTimeViewClock,
+            }}
             slotProps={{
               textField: {
+                error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
               },
             }}
             {...field}
+            value={field.value ? dayjs(field.value) : null}
+            onChange={(value) => field.onChange(value ? value.toDate() : null)}
           />
         </LocalizationProvider>
       )}

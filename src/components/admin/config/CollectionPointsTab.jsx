@@ -1,59 +1,41 @@
-import React, { useState, useEffect } from "react";
 import {
+  Add,
+  Delete,
+  Edit,
+  Email,
+  LocationOn,
+  Phone,
+  Schedule
+} from "@mui/icons-material";
+import {
+  Alert,
   Box,
-  Typography,
   Button,
+  Chip,
+  CircularProgress,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
-  Chip,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Alert,
   Tabs,
-  Tab,
-  CircularProgress,
+  Typography
 } from "@mui/material";
-import {
-  Add,
-  Edit,
-  Delete,
-  LocationOn,
-  Phone,
-  Email,
-  Business,
-  Visibility,
-  Schedule,
-  Sync,
-  CheckCircle,
-  Cancel,
-  AccessTime,
-  CalendarToday,
-  Refresh,
-} from "@mui/icons-material";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { fetchStores } from "../../../services/api/store";
 import {
   createCollectionPoint,
-  updateCollectionPoint,
-  fetchCollectionPoints as fCol,
   deleteCollectionPoint,
+  fetchCollectionPoints as fCol,
+  updateCollectionPoint,
 } from "../../../services/api/collectionPoint";
 import {
   createPointPresence,
@@ -61,7 +43,9 @@ import {
   fetchCollectionPointPresence,
   updatePointPresence,
 } from "../../../services/api/collectionPointPresence";
+import { fetchStores } from "../../../services/api/store";
 import { CollectionPointForm } from "../../forms/CollectionPointForm";
+import { PresencePointForm } from "../../forms/PresencePointForm";
 
 const CollectionPointsTab = () => {
   const [collectionPoints, setCollectionPoints] = useState([]);
@@ -90,15 +74,15 @@ const CollectionPointsTab = () => {
   //   recyclery_id: null,
   // });
 
-  const [presenceFormData, setPresenceFormData] = useState({
-    collection_point_id: "",
-    date: "",
-    start_time: "",
-    end_time: "",
-    employee_name: "",
-    notes: "",
-    is_present: true,
-  });
+  // const [presenceFormData, setPresenceFormData] = useState({
+  //   collection_point_id: "",
+  //   date: "",
+  //   start_time: "",
+  //   end_time: "",
+  //   employee_name: "",
+  //   notes: "",
+  //   is_present: true,
+  // });
 
   useEffect(() => {
     fetchCollectionPoints();
@@ -108,8 +92,7 @@ const CollectionPointsTab = () => {
 
   const fetchCollectionPoints = async () => {
     try {
-
-      const response = await fCol()
+      const response = await fCol();
 
       setCollectionPoints(response.data.collection_points || []);
     } catch (error) {
@@ -122,7 +105,6 @@ const CollectionPointsTab = () => {
 
   const fetchRecycleries = async () => {
     try {
-
       const response = await fetchStores();
 
       setRecycleries(response.data.recycleries || []);
@@ -132,7 +114,7 @@ const CollectionPointsTab = () => {
   };
 
   const handleOpenDialog = (point = null) => {
-      setEditingPoint(point);
+    setEditingPoint(point);
     // if (point) {
     //   setEditingPoint(point);
     //   setFormData({
@@ -182,7 +164,6 @@ const CollectionPointsTab = () => {
   // };
 
   const handleSave = async (data) => {
-
     try {
       //FIXME
       //faudrait pas faire data = {...editing,...data} ?
@@ -197,7 +178,7 @@ const CollectionPointsTab = () => {
       handleCloseDialog();
       fetchCollectionPoints();
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error(
         error.response?.data?.error || "Erreur lors de la sauvegarde"
       );
@@ -209,7 +190,6 @@ const CollectionPointsTab = () => {
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${point.name}" ?`)
     ) {
       try {
-
         await deleteCollectionPoint(point.id);
 
         toast.success("Point de collecte supprimé avec succès");
@@ -261,64 +241,64 @@ const CollectionPointsTab = () => {
   };
 
   const handleOpenPresenceDialog = (presence = null) => {
-    if (presence) {
       setEditingPresence(presence);
-      setPresenceFormData({
-        collection_point_id: presence.collection_point_id,
-        date: presence.date,
-        start_time: presence.start_time,
-        end_time: presence.end_time,
-        employee_name: presence.employee_name,
-        notes: presence.notes,
-        is_present: presence.is_present,
-      });
-    } else {
-      setEditingPresence(null);
-      setPresenceFormData({
-        collection_point_id: "",
-        date: new Date().toISOString().split("T")[0],
-        start_time: "09:00",
-        end_time: "17:00",
-        employee_name: "",
-        notes: "",
-        is_present: true,
-      });
-    }
+
+    // if (presence) {
+    //   setEditingPresence(presence);
+    //   setPresenceFormData({
+    //     collection_point_id: presence.collection_point_id,
+    //     date: presence.date,
+    //     start_time: presence.start_time,
+    //     end_time: presence.end_time,
+    //     employee_name: presence.employee_name,
+    //     notes: presence.notes,
+    //     is_present: presence.is_present,
+    //   });
+    // } else {
+    //   setEditingPresence(null);
+    //   setPresenceFormData({
+    //     collection_point_id: "",
+    //     date: new Date().toISOString().split("T")[0],
+    //     start_time: "09:00",
+    //     end_time: "17:00",
+    //     employee_name: "",
+    //     notes: "",
+    //     is_present: true,
+    //   });
+    // }
     setPresenceDialogOpen(true);
   };
 
   const handleClosePresenceDialog = () => {
     setPresenceDialogOpen(false);
     setEditingPresence(null);
-    setPresenceFormData({
-      collection_point_id: "",
-      date: new Date().toISOString().split("T")[0],
-      start_time: "09:00",
-      end_time: "17:00",
-      employee_name: "",
-      notes: "",
-      is_present: true,
-    });
+    // setPresenceFormData({
+    //   collection_point_id: "",
+    //   date: new Date().toISOString().split("T")[0],
+    //   start_time: "09:00",
+    //   end_time: "17:00",
+    //   employee_name: "",
+    //   notes: "",
+    //   is_present: true,
+    // });
   };
 
-  const handlePresenceInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setPresenceFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  // const handlePresenceInputChange = (e) => {
+  //   const { name, value, type, checked } = e.target;
+  //   setPresenceFormData((prev) => ({
+  //     ...prev,
+  //     [name]: type === "checkbox" ? checked : value,
+  //   }));
+  // };
 
-  const handleSavePresence = async () => {
+  const handleSavePresence = async (data) => {
     try {
-
-
-      if (editingPresence) {
-        await updatePointPresence(editingPresence.id, presenceFormData);
+      if (editingPresence?.id) {
+        await updatePointPresence(editingPresence.id, data);
 
         toast.success("Présence mise à jour avec succès");
       } else {
-        await createPointPresence(presenceFormData);
+        await createPointPresence(data);
 
         toast.success("Présence créée avec succès");
       }
@@ -334,7 +314,7 @@ const CollectionPointsTab = () => {
   const handleDeletePresence = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette présence ?")) {
       try {
-        await deletePointPresence();
+        await deletePointPresence(id);
         toast.success("Présence supprimée avec succès");
         fetchPresenceData();
       } catch (error) {
@@ -501,7 +481,12 @@ const CollectionPointsTab = () => {
                 : "Nouveau Point de Collecte"}
             </DialogTitle>
             <DialogContent>
-              <CollectionPointForm formId="collectionPointForm" recycleries={recycleries} onSubmit={handleSave} defaultValues={editingPoint} />
+              <CollectionPointForm
+                formId="collectionPointForm"
+                recycleries={recycleries}
+                onSubmit={handleSave}
+                defaultValues={editingPoint}
+              />
               {/* <Grid container spacing={2} sx={{ mt: 1 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -728,7 +713,7 @@ const CollectionPointsTab = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {presence.employee_name||"aucun"}
+                          {presence.employee_name || "aucun"}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -777,7 +762,13 @@ const CollectionPointsTab = () => {
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <PresencePointForm
+            formId="presencePointForm"
+            collectionPoints={collectionPoints}
+            onSubmit={handleSavePresence}
+            defaultValues={editingPresence}
+          />
+          {/* <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
                 <InputLabel>Point de Collecte</InputLabel>
@@ -861,11 +852,11 @@ const CollectionPointsTab = () => {
                 placeholder="Ex: Collecte exceptionnelle, problème technique..."
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePresenceDialog}>Annuler</Button>
-          <Button onClick={handleSavePresence} variant="contained">
+          <Button type="submit" form="presencePointForm" variant="contained">
             {editingPresence ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
