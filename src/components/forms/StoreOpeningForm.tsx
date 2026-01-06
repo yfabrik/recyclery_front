@@ -1,6 +1,6 @@
 import { Grid, MenuItem } from "@mui/material"
 import { useForm } from "react-hook-form"
-import { FormInput, FormSelect, FormSwitch, type BaseFormProps } from "./FormBase"
+import { FormInput, FormSelect, FormSwitch, FormTime, type BaseFormProps } from "./FormBase"
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
@@ -11,7 +11,6 @@ import { DAYS_OF_WEEK as daysOfWeek,TIME_SLOTS as timeSlotOptions  } from "../..
 const schema = z.object({
     store_id: z.coerce.number(),
     day_of_week: z.string(),
-    time_slot_name: z.string(),
     is_open: z.boolean(),
     open_time: z.string(),
     close_time: z.string(),
@@ -28,7 +27,6 @@ export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: Ba
             defaultValues: {
                 store_id: defaultValues?.store_id || "",
                 day_of_week: defaultValues?.day_of_week || "",
-                time_slot_name: defaultValues?.time_slot_name || "",
                 is_open: defaultValues?.is_open || true,
                 open_time: defaultValues?.open_time || "",
                 close_time: defaultValues?.close_time || "",
@@ -76,17 +74,19 @@ export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: Ba
                         {!watchFields[1] && (
                             <>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <FormInput control={form.control} name="open_time" label="Heure d'ouverture" extra={{
+                                    <FormTime control={form.control} name="open_time" label="Heure d'ouverture"/>
+                                    {/* <FormInput control={form.control} name="open_time" label="Heure d'ouverture" extra={{
                                         type: "time",
                                         slotProps: { inputLabel: { shrink: true } }
-                                    }} />
+                                    }} /> */}
 
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <FormInput control={form.control} name="close_time" label="Heure de fermeture" extra={{
+                                    <FormTime control={form.control} name="close_time" label="Heure de fermeture"/>
+                                    {/* <FormInput control={form.control} name="close_time" label="Heure de fermeture" extra={{
                                         type: "time",
                                         slotProps: { inputLabel: { shrink: true } }
-                                    }} />
+                                    }} /> */}
 
                                 </Grid>
                             </>
