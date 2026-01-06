@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import {
   FormInput,
   FormSelect,
-  FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
 import { zodResolver } from "@hookform/resolvers/zod";

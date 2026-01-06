@@ -194,6 +194,7 @@ export const FormTime = <
               textField: {
                 error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
+                fullWidth:true
               },
             }}
             {...field}

@@ -277,21 +277,14 @@ const TaskManagement = () => {
 
   const handleSave = async () => {
     try {
-      // const token = localStorage.getItem('token');
-      
+
       if (editingTask) {
         // Mise à jour
         await updateTask(editingTask.id,formData)
-        // await axios.put(`/api/tasks/${editingTask.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+
         toast.success('Tâche mise à jour avec succès');
       } else {
         await createTask(formData)
-        // Création
-        // await axios.post('/api/tasks', formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
         toast.success('Tâche créée avec succès');
       }
       
@@ -309,11 +302,7 @@ const TaskManagement = () => {
     }
 
     try {
-      // const token = localStorage.getItem('token');
       await deleteTask(taskId)
-      // await axios.delete(`/api/tasks/${taskId}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
       toast.success('Tâche supprimée avec succès');
       fetchTasks();
     } catch (error) {
@@ -326,8 +315,6 @@ const TaskManagement = () => {
   const handleAssignEmployees = async (task) => {
     setSelectedTask(task);
     try {
-      // const token = localStorage.getItem('token');
-      
       // Récupérer les employés assignés à cette tâche
       const assignedResponse = await getEmployeesForTask(task.id)
       // await axios.get(`/api/tasks/${task.id}/employees`, {
@@ -360,7 +347,6 @@ const TaskManagement = () => {
   // Fonction pour assigner un employé à une tâche
   const handleAssignEmployee = async (employeeId) => {
     try {
-      // const token = localStorage.getItem('token');
       await addEmployeeToTask(selectedTask.id,employeeId)
       // await axios.post(`/api/tasks/${selectedTask.id}/employees`, {
       //   employee_id: employeeId

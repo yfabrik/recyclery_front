@@ -1,59 +1,53 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
+  AccountBalance,
+  Add,
+  AttachMoney,
+  CheckCircle,
+  Close,
+  Euro,
+  Payment,
+  PointOfSale as PosIcon,
+  QrCodeScanner,
+  Remove,
+  Scale,
+  ShoppingCart
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  Paper,
-  Grid,
   Button,
-  TextField,
+  Chip,
+  Container,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
   InputLabel,
-  Select,
   MenuItem,
-  Card,
-  CardContent,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  Divider,
-  Alert,
-  InputAdornment,
-  IconButton,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  PointOfSale as PosIcon,
-  AccountBalance,
-  QrCodeScanner,
-  ShoppingCart,
-  Euro,
-  Store,
-  Receipt,
-  Close,
-  Add,
-  Remove,
-  Payment,
-  Print,
-  Scale,
-  CheckCircle,
-  AttachMoney,
-} from '@mui/icons-material';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
-import NumericKeypad from '../components/NumericKeypad';
 import MoneyCounter from '../components/MoneyCounter';
-import { getActiveCaisses,fetchStores as fStores, fetchCaisses, OpenCaisse, closeCaisse } from '../services/api/store';
+import NumericKeypad from '../components/NumericKeypad';
+import { useAuth } from '../contexts/AuthContext';
 import { fetchCategories as fcat } from '../services/api/categories';
 import { getItemFromBarcode } from '../services/api/labeledItems';
+import { OpenCaisse, closeCaisse, fetchStores as fStores, fetchCaisses, getActiveCaisses } from '../services/api/store';
 import { createSell } from '../services/api/transactions';
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -114,12 +108,7 @@ const PointOfSale = () => {
 
   const checkActiveSession = async () => {
     try {
-      // const token = localStorage.getItem('token');
       const response = await getActiveCaisses()
-      //  await axios.get('/api/cash-sessions/active', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
       if (response.data.session) {
         setActiveSession(response.data.session);
       }
@@ -130,12 +119,8 @@ const PointOfSale = () => {
 
   const fetchStores = async () => {
     try {
-      // const token = localStorage.getItem('token');
-      const response = await fStores()
-      // await axios.get('/api/stores', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      setStores(response.data.stores?.filter(store => store.is_active) || []);
+      const response = await fStores({active:1})
+      setStores(response.data.stores);
     } catch (error) {
       console.error('Erreur lors du chargement des magasins:', error);
     }
@@ -143,11 +128,8 @@ const PointOfSale = () => {
 
   const fetchCategories = async () => {
     try {
-      // const token = localStorage.getItem('token');
+
       const response = await fcat()
-      // await axios.get('/api/categories', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
@@ -156,11 +138,7 @@ const PointOfSale = () => {
 
   const fetchCashRegisters = async (storeId) => {
     try {
-      // const token = localStorage.getItem('token');
       const response = await fetchCaisses(storeId)
-      // await axios.get(`/api/cash-registers/store/${storeId}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
       setCashRegisters(response.data.data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des caisses:', error);
@@ -187,12 +165,7 @@ const PointOfSale = () => {
         toast.error('Veuillez sélectionner un magasin et une caisse');
         return;
       }
-
-      // const token = localStorage.getItem('token');
       const response = await OpenCaisse(sessionData)
-      // await axios.post('/api/cash-sessions/open', sessionData, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
 
       toast.success('Session ouverte avec succès');
       setOpenSessionDialog(false);
@@ -231,12 +204,7 @@ const PointOfSale = () => {
         toast.error('Veuillez saisir le montant de fermeture');
         return;
       }
-
-      // const token = localStorage.getItem('token');
       const response = await closeCaisse(activeSession.id,closingData)
-      // await axios.put(`/api/cash-sessions/${activeSession.id}/close`, closingData, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
 
       const { expected_amount, difference_amount } = response.data;
       
@@ -268,12 +236,7 @@ const PointOfSale = () => {
     }
 
     try {
-      // const token = localStorage.getItem('token');
       const response = await getItemFromBarcode(scanInput)
-      // await axios.get(`/api/labeled-items/barcode/${scanInput}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-
       const item = response.data.item;
       
       if (item.status !== 'available') {
@@ -397,7 +360,6 @@ const PointOfSale = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       // Créer la transaction
       const transactionData = {
@@ -421,9 +383,6 @@ const PointOfSale = () => {
       };
 
       const response = await createSell(transactionData)
-      // await axios.post('/api/sales-transactions', transactionData, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
 
       toast.success('Vente enregistrée avec succès');
       
@@ -681,10 +640,10 @@ const PointOfSale = () => {
               <PosIcon color="primary" />
               <Box>
                 <Typography variant="h6">
-                  {activeSession.store_name} - {activeSession.cash_register_name}
+                  {activeSession?.Recyclery.name} - {activeSession?.CashRegister.name}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Session: {activeSession.session_number} | Ouvert: {new Date(activeSession.opened_at).toLocaleString()}
+                  Session: {activeSession.session_number} | Ouvert: {new Date(activeSession.createdAt).toLocaleString()}
                 </Typography>
               </Box>
             </Box>
@@ -715,7 +674,7 @@ const PointOfSale = () => {
                 placeholder="Scanner ou saisir le code-barres..."
                 value={scanInput}
                 onChange={(e) => setScanInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleScanProduct()}
+                onKeyDown={(e) => e.key === 'Enter' && handleScanProduct()}
                 slotProps={{
                   input: {
                     startAdornment: <QrCodeScanner sx={{ mr: 1, color: 'text.secondary' }} />
