@@ -12,8 +12,8 @@ const schema = z.object({
     store_id: z.coerce.number(),
     day_of_week: z.string(),
     is_open: z.boolean(),
-    open_time: z.string(),
-    close_time: z.string(),
+    open_time: z.date(),
+    close_time: z.date(),
     is_24h: z.boolean(),
     notes: z.string()
 });
