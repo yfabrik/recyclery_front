@@ -18,12 +18,7 @@ import {
   Card,
   CardContent,
   Chip,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -32,9 +27,9 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
-import { useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
+import type { CategoryModel } from "../../../interfaces/Models";
 import {
   createCategory,
   deleteCategory,
@@ -43,16 +38,16 @@ import {
   updateCategory,
 } from "../../../services/api/categories";
 import { CategorieForm } from "../../forms/CategorieForm";
-import type { CategoryModel } from "../../../interfaces/Models";
-
 
 export const CategoriesTab = () => {
   const [categories, setCategories] = useState<CategoryModel[]>([]);
-  const [availableIcons, setAvailableIcons] = useState<{ name: string, label: string }[]>([]);
+  const [availableIcons, setAvailableIcons] = useState<
+    { name: string; label: string }[]
+  >([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryModel | Pick<CategoryModel, "parent_id"> | null>(
-    null
-  );
+  const [editingCategory, setEditingCategory] = useState<
+    CategoryModel | Pick<CategoryModel, "parent_id"> | null
+  >(null);
   // const [formData, setFormData] = useState({
   //   name: "",
   //   description: "",
@@ -69,28 +64,27 @@ export const CategoriesTab = () => {
   const fetchCategories = async () => {
     try {
       const response = await fCat();
-      //TODO make a where parent_id null, include subcategorie dans la request 
-
+      setCategories(response.data.categories);
       // Organiser les catégories en structure hiérarchique
-      const allCategories = response.data.categories || [];
-      const mainCategories = allCategories.filter(
-        (cat: CategoryModel) => !cat.parent_id
-      );
-      const subcategories = allCategories.filter(
-        (cat: CategoryModel) => cat.parent_id
-      );
+      // const allCategories = response.data.categories || [];
+      // const mainCategories = allCategories.filter(
+      //   (cat: CategoryModel) => !cat.parent_id
+      // );
+      // const subcategories = allCategories.filter(
+      //   (cat: CategoryModel) => cat.parent_id
+      // );
 
-      // Ajouter les sous-catégories à leurs catégories parentes
-      const organizedCategories = mainCategories.map(
-        (category: CategoryModel) => ({
-          ...category,
-          subcategories: subcategories.filter(
-            (sub: CategoryModel) => sub.parent_id === category.id
-          ),
-        })
-      );
+      // // Ajouter les sous-catégories à leurs catégories parentes
+      // const organizedCategories = mainCategories.map(
+      //   (category: CategoryModel) => ({
+      //     ...category,
+      //     subcategories: subcategories.filter(
+      //       (sub: CategoryModel) => sub.parent_id === category.id
+      //     ),
+      //   })
+      // );
 
-      setCategories(organizedCategories);
+      // setCategories(organizedCategories);
     } catch (error) {
       toast.error("Erreur lors du chargement des catégories");
       console.error("Erreur:", error);
@@ -104,7 +98,7 @@ export const CategoriesTab = () => {
       const response = await fetchCategoryIcons();
       const icons = response.data.icons || [];
       setAvailableIcons(
-        icons.map((icon: { name: string, label: string }) => ({
+        icons.map((icon: { name: string; label: string }) => ({
           name: icon,
           label: icon,
         }))
@@ -159,9 +153,7 @@ export const CategoriesTab = () => {
     // setFormData({ name: "", description: "", icon: "", parent_id: null });
   };
 
-  const handleSave = async (
-    formData: CategoryModel
-  ) => {
+  const handleSave = async (formData: CategoryModel) => {
     try {
       if (editingCategory?.id) {
         await updateCategory(editingCategory.id, formData);
@@ -196,14 +188,14 @@ export const CategoriesTab = () => {
     }
   };
 
-  const getIconComponent = (iconName: string) => {
+  const getIconComponent = (iconName: string):ReactNode => {
     // Import dynamique des icônes Material-UI
     const iconMap = {
-      Category,
-      Inventory,
-      Settings,
-      Palette,
-      AdminPanelSettings,
+      Category: Category,
+      Inventory: Inventory,
+      Settings: Settings,
+      Palette: Palette,
+      AdminPanelSettings: AdminPanelSettings,
     };
 
     const IconComponent = iconMap[iconName] || Category;
@@ -358,12 +350,18 @@ export const CategoriesTab = () => {
               <Alert severity="info" sx={{ mb: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie de :{" "}
                 <strong>
-                  {categories.find((cat) => cat.id === editingCategory.parent_id)?.name ||
-                    "Catégorie parente"}
+                  {categories.find(
+                    (cat) => cat.id === editingCategory.parent_id
+                  )?.name || "Catégorie parente"}
                 </strong>
               </Alert>
             )}
-            <CategorieForm formId="CategorieForm" icons={availableIcons} onSubmit={handleSave} defaultValues={editingCategory} />
+            <CategorieForm
+              formId="CategorieForm"
+              icons={availableIcons}
+              onSubmit={handleSave}
+              defaultValues={editingCategory}
+            />
 
             {/* <form id="CategorieForm" onSubmit={form.handleSubmit(handleSave)}>
               <Controller

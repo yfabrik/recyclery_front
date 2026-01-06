@@ -6,6 +6,8 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import { AdminPanelSettings, Category, Inventory, Palette, Settings } from "@mui/icons-material";
+import type { ReactNode } from "react";
 
 
 interface CategorieFormProps extends BaseFormProps<Schema> {
@@ -40,10 +42,19 @@ export const CategorieForm = ({
   });
 
 
-  const getIconComponent = (name: string) => {
-    return name;
-  };
+  const getIconComponent = (iconName: string):ReactNode => {
+    // Import dynamique des icônes Material-UI
+    const iconMap = {
+      Category: Category,
+      Inventory: Inventory,
+      Settings: Settings,
+      Palette: Palette,
+      AdminPanelSettings: AdminPanelSettings,
+    };
 
+    const IconComponent = iconMap[iconName] || Category;
+    return <IconComponent />;
+  };
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <FormInput control={form.control} label="Nom de la catégorie" name="name" extra={{ margin: 'normal' }} />
