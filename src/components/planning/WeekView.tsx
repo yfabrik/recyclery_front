@@ -37,7 +37,7 @@ interface WeekViewProps {
   getStatusInfo:(task:TaskModel)=>object
   isManuallyCreatedTask:(t:TaskModel)=>boolean
   formatTime:(s:string)=>string
-  handleAssignEmployeesToTask:(t:TaskModel),
+  handleAssignEmployeesToTask:(t:TaskModel)=>void,
   isCollectionTask:(t:TaskModel)=>boolean
 }
 
@@ -3210,3 +3210,920 @@ export const WeekView = ({
     </Box>
   );
 };
+
+
+
+
+const PlanningCardList = ()=>{
+  return (
+              <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 2,
+            }}
+          >
+            {weekDays.map((day, index) => {
+              const daySchedules = Array.isArray(filteredSchedules)
+                ? filteredSchedules.filter((schedule) => {
+                    const scheduleDate = new Date(schedule.scheduled_date);
+                    return (
+                      scheduleDate.getDate() === day.getDate() &&
+                      scheduleDate.getMonth() === day.getMonth() &&
+                      scheduleDate.getFullYear() === day.getFullYear()
+                    );
+                  })
+                : [];
+
+              const venteSchedules = daySchedules.filter((schedule) => {
+                const isVente = schedule.notes?.includes("Vente -");
+                const isOuverture = isOpeningTask(schedule);
+                if (!isVente && !isOuverture) return false;
+                const startHour = parseInt(
+                  schedule.start_time?.split(":")[0] || "0"
+                );
+                return startHour >= 8 && startHour < 12;
+              });
+
+              return (
+                <Card
+                  key={`opening-${index}`}
+                  sx={{
+                    minHeight: 200,
+                    border: "1px solid #e0e0e0",
+                    bgcolor:
+                      day.toDateString() === new Date().toDateString()
+                        ? "#e3f2fd"
+                        : "white",
+                    "&:hover": {
+                      boxShadow: 2,
+                      transform: "translateY(-1px)",
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <CardHeader
+                    title={
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#4caf50" }}
+                        >
+                          {dayNames[index]}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {day.getDate()}/{day.getMonth() + 1}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <CardContent sx={{ p: 1 }}>
+                    <Stack spacing={1}>
+                      {venteSchedules.map((schedule, scheduleIndex) => {
+                        const statusInfo = getStatusInfo(schedule.status);
+
+                        return (
+                          <Card
+                            key={scheduleIndex}
+                            sx={{
+                              p: 1.5,
+                              bgcolor: isManuallyCreatedTask(schedule)
+                                ? "#ffffff"
+                                : isOpeningTask(schedule)
+                                  ? "#f1f8e9"
+                                  : isPresenceTask(schedule)
+                                    ? "#fff8e1"
+                                    : `${statusInfo.color}.100`,
+                              border: isManuallyCreatedTask(schedule)
+                                ? "2px solid #e0e0e0"
+                                : isOpeningTask(schedule)
+                                  ? "1px solid #c8e6c9"
+                                  : isPresenceTask(schedule)
+                                    ? "1px solid #ffcc02"
+                                    : `1px solid ${statusInfo.color}.300`,
+                              "&:hover": {
+                                bgcolor: isManuallyCreatedTask(schedule)
+                                  ? "#f5f5f5"
+                                  : isOpeningTask(schedule)
+                                    ? "#e8f5e8"
+                                    : isPresenceTask(schedule)
+                                      ? "#fff3e0"
+                                      : `${statusInfo.color}.200`,
+                                boxShadow: isOpeningTask(schedule)
+                                  ? "0 2px 8px rgba(76, 175, 80, 0.2)"
+                                  : isPresenceTask(schedule)
+                                    ? "0 2px 8px rgba(255, 152, 0, 0.2)"
+                                    : "none",
+                              },
+                            }}
+                          >
+                            <Box sx={{ mb: 1 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                sx={{
+                                  color: isOpeningTask(schedule)
+                                    ? "#4caf50"
+                                    : isPresenceTask(schedule)
+                                      ? "#ff9800"
+                                      : "inherit",
+                                }}
+                              >
+                                {getTaskDisplayName(schedule)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                              >
+                                🏪{" "}
+                                {schedule.store_name || "Magasin non assigné"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                {formatTime(schedule.start_time)} -{" "}
+                                {formatTime(schedule.end_time)}
+                              </Typography>
+
+                              {/* Employés assignés - Layout compact pour vue semaine */}
+                              {schedule.assigned_employees &&
+                                schedule.assigned_employees.length > 0 && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 0.3,
+                                      mb: 0.5,
+                                      p: 0.5,
+                                      bgcolor: "#e8f5e8",
+                                      borderRadius: 1,
+                                      border: "1px solid #4caf50",
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        color: "#2e7d32",
+                                        fontSize: "0.7rem",
+                                        fontWeight: "bold",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      👥 Employés (
+                                      {schedule.assigned_employees.length})
+                                    </Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 0.3,
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      {schedule.assigned_employees.map(
+                                        (emp, index) => (
+                                          <Box
+                                            key={index}
+                                            sx={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 0.3,
+                                              p: 0.3,
+                                              bgcolor: "white",
+                                              borderRadius: 0.5,
+                                              border: "1px solid #c8e6c9",
+                                              width: "100%",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <Avatar
+                                              sx={{
+                                                width: 16,
+                                                height: 16,
+                                                fontSize: "0.6rem",
+                                                bgcolor: getEmployeeColor(
+                                                  emp.username
+                                                ),
+                                                color: "white",
+                                                fontWeight: "bold",
+                                              }}
+                                              title={emp.username}
+                                            >
+                                              {getEmployeeInitials(
+                                                emp.username
+                                              )}
+                                            </Avatar>
+                                            <Typography
+                                              variant="caption"
+                                              sx={{
+                                                color: "#2e7d32",
+                                                fontSize: "0.65rem",
+                                                fontWeight: "bold",
+                                                whiteSpace: "nowrap",
+                                              }}
+                                            >
+                                              {emp.username}
+                                            </Typography>
+                                          </Box>
+                                        )
+                                      )}
+                                    </Box>
+                                  </Box>
+                                )}
+                              {schedule.location_name && (
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#9c27b0",
+                                  }}
+                                >
+                                  📍 {schedule.location_name}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log(
+                                    "Assignation d'employés à la tâche:",
+                                    schedule
+                                  );
+                                  handleAssignEmployeesToTask(schedule);
+                                }}
+                                sx={{
+                                  bgcolor: "#4caf50",
+                                  color: "white",
+                                  fontSize: "0.6rem",
+                                  height: 24,
+                                  minWidth: 60,
+                                  "&:hover": {
+                                    bgcolor: "#45a049",
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              >
+                                +
+                              </Button>
+
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenDialog(schedule);
+                                }}
+                                sx={{
+                                  color: "#2196f3",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(33, 150, 243, 0.1)",
+                                  border: "1px solid rgba(33, 150, 243, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#e3f2fd",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #2196f3",
+                                  },
+                                }}
+                              >
+                                <Edit sx={{ fontSize: 14 }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTask(schedule);
+                                }}
+                                sx={{
+                                  color: "#f44336",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(244, 67, 54, 0.1)",
+                                  border: "1px solid rgba(244, 67, 54, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#ffebee",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #f44336",
+                                  },
+                                }}
+                              >
+                                <Delete sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Box>
+                          </Card>
+                        );
+                      })}
+
+                      {venteSchedules.length === 0 && (
+                        <Box
+                          sx={{
+                            textAlign: "center",
+                            py: 3,
+                            color: "text.secondary",
+                            border: "2px dashed #e0e0e0",
+                            borderRadius: 1,
+                            bgcolor: "#fafafa",
+                          }}
+                        >
+                          <Typography variant="body2">Aucune tâche</Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Box>
+  )
+}
+
+const PlanningCard = ()=>{
+  return (
+                    <Card
+                  
+                  sx={{
+                    minHeight: 200,
+                    border: "1px solid #e0e0e0",
+                    bgcolor:
+                      day.toDateString() === new Date().toDateString()
+                        ? "#e3f2fd"
+                        : "white",
+                    "&:hover": {
+                      boxShadow: 2,
+                      transform: "translateY(-1px)",
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <CardHeader
+                    title={
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#4caf50" }}
+                        >
+                          {dayNames[index]}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {day.getDate()}/{day.getMonth() + 1}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <CardContent sx={{ p: 1 }}>
+                    <Stack spacing={1}>
+                      {venteSchedules.map((schedule, scheduleIndex) => {
+                        const statusInfo = getStatusInfo(schedule.status);
+
+                        return (
+                          <Card
+                            key={scheduleIndex}
+                            sx={{
+                              p: 1.5,
+                              bgcolor: isManuallyCreatedTask(schedule)
+                                ? "#ffffff"
+                                : isOpeningTask(schedule)
+                                  ? "#f1f8e9"
+                                  : isPresenceTask(schedule)
+                                    ? "#fff8e1"
+                                    : `${statusInfo.color}.100`,
+                              border: isManuallyCreatedTask(schedule)
+                                ? "2px solid #e0e0e0"
+                                : isOpeningTask(schedule)
+                                  ? "1px solid #c8e6c9"
+                                  : isPresenceTask(schedule)
+                                    ? "1px solid #ffcc02"
+                                    : `1px solid ${statusInfo.color}.300`,
+                              "&:hover": {
+                                bgcolor: isManuallyCreatedTask(schedule)
+                                  ? "#f5f5f5"
+                                  : isOpeningTask(schedule)
+                                    ? "#e8f5e8"
+                                    : isPresenceTask(schedule)
+                                      ? "#fff3e0"
+                                      : `${statusInfo.color}.200`,
+                                boxShadow: isOpeningTask(schedule)
+                                  ? "0 2px 8px rgba(76, 175, 80, 0.2)"
+                                  : isPresenceTask(schedule)
+                                    ? "0 2px 8px rgba(255, 152, 0, 0.2)"
+                                    : "none",
+                              },
+                            }}
+                          >
+                            <Box sx={{ mb: 1 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                sx={{
+                                  color: isOpeningTask(schedule)
+                                    ? "#4caf50"
+                                    : isPresenceTask(schedule)
+                                      ? "#ff9800"
+                                      : "inherit",
+                                }}
+                              >
+                                {getTaskDisplayName(schedule)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                              >
+                                🏪{" "}
+                                {schedule.store_name || "Magasin non assigné"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                {formatTime(schedule.start_time)} -{" "}
+                                {formatTime(schedule.end_time)}
+                              </Typography>
+
+                              {/* Employés assignés - Layout compact pour vue semaine */}
+                              {schedule.assigned_employees &&
+                                schedule.assigned_employees.length > 0 && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 0.3,
+                                      mb: 0.5,
+                                      p: 0.5,
+                                      bgcolor: "#e8f5e8",
+                                      borderRadius: 1,
+                                      border: "1px solid #4caf50",
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        color: "#2e7d32",
+                                        fontSize: "0.7rem",
+                                        fontWeight: "bold",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      👥 Employés (
+                                      {schedule.assigned_employees.length})
+                                    </Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 0.3,
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      {schedule.assigned_employees.map(
+                                        (emp, index) => (
+                                          <Box
+                                            key={index}
+                                            sx={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 0.3,
+                                              p: 0.3,
+                                              bgcolor: "white",
+                                              borderRadius: 0.5,
+                                              border: "1px solid #c8e6c9",
+                                              width: "100%",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <Avatar
+                                              sx={{
+                                                width: 16,
+                                                height: 16,
+                                                fontSize: "0.6rem",
+                                                bgcolor: getEmployeeColor(
+                                                  emp.username
+                                                ),
+                                                color: "white",
+                                                fontWeight: "bold",
+                                              }}
+                                              title={emp.username}
+                                            >
+                                              {getEmployeeInitials(
+                                                emp.username
+                                              )}
+                                            </Avatar>
+                                            <Typography
+                                              variant="caption"
+                                              sx={{
+                                                color: "#2e7d32",
+                                                fontSize: "0.65rem",
+                                                fontWeight: "bold",
+                                                whiteSpace: "nowrap",
+                                              }}
+                                            >
+                                              {emp.username}
+                                            </Typography>
+                                          </Box>
+                                        )
+                                      )}
+                                    </Box>
+                                  </Box>
+                                )}
+                              {schedule.location_name && (
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#9c27b0",
+                                  }}
+                                >
+                                  📍 {schedule.location_name}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log(
+                                    "Assignation d'employés à la tâche:",
+                                    schedule
+                                  );
+                                  handleAssignEmployeesToTask(schedule);
+                                }}
+                                sx={{
+                                  bgcolor: "#4caf50",
+                                  color: "white",
+                                  fontSize: "0.6rem",
+                                  height: 24,
+                                  minWidth: 60,
+                                  "&:hover": {
+                                    bgcolor: "#45a049",
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              >
+                                +
+                              </Button>
+
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenDialog(schedule);
+                                }}
+                                sx={{
+                                  color: "#2196f3",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(33, 150, 243, 0.1)",
+                                  border: "1px solid rgba(33, 150, 243, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#e3f2fd",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #2196f3",
+                                  },
+                                }}
+                              >
+                                <Edit sx={{ fontSize: 14 }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTask(schedule);
+                                }}
+                                sx={{
+                                  color: "#f44336",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(244, 67, 54, 0.1)",
+                                  border: "1px solid rgba(244, 67, 54, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#ffebee",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #f44336",
+                                  },
+                                }}
+                              >
+                                <Delete sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Box>
+                          </Card>
+                        );
+                      })}
+
+                      {venteSchedules.length === 0 && (
+                        <Box
+                          sx={{
+                            textAlign: "center",
+                            py: 3,
+                            color: "text.secondary",
+                            border: "2px dashed #e0e0e0",
+                            borderRadius: 1,
+                            bgcolor: "#fafafa",
+                          }}
+                        >
+                          <Typography variant="body2">Aucune tâche</Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+  )
+}
+
+
+interface TaskInfos {
+manualCreated:boolean
+opening:boolean
+presence:boolean
+}
+const CardTasks = ()=>{
+
+  const cssManual= {
+    bgcolor:"#ffffff",
+    border:"2px solid #e0e0e0",
+    hover_bgcolor:"#f5f5f5",
+    boxShadow:"none"
+  }
+    const cssOpening= {
+    bgcolor:"#f1f8e9",
+    border:"1px solid #c8e6c9",
+    hover_bgcolor:"#e8f5e8",
+    boxShadow:"0 2px 8px rgba(76, 175, 80, 0.2)"
+  }
+      const cssPresence= {
+    bgcolor:"#fff8e1",
+    border:"1px solid #ffcc02",
+    hover_bgcolor:"#fff3e0",
+    boxShadow:"0 2px 8px rgba(255, 152, 0, 0.2)"
+  }
+        const autre= {
+    bgcolor:"#fff8e1",
+    border:"1px solid #ffcc02",
+    hover_bgcolor:"#fff3e0",
+    boxShadow:"0 2px 8px rgba(255, 152, 0, 0.2)"
+  }
+
+  return (<>
+
+                          <Card
+                            key={scheduleIndex}
+                            sx={{
+                              p: 1.5,
+                              bgcolor: 
+                                 "#ffffff",
+                                
+                              border: 
+                                 "2px solid #e0e0e0",
+                                
+                              "&:hover": {
+                                
+                                  "#f5f5f5",
+                                 
+                                boxShadow: 
+                                   "0 2px 8px rgba(76, 175, 80, 0.2)"
+                                
+                              },
+                            }}
+                          >
+                            <Box sx={{ mb: 1 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                sx={{
+                                  color:  "#4caf50"
+                                   
+                                }}
+                              >
+                                {getTaskDisplayName(schedule)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                              >
+                                🏪{" "}
+                                {schedule.store_name || "Magasin non assigné"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                {formatTime(schedule.start_time)} -{" "}
+                                {formatTime(schedule.end_time)}
+                              </Typography>
+
+                              {/* Employés assignés - Layout compact pour vue semaine */}
+                              {schedule.assigned_employees &&
+                                schedule.assigned_employees.length > 0 && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 0.3,
+                                      mb: 0.5,
+                                      p: 0.5,
+                                      bgcolor: "#e8f5e8",
+                                      borderRadius: 1,
+                                      border: "1px solid #4caf50",
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        color: "#2e7d32",
+                                        fontSize: "0.7rem",
+                                        fontWeight: "bold",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      👥 Employés (
+                                      {schedule.assigned_employees.length})
+                                    </Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 0.3,
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      {schedule.assigned_employees.map(
+                                        (emp, index) => (
+                                          <Box
+                                            key={index}
+                                            sx={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 0.3,
+                                              p: 0.3,
+                                              bgcolor: "white",
+                                              borderRadius: 0.5,
+                                              border: "1px solid #c8e6c9",
+                                              width: "100%",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <Avatar
+                                              sx={{
+                                                width: 16,
+                                                height: 16,
+                                                fontSize: "0.6rem",
+                                                bgcolor: getEmployeeColor(
+                                                  emp.username
+                                                ),
+                                                color: "white",
+                                                fontWeight: "bold",
+                                              }}
+                                              title={emp.username}
+                                            >
+                                              {getEmployeeInitials(
+                                                emp.username
+                                              )}
+                                            </Avatar>
+                                            <Typography
+                                              variant="caption"
+                                              sx={{
+                                                color: "#2e7d32",
+                                                fontSize: "0.65rem",
+                                                fontWeight: "bold",
+                                                whiteSpace: "nowrap",
+                                              }}
+                                            >
+                                              {emp.username}
+                                            </Typography>
+                                          </Box>
+                                        )
+                                      )}
+                                    </Box>
+                                  </Box>
+                                )}
+                              {schedule.location_name && (
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#9c27b0",
+                                  }}
+                                >
+                                  📍 {schedule.location_name}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log(
+                                    "Assignation d'employés à la tâche:",
+                                    schedule
+                                  );
+                                  handleAssignEmployeesToTask(schedule);
+                                }}
+                                sx={{
+                                  bgcolor: "#4caf50",
+                                  color: "white",
+                                  fontSize: "0.6rem",
+                                  height: 24,
+                                  minWidth: 60,
+                                  "&:hover": {
+                                    bgcolor: "#45a049",
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              >
+                                +
+                              </Button>
+
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenDialog(schedule);
+                                }}
+                                sx={{
+                                  color: "#2196f3",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(33, 150, 243, 0.1)",
+                                  border: "1px solid rgba(33, 150, 243, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#e3f2fd",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #2196f3",
+                                  },
+                                }}
+                              >
+                                <Edit sx={{ fontSize: 14 }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTask(schedule);
+                                }}
+                                sx={{
+                                  color: "#f44336",
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                  width: 24,
+                                  height: 24,
+                                  bgcolor: "rgba(244, 67, 54, 0.1)",
+                                  border: "1px solid rgba(244, 67, 54, 0.3)",
+                                  "&:hover": {
+                                    bgcolor: "#ffebee",
+                                    transform: "scale(1.2)",
+                                    border: "1px solid #f44336",
+                                  },
+                                }}
+                              >
+                                <Delete sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Box>
+                          </Card>
+                        );
+
+  </>
+
+  )
+}
