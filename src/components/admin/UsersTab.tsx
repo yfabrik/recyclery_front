@@ -11,20 +11,14 @@ import {
   Button,
   Card,
   CardContent,
-  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  FormControlLabel,
   Grid,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -35,9 +29,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { type StoreModel, type UserModel } from "../../interfaces/Models";
+import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
   fetchUsers as fUsers,
@@ -45,35 +40,35 @@ import {
   getUsersStats,
   updateUser,
   updateUserPassword,
-  type userModel,
 } from "../../services/api/users";
-import { fetchStores as fStores } from "../../services/api/store";
+import { UserForm } from "../forms/UserForm";
 import { StatCardNoIcon } from "../StatCard";
 
 export const UsersTab = () => {
-  const [users, setUsers] = useState<userModel[]>([]);
+  const [users, setUsers] = useState<UserModel[]>([]);
   const [roles, setRoles] = useState([]);
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<StoreModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [userDialog, setUserDialog] = useState(false);
   const [passwordDialog, setPasswordDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<userModel | null>(null);
+  const [editingUser, setEditingUser] = useState<UserModel | null>(null);
   const [userStats, setUserStats] = useState({
-    total_users: 0,
-    users_by_role: [],
-    active_last_30_days: 0,
+    totalUsers: 0,
+    usersByRole: [],
+    activeEmployees: 0,
+    recentLogins: 0,
   });
-  const [userForm, setUserForm] = useState<userModel>({
-    username: "",
-    email: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-    phone: "",
-    role: "",
-    recyclery_id: "",
-    is_active: true,
-  });
+  // const [userForm, setUserForm] = useState<userModel>({
+  //   username: "",
+  //   email: "",
+  //   password: "",
+  //   first_name: "",
+  //   last_name: "",
+  //   phone: "",
+  //   role: "",
+  //   recyclery_id: "",
+  //   is_active: true,
+  // });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -102,7 +97,6 @@ export const UsersTab = () => {
 
   const fetchRoles = async () => {
     try {
-
       const response = await getRoles();
 
       setRoles(response.data.roles || []);
@@ -123,7 +117,6 @@ export const UsersTab = () => {
 
   const fetchUserStats = async () => {
     try {
-
       const response = await getUsersStats();
       setUserStats(response.data.stats || {});
     } catch (error) {
@@ -131,59 +124,60 @@ export const UsersTab = () => {
     }
   };
 
-  const handleOpenUserDialog = (user: userModel | null = null) => {
-    if (user) {
-      setEditingUser(user);
-      setUserForm({
-        username: user.username,
-        email: user.email,
-        password: "",
-        first_name: user.first_name || "",
-        last_name: user.last_name || "",
-        phone: user.phone || "",
-        role: user.role || "",
-        recyclery_id: user.recyclery_id || "",
-        is_active: user.is_active !== 0,
-      });
-    } else {
-      setEditingUser(null);
-      setUserForm({
-        username: "",
-        email: "",
-        password: "",
-        first_name: "",
-        last_name: "",
-        phone: "",
-        role: "",
-        recyclery_id: "",
-        is_active: true,
-      });
-    }
+  const handleOpenUserDialog = (user: UserModel | null = null) => {
+    setEditingUser(user);
+
+    // if (user) {
+    //   setEditingUser(user);
+    //   setUserForm({
+    //     username: user.username,
+    //     email: user.email,
+    //     password: "",
+    //     first_name: user.first_name || "",
+    //     last_name: user.last_name || "",
+    //     phone: user.phone || "",
+    //     role: user.role || "",
+    //     recyclery_id: user.recyclery_id || "",
+    //     is_active: user.is_active !== 0,
+    //   });
+    // } else {
+    //   setEditingUser(null);
+    //   setUserForm({
+    //     username: "",
+    //     email: "",
+    //     password: "",
+    //     first_name: "",
+    //     last_name: "",
+    //     phone: "",
+    //     role: "",
+    //     recyclery_id: "",
+    //     is_active: true,
+    //   });
+    // }
     setUserDialog(true);
   };
 
   const handleCloseUserDialog = () => {
     setUserDialog(false);
     setEditingUser(null);
-    setUserForm({
-      username: "",
-      email: "",
-      password: "",
-      first_name: "",
-      last_name: "",
-      phone: "",
-      role: "",
-      recyclery_id: "",
-      is_active: true,
-    });
+    // setUserForm({
+    //   username: "",
+    //   email: "",
+    //   password: "",
+    //   first_name: "",
+    //   last_name: "",
+    //   phone: "",
+    //   role: "",
+    //   recyclery_id: "",
+    //   is_active: true,
+    // });
   };
 
-  const handleSaveUser = async () => {
+  const handleSaveUser = async (data) => {
     try {
-
-      if (editingUser) {
+      if (editingUser?.id) {
         // Mise à jour
-        const updateData = { ...userForm };
+        const updateData = { ...data };
         delete updateData.password; // Ne pas envoyer le mot de passe lors de la mise à jour
 
         await updateUser(editingUser.id, updateData);
@@ -191,12 +185,12 @@ export const UsersTab = () => {
         toast.success("Utilisateur mis à jour avec succès");
       } else {
         // Création
-        if (!userForm.password) {
+        if (!data.password) {
           toast.error("Le mot de passe est requis pour un nouvel utilisateur");
           return;
         }
 
-        await createUser(userForm);
+        await createUser(data);
 
         toast.success("Utilisateur créé avec succès");
       }
@@ -244,7 +238,6 @@ export const UsersTab = () => {
     }
 
     try {
-      // const token = localStorage.getItem("token");
       await updateUserPassword(editingUser.id, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
@@ -256,23 +249,22 @@ export const UsersTab = () => {
       console.error("Erreur lors du changement de mot de passe:", error);
       toast.error(
         error.response?.data?.error ||
-        "Erreur lors du changement de mot de passe"
+          "Erreur lors du changement de mot de passe"
       );
     }
   };
 
-  const handleToggleUserStatus = async (user) => {
+  const handleToggleUserStatus = async (user: UserModel) => {
     try {
-
       const newStatus = !user.is_active;
 
       if (newStatus) {
-        await updateUser(user.id, { is_active: newStatus })
+        await updateUser(user.id, { is_active: newStatus });
         // Réactiver l'utilisateur
         toast.success("Utilisateur réactivé");
       } else {
         // Désactiver l'utilisateur
-        await updateUser(user.id, { is_active: false })
+        await updateUser(user.id, { is_active: false });
 
         toast.success("Utilisateur désactivé");
       }
@@ -349,27 +341,39 @@ export const UsersTab = () => {
       {/* Statistiques des utilisateurs */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon title="Utilisateurs actifs" value={userStats.total_users} color="primary" />
+          <StatCardNoIcon
+            title="Utilisateurs actifs"
+            value={userStats.totalUsers}
+            color="primary"
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon title=" Connectés (30j)" value={userStats.active_last_30_days} color="success.main" />
+          <StatCardNoIcon
+            title=" Connectés (30j)"
+            value={userStats.activeEmployees}
+            color="success.main"
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon title=" Rôles différents" value={userStats.users_by_role?.length} color="info.main" />
+          <StatCardNoIcon
+            title=" Rôles différents"
+            value={userStats.usersByRole?.length}
+            color="info.main"
+          />
         </Grid>
       </Grid>
 
       {/* Répartition par rôles */}
-      {userStats.users_by_role && userStats.users_by_role.length > 0 && (
+      {userStats.usersByRole && userStats.usersByRole.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               📊 Répartition par Rôles
             </Typography>
             <Grid container spacing={2}>
-              {userStats.users_by_role.map((rolestat) => (
+              {userStats.usersByRole.map((rolestat) => (
                 <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
                   <Box sx={{ textAlign: "center" }}>
                     <Chip
@@ -444,6 +448,7 @@ export const UsersTab = () => {
                         />
                       </TableCell>
                       <TableCell>
+                        {/* //FIXME c'est bancal et pas forcement utile vu que peut y avoir plusieur store */}
                         {user.recyclery_name || "Non assigné"}
                       </TableCell>
                       <TableCell>
@@ -453,8 +458,8 @@ export const UsersTab = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={user.is_active ? "Actif" : "Inactif"}
-                          color={user.is_active ? "success" : "default"}
+                          label={user.isActive ? "Actif" : "Inactif"}
+                          color={user.isActive ? "success" : "default"}
                           size="small"
                         />
                       </TableCell>
@@ -479,14 +484,14 @@ export const UsersTab = () => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip
-                            title={user.is_active ? "Désactiver" : "Réactiver"}
+                            title={user.isActive ? "Désactiver" : "Réactiver"}
                           >
                             <IconButton
                               size="small"
-                              color={user.is_active ? "error" : "success"}
+                              color={user.isActive ? "error" : "success"}
                               onClick={() => handleToggleUserStatus(user)}
                             >
-                              {user.is_active ? <Block /> : <CheckCircle />}
+                              {user.isActive ? <Block /> : <CheckCircle />}
                             </IconButton>
                           </Tooltip>
                         </Box>
@@ -511,7 +516,14 @@ export const UsersTab = () => {
           {editingUser ? "✏️ Modifier l'utilisateur" : "👤 Nouvel utilisateur"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <UserForm
+            formId="UserForm"
+            roles={roles}
+            stores={stores}
+            defaultValues={editingUser}
+            onSubmit={handleSaveUser}
+          />
+          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -643,19 +655,20 @@ export const UsersTab = () => {
                 label="Utilisateur actif"
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUserDialog}>Annuler</Button>
           <Button
-            onClick={handleSaveUser}
+            type="submit"
+            form="UserForm"
             variant="contained"
-            disabled={
-              !userForm.username ||
-              !userForm.email ||
-              !userForm.role ||
-              (!editingUser && !userForm.password)
-            }
+            // disabled={
+            //   !userForm.username ||
+            //   !userForm.email ||
+            //   !userForm.role ||
+            //   (!editingUser && !userForm.password)
+            // }
           >
             {editingUser ? "Mettre à jour" : "Créer"}
           </Button>

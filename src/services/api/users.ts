@@ -1,17 +1,5 @@
+import type { UserModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-
-export interface userModel {
-  id?: number;
-  username: string;
-  email: string;
-  password?: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  role: string;
-  recyclery_id?: number;
-  is_active: boolean;
-}
 
 interface UserFilters {
   role?: "employee" | "admin"
@@ -22,14 +10,14 @@ interface UserFilters {
 export const fetchUsers = (filters: UserFilters|null=null) => axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
 // export const getEmployees = () => axiosInstance.get("/api/users/employees")
 
-export const createUser = (data: userModel) =>
+export const createUser = (data: UserModel) =>
   axiosInstance.post("/api/users", data);
-export const updateUser = (id: number, data: userModel) =>
+export const updateUser = (id: number, data: UserModel) =>
   axiosInstance.put(`/api/users/${id}`, data);
 export const deleteUser = (id: number) =>
   axiosInstance.delete(`/api/users/${id}`);
 
-export const updateUserPassword = (id: number, data: userModel) =>
+export const updateUserPassword = (id: number, data: UserModel) =>
   axiosInstance.put(`/api/users/${id}/password`, data);
 
 
