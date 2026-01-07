@@ -52,16 +52,15 @@ import {
   MenuItem,
   Select,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Calendar } from "../components/Calendar";
-import { PlaningForm } from "../components/forms/planningForm";
-import { DAYS_OF_WEEK } from "../interfaces/shared";
-import { getCollectionSchedules } from "../services/api/collectionSchedules";
+import { fetchStores as fstore, getAllInfosStore } from "../services/api/store";
+import { fetchUsers } from "../services/api/users";
 import {
   createPlanning,
   deletePlanning,
@@ -69,12 +68,8 @@ import {
   getPlanning,
   updatePlanning,
 } from "../services/api/planning";
-import { fetchStores as fstore } from "../services/api/store";
-import { getTasks } from "../services/api/tasks";
-import { fetchUsers } from "../services/api/users";
-import { useEmployee } from "../services/useEmployee";
-import { PlanningFilter } from "../components/planning/PlanningFilter";
-import { ViewSelector } from "../components/planning/ViewSelector";
+import { createTask, getTasks, updateTask } from "../services/api/tasks";
+import { getCollectionSchedules } from "../services/api/collectionSchedules";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState([]);
@@ -84,8 +79,36 @@ const Planning = () => {
   const [locations, setLocations] = useState([]);
   const [collections, setCollections] = useState([]);
 
-  const { getEmployeeColor, getEmployeeInitials } = useEmployee();
+  // Fonction pour générer une couleur basée sur le nom de l'employé
+  const getEmployeeColor = (employeeName) => {
+    if (!employeeName) return "#999";
+    const colors = [
+      "#4caf50",
+      "#2196f3",
+      "#ff9800",
+      "#9c27b0",
+      "#f44336",
+      "#00bcd4",
+      "#795548",
+      "#607d8b",
+    ];
+    const hash = employeeName.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length];
+  };
 
+  // Fonction pour obtenir les initiales d'un employé
+  const getEmployeeInitials = (employeeName) => {
+    if (!employeeName) return "?";
+    return employeeName
+      .split(" ")
+      .map((name) => name.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
   const [selectedStore, setSelectedStore] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(false);
@@ -139,19 +162,25 @@ const Planning = () => {
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
-  // const [formData, setFormData] = useState({
-  //   task_id: "",
-  //   scheduled_date: new Date(),
-  //   start_time: "",
-  //   end_time: "",
-  //   status: "new",
-  //   priority: "medium",
-  //   location: "",
-  //   location_id: "",
-  //   store_id: "",
-  //   notes: "",
-  //   estimated_duration: 60,
-  // });
+  const [formData, setFormData] = useState({
+    task_id: "",
+    scheduled_date: new Date(),
+    start_time: "",
+    end_time: "",
+    status: "new",
+    priority: "medium",
+    location: "",
+    location_id: "",
+    store_id: "",
+    notes: "",
+    estimated_duration: 60,
+  });
+
+  useEffect(() => {
+    console.log("t", tasks);
+    console.log("u", schedules);
+
+  }, [tasks,schedules]);
 
   const statusOptions = [
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
@@ -183,7 +212,7 @@ const Planning = () => {
     fetchTasks();
     fetchEmployees();
     fetchStores();
-    // fetchLocations();
+    fetchLocations();
     fetchCollections();
   }, []);
 
@@ -197,15 +226,15 @@ const Planning = () => {
     fetchSchedules();
   }, [selectedStore]);
 
-  // useEffect(() => {
-  //   if (selectedStore) {
-  //     // Filtrer les lieux par magasin sélectionné
-  //     const filteredLocations = locations.filter(
-  //       (loc) => loc.store_id === parseInt(selectedStore)
-  //     );
-  //     setLocations(filteredLocations);
-  //   }
-  // }, [selectedStore, locations]);
+  useEffect(() => {
+    if (selectedStore) {
+      // Filtrer les lieux par magasin sélectionné
+      const filteredLocations = locations.filter(
+        (loc) => loc.store_id === parseInt(selectedStore)
+      );
+      setLocations(filteredLocations);
+    }
+  }, [selectedStore, locations]);
 
   // Recharger les employés quand le magasin sélectionné change
   useEffect(() => {
@@ -222,54 +251,96 @@ const Planning = () => {
         params.store_id = parseInt(selectedStore);
       }
 
-      const response = await getPlanning(params);
+      const r = await getTasks();
+      const tasks = r.data.tasks;
+      const synchronizedSchedules = tasks.map((task, i, array) => {
+        const users = task.Users ||[]
+        const occuped = [];
 
-      if (response.data.success) {
-        const loadedSchedules = response.data.schedules || [];
-
-        // Synchroniser le statut des employés entre toutes les tâches
-        const synchronizedSchedules = loadedSchedules.map((schedule) => {
-          const assignedEmployees = schedule.assigned_employees || [];
-          const occupiedEmployees = [];
-
-          // Marquer les employés occupés par d'autres tâches
-          loadedSchedules.forEach((otherSchedule) => {
-            if (
-              otherSchedule.id !== schedule.id &&
-              otherSchedule.assigned_employees
-            ) {
-              otherSchedule.assigned_employees.forEach((emp) => {
-                if (
-                  !assignedEmployees.some((assigned) => assigned.id === emp.id)
-                ) {
-                  occupiedEmployees.push({
-                    ...emp,
-                    assigned_to_task_id: otherSchedule.id,
-                    assigned_to_task_name: otherSchedule.task_name,
-                  });
-                }
-              });
-            }
+        array
+          .filter((a, j) => i != j)
+          .forEach((other) => {
+            const otherUsers = other.Users;
+            users.forEach(
+              (user) =>
+                otherUsers.some((o) => o.id == user.id) &&
+                occuped.push({
+                  ...user,
+                  assigned_to_task_id: task.id,
+                  assigned_to_task_name: task.name || "",
+                })
+            );
           });
+        return { ...task, occupied_employees: occuped };
+      });
+      // Logs très visibles
+      // Logs de débogage supprimés pour éviter la boucle infinie
 
-          return {
-            ...schedule,
-            occupied_employees: occupiedEmployees,
-          };
-        });
+      // const response = await getPlanning(params);
+      // // await axios.get('/api/planning', { params });
+      // // Logs de débogage supprimés pour éviter la boucle infinie
 
-        setSchedules(synchronizedSchedules);
+      // if (response.data.success) {
+      //   const loadedSchedules = response.data.schedules || [];
 
-        setForceUpdate((prev) => prev + 1);
-        
-        const venteTasks = response.data.schedules?.filter((s) =>
-          s.notes?.includes("Vente -")
-        );
-       
-      } else {
+      //   // Synchroniser le statut des employés entre toutes les tâches
+      //   const synchronizedSchedules = loadedSchedules.map((schedule) => {
+      //     const assignedEmployees = schedule.assigned_employees || [];
+      //     const occupiedEmployees = [];
 
-        setSchedules([]);
-      }
+      //     // Marquer les employés occupés par d'autres tâches
+      //     loadedSchedules.forEach((otherSchedule) => {
+      //       if (
+      //         otherSchedule.id !== schedule.id &&
+      //         otherSchedule.assigned_employees
+      //       ) {
+      //         otherSchedule.assigned_employees.forEach((emp) => {
+      //           if (
+      //             !assignedEmployees.some((assigned) => assigned.id === emp.id)
+      //           ) {
+      //             occupiedEmployees.push({
+      //               ...emp,
+      //               assigned_to_task_id: otherSchedule.id,
+      //               assigned_to_task_name: otherSchedule.task_name,
+      //             });
+      //           }
+      //         });
+      //       }
+      //     });
+
+      //     return {
+      //       ...schedule,
+      //       occupied_employees: occupiedEmployees,
+      //     };
+      //   });
+
+      setSchedules(synchronizedSchedules);
+
+      // Forcer la mise à jour de toutes les cartes
+      setForceUpdate((prev) => prev + 1);
+
+      // Log de débogage supprimé pour éviter la boucle infinie
+
+      // Debug pour les employés assignés - logs supprimés pour éviter la boucle infinie
+
+      //   // Debug pour les tâches Vente
+      //   const venteTasks = response.data.schedules?.filter((s) =>
+      //     s.notes?.includes("Vente -")
+      //   );
+      //   // Log supprimé
+      //   if (venteTasks && venteTasks.length > 0) {
+      //     // Log supprimé
+      //     // Log supprimé pour éviter la boucle infinie
+      //   }
+      //   // Log supprimé
+
+      //   // Log de toutes les tâches pour diagnostic
+      //   // Log supprimé
+      //   // Logs supprimés pour éviter la boucle infinie
+      // } else {
+      //   // Log supprimé
+      //   setSchedules([]);
+      // }
     } catch (error) {
       console.error("❌ ERREUR lors du chargement des plannings:", error);
       console.error("❌ Error details:", error.response?.data);
@@ -283,7 +354,7 @@ const Planning = () => {
   const fetchTasks = async () => {
     try {
       const response = await getTasks();
-
+      //  await axios.get('/api/tasks');
       if (response.data.success) {
         // Filtrer les tâches pour ne garder que celles pertinentes pour le planning
         const allTasks = response.data.tasks || [];
@@ -295,8 +366,12 @@ const Planning = () => {
 
           // Garder toutes les tâches actives créées par l'utilisateur
           // (y compris "Ouverture de magasin" et "Présence point de collecte" si créées par l'utilisateur)
-          return task.status === "active";
+          // return task.status === "active";
+          return true;
         });
+
+        // console.log('🔍 Tâches filtrées pour le planning:', filteredTasks.length);
+        // console.log('🔍 Tâches disponibles:', filteredTasks.map(t => ({ id: t.id, name: t.name, category: t.category })));
 
         setTasks(filteredTasks);
       } else {
@@ -324,29 +399,45 @@ const Planning = () => {
 
   const fetchStores = async () => {
     try {
+      // console.log('🏪 FETCHING STORES...');
       const response = await fstore();
-      setStores(response.data.stores || []);
+      // await axios.get('/api/stores');
+      // console.log('🏪 Stores response:', response.data);
+      if (response.data.success) {
+        setStores(response.data.stores || []);
+        // console.log('🏪 Stores loaded:', response.data.stores?.length || 0);
+      } else {
+        // console.log('❌ Stores API returned success: false');
+        setStores([]);
+      }
     } catch (error) {
       console.error("❌ ERREUR lors du chargement des magasins:", error);
       setStores([]);
     }
   };
 
-  // const fetchLocations = async () => {
-  //   try {
-  //     const response = await axios.get("/api/store-locations");
-
-  //     setLocations(response.data.locations || []);
-  //   } catch (e) {
-  //     setLocations([]);
-  //   }
-  // };
+  const fetchLocations = async () => {
+    try {
+      const response = await axios.get("/api/store-locations");
+      if (response.data.locations) {
+        setLocations(response.data.locations || []);
+      } else {
+        setLocations([]);
+      }
+    } catch (e) {
+      setLocations([]);
+    }
+  };
 
   const fetchCollections = async () => {
     try {
       const response = await getCollectionSchedules();
-
-      setCollections(response.data.schedules || []);
+      // await axios.get('/api/collection-schedules');
+      if (response.data.schedules) {
+        setCollections(response.data.schedules || []);
+      } else {
+        setCollections([]);
+      }
     } catch (error) {
       console.error(
         "❌ ERREUR lors du chargement des plannings de collecte:",
@@ -359,78 +450,95 @@ const Planning = () => {
   const fetchEmployeesPresent = async () => {
     try {
       setLoadingEmployeesPresent(true);
+      const [infoStoreResponse, employeesResponse] = await Promise.all([
+        getAllInfosStore(),
+        fetchUsers({ role: "employee" }),
+      ]);
+
+      const employeesByStore = {};
+      infoStoreResponse.data.stores.forEach((store) => {
+        const employees = store.employees;
+
+        employeesByStore[store.id] = employees.map((employee) => {
+          return {
+            ...employee,
+            is_primary: employee.EmployeeStore.is_primary,
+            workdays: employee.EmployeeWorkdays,
+          };
+        });
+      });
+
+      const filteredEmployees = employeesResponse.data.users;
 
       // Récupérer les employés, leurs affectations aux magasins et leurs jours de travail
-      const [employeesResponse, assignmentsResponse, workdaysResponse] =
-        await Promise.all([
-          axios.get("/api/users"),
-          axios.get("/api/employee-stores"),
-          axios.get("/api/employee-workdays"),
-        ]);
+      // const [employeesResponse, assignmentsResponse, workdaysResponse] =
+      //   await Promise.all([
+      //     axios.get("/api/users"),
+      //     axios.get("/api/employee-stores"),
+      //     axios.get("/api/employee-workdays"),
+      //   ]);
 
-      if (
-        employeesResponse.data.users &&
-        assignmentsResponse.data.success &&
-        workdaysResponse.data.success
-      ) {
-        const employees = employeesResponse.data.users || [];
-        const assignments = assignmentsResponse.data.assignments || [];
-        const workdays = workdaysResponse.data.workdays || [];
+      // if (
+      //   employeesResponse.data.users &&
+      //   assignmentsResponse.data.success &&
+      //   workdaysResponse.data.success
+      // ) {
+      //   const employees = employeesResponse.data.users || [];
+      //   const assignments = assignmentsResponse.data.assignments || [];
+      //   const workdays = workdaysResponse.data.workdays || [];
 
-        // Filtrer les employés (exclure les admins)
-        const filteredEmployees = employees.filter(
-          (emp) => emp.role !== "admin"
-        );
+      //   // Filtrer les employés (exclure les admins)
+      //   const filteredEmployees = employees.filter(
+      //     (emp) => emp.role !== "admin"
+      //   );
 
-        // Organiser les employés par magasin avec leurs jours de travail
-        const employeesByStore = {};
+      //   // Organiser les employés par magasin avec leurs jours de travail
+      //   const employeesByStore = {};
 
-        // Initialiser tous les magasins
-        stores.forEach((store) => {
-          employeesByStore[store.id] = [];
-        });
+      //   // Initialiser tous les magasins
+      //   stores.forEach((store) => {
+      //     employeesByStore[store.id] = [];
+      //   });
 
-        // Ajouter les employés affectés avec leurs jours de travail
-        assignments.forEach((assignment) => {
-          const employee = filteredEmployees.find(
-            (emp) => emp.id === assignment.employee_id
-          );
-          if (employee && employeesByStore[assignment.store_id]) {
-            // Récupérer les jours de travail de cet employé
-            const employeeWorkdays = workdays.filter(
-              (wd) => wd.employee_id === employee.id && wd.is_working
-            );
+      //   // Ajouter les employés affectés avec leurs jours de travail
+      //   assignments.forEach((assignment) => {
+      //     const employee = filteredEmployees.find(
+      //       (emp) => emp.id === assignment.employee_id
+      //     );
+      //     if (employee && employeesByStore[assignment.store_id]) {
+      //       // Récupérer les jours de travail de cet employé
+      //       const employeeWorkdays = workdays.filter(
+      //         (wd) => wd.employee_id === employee.id && wd.is_working
+      //       );
 
-            employeesByStore[assignment.store_id].push({
-              ...employee,
-              is_primary: assignment.is_primary,
-              workdays: employeeWorkdays,
-            });
+      //       employeesByStore[assignment.store_id].push({
+      //         ...employee,
+      //         is_primary: assignment.is_primary,
+      //         workdays: employeeWorkdays,
+      //       });
+      //     }
+      //   });
+      setEmployeesPresent(employeesByStore);
+      setAllEmployees(filteredEmployees);
+
+      // Détecter les employés manquants (sans affectations ou sans jours de travail)
+      const employeesInPlanning = new Set();
+      Object.values(employeesByStore).forEach((storeEmployees) => {
+        storeEmployees.forEach((employee) => {
+          if (employee.workdays && employee.workdays.length > 0) {
+            employeesInPlanning.add(employee.id);
           }
         });
+      });
 
-        setEmployeesPresent(employeesByStore);
-        setAllEmployees(filteredEmployees);
+      const missingEmployeesList = filteredEmployees.filter(
+        (emp) => !employeesInPlanning.has(emp.id)
+      );
+      setMissingEmployees(missingEmployeesList);
 
-        // Détecter les employés manquants (sans affectations ou sans jours de travail)
-        const employeesInPlanning = new Set();
-        Object.values(employeesByStore).forEach((storeEmployees) => {
-          storeEmployees.forEach((employee) => {
-            if (employee.workdays && employee.workdays.length > 0) {
-              employeesInPlanning.add(employee.id);
-            }
-          });
-        });
-
-        const missingEmployeesList = filteredEmployees.filter(
-          (emp) => !employeesInPlanning.has(emp.id)
-        );
-        setMissingEmployees(missingEmployeesList);
-
-        // Afficher le popup s'il y a des employés manquants
-        if (missingEmployeesList.length > 0) {
-          setShowMissingEmployeesDialog(true);
-        }
+      // Afficher le popup s'il y a des employés manquants
+      if (missingEmployeesList.length > 0) {
+        setShowMissingEmployeesDialog(true);
       }
     } catch (error) {
       console.error(
@@ -445,11 +553,30 @@ const Planning = () => {
 
   // Fonction pour organiser les employés par jour de la semaine
   const getEmployeesByDay = () => {
+    const daysOfWeek = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
+    const dayLabels = [
+      "Lundi",
+      "Mardi",
+      "Mercredi",
+      "Jeudi",
+      "Vendredi",
+      "Samedi",
+      "Dimanche",
+    ];
+
     const employeesByDay = {};
 
-    DAYS_OF_WEEK.forEach((day, index) => {
-      employeesByDay[day.key] = {
-        label: day.label,
+    daysOfWeek.forEach((day, index) => {
+      employeesByDay[day] = {
+        label: dayLabels[index],
         morning: [],
         afternoon: [],
         allDay: [],
@@ -565,43 +692,39 @@ const Planning = () => {
     return worksThisDay;
   };
 
-  const handleOpenDialog = (schedule = null, scheduled_date = null) => {
-    setEditingSchedule(
-      schedule ? schedule : { scheduled_date: scheduled_date || new Date() }
-    );
-
-    // if (schedule) {
-    //   setEditingSchedule(schedule);
-    //   setFormData({
-    //     task_id: schedule.task_id || "",
-    //     scheduled_date: new Date(schedule.scheduled_date),
-    //     start_time: schedule.start_time || "",
-    //     end_time: schedule.end_time || "",
-    //     status: schedule.status || "new",
-    //     priority: schedule.priority || "medium",
-    //     location: schedule.location || "",
-    //     location_id: schedule.location_id || "",
-    //     store_id: schedule.store_id || "",
-    //     notes: schedule.notes || "",
-    //     estimated_duration: schedule.estimated_duration || 60,
-    //   });
-    // } else {
-    //   setEditingSchedule(null);
-    //   const dateToUse = selectedDate || new Date();
-    //   setFormData({
-    //     task_id: "",
-    //     scheduled_date: dateToUse,
-    //     start_time: "",
-    //     end_time: "",
-    //     status: "new",
-    //     priority: "medium",
-    //     location: "",
-    //     location_id: "",
-    //     store_id: "",
-    //     notes: "",
-    //     estimated_duration: 60,
-    //   });
-    // }
+  const handleOpenDialog = (schedule = null, selectedDate = null) => {
+    if (schedule) {
+      setEditingSchedule(schedule);
+      setFormData({
+        task_id: schedule.task_id || "",
+        scheduled_date: new Date(schedule.scheduled_date),
+        start_time: schedule.start_time || "",
+        end_time: schedule.end_time || "",
+        status: schedule.status || "new",
+        priority: schedule.priority || "medium",
+        location: schedule.location || "",
+        location_id: schedule.location_id || "",
+        store_id: schedule.store_id || "",
+        notes: schedule.notes || "",
+        estimated_duration: schedule.estimated_duration || 60,
+      });
+    } else {
+      setEditingSchedule(null);
+      const dateToUse = selectedDate || new Date();
+      setFormData({
+        task_id: "",
+        scheduled_date: dateToUse,
+        start_time: "",
+        end_time: "",
+        status: "new",
+        priority: "medium",
+        location: "",
+        location_id: "",
+        store_id: "",
+        notes: "",
+        estimated_duration: 60,
+      });
+    }
     setOpenDialog(true);
   };
 
@@ -610,20 +733,20 @@ const Planning = () => {
     setEditingSchedule(null);
   };
 
-  // const handleQuickTimeSlot = (slot) => {
-  //   if (slot === "morning") {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       start_time: "08:00",
-  //       end_time: "12:00",
-  //     }));
-  //   } else if (slot === "afternoon") {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       start_time: "13:30",
-  //       end_time: "17:00",
-  //     }));
-  //   }
+  const handleQuickTimeSlot = (slot) => {
+    if (slot === "morning") {
+      setFormData((prev) => ({
+        ...prev,
+        start_time: "08:00",
+        end_time: "12:00",
+      }));
+    } else if (slot === "afternoon") {
+      setFormData((prev) => ({
+        ...prev,
+        start_time: "13:30",
+        end_time: "17:00",
+      }));
+    }
 
     // Pré-remplir le magasin si un filtre est sélectionné
     if (selectedStore) {
@@ -636,34 +759,34 @@ const Planning = () => {
     }
   };
 
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => {
-  //     const newData = {
-  //       ...prev,
-  //       [name]: value,
-  //     };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
 
-  //     // Réinitialiser le lieu si le magasin change
-  //     if (name === "store_id") {
-  //       newData.location_id = "";
-  //     }
+      // Réinitialiser le lieu si le magasin change
+      if (name === "store_id") {
+        newData.location_id = "";
+      }
 
-  //     return newData;
-  //   });
-  // };
+      return newData;
+    });
+  };
 
-  // const handleDateChange = (e) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     scheduled_date: new Date(e.target.value),
-  //   }));
-  // };
+  const handleDateChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      scheduled_date: new Date(e.target.value),
+    }));
+  };
 
   // Fonction pour vérifier les conflits d'horaires supprimée
   // Les conflits sont maintenant gérés lors de l'assignation des employés
 
-  const handleSave = async (data) => {
+  const handleSave = async () => {
     try {
       let scheduleData = {
         ...formData,
@@ -687,11 +810,13 @@ const Planning = () => {
 
       // Pas de conflit, procéder à la sauvegarde
       if (editingSchedule) {
-        await updatePlanning(editingSchedule.id, scheduleData);
+        await updateTask(editingSchedule.id, scheduleData);
+        // await updatePlanning(editingSchedule.id, scheduleData);
         // await axios.put(`/api/planning/${editingSchedule.id}`, scheduleData);
         toast.success("Planning mis à jour avec succès");
       } else {
-        await createPlanning(scheduleData);
+        await createTask(scheduleData);
+        // await createPlanning(scheduleData);
         // await axios.post('/api/planning', scheduleData);
         toast.success("Planning créé avec succès");
       }
@@ -765,6 +890,7 @@ const Planning = () => {
     }
 
     try {
+
       // Vérification supplémentaire pour s'assurer que schedule a toutes les propriétés nécessaires
       if (
         !schedule.scheduled_date ||
@@ -779,15 +905,9 @@ const Planning = () => {
         return;
       }
 
-      // UTILISER LE NOUVEL ENDPOINT BACKEND QUI GÈRE CORRECTEMENT LA DISPONIBILITÉ
-      const apiBaseUrl = ""; //import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-
       const availableEmployeesResponse = await getAvailableUserForTask(
         schedule.id
       );
-      // await axios.get(`${apiBaseUrl}/api/planning/${schedule.id}/available-employees`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
 
       if (availableEmployeesResponse.data.success) {
         // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
@@ -1702,13 +1822,6 @@ const Planning = () => {
         </Box>
 
         {/* Grille du calendrier */}
-        <Calendar
-          filteredSchedules={filteredSchedules}
-          getTaskDisplayName={getTaskDisplayName}
-          handleDeleteTask={handleDeleteTask}
-          isOpeningTask={isOpeningTask}
-          isPresenceTask={isPresenceTask}
-        />
         <Box
           sx={{
             bgcolor: "white",
@@ -2314,16 +2427,16 @@ const Planning = () => {
                 🛒 Tâches de vente - Matin (8h-12h)
               </Typography>
               <Chip
-                label={`${
-                  filteredSchedules.filter((s) => {
-                    const isVente = s.notes?.includes("Vente -");
-                    const isOuverture = isOpeningTask(s);
-                    if (!isVente && !isOuverture) return false;
-                    const startHour = parseInt(
-                      s.start_time?.split(":")[0] || "0"
-                    );
-                    return startHour >= 8 && startHour < 12;
-                  }).length
+                label={`${ filteredSchedules.length
+                  // filteredSchedules.filter((s) => {
+                  //   const isVente = s.notes?.includes("Vente -");
+                  //   const isOuverture = isOpeningTask(s);
+                  //   if (!isVente && !isOuverture) return false;
+                  //   const startHour = parseInt(
+                  //     s.start_time?.split(":")[0] || "0"
+                  //   );
+                  //   return startHour >= 8 && startHour < 12;
+                  // }).length
                 } tâches`}
                 size="small"
                 sx={{
@@ -2345,6 +2458,7 @@ const Planning = () => {
                 const daySchedules = Array.isArray(filteredSchedules)
                   ? filteredSchedules.filter((schedule) => {
                       const scheduleDate = new Date(schedule.scheduled_date);
+                    
                       return (
                         scheduleDate.getDate() === day.getDate() &&
                         scheduleDate.getMonth() === day.getMonth() &&
@@ -2355,11 +2469,12 @@ const Planning = () => {
 
                 const venteSchedules = daySchedules.filter((schedule) => {
                   const isVente = schedule.notes?.includes("Vente -");
-                  const isOuverture = isOpeningTask(schedule);
-                  if (!isVente && !isOuverture) return false;
+                  // const isOuverture = isOpeningTask(schedule);
+                  if (!isVente) return false;
                   const startHour = parseInt(
                     schedule.start_time?.split(":")[0] || "0"
                   );
+                  return true
                   return startHour >= 8 && startHour < 12;
                 });
 
@@ -5987,14 +6102,71 @@ const Planning = () => {
   return (
     <Box>
       {/* Sélecteurs de magasin et lieu */}
-      <PlanningFilter
-        locations={locations}
-        selectedLocation={selectedLocation}
-        setSelectedLocation={setSelectedLocation}
-        setSelectedStore={setSelectedStore}
-        selectedStore={selectedStore}
-        stores={stores}
-      />
+      <Box sx={{ mb: 3, p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel>Filtrer par magasin</InputLabel>
+              <Select
+                value={selectedStore}
+                onChange={(e) => {
+                  console.log("🏪 STORE SELECTION CHANGED");
+                  console.log("🏪 New selected store:", e.target.value);
+                  setSelectedStore(e.target.value);
+                  setSelectedLocation(""); // Reset location when store changes
+                }}
+                label="Filtrer par magasin"
+              >
+                <MenuItem value="">
+                  <em>Tous les magasins</em>
+                </MenuItem>
+                {stores.map((store) => (
+                  <MenuItem key={store.id} value={store.id}>
+                    {store.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <FormControl fullWidth disabled={!selectedStore}>
+              <InputLabel>Filtrer par lieu</InputLabel>
+              <Select
+                value={selectedLocation}
+                onChange={(e) => {
+                  console.log("📍 LOCATION SELECTION CHANGED");
+                  console.log("📍 New selected location:", e.target.value);
+                  setSelectedLocation(e.target.value);
+                }}
+                label="Filtrer par lieu"
+              >
+                <MenuItem value="">
+                  <em>Tous les lieux</em>
+                </MenuItem>
+                {locations
+                  .filter(
+                    (loc) =>
+                      !selectedStore || loc.store_id === parseInt(selectedStore)
+                  )
+                  .map((location) => (
+                    <MenuItem key={location.id} value={location.id}>
+                      {location.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              {selectedStore
+                ? `Affichage des tâches pour ${stores.find((s) => s.id === parseInt(selectedStore))?.name || "magasin sélectionné"}`
+                : "Affichage de toutes les tâches"}
+              {selectedLocation &&
+                ` - Lieu: ${locations.find((l) => l.id === parseInt(selectedLocation))?.name || "lieu sélectionné"}`}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Box>
 
       {/* Planning des employés par jour */}
       <Box sx={{ mb: 3 }}>
@@ -6352,24 +6524,227 @@ const Planning = () => {
           </Box>
         </DialogTitle>
         <DialogContent>
-          <PlaningForm
-            formId="PlanningtaskForm"
-            onSubmit={handleSave}
-            defaultValues={editingSchedule}
-            locations={locations}
-            priorityOptions={priorityOptions}
-            stores={stores}
-            tasks={tasks}
-          />
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Tâche</InputLabel>
+                <Select
+                  name="task_id"
+                  value={formData.task_id}
+                  onChange={handleInputChange}
+                  label="Tâche"
+                >
+                  <MenuItem value="vente">Vente - Création manuelle</MenuItem>
+                  {tasks && tasks.length > 0 ? (
+                    tasks.map((task) => (
+                      <MenuItem key={task.id} value={task.id}>
+                        {task.name} ({task.category})
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>
+                      Aucune tâche disponible
+                      <br />
+                      <small style={{ fontSize: "0.7em", color: "#666" }}>
+                        Créez des tâches dans la section "Gestion des Tâches"
+                      </small>
+                    </MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label="Date"
+                name="scheduled_date"
+                type="date"
+                value={
+                  formData.scheduled_date
+                    ? formData.scheduled_date.toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={handleDateChange}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Heure de début"
+                name="start_time"
+                type="time"
+                value={formData.start_time}
+                onChange={handleInputChange}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Heure de fin"
+                name="end_time"
+                type="time"
+                value={formData.end_time}
+                onChange={handleInputChange}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+
+            {/* Boutons de configuration rapide des horaires */}
+            <Grid size={{ xs: 12 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 2, color: "#666", fontWeight: "bold" }}
+              >
+                Configuration rapide des horaires
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleQuickTimeSlot("morning")}
+                  sx={{
+                    borderColor: "#4caf50",
+                    color: "#4caf50",
+                    "&:hover": {
+                      borderColor: "#45a049",
+                      backgroundColor: "#f1f8e9",
+                    },
+                    px: 3,
+                    py: 1.5,
+                    borderRadius: "20px",
+                  }}
+                >
+                  🌅 Matin (8h - 12h)
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleQuickTimeSlot("afternoon")}
+                  sx={{
+                    borderColor: "#ff9800",
+                    color: "#ff9800",
+                    "&:hover": {
+                      borderColor: "#f57c00",
+                      backgroundColor: "#fff3e0",
+                    },
+                    px: 3,
+                    py: 1.5,
+                    borderRadius: "20px",
+                  }}
+                >
+                  🌞 Après-midi (13h30 - 17h)
+                </Button>
+              </Box>
+            </Grid>
+
+            {/* Message informatif sur l'assignation des employés */}
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: "#e3f2fd",
+                  borderRadius: 1,
+                  border: "1px solid #2196f3",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <PersonAdd sx={{ fontSize: 20, color: "#2196f3" }} />
+                <Typography variant="body2" sx={{ color: "#1976d2" }}>
+                  <strong>Assignation des employés :</strong> Une fois la tâche
+                  créée, vous pourrez assigner des employés en cliquant sur le
+                  bouton "+" de la tâche. Le système filtrera automatiquement
+                  les employés disponibles selon le magasin et les horaires.
+                </Typography>
+              </Box>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Priorité</InputLabel>
+                <Select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                  label="Priorité"
+                >
+                  {priorityOptions.map((priority) => (
+                    <MenuItem key={priority.value} value={priority.value}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        {priority.icon}
+                        {priority.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Magasin</InputLabel>
+                <Select
+                  name="store_id"
+                  value={formData.store_id || ""}
+                  onChange={handleInputChange}
+                  label="Magasin"
+                >
+                  <MenuItem value="">
+                    <em>Sélectionner un magasin</em>
+                  </MenuItem>
+                  {stores.map((store) => (
+                    <MenuItem key={store.id} value={store.id}>
+                      {store.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Lieu spécifique</InputLabel>
+                <Select
+                  name="location_id"
+                  value={formData.location_id || ""}
+                  onChange={handleInputChange}
+                  label="Lieu spécifique"
+                >
+                  <MenuItem value="">
+                    <em>Tous les lieux</em>
+                  </MenuItem>
+                  {locations
+                    .filter(
+                      (loc) =>
+                        !formData.store_id ||
+                        loc.store_id === parseInt(formData.store_id)
+                    )
+                    .map((location) => (
+                      <MenuItem key={location.id} value={location.id}>
+                        {location.name}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Instructions spéciales, détails importants..."
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button
-            type="submit"
-            form="PlanningtaskForm"
-            variant="contained"
-            startIcon={<Save />}
-          >
+          <Button onClick={handleSave} variant="contained" startIcon={<Save />}>
             {editingSchedule ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
