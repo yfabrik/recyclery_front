@@ -119,3 +119,18 @@ export interface UserModel extends BaseModel {
   isActive: boolean;
   last_login:Date
 }
+
+
+export interface TaskModel extends BaseModel{
+
+  scheduled_date: Date;
+  task_employees: UserModel[];
+  assigned_employees: UserModel[];
+  notes: string;
+  start_time: string;
+  end_time: string;
+  status:string
+  location_name:string
+  priority:string
+
+}
