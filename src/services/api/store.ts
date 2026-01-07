@@ -20,3 +20,5 @@ export const deleteCaisse = (id: number) => axiosInstance.delete(`/api/cash-regi
 
 export const OpenCaisse = (data) => axiosInstance.post('/api/cash-sessions/open', data)
 export const closeCaisse = (id: number, data) => axiosInstance.put(`/api/cash-sessions/${id}/close`, data)
+
+export const getAllInfosStore = (filters?: StoreFilters) => axiosInstance.get("/api/stores/all", { params: filters })
