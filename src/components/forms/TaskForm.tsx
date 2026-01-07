@@ -1,21 +1,26 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
   Chip,
-  FormControlLabel,
   Grid,
   MenuItem,
-  Switch,
-  Typography,
+  Typography
 } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch, type Control } from "react-hook-form";
 import * as z from "zod";
 
-import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import {
+  DAYS_OF_WEEK,
   PRIORITIES as priorities,
   RECURRENCE_PATTERNS as recurrencePatterns,
 } from "../../interfaces/shared";
+import {
+  FormDate,
+  FormInput,
+  FormSelect,
+  FormTime,
+  type BaseFormProps,
+} from "./FormBase";
 
 const schema = z.object({
   name: z.string().nonempty("Le nom de la tâche est requis"),
@@ -23,17 +28,20 @@ const schema = z.object({
   description: z.string().optional(),
   category: z.string().nonempty("La catégorie est requise"),
   priority: z.string().nonempty("La priorité est requise"),
-  estimated_duration: z.coerce
-    .number()
-    .min(15, "Minimum 15 minutes")
-    .max(480, "Maximum 480 minutes"),
+  // estimated_duration: z.coerce
+  //   .number()
+  //   .min(15, "Minimum 15 minutes")
+  //   .max(480, "Maximum 480 minutes"),
   location: z.string().optional(),
   assigned_to: z.union([z.string(), z.number()]).optional().nullable(),
   required_skills: z.array(z.string()).default([]),
   equipment_needed: z.array(z.string()).default([]),
   is_recurring: z.boolean().default(false),
-  recurrence_pattern: z.string().optional(),
+  recurrence_pattern: z.string(),
   notes: z.string().optional(),
+  scheduled_date: z.date(),
+  start_time: z.date(),
+  end_time: z.date(),
 });
 
 export type TaskFormSchema = z.infer<typeof schema>;
@@ -69,16 +77,33 @@ export type TaskFormProps = BaseFormProps<TaskFormSchema> & {
   //   recurrencePatterns: RecurrencePatternOption[];
 };
 
+export const RecurseWatch = ({
+  control,
+}: {
+  control: Control<TaskFormSchema>;
+}) => {
+  const recurse = useWatch({
+    control,
+    name: "recurrence_pattern",
+  });
+  if (recurse == "daily")
+    return (
+      <FormSelect control={control} name="scheduled_date" label="Jour">
+        {DAYS_OF_WEEK.map((day) => (
+          <MenuItem key={day.key} value={day.label}>
+            {day.label}
+          </MenuItem>
+        ))}
+      </FormSelect>
+    );
+  return <FormDate control={control} name="scheduled_date" label="Jour" />;
+};
+
 export const TaskForm = ({
   formId,
   onSubmit,
   defaultValues,
-  //   categories,
-  //   priorities,
   employees,
-  //   skillsOptions,
-  //   equipmentOptions,
-  //   recurrencePatterns,
 }: TaskFormProps) => {
   const categories = [
     { value: "collection", label: "Collecte", icon: "🚛", color: "primary" },
@@ -136,10 +161,10 @@ export const TaskForm = ({
       description: defaultValues?.description || "",
       category: defaultValues?.category || "collection",
       priority: defaultValues?.priority || "medium",
-      estimated_duration:
-        defaultValues?.estimated_duration !== undefined
-          ? defaultValues.estimated_duration
-          : 60,
+      // estimated_duration:
+      //   defaultValues?.estimated_duration !== undefined
+      //     ? defaultValues.estimated_duration
+      //     : 60,
       required_skills: defaultValues?.required_skills || [],
       location: defaultValues?.location || "",
       equipment_needed: defaultValues?.equipment_needed || [],
@@ -147,13 +172,21 @@ export const TaskForm = ({
       is_recurring: defaultValues?.is_recurring ?? false,
       recurrence_pattern: defaultValues?.recurrence_pattern || "none",
       assigned_to: defaultValues?.assigned_to ?? "",
+      scheduled_date: defaultValues?.scheduled_date ?? null,
       notes: defaultValues?.notes || "",
+      start_time: defaultValues?.start_time || null,
+      end_time: defaultValues?.end_time || null,
     },
   });
 
   const requiredSkills = form.watch("required_skills") || [];
   const equipmentNeeded = form.watch("equipment_needed") || [];
   const isRecurring = form.watch("is_recurring");
+  const pattern = form.watch("recurrence_pattern");
+
+  // useEffect(() => {
+  //   form.resetField("scheduled_date");
+  // }, [pattern]);
 
   const toggleArrayField = (
     field: "required_skills" | "equipment_needed",
@@ -178,7 +211,7 @@ export const TaskForm = ({
             control={form.control}
             name="name"
             label="Nom de la tâche"
-            extra={{ required: true }}
+            // extra={{ required: true }}
           />
         </Grid>
 
@@ -228,14 +261,17 @@ export const TaskForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormTime
             control={form.control}
-            name="estimated_duration"
-            label="Durée estimée (minutes)"
-            extra={{
-              type: "number",
-              inputProps: { min: 15, max: 480 },
-            }}
+            name="start_time"
+            label="Heure de début"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormTime
+            control={form.control}
+            name="end_time"
+            label="Heure de fin"
           />
         </Grid>
 
@@ -302,7 +338,7 @@ export const TaskForm = ({
           </Box>
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
+        {/* <Grid size={{ xs: 12,sm:6 }}>
           <Controller
             name="is_recurring"
             control={form.control}
@@ -318,23 +354,48 @@ export const TaskForm = ({
               />
             )}
           />
+        </Grid> */}
+
+        {/* {isRecurring && ( */}
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormSelect
+            control={form.control}
+            name="recurrence_pattern"
+            label="Modèle de récurrence"
+          >
+            {recurrencePatterns.map((pattern) => (
+              <MenuItem key={pattern.value} value={pattern.value}>
+                {pattern.label}
+              </MenuItem>
+            ))}
+          </FormSelect>
         </Grid>
 
-        {isRecurring && (
-          <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          {/* {pattern == "daily" ? (
             <FormSelect
               control={form.control}
-              name="recurrence_pattern"
-              label="Modèle de récurrence"
+              name="scheduled_date"
+              label="Jour"
             >
-              {recurrencePatterns.map((pattern) => (
-                <MenuItem key={pattern.value} value={pattern.value}>
-                  {pattern.label}
+              {DAYS_OF_WEEK.map((day) => (
+                <MenuItem key={day.key} value={day.label}>
+                  {day.label}
                 </MenuItem>
               ))}
             </FormSelect>
-          </Grid>
-        )}
+          ) : (
+            <FormDate
+              control={form.control}
+              name="scheduled_date"
+              label="Jour"
+            />
+          )} */}
+          {/* <RecurseWatch control={form.control} /> */}
+
+          <FormDate control={form.control} name="scheduled_date" label="Jour" />
+        </Grid>
+        {/* )} */}
 
         <Grid size={{ xs: 12 }}>
           <FormInput
