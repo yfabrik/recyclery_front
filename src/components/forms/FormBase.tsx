@@ -157,10 +157,14 @@ export const FormDate = <
             label={label}
             slotProps={{
               textField: {
+                fullWidth:true,
+                error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
               },
             }}
             {...field}
+            value={field.value ? dayjs(field.value) : null}
+            onChange={(value) => field.onChange(value ? value.toDate() : null)}
           />
         </LocalizationProvider>
       )}
@@ -194,7 +198,7 @@ export const FormTime = <
               textField: {
                 error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
-                fullWidth:true
+                fullWidth: true,
               },
             }}
             {...field}
