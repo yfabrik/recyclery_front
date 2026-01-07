@@ -4,7 +4,7 @@ interface filters {
     store_id: number;
   };
 }
-export const getPlanning = (filters: filters) =>
+export const getPlanning = (filters?: filters) =>
   axiosInstance.get("/api/planning", { params: filters });
 
 export const updatePlanning = (id:number,data)=>axiosInstance.put(`/api/planning/${id}`,data)
