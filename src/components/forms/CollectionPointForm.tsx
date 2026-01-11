@@ -27,7 +27,7 @@ const schema = z.object({
   // type: z.string(),
   notes: z.string(),
   is_active: z.boolean(),
-  recyclery_id: z.coerce.number().nullable(),
+  recyclery_id: z.coerce.number().nullable().transform(val => val == 0 ? null : val),
 });
 
 type Schema = z.infer<typeof schema>;

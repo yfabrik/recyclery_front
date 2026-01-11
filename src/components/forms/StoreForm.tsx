@@ -10,12 +10,12 @@ import { phoneSchema } from "../../interfaces/ZodTypes";
 
 const schema = z.object({
     name: z.string().nonempty(),
-    manager_id: z.coerce.number().optional(),
+    manager_id: z.coerce.number().optional().transform(val => val == 0||"" ? null : val),
     address: z.string(),
     city: z.string(),
-    postal_code: z.string(),
-    phone: phoneSchema,
-    email: z.email(),
+    postal_code: z.string().optional(),
+    phone: z.union([phoneSchema, z.literal("").transform(val => val == "" ? null : val)]),
+    email: z.union([z.email(), z.literal("").transform(val => val == "" ? null : val)]),
     is_active: z.boolean(),
 });
 
