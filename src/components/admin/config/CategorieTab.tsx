@@ -63,7 +63,7 @@ export const CategoriesTab = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fCat();
+      const response = await fCat({only_category:true,include:"Category"});
       setCategories(response.data.categories);
       // Organiser les catégories en structure hiérarchique
       // const allCategories = response.data.categories || [];
