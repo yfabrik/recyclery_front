@@ -137,7 +137,7 @@ const WasteManagement = () => {
 
   const fetchSubcategories = async () => {
     try {
-      const response = await getSubcategories();
+      const response = await fcat({only_sub:true});
       // await axios.get('/api/subcategories');
       setSubcategories(response.data.subcategories || []);
     } catch (error) {

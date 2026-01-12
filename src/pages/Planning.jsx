@@ -59,7 +59,7 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchStores as fstore, getAllInfosStore } from "../services/api/store";
+import { fetchStores as fstore } from "../services/api/store";
 import { fetchUsers } from "../services/api/users";
 import {
   createPlanning,
@@ -451,7 +451,7 @@ const Planning = () => {
     try {
       setLoadingEmployeesPresent(true);
       const [infoStoreResponse, employeesResponse] = await Promise.all([
-        getAllInfosStore(),
+        fstore({include:"employees"}),
         fetchUsers({ role: "employee" }),
       ]);
 
@@ -2469,14 +2469,15 @@ const Planning = () => {
                   : [];
 
                 const venteSchedules = daySchedules.filter((schedule) => {
-                  const isVente = schedule.notes?.includes("Vente -");
-                  // const isOuverture = isOpeningTask(schedule);
-                  if (!isVente) return false;
-                  const startHour = parseInt(
-                    schedule.start_time?.split(":")[0] || "0"
-                  );
-                  return true
-                  return startHour >= 8 && startHour < 12;
+                  return schedule.category =="vente"
+                  // const isVente = schedule.notes?.includes("Vente -");
+                  // // const isOuverture = isOpeningTask(schedule);
+                  // if (!isVente) return false;
+                  // const startHour = parseInt(
+                  //   schedule.start_time?.split(":")[0] || "0"
+                  // );
+                  // return true
+                  // return startHour >= 8 && startHour < 12;
                 });
 
                 return (

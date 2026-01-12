@@ -4,7 +4,8 @@ import axiosInstance from "./axios";
 interface UserFilters {
   role?: "employee" | "admin";
   store_id?: number;
-  active?: 0 | 1;
+  active?: boolean;
+  include?: string;
 }
 
 export const fetchUsers = (filters: UserFilters | null = null) =>
@@ -29,8 +30,7 @@ interface EmployeeStoreModel {
   store_id: number;
   is_primary: boolean;
 }
-export const getUsersWithStoreAndWorkdays = (filters?: UserFilters) =>
-  axiosInstance.get(`/api/users/all`, { params: filters });
+
 
 export const getAssignedStores = (employee_id: number) =>
   axiosInstance.get(`/api/employee-stores/employee/${employee_id}`);
