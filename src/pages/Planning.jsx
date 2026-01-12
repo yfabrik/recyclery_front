@@ -2427,16 +2427,17 @@ const Planning = () => {
                 🛒 Tâches de vente - Matin (8h-12h)
               </Typography>
               <Chip
-                label={`${ filteredSchedules.length
-                  // filteredSchedules.filter((s) => {
-                  //   const isVente = s.notes?.includes("Vente -");
-                  //   const isOuverture = isOpeningTask(s);
-                  //   if (!isVente && !isOuverture) return false;
-                  //   const startHour = parseInt(
-                  //     s.start_time?.split(":")[0] || "0"
-                  //   );
-                  //   return startHour >= 8 && startHour < 12;
-                  // }).length
+                label={`${ //filteredSchedules.length
+                  filteredSchedules.filter((s) => {
+                    return s.category =="vente"// && s.start_time.getHours<12
+                    // const isVente = s.notes?.includes("Vente -");
+                    // const isOuverture = isOpeningTask(s);
+                    // if (!isVente && !isOuverture) return false;
+                    // const startHour = parseInt(
+                    //   s.start_time?.split(":")[0] || "0"
+                    // );
+                    // return startHour >= 8 && startHour < 12;
+                  }).length
                 } tâches`}
                 size="small"
                 sx={{

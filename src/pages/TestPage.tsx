@@ -52,7 +52,7 @@ export const TestPage = () => {
             <TableRow>
               <TableCell>id</TableCell>
               <TableCell align="right">name</TableCell>
-              <TableCell align="right">pattern</TableCell>
+              <TableCell align="right">category</TableCell>
 
               <TableCell align="right">schedule date</TableCell>
               <TableCell align="right">start</TableCell>
@@ -69,7 +69,7 @@ export const TestPage = () => {
                   {row.id}
                 </TableCell>
                 <TableCell align="right">{row.name}</TableCell>
-                <TableCell align="right">{row.recurrence_pattern}</TableCell>
+                <TableCell align="right">{row.category}</TableCell>
                 <TableCell align="right">{row.scheduled_date}</TableCell>
                 <TableCell align="right">{row.start_time}</TableCell>
                 <TableCell align="right">{row.end_time}</TableCell>
@@ -83,7 +83,7 @@ export const TestPage = () => {
           <TableHead>
             <TableRow>
               <TableCell>id</TableCell>
-              <TableCell align="right">name</TableCell>
+              <TableCell align="right">category</TableCell>
               <TableCell align="right">pattern</TableCell>
 
               <TableCell align="right">schedule date</TableCell>
@@ -100,7 +100,7 @@ export const TestPage = () => {
                 <TableCell component="th" scope="row">
                   {row.id}
                 </TableCell>
-                <TableCell align="right">{row.scheduled_date}</TableCell>
+                <TableCell align="right">{row.category}</TableCell>
                 <TableCell align="right">{row.recurrence_pattern}</TableCell>
                 <TableCell align="right">{row.scheduled_date}</TableCell>
                 <TableCell align="right">{row.start_time}</TableCell>
