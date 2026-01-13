@@ -70,6 +70,8 @@ import {
 } from "../services/api/planning";
 import { createTask, getTasks, updateTask } from "../services/api/tasks";
 import { getCollectionSchedules } from "../services/api/collectionSchedules";
+import { PlaningForm } from "../components/forms/planningForm";
+import { PrecenseEmployees } from "../components/planning/PresenceEmployees";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState([]);
@@ -162,19 +164,19 @@ const Planning = () => {
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
-  const [formData, setFormData] = useState({
-    task_id: "",
-    scheduled_date: new Date(),
-    start_time: "",
-    end_time: "",
-    status: "new",
-    priority: "medium",
-    location: "",
-    location_id: "",
-    store_id: "",
-    notes: "",
-    estimated_duration: 60,
-  });
+  // const [formData, setFormData] = useState({
+  //   task_id: "",
+  //   scheduled_date: new Date(),
+  //   start_time: "",
+  //   end_time: "",
+  //   status: "new",
+  //   priority: "medium",
+  //   location: "",
+  //   location_id: "",
+  //   store_id: "",
+  //   notes: "",
+  //   estimated_duration: 60,
+  // });
 
   useEffect(() => {
     console.log("t", tasks);
@@ -693,38 +695,39 @@ const Planning = () => {
   };
 
   const handleOpenDialog = (schedule = null, selectedDate = null) => {
-    if (schedule) {
-      setEditingSchedule(schedule);
-      setFormData({
-        task_id: schedule.task_id || "",
-        scheduled_date: new Date(schedule.scheduled_date),
-        start_time: schedule.start_time || "",
-        end_time: schedule.end_time || "",
-        status: schedule.status || "new",
-        priority: schedule.priority || "medium",
-        location: schedule.location || "",
-        location_id: schedule.location_id || "",
-        store_id: schedule.store_id || "",
-        notes: schedule.notes || "",
-        estimated_duration: schedule.estimated_duration || 60,
-      });
-    } else {
-      setEditingSchedule(null);
-      const dateToUse = selectedDate || new Date();
-      setFormData({
-        task_id: "",
-        scheduled_date: dateToUse,
-        start_time: "",
-        end_time: "",
-        status: "new",
-        priority: "medium",
-        location: "",
-        location_id: "",
-        store_id: "",
-        notes: "",
-        estimated_duration: 60,
-      });
-    }
+     setEditingSchedule(schedule ||{scheduled_date:selectedDate||new Date()});
+    // if (schedule) {
+    //   setEditingSchedule(schedule);
+    //   setFormData({
+    //     task_id: schedule.task_id || "",
+    //     scheduled_date: new Date(schedule.scheduled_date),
+    //     start_time: schedule.start_time || "",
+    //     end_time: schedule.end_time || "",
+    //     status: schedule.status || "new",
+    //     priority: schedule.priority || "medium",
+    //     location: schedule.location || "",
+    //     location_id: schedule.location_id || "",
+    //     store_id: schedule.store_id || "",
+    //     notes: schedule.notes || "",
+    //     estimated_duration: schedule.estimated_duration || 60,
+    //   });
+    // } else {
+    //   setEditingSchedule(null);
+    //   const dateToUse = selectedDate || new Date();
+    //   setFormData({
+    //     task_id: "",
+    //     scheduled_date: dateToUse,
+    //     start_time: "",
+    //     end_time: "",
+    //     status: "new",
+    //     priority: "medium",
+    //     location: "",
+    //     location_id: "",
+    //     store_id: "",
+    //     notes: "",
+    //     estimated_duration: 60,
+    //   });
+    // }
     setOpenDialog(true);
   };
 
@@ -733,76 +736,76 @@ const Planning = () => {
     setEditingSchedule(null);
   };
 
-  const handleQuickTimeSlot = (slot) => {
-    if (slot === "morning") {
-      setFormData((prev) => ({
-        ...prev,
-        start_time: "08:00",
-        end_time: "12:00",
-      }));
-    } else if (slot === "afternoon") {
-      setFormData((prev) => ({
-        ...prev,
-        start_time: "13:30",
-        end_time: "17:00",
-      }));
-    }
+  // const handleQuickTimeSlot = (slot) => {
+  //   if (slot === "morning") {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       start_time: "08:00",
+  //       end_time: "12:00",
+  //     }));
+  //   } else if (slot === "afternoon") {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       start_time: "13:30",
+  //       end_time: "17:00",
+  //     }));
+  //   }
 
-    // Pré-remplir le magasin si un filtre est sélectionné
-    if (selectedStore) {
-      const selectedStoreName = stores.find(
-        (s) => s.id === parseInt(selectedStore)
-      )?.name;
-      if (selectedStoreName) {
-        setFormData((prev) => ({ ...prev, location: selectedStoreName }));
-      }
-    }
-  };
+  //   // Pré-remplir le magasin si un filtre est sélectionné
+  //   if (selectedStore) {
+  //     const selectedStoreName = stores.find(
+  //       (s) => s.id === parseInt(selectedStore)
+  //     )?.name;
+  //     if (selectedStoreName) {
+  //       setFormData((prev) => ({ ...prev, location: selectedStoreName }));
+  //     }
+  //   }
+  // };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => {
-      const newData = {
-        ...prev,
-        [name]: value,
-      };
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => {
+  //     const newData = {
+  //       ...prev,
+  //       [name]: value,
+  //     };
 
-      // Réinitialiser le lieu si le magasin change
-      if (name === "store_id") {
-        newData.location_id = "";
-      }
+  //     // Réinitialiser le lieu si le magasin change
+  //     if (name === "store_id") {
+  //       newData.location_id = "";
+  //     }
 
-      return newData;
-    });
-  };
+  //     return newData;
+  //   });
+  // };
 
-  const handleDateChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      scheduled_date: new Date(e.target.value),
-    }));
-  };
+  // const handleDateChange = (e) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     scheduled_date: new Date(e.target.value),
+  //   }));
+  // };
 
   // Fonction pour vérifier les conflits d'horaires supprimée
   // Les conflits sont maintenant gérés lors de l'assignation des employés
 
-  const handleSave = async () => {
+  const handleSave = async (data) => {
     try {
-      let scheduleData = {
-        ...formData,
-        scheduled_date: formData.scheduled_date.toISOString().split("T")[0],
-        store_id: formData.store_id || selectedStore || null,
-      };
+      // let scheduleData = {
+      //   ...formData,
+      //   scheduled_date: formData.scheduled_date.toISOString().split("T")[0],
+      //   store_id: formData.store_id || selectedStore || null,
+      // };
 
-      // Traitement spécial pour les tâches de "Vente"
-      if (formData.task_id === "vente") {
-        scheduleData = {
-          ...scheduleData,
-          task_id: null, // Pas de task_id pour les tâches d'ouverture
-          store_id: formData.store_id || selectedStore || 1, // S'assurer qu'il y a un store_id
-          notes: "Vente - " + (formData.notes || "Tâche de vente"),
-        };
-      }
+      // // Traitement spécial pour les tâches de "Vente"
+      // if (formData.task_id === "vente") {
+      //   scheduleData = {
+      //     ...scheduleData,
+      //     task_id: null, // Pas de task_id pour les tâches d'ouverture
+      //     store_id: formData.store_id || selectedStore || 1, // S'assurer qu'il y a un store_id
+      //     notes: "Vente - " + (formData.notes || "Tâche de vente"),
+      //   };
+      // }
 
       // Les conflits d'horaires sont maintenant gérés lors de l'assignation des employés
 
@@ -810,12 +813,12 @@ const Planning = () => {
 
       // Pas de conflit, procéder à la sauvegarde
       if (editingSchedule) {
-        await updateTask(editingSchedule.id, scheduleData);
+        await updateTask(editingSchedule.id, data);
         // await updatePlanning(editingSchedule.id, scheduleData);
         // await axios.put(`/api/planning/${editingSchedule.id}`, scheduleData);
         toast.success("Planning mis à jour avec succès");
       } else {
-        await createTask(scheduleData);
+        await createTask(data);
         // await createPlanning(scheduleData);
         // await axios.post('/api/planning', scheduleData);
         toast.success("Planning créé avec succès");
@@ -6171,342 +6174,13 @@ const Planning = () => {
       </Box>
 
       {/* Planning des employés par jour */}
-      <Box sx={{ mb: 3 }}>
-        <Card sx={{ bgcolor: "#f8f9fa", border: "2px solid #e0e0e0" }}>
-          <CardContent>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 2,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <CalendarToday sx={{ color: "#2196f3", fontSize: 28 }} />
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "bold", color: "#2196f3" }}
-                  >
-                    Planning des Employés par Jour
-                  </Typography>
-                  {selectedStore && (
-                    <Typography variant="body2" sx={{ color: "#666", mt: 0.5 }}>
-                      Magasin sélectionné:{" "}
-                      {stores.find((s) => s.id === parseInt(selectedStore))
-                        ?.name || "Magasin inconnu"}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Warning />}
-                onClick={() => setShowMissingEmployeesDialog(true)}
-                sx={{
-                  borderColor: "#ff9800",
-                  color: "#ff9800",
-                  "&:hover": {
-                    borderColor: "#ff9800",
-                    backgroundColor: "#fff3e0",
-                  },
-                }}
-              >
-                Vérifier les employés manquants
-              </Button>
-            </Box>
-
-            {loadingEmployeesPresent ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                <CircularProgress size={24} />
-                <Typography sx={{ ml: 2 }}>
-                  Chargement des employés...
-                </Typography>
-              </Box>
-            ) : (
-              (() => {
-                const employeesByDay = getEmployeesByDay();
-                const hasEmployees = Object.values(employeesByDay).some(
-                  (day) =>
-                    day.morning.length > 0 ||
-                    day.afternoon.length > 0 ||
-                    day.allDay.length > 0
-                );
-
-                if (!hasEmployees && selectedStore) {
-                  return (
-                    <Box sx={{ textAlign: "center", py: 4 }}>
-                      <Typography
-                        variant="h6"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}
-                      >
-                        Aucun employé trouvé pour ce magasin
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Sélectionnez un autre magasin ou vérifiez les
-                        affectations d'employés.
-                      </Typography>
-                    </Box>
-                  );
-                }
-
-                return (
-                  <Grid container spacing={2}>
-                    {Object.entries(getEmployeesByDay()).map(
-                      ([dayKey, dayData]) => (
-                        <Grid
-                          size={{ xs: 12, sm: 6, md: 4, lg: 1.7 }}
-                          key={dayKey}
-                        >
-                          <Card
-                            sx={{
-                              height: "100%",
-                              border: "1px solid #e0e0e0",
-                              bgcolor:
-                                dayData.allDay.length > 0
-                                  ? "#e8f5e8"
-                                  : "#f5f5f5",
-                              "&:hover": { boxShadow: 2 },
-                            }}
-                          >
-                            <CardContent sx={{ p: 2 }}>
-                              <Box sx={{ textAlign: "center", mb: 2 }}>
-                                <Typography
-                                  variant="subtitle1"
-                                  fontWeight="bold"
-                                  sx={{ color: "#333" }}
-                                >
-                                  {dayData.label}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {dayData.allDay.length} employé
-                                  {dayData.allDay.length > 1 ? "s" : ""}
-                                </Typography>
-                              </Box>
-
-                              {dayData.allDay.length > 0 ? (
-                                <Stack spacing={1}>
-                                  {/* Employés travaillant toute la journée */}
-                                  {(() => {
-                                    const allDayEmployees =
-                                      dayData.allDay.filter((employee) => {
-                                        const worksMorning =
-                                          dayData.morning.some(
-                                            (emp) => emp.id === employee.id
-                                          );
-                                        const worksAfternoon =
-                                          dayData.afternoon.some(
-                                            (emp) => emp.id === employee.id
-                                          );
-                                        return worksMorning && worksAfternoon;
-                                      });
-
-                                    const morningOnlyEmployees =
-                                      dayData.morning.filter(
-                                        (employee) =>
-                                          !dayData.afternoon.some(
-                                            (emp) => emp.id === employee.id
-                                          )
-                                      );
-
-                                    const afternoonOnlyEmployees =
-                                      dayData.afternoon.filter(
-                                        (employee) =>
-                                          !dayData.morning.some(
-                                            (emp) => emp.id === employee.id
-                                          )
-                                      );
-
-                                    return (
-                                      <>
-                                        {/* Toute la journée */}
-                                        {allDayEmployees.length > 0 && (
-                                          <Box>
-                                            <Typography
-                                              variant="caption"
-                                              fontWeight="bold"
-                                              sx={{
-                                                color: "#4caf50",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 0.5,
-                                              }}
-                                            >
-                                              🌞 Journée
-                                            </Typography>
-                                            {allDayEmployees.map((employee) => (
-                                              <Box
-                                                key={`${employee.id}-allday`}
-                                                sx={{
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  gap: 0.5,
-                                                  mt: 0.5,
-                                                }}
-                                              >
-                                                <Avatar
-                                                  sx={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    bgcolor: "#4caf50",
-                                                    fontSize: 10,
-                                                  }}
-                                                >
-                                                  <Person
-                                                    sx={{ fontSize: 12 }}
-                                                  />
-                                                </Avatar>
-                                                <Typography
-                                                  variant="caption"
-                                                  sx={{
-                                                    fontSize: "0.7rem",
-                                                    fontWeight: "bold",
-                                                  }}
-                                                >
-                                                  {employee.name}
-                                                </Typography>
-                                              </Box>
-                                            ))}
-                                          </Box>
-                                        )}
-
-                                        {/* Matin seulement */}
-                                        {morningOnlyEmployees.length > 0 && (
-                                          <Box>
-                                            <Typography
-                                              variant="caption"
-                                              fontWeight="bold"
-                                              sx={{
-                                                color: "#ff9800",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 0.5,
-                                              }}
-                                            >
-                                              🌅 Matin
-                                            </Typography>
-                                            {morningOnlyEmployees.map(
-                                              (employee) => (
-                                                <Box
-                                                  key={`${employee.id}-morning`}
-                                                  sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 0.5,
-                                                    mt: 0.5,
-                                                  }}
-                                                >
-                                                  <Avatar
-                                                    sx={{
-                                                      width: 20,
-                                                      height: 20,
-                                                      bgcolor: "#ff9800",
-                                                      fontSize: 10,
-                                                    }}
-                                                  >
-                                                    <Person
-                                                      sx={{ fontSize: 12 }}
-                                                    />
-                                                  </Avatar>
-                                                  <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                      fontSize: "0.7rem",
-                                                      fontWeight: "medium",
-                                                    }}
-                                                  >
-                                                    {employee.name}
-                                                  </Typography>
-                                                </Box>
-                                              )
-                                            )}
-                                          </Box>
-                                        )}
-
-                                        {/* Après-midi seulement */}
-                                        {afternoonOnlyEmployees.length > 0 && (
-                                          <Box>
-                                            <Typography
-                                              variant="caption"
-                                              fontWeight="bold"
-                                              sx={{
-                                                color: "#2196f3",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 0.5,
-                                              }}
-                                            >
-                                              🌆 Après-midi
-                                            </Typography>
-                                            {afternoonOnlyEmployees.map(
-                                              (employee) => (
-                                                <Box
-                                                  key={`${employee.id}-afternoon`}
-                                                  sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 0.5,
-                                                    mt: 0.5,
-                                                  }}
-                                                >
-                                                  <Avatar
-                                                    sx={{
-                                                      width: 20,
-                                                      height: 20,
-                                                      bgcolor: "#2196f3",
-                                                      fontSize: 10,
-                                                    }}
-                                                  >
-                                                    <Person
-                                                      sx={{ fontSize: 12 }}
-                                                    />
-                                                  </Avatar>
-                                                  <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                      fontSize: "0.7rem",
-                                                      fontWeight: "medium",
-                                                    }}
-                                                  >
-                                                    {employee.name}
-                                                  </Typography>
-                                                </Box>
-                                              )
-                                            )}
-                                          </Box>
-                                        )}
-                                      </>
-                                    );
-                                  })()}
-                                </Stack>
-                              ) : (
-                                <Box sx={{ textAlign: "center", py: 2 }}>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    Aucun employé
-                                  </Typography>
-                                </Box>
-                              )}
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      )
-                    )}
-                  </Grid>
-                );
-              })()
-            )}
-          </CardContent>
-        </Card>
-      </Box>
+      <PrecenseEmployees
+      getEmployeesByDay={getEmployeesByDay}
+      loadingEmployeesPresent={loadingEmployeesPresent}
+      selectedStore={selectedStore}
+      setShowMissingEmployeesDialog={setShowMissingEmployeesDialog}
+      ></PrecenseEmployees>
+ 
 
       {viewMode === "calendar" && renderCalendarView()}
       {viewMode === "week" && renderWeekView()}
@@ -6526,7 +6200,9 @@ const Planning = () => {
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <PlaningForm
+          formId="planningForm" defaultValues={editingSchedule} onSubmit={handleSave} stores={stores} tasks={tasks}/>
+          {/* <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
                 <InputLabel>Tâche</InputLabel>
@@ -6593,7 +6269,7 @@ const Planning = () => {
               />
             </Grid>
 
-            {/* Boutons de configuration rapide des horaires */}
+
             <Grid size={{ xs: 12 }}>
               <Typography
                 variant="subtitle2"
@@ -6639,7 +6315,6 @@ const Planning = () => {
               </Box>
             </Grid>
 
-            {/* Message informatif sur l'assignation des employés */}
             <Grid size={{ xs: 12 }}>
               <Box
                 sx={{
@@ -6742,11 +6417,11 @@ const Planning = () => {
                 placeholder="Instructions spéciales, détails importants..."
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button onClick={handleSave} variant="contained" startIcon={<Save />}>
+          <Button onClick={handleSave} type="submit" form="planningForm" variant="contained" startIcon={<Save />}>
             {editingSchedule ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
@@ -7757,6 +7432,7 @@ const Planning = () => {
       )}
     </Box>
   );
-};
+}
+
 
 export default Planning;
