@@ -1,36 +1,37 @@
-import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router';
-import { Box, CircularProgress, Container } from '@mui/material';
-import { useAuth } from './contexts/AuthContext';
+import React, { useState } from "react";
+import { Routes, Route, Navigate } from "react-router";
+import { Box, CircularProgress, Container } from "@mui/material";
+import { useAuth } from "./contexts/AuthContext";
 
 // Components
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
 
 // Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Recycleries from './pages/Recycleries';
-import Stores from './pages/Stores';
-import Items from './pages/Items';
-import Donations from './pages/Donations';
-import Collections from './pages/Collections';
-import Sales from './pages/Sales';
-import Users from './pages/Users';
-import Settings from './pages/Settings';
-import Profile from './pages/Profile';
-import Admin from './pages/Admin';
-import CollectionSchedule from './pages/CollectionSchedule';
-import CollectionReceipts from './pages/CollectionReceipts';
-import Arrivals from './pages/Arrivals';
-import Labels from './pages/Labels';
-import PointOfSale from './pages/PointOfSale';
-import WasteManagement from './pages/WasteManagement';
-import EmployeeTools from './pages/EmployeeTools';
-import EmployeeManagement from './components/admin/config/EmployeeManagement';
-import TaskManagement from './components/admin/config/TaskManagement';
-import Planning from './pages/Planning';
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Recycleries from "./pages/Recycleries";
+import Stores from "./pages/Stores";
+import Items from "./pages/Items";
+import Donations from "./pages/Donations";
+import Collections from "./pages/Collections";
+import Sales from "./pages/Sales";
+import Users from "./pages/Users";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
+import CollectionSchedule from "./pages/CollectionSchedule";
+import CollectionReceipts from "./pages/CollectionReceipts";
+import Arrivals from "./pages/Arrivals";
+import Labels from "./pages/Labels";
+import PointOfSale from "./pages/PointOfSale";
+import WasteManagement from "./pages/WasteManagement";
+import EmployeeTools from "./pages/EmployeeTools";
+import EmployeeManagement from "./components/admin/config/EmployeeManagement";
+import TaskManagement from "./components/admin/config/TaskManagement";
+import Planning from "./pages/Planning";
+import { TestPage } from "./pages/TestPage";
 
 // Route protégée
 const ProtectedRoute = ({ children }) => {
@@ -85,7 +86,7 @@ function App() {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
       {isAuthenticated && (
         <>
           <Navbar onMenuToggle={handleSidebarToggle} />
@@ -97,9 +98,9 @@ function App() {
         component="main"
         sx={{
           flexGrow: 1,
-          bgcolor: 'background.default',
-          minHeight: '100vh',
-          
+          bgcolor: "background.default",
+          minHeight: "100vh",
+
           pt: isAuthenticated ? 8 : 0, // Padding pour la navbar
         }}
       >
@@ -315,6 +316,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {import.meta.env.DEV && (
+            <Route path="/test" element={<TestPage />} />
+          )}
 
           {/* Redirection par défaut */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -326,4 +330,3 @@ function App() {
 }
 
 export default App;
-

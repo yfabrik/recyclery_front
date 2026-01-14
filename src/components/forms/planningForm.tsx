@@ -2,8 +2,15 @@ import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import {
+  FormDate,
+  FormInput,
+  FormSelect,
+  FormTime,
+  type BaseFormProps,
+} from "./FormBase";
 import { PRIORITIES as priorities } from "../../interfaces/shared";
+import { useEffect } from "react";
 
 type TaskOption = {
   id: number | string;
@@ -29,57 +36,51 @@ type LocationOption = {
 };
 
 const schema = z.object({
-  task_id: z.union([z.string(), z.number()], {
-    message: "La tâche est requise",
-  }),
-  scheduled_date: z.string().nonempty("La date est requise"),
-  start_time: z.string().nonempty("L'heure de début est requise"),
-  end_time: z.string().nonempty("L'heure de fin est requise"),
+  category: z.string("La tâche est requise").nonempty("La tâche est requise"),
+  scheduled_date: z.date("La date est requise"),
+  start_time: z.date("L'heure de début est requise"),
+  end_time: z.date("L'heure de fin est requise"),
   priority: z.string().nonempty("La priorité est requise"),
   store_id: z.union([z.string(), z.number()]).optional().nullable(),
-  location_id: z.union([z.string(), z.number()]).optional().nullable(),
+  reccurence_pattern: z.union([z.string(), z.number()]).optional().nullable(),
   notes: z.string().optional(),
 });
 
 type Schema = z.infer<typeof schema>;
 
 type ScheduleFormProps = BaseFormProps<Schema> & {
-  tasks: TaskOption[];
-  priorityOptions: PriorityOption[];
   stores: StoreOption[];
-  locations: LocationOption[];
 };
 
 export const PlaningForm = ({
   formId,
   onSubmit,
   defaultValues,
-  tasks,
-  priorityOptions,
   stores,
-  locations,
 }: ScheduleFormProps) => {
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      task_id: defaultValues?.task_id ?? "",
-      scheduled_date: defaultValues?.scheduled_date || "",
-      start_time: defaultValues?.start_time || "",
-      end_time: defaultValues?.end_time || "",
-      priority: defaultValues?.priority || "",
-      store_id: defaultValues?.store_id ?? "",
-      location_id: defaultValues?.location_id ?? "",
-      notes: defaultValues?.notes || "",
+      category: "",
+      start_time:  new Date(new Date().setHours(9, 0)),
+      end_time: new Date(new Date().setHours(17, 0)),
+      notes: "",
+      priority: "medium",
+      reccurence_pattern: "",
+      scheduled_date: new Date(),
+      store_id: "",
+
+      ...(defaultValues || {}),
     },
   });
 
   const handleQuickTimeSlot = (slot: "morning" | "afternoon") => {
     if (slot === "morning") {
-      form.setValue("start_time", "08:00");
-      form.setValue("end_time", "12:00");
+      form.setValue("start_time",  new Date(new Date().setHours(8, 0)));
+      form.setValue("end_time", new Date(new Date().setHours(12, 0)));
     } else {
-      form.setValue("start_time", "13:30");
-      form.setValue("end_time", "17:00");
+      form.setValue("start_time", new Date(new Date().setHours(13, 30)));
+      form.setValue("end_time",  new Date(new Date().setHours(17, 0)));
     }
   };
 
@@ -87,8 +88,13 @@ export const PlaningForm = ({
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormSelect control={form.control} name="task_id" label="Tâche">
-            <MenuItem value="vente">Vente - Création manuelle</MenuItem>
+          <FormSelect control={form.control} name="category" label="Tâche">
+            <MenuItem value="vente">Vente</MenuItem>
+            <MenuItem value="point">Precense point collecte</MenuItem>
+            <MenuItem value="collection">Collecte</MenuItem>
+            <MenuItem value="custom">tache spéciale</MenuItem>
+
+            {/* <MenuItem value="vente">Vente - Création manuelle</MenuItem>
             {tasks && tasks.length > 0 ? (
               tasks.map((task) => (
                 <MenuItem key={task.id} value={task.id}>
@@ -103,43 +109,27 @@ export const PlaningForm = ({
                   Créez des tâches dans la section "Gestion des Tâches"
                 </small>
               </MenuItem>
-            )}
+            )} */}
           </FormSelect>
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <FormInput
-            control={form.control}
-            name="scheduled_date"
-            label="Date"
-            extra={{
-              type: "date",
-              slotProps: { inputLabel: { shrink: true } },
-            }}
-          />
+          <FormDate control={form.control} name="scheduled_date" label="Date" />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormTime
             control={form.control}
             name="start_time"
             label="Heure de début"
-            extra={{
-              type: "time",
-              slotProps: { inputLabel: { shrink: true } },
-            }}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormTime
             control={form.control}
             name="end_time"
             label="Heure de fin"
-            extra={{
-              type: "time",
-              slotProps: { inputLabel: { shrink: true } },
-            }}
           />
         </Grid>
 
@@ -214,7 +204,7 @@ export const PlaningForm = ({
           </FormSelect>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
+        {/* <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect
             control={form.control}
             name="location_id"
@@ -228,6 +218,18 @@ export const PlaningForm = ({
                 {location.name}
               </MenuItem>
             ))}
+          </FormSelect>
+        </Grid> */}
+        <Grid size={{ xs: 12 }}>
+          <FormSelect
+            control={form.control}
+            name="reccurence_pattern"
+            label="Récurrence"
+          >
+            <MenuItem value="">Aucune</MenuItem>
+            <MenuItem value="daily">Journaliere</MenuItem>
+            <MenuItem value="weekly">hebdomadaire</MenuItem>
+            <MenuItem value="monthly">mensuel</MenuItem>
           </FormSelect>
         </Grid>
 
