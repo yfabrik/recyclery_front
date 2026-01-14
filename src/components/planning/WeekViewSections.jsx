@@ -3,6 +3,7 @@ import WeekTaskSection, {
   TaskCard,
   TaskCardContent,
 } from "./weekView/WeekTaskSection";
+import WeekCollectionSection from "./weekView/WeekCollectionSection";
 
 const WeekViewSections = ({
   // weekDays,
@@ -21,7 +22,7 @@ const WeekViewSections = ({
   handleAssignEmployeesToTask,
   handleOpenDialog,
   handleDeleteTask,
-  // handleAssignEmployeesToCollection,
+  handleAssignEmployeesToCollection,
   selectedDate
 }) => {
   const wd = () => {
@@ -583,31 +584,25 @@ const WeekViewSections = ({
         })}
       </WeekTaskSection>
 
-      {/* <WeekCollectionSection
+      <WeekCollectionSection
         title="🚚 Lieux de collecte - Matin (8h-12h)"
-        chipLabel={collectionChip(8, 12)}
+        chipLabel={filteredSchedules("collection",8, 12)}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         weekDays={weekDays}
         collections={collections}
-        filteredSchedules={filteredSchedules}
-        isCollectionTask={isCollectionTask}
-        getTaskDisplayName={getTaskDisplayName}
-        formatTime={formatTime}
+        filteredSchedules={filteredSchedules("collection",8, 12)}
         handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
       />
 
       <WeekCollectionSection
         title="🚚 Lieux de collecte - Après-midi (13h-17h)"
-        chipLabel={collectionChip(13, 17)}
+        chipLabel={filteredSchedules("collection",13, 17)}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         weekDays={weekDays}
         collections={collections}
-        filteredSchedules={filteredSchedules}
-        isCollectionTask={isCollectionTask}
-        getTaskDisplayName={getTaskDisplayName}
-        formatTime={formatTime}
+        filteredSchedules={filteredSchedules("collection",13, 17)}
         handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
-      /> */}
+      />
     </Box>
   );
 };

@@ -2408,10 +2408,11 @@ const Planning = () => {
           schedules={filteredSchedules}
           getEmployeeColor={getEmployeeColor}
           getEmployeeInitials={getEmployeeInitials}
-          handleAssignEmployeesToTask={handleAssignEmployeeToTask}
+          handleAssignEmployeesToTask={handleAssignEmployeesToTask}
           handleDeleteTask={handleDeleteTask}
           handleOpenDialog={handleOpenDialog}
           selectedDate={selectedDate}
+          handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
         />
 
 
