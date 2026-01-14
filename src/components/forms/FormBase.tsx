@@ -35,7 +35,7 @@ interface FormControlProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
 > {
-  control: ControllerProps<TFieldValues, TName, TTransformedValues>["control"];
+  control: ControllerProps<TFieldValues, TName, TTransformedValues>["control"];//Control<TFieldValues>
   name: TName;
   label: string;
   children?: ReactNode;
@@ -120,11 +120,12 @@ export const FormSelect = <
       control={control}
       render={({ field, fieldState }) => (
         <FormControl fullWidth {...extra} error={fieldState.invalid}>
-          <InputLabel id={`${name}_label`}>{label}</InputLabel>
+          <InputLabel id={`${name}_label`} shrink>{label}</InputLabel>
           <Select
             labelId={`${name}_label`}
             label={label}
             {...field}
+            displayEmpty
             error={fieldState.invalid}
           >
             {children}
