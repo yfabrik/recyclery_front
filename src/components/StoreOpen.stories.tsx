@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { storeOpen } from './StoreOpen';
+import { StoreOpen } from './StoreOpen';
 
 const meta = {
-  component: storeOpen,
+  component: StoreOpen,
   args:{
     handleDeleteHours:()=>{},
     handleOpenHoursDialog:()=>{},
     store:{id:1,name:"aaaaa"},
     hours:[]
   }
-} satisfies Meta<typeof storeOpen>;
+} satisfies Meta<typeof StoreOpen>;
 
 export default meta;
 
