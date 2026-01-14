@@ -268,7 +268,7 @@ const WeekViewSections = ({
 
       <WeekTaskSection
         title="📍 Présence déchèterie - Matin (8h-12h)"
-        chipLabel={filteredSchedules("point", 8, 12)}
+        chipLabel={`${filteredSchedules("point", 8, 12).length} présences`}
         chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
         cardColor="#ff9800"
         borderColor="#ff9800"
@@ -343,7 +343,7 @@ const WeekViewSections = ({
 
       <WeekTaskSection
         title="📍 Présence déchèterie - Après-midi (13h-17h)"
-        chipLabel={filteredSchedules("point", 13, 17)}
+        chipLabel={`${filteredSchedules("point", 13, 17).length} présences`}
         chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
         cardColor="#ff9800"
         borderColor="#ff9800"
@@ -418,7 +418,7 @@ const WeekViewSections = ({
 
       <WeekTaskSection
         title="🌅 Tâches normales - Matin (8h00 - 12h00)"
-        chipLabel={filteredSchedules("custom", 8, 12)}
+        chipLabel={`${filteredSchedules("custom", 8, 12).length} tâches`}
         chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
         cardColor="#2196f3"
         borderColor="#2196f3"
@@ -502,7 +502,7 @@ const WeekViewSections = ({
 
       <WeekTaskSection
         title="🌞 Tâches normales - Après-midi (13h30 - 17h)"
-        chipLabel={filteredSchedules("custom", 13, 17)}
+        chipLabel={`${filteredSchedules("custom", 13, 17).length} tâches`}
         chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
         cardColor="#2196f3"
         borderColor="#2196f3"
@@ -586,21 +586,21 @@ const WeekViewSections = ({
 
       <WeekCollectionSection
         title="🚚 Lieux de collecte - Matin (8h-12h)"
-        chipLabel={filteredSchedules("collection",8, 12)}
+        chipLabel={`${filteredSchedules("collection", 8, 12).length} lieux de collecte`}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         weekDays={weekDays}
         collections={collections}
-        filteredSchedules={filteredSchedules("collection",8, 12)}
+        filteredSchedules={filteredSchedules("collection", 8, 12)}
         handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
       />
 
       <WeekCollectionSection
         title="🚚 Lieux de collecte - Après-midi (13h-17h)"
-        chipLabel={filteredSchedules("collection",13, 17)}
+        chipLabel={`${filteredSchedules("collection", 13, 17).length} lieux de collecte`}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         weekDays={weekDays}
         collections={collections}
-        filteredSchedules={filteredSchedules("collection",13, 17)}
+        filteredSchedules={filteredSchedules("collection", 13, 17)}
         handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
       />
     </Box>
