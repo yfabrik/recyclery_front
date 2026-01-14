@@ -10,7 +10,7 @@ import {
   ShoppingCart,
   Store,
   TrendingUp,
-  VolunteerActivism
+  VolunteerActivism,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -27,7 +27,7 @@ import {
   Paper,
   Stack,
   Tooltip,
-  Typography
+  Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 
@@ -52,6 +52,7 @@ import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
 import dashboardService from "../services/dashboardService";
 import { getAllDashboardData, getStoreStats } from "../services/api/dashboard";
+import SimpleBarChart from "../components/dashboard/SimpleBarChart";
 
 // Composant de carte statistique amélioré
 // const StatCard = ({
@@ -262,6 +263,9 @@ const Dashboard = () => {
   const [storesLoading, setStoresLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    console.log(storesStats);
+  }, [storesStats]);
   // Données simulées réalistes pour la démonstration
   const mockStats = {
     totalItems: 1247,
@@ -348,12 +352,9 @@ const Dashboard = () => {
       // const response = await fetch("/api/dashboard/stores-stats", {
       //   headers: { Authorization: `Bearer ${token}` },
       // });
-      const data =  await getStoreStats() 
+      const data = await getStoreStats();
       //await response.json();
-
-      if (data.success) {
-        setStoresStats(data.stores);
-      }
+      setStoresStats(data.data.stores);
     } catch (error) {
       console.error("Erreur chargement stats magasins:", error);
     } finally {
@@ -368,19 +369,19 @@ const Dashboard = () => {
 
       try {
         // Récupération des vraies données depuis l'API
-        const result = await getAllDashboardData()
+        const result = await getAllDashboardData();
         //  await dashboardService.getAllDashboardData();
-
+        console.log(result)
         if (result.success) {
           setStats(result.data.stats);
-          setStats(mockStats);
+          // setStats(mockStats);
 
           setActivities(result.data.activities);
 
           // Mettre à jour les données des graphiques
           if (result.data.charts) {
             setCharts(result.data.charts);
-            console.log("Données des graphiques:", result.data.charts);
+            // console.log("Données des graphiques:", result.data.charts);
           }
         } else {
           setError(result.error || "Erreur lors du chargement des données");
@@ -418,7 +419,7 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      const result = await getAllDashboardData()
+      const result = await getAllDashboardData();
       // await dashboardService.getAllDashboardData();
 
       if (result.success) {
@@ -609,7 +610,18 @@ const Dashboard = () => {
       <Grid container spacing={3}>
         {/* Graphiques de performance */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <SimpleChart
+          <SimpleBarChart 
+          pData={ mockSalesData}
+          uData={ mockRevenueData}
+          label1="Ventes cette semaine"
+          label2="Revenus cette semaine (€)"
+          xLabels={
+            
+                 ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+            }
+          />
+
+          {/* <SimpleChart
             data={charts.sales.length > 0 ? charts.sales : mockSalesData}
             title="Ventes cette semaine"
             color="success"
@@ -630,7 +642,7 @@ const Dashboard = () => {
                 ? charts.labels
                 : ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
             }
-          />
+          /> */}
         </Grid>
 
         {/* Activités récentes améliorées */}
