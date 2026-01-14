@@ -6,6 +6,7 @@ import { useAuth } from "./contexts/AuthContext";
 // Components
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import Banner from "./components/Banner";
 
 // Pages
 import Login from "./pages/Login";
@@ -100,7 +101,6 @@ function App() {
           flexGrow: 1,
           bgcolor: "background.default",
           minHeight: "100vh",
-
           pt: isAuthenticated ? 8 : 0, // Padding pour la navbar
         }}
       >
@@ -325,6 +325,7 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Box>
+      <Banner />
     </Box>
   );
 }
