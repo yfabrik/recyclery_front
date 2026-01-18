@@ -28,7 +28,7 @@ import {
   Paper,
   Select,
   Table,
-  TableBody, 
+  TableBody,
   TableCell,
   TableContainer,
   TableHead,
@@ -52,6 +52,7 @@ import {
   getWasteStats,
   updateWaste,
 } from "../services/api/wasteDisposal";
+import { WasteForm } from "../components/forms/WasteForm";
 
 const WasteManagement = () => {
   // États principaux
@@ -66,19 +67,19 @@ const WasteManagement = () => {
   const [disposalDialog, setDisposalDialog] = useState(false);
   const [editingDisposal, setEditingDisposal] = useState(null);
   const [showWeightKeypad, setShowWeightKeypad] = useState(false);
-  const [disposalForm, setDisposalForm] = useState({
-    disposal_date: new Date().toISOString().split("T")[0],
-    category_id: "",
-    subcategory_id: "",
-    eco_organism_id: "",
-    disposal_type: "eco_organism",
-    weight_kg: "",
-    volume_m3: "",
-    transport_method: "",
-    transport_company: "",
-    transport_cost: "",
-    notes: "",
-  });
+  // const [disposalForm, setDisposalForm] = useState({
+  //   disposal_date: new Date().toISOString().split("T")[0],
+  //   category_id: "",
+  //   subcategory_id: "",
+  //   eco_organism_id: "",
+  //   disposal_type: "eco_organism",
+  //   weight_kg: "",
+  //   volume_m3: "",
+  //   transport_method: "",
+  //   transport_company: "",
+  //   transport_cost: "",
+  //   notes: "",
+  // });
 
   // États pour les filtres
   const [filters, setFilters] = useState({
@@ -113,7 +114,7 @@ const WasteManagement = () => {
       setLoading(true);
       await Promise.all([
         fetchCategories(),
-        fetchSubcategories(),
+        // fetchSubcategories(),
         fetchEcoOrganisms(),
         fetchStats(),
       ]);
@@ -127,7 +128,7 @@ const WasteManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat();
+      const response = await fcat({ only_category: true, include: 'category' });
       //  await axios.get('/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
@@ -135,19 +136,19 @@ const WasteManagement = () => {
     }
   };
 
-  const fetchSubcategories = async () => {
-    try {
-      const response = await fcat({only_sub:true});
-      // await axios.get('/api/subcategories');
-      setSubcategories(response.data.subcategories || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des sous-catégories:", error);
-    }
-  };
+  // const fetchSubcategories = async () => {
+  //   try {
+  //     const response = await fcat({ only_sub: true });
+  //     // await axios.get('/api/subcategories');
+  //     setSubcategories(response.data.subcategories || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des sous-catégories:", error);
+  //   }
+  // };
 
   const fetchEcoOrganisms = async () => {
     try {
-      const response = await getEcoOrganisms({active:1})
+      const response = await getEcoOrganisms({ active: 1 })
       setEcoOrganisms(response.data.eco_organisms || []);
     } catch (error) {
       console.error("Erreur lors du chargement des éco-organismes:", error);
@@ -185,37 +186,39 @@ const WasteManagement = () => {
   };
 
   const handleOpenDisposalDialog = (disposal = null) => {
-    if (disposal) {
-      setEditingDisposal(disposal);
-      setDisposalForm({
-        disposal_date: disposal.disposal_date,
-        category_id: disposal.category_id || "",
-        subcategory_id: disposal.subcategory_id || "",
-        eco_organism_id: disposal.eco_organism_id || "",
-        disposal_type: disposal.disposal_type,
-        weight_kg: disposal.weight_kg,
-        volume_m3: disposal.volume_m3 || "",
-        transport_method: disposal.transport_method || "",
-        transport_company: disposal.transport_company || "",
-        transport_cost: disposal.transport_cost || "",
-        notes: disposal.notes || "",
-      });
-    } else {
-      setEditingDisposal(null);
-      setDisposalForm({
-        disposal_date: new Date().toISOString().split("T")[0],
-        category_id: "",
-        subcategory_id: "",
-        eco_organism_id: "",
-        disposal_type: "eco_organism",
-        weight_kg: "",
-        volume_m3: "",
-        transport_method: "",
-        transport_company: "",
-        transport_cost: "",
-        notes: "",
-      });
-    }
+    setEditingDisposal(disposal);
+
+    // if (disposal) {
+    //   setEditingDisposal(disposal);
+    //   setDisposalForm({
+    //     disposal_date: disposal.disposal_date,
+    //     category_id: disposal.category_id || "",
+    //     subcategory_id: disposal.subcategory_id || "",
+    //     eco_organism_id: disposal.eco_organism_id || "",
+    //     disposal_type: disposal.disposal_type,
+    //     weight_kg: disposal.weight_kg,
+    //     volume_m3: disposal.volume_m3 || "",
+    //     transport_method: disposal.transport_method || "",
+    //     transport_company: disposal.transport_company || "",
+    //     transport_cost: disposal.transport_cost || "",
+    //     notes: disposal.notes || "",
+    //   });
+    // } else {
+    //   setEditingDisposal(null);
+    //   setDisposalForm({
+    //     disposal_date: new Date().toISOString().split("T")[0],
+    //     category_id: "",
+    //     subcategory_id: "",
+    //     eco_organism_id: "",
+    //     disposal_type: "eco_organism",
+    //     weight_kg: "",
+    //     volume_m3: "",
+    //     transport_method: "",
+    //     transport_company: "",
+    //     transport_cost: "",
+    //     notes: "",
+    //   });
+    // }
     setDisposalDialog(true);
   };
 
@@ -224,11 +227,11 @@ const WasteManagement = () => {
     setEditingDisposal(null);
   };
 
-  const handleSaveDisposal = async () => {
+  const handleSaveDisposal = async (data) => {
     try {
-      const url = editingDisposal
-        ? await updateWaste(disposalForm)
-        : await createWaste(disposalForm);
+      const url = editingDisposal?.id
+        ? await updateWaste(editingDisposal.id,data)
+        : await createWaste(data);
       //
       // ? `/api/waste-disposals/${editingDisposal.id}`
       // : '/api/waste-disposals';
@@ -239,7 +242,7 @@ const WasteManagement = () => {
       // await axios[method](url, disposalForm);
 
       toast.success(
-        editingDisposal
+        editingDisposal?.id
           ? "Sortie de déchets mise à jour avec succès"
           : "Sortie de déchets créée avec succès"
       );
@@ -615,7 +618,8 @@ const WasteManagement = () => {
             : "Nouvelle Sortie de Déchets"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <WasteForm formId="wasteForm" defaultValues={editingDisposal} onSubmit={handleSaveDisposal} categories={categories} ecoOrganisms={ecoOrganisms} onWeightFieldClick={() => { }} />
+          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
@@ -837,17 +841,17 @@ const WasteManagement = () => {
                 }
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDisposalDialog}>Annuler</Button>
-          <Button onClick={handleSaveDisposal} variant="contained">
+          <Button type="submit" form="wasteForm" variant="contained">
             {editingDisposal ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>
       {/* Pavé numérique pour le poids */}
-      <Dialog
+      {/* <Dialog
         open={showWeightKeypad}
         onClose={() => setShowWeightKeypad(false)}
         maxWidth="xs"
@@ -865,7 +869,7 @@ const WasteManagement = () => {
             decimalPlaces={1}
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </Container>
   );
 };
