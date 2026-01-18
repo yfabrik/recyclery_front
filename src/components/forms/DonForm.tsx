@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import {
@@ -5,17 +6,17 @@ import {
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
 import { phoneSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  donor_name: z.string().nonempty(),
-  donor_contact: z.union([z.email(), phoneSchema, z.literal("")]),
-  item_description: z.string().nonempty(),
+  donor_name: z.string().trim().nonempty(),
+  donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(v => null)]),
+  item_description: z.string().trim().nonempty(),
   estimated_value: z.coerce.number().min(0),
-  status: z.string(),
+  status: z.enum(["pending", "accepted", "rejected"]),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -25,6 +26,8 @@ export const DonForm = ({
   onSubmit,
   defaultValues,
 }: BaseFormProps<Schema>) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -33,7 +36,8 @@ export const DonForm = ({
       item_description: "",
       estimated_value: "",
       status: "pending",
-      ...(defaultValues ?? {}),
+      ...data
+      // ...(defaultValues ?? {}),
     },
   });
 
@@ -59,7 +63,7 @@ export const DonForm = ({
             control={form.control}
             label="Description du Don"
             name="item_description"
-            extra={{ multiline: true, rows: 3, required: true }}
+            extra={{ multiline: true, rows: 3 }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
