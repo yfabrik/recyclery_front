@@ -52,6 +52,7 @@ import JsBarcode from 'jsbarcode';
 import { fetchCategories as fcat } from '../services/api/categories';
 import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
 import { StatCardNoIcon } from '../components/StatCard';
+import { LabeledItemForm } from '../components/forms/LabeledItemForm';
 
 const Labels = () => {
   const { user } = useAuth();
@@ -68,17 +69,17 @@ const Labels = () => {
     search: ''
   });
 
-  const [formData, setFormData] = useState({
-    description: '',
-    category_id: '',
-    subcategory_id: '',
-    weight: '',
-    price: '',
-    cost: '',
-    condition_state: 'good',
-    location: '',
-    autoPrint: false,
-  });
+  // const [formData, setFormData] = useState({
+  //   description: '',
+  //   category_id: '',
+  //   subcategory_id: '',
+  //   weight: '',
+  //   price: '',
+  //   cost: '',
+  //   condition_state: 'good',
+  //   location: '',
+  //   autoPrint: false,
+  // });
 
   const conditionOptions = [
     { value: 'excellent', label: 'Excellent', color: 'success' },
@@ -110,9 +111,6 @@ const Labels = () => {
       if (filters.search) params.append('search', filters.search);
 
       const response = await getLabeledItems(params)
-      // await axios.get(`/api/labeled-items?${params}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
 
       setItems(response.data.items || []);
     } catch (error) {
@@ -126,35 +124,35 @@ const Labels = () => {
   const fetchCategories = async () => {
     try {
       // const token = localStorage.getItem('token');
-      const response = await fcat()
+      const response = await fcat({ only_category: true, include: "category" })
       // await axios.get('/api/categories', {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
 
       // Organiser les catégories comme dans les autres pages
-      const allCategories = response.data.categories || [];
-      const mainCategories = allCategories.filter(cat => !cat.parent_id);
-      const subcategories = allCategories.filter(cat => cat.parent_id);
+      // const allCategories = response.data.categories || [];
+      // const mainCategories = allCategories.filter(cat => !cat.parent_id);
+      // const subcategories = allCategories.filter(cat => cat.parent_id);
 
-      const organizedCategories = mainCategories.map(category => ({
-        ...category,
-        subcategories: subcategories.filter(sub => sub.parent_id === category.id)
-      }));
+      // const organizedCategories = mainCategories.map(category => ({
+      //   ...category,
+      //   subcategories: subcategories.filter(sub => sub.parent_id === category.id)
+      // }));
 
-      setCategories(organizedCategories);
+      setCategories(response.data.categories);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-      // Réinitialiser la sous-catégorie si la catégorie change
-      ...(field === 'category_id' ? { subcategory_id: '' } : {})
-    }));
-  };
+  // const handleInputChange = (field, value) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [field]: value,
+  //     // Réinitialiser la sous-catégorie si la catégorie change
+  //     ...(field === 'category_id' ? { subcategory_id: '' } : {})
+  //   }));
+  // };
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
@@ -163,77 +161,68 @@ const Labels = () => {
     }));
   };
 
-  const resetForm = () => {
-    setFormData({
-      description: '',
-      category_id: '',
-      subcategory_id: '',
-      weight: '',
-      price: '',
-      cost: '',
-      condition_state: 'good',
-      location: '',
-      autoPrint: false,
-    });
-    setEditingItem(null);
-  };
+  // const resetForm = () => {
+  //   setFormData({
+  //     description: '',
+  //     category_id: '',
+  //     subcategory_id: '',
+  //     weight: '',
+  //     price: '',
+  //     cost: '',
+  //     condition_state: 'good',
+  //     location: '',
+  //     autoPrint: false,
+  //   });
+  //   setEditingItem(null);
+  // };
 
   const handleOpenDialog = (item = null) => {
-    if (item) {
-      setEditingItem(item);
-      setFormData({
-        description: item.description || '',
-        category_id: item.category_id || '',
-        subcategory_id: item.subcategory_id || '',
-        weight: item.weight || '',
-        price: item.price || '',
-        cost: item.cost || '',
-        condition_state: item.condition_state || 'good',
-        location: item.location || '',
-        autoPrint: false, // Par défaut désactivé pour la modification
-      });
-    } else {
-      resetForm();
-    }
+    setEditingItem(item);
+
+    // if (item) {
+    //   setEditingItem(item);
+    //   setFormData({
+    //     description: item.description || '',
+    //     category_id: item.category_id || '',
+    //     subcategory_id: item.subcategory_id || '',
+    //     weight: item.weight || '',
+    //     price: item.price || '',
+    //     cost: item.cost || '',
+    //     condition_state: item.condition_state || 'good',
+    //     location: item.location || '',
+    //     autoPrint: false, // Par défaut désactivé pour la modification
+    //   });
+    // } else {
+    //   resetForm();
+    // }
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    resetForm();
+    // resetForm();
   };
 
-  const handleSave = async () => {
+  const handleSave = async (data) => {
     try {
-      if (!formData.category_id || !formData.price) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
-        return;
-      }
 
-      const token = localStorage.getItem('token');
       let savedItem = null;
 
-      if (editingItem) {
+      if (editingItem?.id) {
         // Mise à jour
 
-        const response = await updateLabeledItem(editingItem.id, formData)
-        //  await axios.put(`/api/labeled-items/${editingItem.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+        const response = await updateLabeledItem(editingItem.id, data)
         savedItem = response.data.item;
         toast.success('Article mis à jour avec succès');
       } else {
         // Création
-        const response = await createLabeledItem(formData)
-        // await axios.post('/api/labeled-items', formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+        const response = await createLabeledItem(data)
         savedItem = response.data.item;
         toast.success('Article créé avec succès');
       }
 
       // Impression automatique si activée
-      if (formData.autoPrint && savedItem) {
+      if (data.autoPrint && savedItem) {
         setTimeout(() => {
           printLabel(savedItem);
         }, 500); // Petit délai pour s'assurer que l'article est bien créé
@@ -365,7 +354,7 @@ const Labels = () => {
     printWindow.print();
   };
 
-  const selectedCategory = categories.find(cat => cat.id == formData.category_id);
+  // const selectedCategory = categories.find(cat => cat.id == formData.category_id);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -566,6 +555,9 @@ const Labels = () => {
           {editingItem ? 'Modifier l\'article' : 'Nouvel article'}
         </DialogTitle>
         <DialogContent>
+          <LabeledItemForm formId='labelItemForm' categories={categories} onSubmit={handleSave} setShowPriceKeypad={setShowPriceKeypad} setShowWeightKeypad={setShowWeightKeypad} defaultValues={editingItem} />
+        </DialogContent>
+        {/* <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required>
@@ -713,10 +705,10 @@ const Labels = () => {
               </Box>
             </Grid>
           </Grid>
-        </DialogContent>
+        </DialogContent> */}
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button onClick={handleSave} variant="contained">
+          <Button type='submit' form='labelItemForm' variant="contained">
             {editingItem ? 'Mettre à jour' : 'Créer'}
           </Button>
         </DialogActions>
@@ -726,7 +718,7 @@ const Labels = () => {
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du poids</DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <NumericKeypad
-            value={formData.weight || '0'}
+            value={'0'}
             onChange={(value) => handleInputChange('weight', value)}
             onClose={() => setShowWeightKeypad(false)}
             maxValue={9999}
@@ -740,7 +732,7 @@ const Labels = () => {
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du prix</DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <NumericKeypad
-            value={formData.price || '0'}
+            value={'0'}
             onChange={(value) => handleInputChange('price', value)}
             onClose={() => setShowPriceKeypad(false)}
             maxValue={99999}
