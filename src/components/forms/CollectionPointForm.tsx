@@ -8,6 +8,8 @@ import {
 } from "./FormBase";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { idSchema, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 interface CollectionPointFormProps extends BaseFormProps<Schema> {
   recycleries: Array<{ id: number; name: string }>;
@@ -17,17 +19,17 @@ const schema = z.object({
   name: z.string().trim().nonempty(),
   address: z.string().trim().nonempty(),
   city: z.string().trim().nonempty(),
-  postal_code: z.string().regex(/^(?:0[1-9]|[1-8]\d|9[0-8])\d{3}$/),
-  contact_person: z.string().optional().nullable(),
+  postal_code: postalSchema(),
+  contact_person: z.string().transform(val => val == "" ? null : val),
   contact_phone: z.union([
-    z.string().regex(/^(0|(\+[0-9]{2}[. -]?))[1-9]([. -]?[0-9][0-9]){4}$/),
-    z.literal(""),
+    phoneSchema(),
+    z.literal("").transform(v => null)
   ]),
-  contact_email: z.union([z.email(), z.literal("")]),
+  contact_email: z.union([z.email(), z.literal("").transform(v => null)]),
   // type: z.string(),
-  notes: z.string(),
+  notes: z.string().transform(val => val == "" ? null : val),
   is_active: z.boolean(),
-  recyclery_id: z.coerce.number().nullable().transform(val => val == 0 ? null : val),
+  recyclery_id: z.union([idSchema(), z.literal("").transform(v => null)])
 });
 
 type Schema = z.infer<typeof schema>;
@@ -38,6 +40,7 @@ export const CollectionPointForm = ({
   defaultValues,
   recycleries,
 }: CollectionPointFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
   const form = useForm({
     defaultValues: {
       name: "",
@@ -51,10 +54,12 @@ export const CollectionPointForm = ({
       notes: "",
       is_active: true,
       recyclery_id: "",
-      ...(defaultValues ?? {}),
+      ...data
+      // ...(defaultValues ?? {}),
     },
     resolver: zodResolver(schema),
   });
+
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2} sx={{ mt: 1 }}>

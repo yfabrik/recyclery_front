@@ -1,5 +1,34 @@
 import z from "zod";
 
-export const phoneSchema = z
-  .string()
-  .regex(/^[0-9+\-()\s]+$/, "Invalid phone");
+// export const phoneSchema = z
+//   .string()
+//   .regex(/^[0-9+\-()\s]+$/, "Invalid phone");
+
+
+export const phoneSchema = (message?: string) => z.string({ message }).regex(/^(0|(\+[0-9]{2}[. -]?))[1-9]([. -]?[0-9][0-9]){4}$/, { message })
+
+export const postalSchema = (message?: string) => z.string({ message }).regex(/^(?:0[1-9]|[1-8]\d|9[0-8])\d{3}$/, { message })
+
+export const idSchema = (message?: string) => z.coerce.number({ message }).positive({ message })
+
+
+function transformNullsToEmptyStrings<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
+  return schema.transform((obj) => {
+    const result: Record<string, any> = {};
+    for (const key in obj) {
+      result[key] = obj[key] === null ? "" : obj[key];
+    }
+    return result;
+  });
+}
+
+function transformEmptyStringsToNulls<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
+  return schema.transform((obj) => {
+    const result: Record<string, any> = {};
+    for (const key in obj) {
+      result[key] = obj[key] === "" ? null : obj[key];
+    }
+    return result;
+  });
+}
+
