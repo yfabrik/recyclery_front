@@ -11,12 +11,14 @@ import {
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
+import { idSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  collection_point_id: z.coerce.number().positive("un point de collecte est requis"),
+  collection_point_id: idSchema("un point de collecte est requis"),
   day_of_week: z.string().nonempty("choissisez un jour"),
   is_present: z.boolean(),
-  start_time: z.coerce.date().nullable(),
+  start_time: z.coerce.date(),
   end_time: z.coerce.date(),
   is_24h: z.boolean(),
   notes: z.string(),
@@ -32,17 +34,20 @@ export const PresencePointForm = ({
 }: BaseFormProps<Schema> & {
   collectionPoints: Array<{ id: number; name: string }>;
 }) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       collection_point_id: "",
       day_of_week: "",
       is_present: true,
-      start_time: null,
-      end_time: null,
+      start_time: new Date().setHours(9, 0),//TODO j'aime pas la date null
+      end_time: new Date().setHours(17, 0),
       is_24h: false,
       notes: "",
-      ...(defaultValues ?? {}),
+      ...data
+      // ...(defaultValues ?? {}),
     },
   });
   //   const is_24 = form.watch("is_24h");
