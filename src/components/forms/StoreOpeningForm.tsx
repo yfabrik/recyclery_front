@@ -4,23 +4,28 @@ import { FormInput, FormSelect, FormSwitch, FormTime, type BaseFormProps } from 
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { DAYS_OF_WEEK as daysOfWeek,TIME_SLOTS as timeSlotOptions  } from "../../interfaces/shared";
+import { DAYS_OF_WEEK as daysOfWeek, TIME_SLOTS as timeSlotOptions } from "../../interfaces/shared";
+import { idSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 
 
 const schema = z.object({
-    store_id: z.coerce.number(),
+    store_id: z.union([idSchema(), z.literal("").transform(val => null)]),
     day_of_week: z.string(),
     is_open: z.boolean(),
-    open_time: z.date(),
-    close_time: z.date(),
+    open_time: z.coerce.date(),
+    close_time: z.coerce.date(),
     is_24h: z.boolean(),
-    notes: z.string()
+    notes: z.string().transform(val => val == '' ? null : val)
 });
 
 type Schema = z.infer<typeof schema>
 
 export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: BaseFormProps<Schema> & { stores: Array<{ id: number, name: string }> }) => {
+
+    const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+
     const form = useForm(
         {
             resolver: zodResolver(schema),
@@ -28,8 +33,8 @@ export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: Ba
                 store_id: defaultValues?.store_id || "",
                 day_of_week: defaultValues?.day_of_week || "",
                 is_open: defaultValues?.is_open || true,
-                open_time: defaultValues?.open_time || "",
-                close_time: defaultValues?.close_time || "",
+                open_time: defaultValues?.open_time || new Date().setHours(9,0),
+                close_time: defaultValues?.close_time || new Date().setHours(17,0),
                 is_24h: defaultValues?.is_24h || false,
                 notes: defaultValues?.notes || "",
             }
@@ -74,7 +79,7 @@ export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: Ba
                         {!watchFields[1] && (
                             <>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <FormTime control={form.control} name="open_time" label="Heure d'ouverture"/>
+                                    <FormTime control={form.control} name="open_time" label="Heure d'ouverture" />
                                     {/* <FormInput control={form.control} name="open_time" label="Heure d'ouverture" extra={{
                                         type: "time",
                                         slotProps: { inputLabel: { shrink: true } }
@@ -82,7 +87,7 @@ export const StoreOpeningForm = ({ formId, onSubmit, defaultValues, stores }: Ba
 
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <FormTime control={form.control} name="close_time" label="Heure de fermeture"/>
+                                    <FormTime control={form.control} name="close_time" label="Heure de fermeture" />
                                     {/* <FormInput control={form.control} name="close_time" label="Heure de fermeture" extra={{
                                         type: "time",
                                         slotProps: { inputLabel: { shrink: true } }
