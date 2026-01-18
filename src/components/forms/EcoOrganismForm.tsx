@@ -6,17 +6,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
 import { phoneSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  name: z.string().nonempty(),
-  description: z.string(),
-  contact_email: z.union([z.email(), z.literal("")]),
+  name: z.string().trim().nonempty(),
+  description: z.string().transform(v => v == '' ? null : v),
+  contact_email: z.union([z.email(), z.literal("").transform(v => null)]),
   contact_phone: z.union([
-    phoneSchema,
-    z.literal(""),
+    phoneSchema(),
+    z.literal("").transform(v => null),
   ]),
-  address: z.string(),
-  website: z.string(),
+  address: z.string().transform(v => v == '' ? null : v),
+  website: z.union([
+    z.url(),
+    z.literal("").transform(v => null),
+  ]),
   is_active: z.boolean(),
 });
 
@@ -27,6 +31,7 @@ export const EcoOrganismForm = ({
   onSubmit,
   defaultValues,
 }: BaseFormProps<Schema>) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -37,8 +42,8 @@ export const EcoOrganismForm = ({
       address: "",
       website: "",
       is_active: true,
-
-      ...(defaultValues ?? {}),
+      ...data
+      // ...(defaultValues ?? {}),
     },
   });
   return (
