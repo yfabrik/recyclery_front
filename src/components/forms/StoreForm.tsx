@@ -4,24 +4,26 @@ import { FormInput, FormSelect, FormSwitch, type BaseFormProps } from "./FormBas
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { phoneSchema } from "../../interfaces/ZodTypes";
+import { idSchema, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 
 
 const schema = z.object({
     name: z.string().nonempty(),
-    manager_id: z.coerce.number().optional().transform(val => val == 0||"" ? null : val),
+    manager_id: z.union([idSchema(), z.literal("").transform(val => null)]),
     address: z.string(),
     city: z.string(),
-    postal_code: z.string().optional(),
-    phone: z.union([phoneSchema, z.literal("").transform(val => val == "" ? null : val)]),
-    email: z.union([z.email(), z.literal("").transform(val => val == "" ? null : val)]),
+    postal_code: z.union([postalSchema(), z.literal("").transform(val => null)]),
+    phone: z.union([phoneSchema(), z.literal("").transform(val => null)]),
+    email: z.union([z.email(), z.literal("").transform(val => null)]),
     is_active: z.boolean(),
 });
 
 type Schema = z.infer<typeof schema>
 
 export const StoreForm = ({ formId, onSubmit, users, defaultValues }: BaseFormProps<Schema> & { users: Array<{ id: number, username: string, role: string }> }) => {
+    const data = defaultValues ? emptyStringToNull(defaultValues) : {}
     const form = useForm(
         {
             resolver: zodResolver(schema),
