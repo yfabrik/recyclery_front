@@ -2,12 +2,14 @@ import {
   FormControl,
   FormControlLabel,
   FormHelperText,
+  FormLabel,
   InputLabel,
+  RadioGroup,
   Select,
   Switch,
   TextField,
   type FormControlOwnProps,
-  type TextFieldProps,
+  type TextFieldProps
 } from "@mui/material";
 import type { ReactNode } from "react";
 import {
@@ -91,7 +93,7 @@ export const FormSwitch = <
             <Switch
               {...field}
               checked={field.value}
-              // onChange={field.onChange}
+            // onChange={field.onChange}
             />
           }
           label={label}
@@ -158,7 +160,7 @@ export const FormDate = <
             label={label}
             slotProps={{
               textField: {
-                fullWidth:true,
+                fullWidth: true,
                 error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
               },
@@ -211,3 +213,37 @@ export const FormTime = <
     />
   );
 };
+
+export const FormRadio = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({ name,
+  control,
+  label,
+  extra,
+  children
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  extra?: FormControlOwnProps;
+}) => {
+  return (
+
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <FormControl error={fieldState.invalid} fullWidth {...extra}>
+          <FormLabel id={name}>{label}</FormLabel>
+          <RadioGroup
+            aria-labelledby={name}
+            {...field}
+          >
+            {children}
+          </RadioGroup>
+          {fieldState.invalid && (
+            <FormHelperText>{fieldState.error?.message}</FormHelperText>
+          )}
+        </FormControl>)} />
+  )
+}
+

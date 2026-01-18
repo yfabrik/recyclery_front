@@ -49,6 +49,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { fetchCollectionPoints as fCollP } from "../services/api/collectionPoint";
 import { createArrival, getArrivals } from "../services/api/arrival";
+import { ArrivalForm } from "../components/forms/ArrivalForm";
 
 const Arrivals = () => {
   const { user } = useAuth();
@@ -191,45 +192,46 @@ const Arrivals = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!formData.category_id || !formData.weight || !formData.source_type) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
+  const handleSubmit = async (data) => {
 
-    if (parseFloat(formData.weight) <= 0) {
-      toast.error("Le poids doit être supérieur à 0");
-      return;
-    }
+    // Validation
+    // if (!formData.category_id || !formData.weight || !formData.source_type) {
+    //   toast.error("Veuillez remplir tous les champs obligatoires");
+    //   return;
+    // }
+
+    // if (parseFloat(formData.weight) <= 0) {
+    //   toast.error("Le poids doit être supérieur à 0");
+    //   return;
+    // }
 
     setLoading(true);
     try {
       // const token = localStorage.getItem('token');
 
       // Préparer les données selon le type de source
-      let payload = { ...formData };
+      // let payload = { ...formData };
 
-      if (
-        formData.source_type === "collection_point" &&
-        !formData.collection_point_id
-      ) {
-        toast.error("Veuillez sélectionner un point de collecte");
-        setLoading(false);
-        return;
-      }
+      // if (
+      //   formData.source_type === "collection_point" &&
+      //   !formData.collection_point_id
+      // ) {
+      //   toast.error("Veuillez sélectionner un point de collecte");
+      //   setLoading(false);
+      //   return;
+      // }
 
-      if (formData.source_type === "volunteer_donation") {
-        payload.volunteer_donation = true;
-        payload.source_details = "Apport volontaire sur site";
-      }
+      // if (formData.source_type === "volunteer_donation") {
+      //   payload.volunteer_donation = true;
+      //   payload.source_details = "Apport volontaire sur site";
+      // }
 
-      if (formData.source_type === "house_clearance") {
-        payload.house_clearance = true;
-        payload.source_details = "Vide maison";
-      }
+      // if (formData.source_type === "house_clearance") {
+      //   payload.house_clearance = true;
+      //   payload.source_details = "Vide maison";
+      // }
 
-      const response = await createArrival(payload);
+      const response = await createArrival(data);
       // await axios.post('/api/arrivals', payload, {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
@@ -372,6 +374,8 @@ const Arrivals = () => {
                 <Add color="primary" />
                 Nouvel Arrivage
               </Typography>
+
+              <ArrivalForm loading={loading} categories={categories} formId="arrivalForm" collectionPoints={collectionPoints} onSubmit={handleSubmit} onWeightFieldClick={() => setShowKeypad(true)} />
 
               <Grid container spacing={3}>
                 {/* Catégorie */}
@@ -632,23 +636,23 @@ const Arrivals = () => {
 
                 {(formData.source_type === "volunteer_donation" ||
                   formData.source_type === "house_clearance") && (
-                  <Grid size={{ xs: 12 }}>
-                    <TextField
-                      fullWidth
-                      label="Détails supplémentaires"
-                      value={formData.source_details}
-                      onChange={(e) =>
-                        handleInputChange("source_details", e.target.value)
-                      }
-                      multiline
-                      rows={2}
-                      placeholder="Informations complémentaires sur la provenance..."
-                      sx={{
-                        "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                      }}
-                    />
-                  </Grid>
-                )}
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        fullWidth
+                        label="Détails supplémentaires"
+                        value={formData.source_details}
+                        onChange={(e) =>
+                          handleInputChange("source_details", e.target.value)
+                        }
+                        multiline
+                        rows={2}
+                        placeholder="Informations complémentaires sur la provenance..."
+                        sx={{
+                          "& .MuiInputBase-input": { fontSize: "1.1rem" },
+                        }}
+                      />
+                    </Grid>
+                  )}
 
                 {/* Notes */}
                 <Grid size={{ xs: 12 }}>

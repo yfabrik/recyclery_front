@@ -4,7 +4,7 @@ import { ArrivalForm } from "./ArrivalForm";
 
 const meta = {
   component: ArrivalForm,
-  args:{
+  args: {
     categories: [
       {
         id: 1,
@@ -25,7 +25,8 @@ const meta = {
         parent_id: null,
       },
     ],
-    collectionPoints:[]
+    collectionPoints: [],
+    onSubmit: (data) => console.log(data)
   },
 } satisfies Meta<typeof ArrivalForm>;
 
