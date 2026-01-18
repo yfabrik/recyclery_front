@@ -8,17 +8,19 @@ import { z } from "zod";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import { AdminPanelSettings, Category, Inventory, Palette, Settings } from "@mui/icons-material";
 import type { ReactNode } from "react";
+import { idSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 
 interface CategorieFormProps extends BaseFormProps<Schema> {
   icons: Array<{ name: string; label: string }>;
-  
+
 }
 const schema = z.object({
-  name: z.string().trim().nonempty(),
-  description: z.string().nullable(),
-  icon: z.string().nullable(),
-  parent_id:z.coerce.number().nullable()
+  name: z.string().trim().nonempty("name required"),
+  description: z.string().transform(v => v == "" ? null : v),
+  icon: z.string().transform(v => v == "" ? null : v),
+  parent_id: idSchema().nullable()
 })
 
 type Schema = z.infer<typeof schema>
@@ -30,19 +32,21 @@ export const CategorieForm = ({
   defaultValues,
 
 }: CategorieFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+
   const form = useForm({
-    defaultValues:  {
+    defaultValues: {
       name: "",
       description: "",
       icon: "",
       parent_id: null,
-      ...(defaultValues??{})
+      ...data
     },
     resolver: zodResolver(schema),
   });
 
 
-  const getIconComponent = (iconName: string):ReactNode => {
+  const getIconComponent = (iconName: string): ReactNode => {
     // Import dynamique des icônes Material-UI
     const iconMap = {
       Category: Category,
@@ -63,7 +67,7 @@ export const CategorieForm = ({
         rows: 3,
         margin: 'normal'
       }} />
-      <FormSelect control={form.control} label="Icône" name="icon">
+      <FormSelect control={form.control} label="Icône" name="icon" extra={{ margin: "normal" }}>
         {icons.map((icon) => (
           <MenuItem key={icon.name} value={icon.name}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
