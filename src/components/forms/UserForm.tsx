@@ -9,7 +9,7 @@ import {
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import { phoneSchema } from "../../interfaces/ZodTypes";
+import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
@@ -17,10 +17,10 @@ const schema = z.object({
   email: z.email(),
   first_name: z.string(),
   last_name: z.string(),
-  phone: z.union([phoneSchema, z.literal("")]),
+  phone: z.union([phoneSchema(), z.literal("").transform(v=>null)]),
   password: z.string(),
   role: z.string(),
-  recyclery_id: z.coerce.number().nonnegative(),
+  recyclery_id: idSchema(),
   is_active: z.boolean(),
 });
 

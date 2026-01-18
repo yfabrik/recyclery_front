@@ -256,15 +256,15 @@ export const UsersTab = () => {
 
   const handleToggleUserStatus = async (user: UserModel) => {
     try {
-      const newStatus = !user.is_active;
+      const newStatus = !user.isActive;
 
       if (newStatus) {
-        await updateUser(user.id, { is_active: newStatus });
+        await updateUser(user.id, { isActive: newStatus });
         // Réactiver l'utilisateur
         toast.success("Utilisateur réactivé");
       } else {
         // Désactiver l'utilisateur
-        await updateUser(user.id, { is_active: false });
+        await updateUser(user.id, { isActive: false });
 
         toast.success("Utilisateur désactivé");
       }

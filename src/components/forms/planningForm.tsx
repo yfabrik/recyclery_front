@@ -11,6 +11,7 @@ import {
 } from "./FormBase";
 import { PRIORITIES as priorities } from "../../interfaces/shared";
 import { useEffect } from "react";
+import { idSchema } from "../../interfaces/ZodTypes";
 
 type TaskOption = {
   id: number | string;
@@ -25,7 +26,7 @@ type PriorityOption = {
 };
 
 type StoreOption = {
-  id: number | string;
+  id: number;
   name: string;
 };
 
@@ -36,14 +37,14 @@ type LocationOption = {
 };
 
 const schema = z.object({
-  category: z.string("La tâche est requise").nonempty("La tâche est requise"),
-  scheduled_date: z.date("La date est requise"),
-  start_time: z.date("L'heure de début est requise"),
-  end_time: z.date("L'heure de fin est requise"),
+  category: z.string("La tâche est requise").nonempty("La tâche est requise"),//TODO enum
+  scheduled_date: z.coerce.date("La date est requise"),
+  start_time: z.coerce.date("L'heure de début est requise"),
+  end_time: z.coerce.date("L'heure de fin est requise"),
   priority: z.string().nonempty("La priorité est requise"),
-  store_id: z.union([z.string(), z.number()]).optional().nullable(),
-  reccurence_pattern: z.union([z.string(), z.number()]).optional().nullable(),
-  notes: z.string().optional(),
+  store_id: z.union([idSchema(), z.literal("").transform(v => null)]),
+  reccurence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
+  notes: z.string().transform(v => v == "" ? null : v),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -62,7 +63,7 @@ export const PlaningForm = ({
     resolver: zodResolver(schema),
     defaultValues: {
       category: "",
-      start_time:  new Date(new Date().setHours(9, 0)),
+      start_time: new Date(new Date().setHours(9, 0)),
       end_time: new Date(new Date().setHours(17, 0)),
       notes: "",
       priority: "medium",
@@ -76,11 +77,11 @@ export const PlaningForm = ({
 
   const handleQuickTimeSlot = (slot: "morning" | "afternoon") => {
     if (slot === "morning") {
-      form.setValue("start_time",  new Date(new Date().setHours(8, 0)));
+      form.setValue("start_time", new Date(new Date().setHours(8, 0)));
       form.setValue("end_time", new Date(new Date().setHours(12, 0)));
     } else {
       form.setValue("start_time", new Date(new Date().setHours(13, 30)));
-      form.setValue("end_time",  new Date(new Date().setHours(17, 0)));
+      form.setValue("end_time", new Date(new Date().setHours(17, 0)));
     }
   };
 
