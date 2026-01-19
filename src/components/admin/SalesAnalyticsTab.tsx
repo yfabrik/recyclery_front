@@ -125,7 +125,6 @@ export const SalesAnalyticsTab = () => {
 
   useEffect(() => {
     fetchStores();
-    fetchSalesData();
   }, []);
 
   useEffect(() => {
@@ -135,7 +134,7 @@ export const SalesAnalyticsTab = () => {
   const fetchStores = async () => {
     try {
 
-      const response =await fStore({active:1})
+      const response =await fStore({active:true})
 
       setStores(response.data.stores);
     } catch (error) {
@@ -180,7 +179,7 @@ export const SalesAnalyticsTab = () => {
       setPostalCodeStats(postalResponse.data.postal_codes || []);
 
       // Récupérer les remboursements pour toutes les transactions
-      await fetchAllTransactionRefunds(transactions);
+      // await fetchAllTransactionRefunds(transactions);
     } catch (error) {
       console.error("Erreur lors du chargement des données de vente:", error);
       toast.error("Erreur lors du chargement des données");
@@ -879,11 +878,11 @@ export const SalesAnalyticsTab = () => {
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <Typography variant="body2" fontWeight="bold">
-                          {transaction.transaction_number}
+                          {transaction.id}
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        {new Date(transaction.created_at).toLocaleDateString(
+                        {new Date(transaction.createdAt).toLocaleDateString(
                           "fr-FR",
                           {
                             day: "2-digit",
@@ -894,8 +893,8 @@ export const SalesAnalyticsTab = () => {
                           }
                         )}
                       </TableCell>
-                      <TableCell>{transaction.store_name || "N/A"}</TableCell>
-                      <TableCell>{transaction.cashier_name || "N/A"}</TableCell>
+                      <TableCell>{transaction?.CashSession?.CashRegister?.Recyclery.name || "N/A"}</TableCell>
+                      <TableCell>{transaction?.CashSession?.User?.username || "N/A"}</TableCell>
                       <TableCell>
                         <Chip
                           label={getPaymentMethodLabel(

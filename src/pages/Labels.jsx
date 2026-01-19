@@ -242,11 +242,7 @@ const Labels = () => {
     }
 
     try {
-      // const token = localStorage.getItem('token');
       await deleteLabeledItem(id)
-      // await axios.delete(`/api/labeled-items/${id}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
       toast.success('Article supprimé avec succès');
       fetchItems();
     } catch (error) {
@@ -261,11 +257,9 @@ const Labels = () => {
     }
 
     try {
-      // const token = localStorage.getItem('token');
+
       await sellItem(id)
-      // await axios.post(`/api/labeled-items/${id}/sell`, {}, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+
       toast.success('Article marqué comme vendu');
       fetchItems();
     } catch (error) {
@@ -487,12 +481,12 @@ const Labels = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {item.category_name || '-'}
+                      {item?.category?.name || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="textSecondary">
-                      {item.subcategory_name || '-'}
+                      {item?.subcategory?.name || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell>

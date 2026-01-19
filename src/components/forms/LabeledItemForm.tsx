@@ -67,6 +67,10 @@ export const LabeledItemForm = ({
     resolver: zodResolver(schema),
   });
 
+  const categoryId = form.watch("category_id")
+  const subcategories = ()=>{
+    return categoryId ? categories.find(c=>c.id==categoryId)?.subcategories||[]:[]
+  }
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -85,7 +89,7 @@ export const LabeledItemForm = ({
 
           <FormSelect control={form.control} label="Sous-catégories" name="subcategory_id">
             <MenuItem value="">Aucune</MenuItem>
-            {categories.map(category => (
+            {subcategories().map(category => (
               <MenuItem key={category.id} value={category.id}>
                 {category.name}
               </MenuItem>
