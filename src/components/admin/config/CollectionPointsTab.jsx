@@ -5,7 +5,7 @@ import {
   Email,
   LocationOn,
   Phone,
-  Schedule
+  Schedule,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -27,7 +27,7 @@ import {
   TableHead,
   TableRow,
   Tabs,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -180,7 +180,7 @@ const CollectionPointsTab = () => {
     } catch (error) {
       console.log(error);
       toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde"
+        error.response?.data?.error || "Erreur lors de la sauvegarde",
       );
     }
   };
@@ -196,7 +196,7 @@ const CollectionPointsTab = () => {
         fetchCollectionPoints();
       } catch (error) {
         toast.error(
-          error.response?.data?.error || "Erreur lors de la suppression"
+          error.response?.data?.error || "Erreur lors de la suppression",
         );
       }
     }
@@ -241,7 +241,7 @@ const CollectionPointsTab = () => {
   };
 
   const handleOpenPresenceDialog = (presence = null) => {
-      setEditingPresence(presence);
+    setEditingPresence(presence);
 
     // if (presence) {
     //   setEditingPresence(presence);
@@ -696,19 +696,33 @@ const CollectionPointsTab = () => {
                           <LocationOn color="primary" fontSize="small" />
                           <Typography variant="body2">
                             {collectionPoints.find(
-                              (cp) => cp.id === presence.collection_point_id
+                              (cp) => cp.id === presence.collection_point_id,
                             )?.name || "Point inconnu"}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {new Date(presence.day_of_week).toLocaleDateString()}
+                          {presence.day_of_week}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {presence.start_time} - {presence.end_time}
+                          {new Date(presence.start_time).toLocaleString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}{" "}
+                          -{" "}
+                          {new Date(presence.end_time).toLocaleString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -718,8 +732,8 @@ const CollectionPointsTab = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={presence.is_present ? "Présent" : "Absent"}
-                          color={presence.is_present ? "success" : "error"}
+                          label={presence.is_recurring ? "Présent" : "Absent"}
+                          color={presence.is_recurring ? "success" : "error"}
                           size="small"
                         />
                       </TableCell>

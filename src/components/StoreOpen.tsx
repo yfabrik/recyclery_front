@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { DAYS_OF_WEEK as daysOfWeek} from "../interfaces/shared";
+import { DAYS_OF_WEEK as daysOfWeek } from "../interfaces/shared";
 interface Hours {
   id: number;
   day_of_week: string;
@@ -43,7 +43,6 @@ export const StoreOpen = ({
   handleOpenHoursDialog,
   handleDeleteHours,
 }: StoreOpenProps) => {
-
   return (
     <Card>
       <CardHeader
@@ -89,7 +88,7 @@ export const StoreOpen = ({
                 .sort(
                   (a, b) =>
                     daysOfWeek.findIndex((d) => d.key === a.day_of_week) -
-                    daysOfWeek.findIndex((d) => d.key === b.day_of_week)
+                    daysOfWeek.findIndex((d) => d.key === b.day_of_week),
                 )
                 .map((hour) => (
                   <TableRow key={hour.id}>
@@ -113,8 +112,20 @@ export const StoreOpen = ({
                         {!hour.is_open
                           ? "Fermé"
                           : hour.is_24h
-                          ? "24h/24"
-                          : `${hour.open_time} - ${hour.close_time}`}
+                            ? "24h/24"
+                            : `${new Date(hour.open_time).toLocaleString(
+                                "fr-FR",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )} - ${new Date(hour.close_time).toLocaleString(
+                                "fr-FR",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}`}
                       </Typography>
                       {hour.notes && (
                         <Typography
