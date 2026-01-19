@@ -13,15 +13,15 @@ import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
-  username: z.string(),
-  email: z.email(),
+  username: z.string("username requis"),
+  email: z.email("email requis"),
   first_name: z.string(),
   last_name: z.string(),
   phone: z.union([phoneSchema(), z.literal("").transform(v=>null)]),
   password: z.string(),
   role: z.string(),
   recyclery_id: idSchema(),
-  is_active: z.boolean(),
+  is_active: z.boolean().default(true),
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -76,7 +76,7 @@ export const UserForm = ({
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput control={form.control} label="Téléphone" name="phone" />
         </Grid>
-        {!defaultValues && (
+        {!defaultValues?.id && (
           <Grid size={{ xs: 12, md: 6 }}>
             <FormInput
               control={form.control}
