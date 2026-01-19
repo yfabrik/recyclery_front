@@ -963,10 +963,10 @@ const StoresTab = () => {
                   cashRegisters.map((register) => (
                     <TableRow key={register.id}>
                       <TableCell>{register.name}</TableCell>
-                      <TableCell>{register.sessions_count || 0}</TableCell>
+                      <TableCell>{register.total_sessions || 0}</TableCell>
                       <TableCell>
-                        {register.last_session_date ?
-                          new Date(register.last_session_date).toLocaleDateString() :
+                        {register.last_session ?
+                          new Date(register.last_session).toLocaleString() :
                           'Jamais'
                         }
                       </TableCell>
