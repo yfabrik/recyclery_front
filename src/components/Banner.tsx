@@ -24,7 +24,7 @@ const Banner = () => {
       }}
     >
       <Typography variant="body2" align="left">
-        Hello World - {envText}
+        bug trouvé ? bug reporté: <a href={`mailto:${envText}`}> {envText}</a>
       </Typography>
     </Box>
   );
