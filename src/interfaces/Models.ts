@@ -117,20 +117,25 @@ export interface UserModel extends BaseModel {
   role: string;
   recyclery_id?: number;
   isActive: boolean;
-  last_login:Date
+  last_login: Date;
 }
 
-
-export interface TaskModel extends BaseModel{
-
+export interface TaskModel extends BaseModel {
   scheduled_date: Date;
   task_employees: UserModel[];
   assigned_employees: UserModel[];
   notes: string;
   start_time: string;
   end_time: string;
-  status:string
-  location_name:string
-  priority:string
+  status: string;
+  location_name: string;
+  priority: string;
+}
 
+export interface EmployeeModel extends BaseModel {
+  nom: string;
+  prenom: string;
+  isActive: boolean;
+  phone?: string;
+  email?: string;
 }

@@ -40,24 +40,25 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-// import { useAuth } from '../../../contexts/AuthContext';
-import {
-  createUser,
-  deleteUser,
-  fetchUsers,
-  updateUser,
-} from "../../../services/api/users";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import { EmployeeForm } from "../../forms/EmployeeForm";
 import { fetchStores } from "../../../services/api/store";
+import {
+  createEmployees,
+  deleteEmployee,
+  getEmployees,
+  updateEmployee,
+} from "../../../services/api/employee";
+import type { EmployeeModel, StoreModel } from "../../../interfaces/Models";
 
 const EmployeeManagement = () => {
-  // const { user } = useAuth();
-  const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState<EmployeeModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeModel | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -66,9 +67,12 @@ const EmployeeManagement = () => {
   const [openStoreAssignmentDialog, setOpenStoreAssignmentDialog] =
     useState(false);
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  //   const [editingEmployee
+  // , setEditingEmployee
+  // ] =
+  //     useState<EmployeeModel | null>(null);
 
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<StoreModel[]>([]);
 
   // const [formData, setFormData] = useState({
   //   username: '',
@@ -109,14 +113,14 @@ const EmployeeManagement = () => {
 
   useEffect(() => {
     fetchEmployees();
-    getStores()
+    getStores();
   }, []);
 
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await fetchUsers({ role: "employee" });
-      setEmployees(response.data.users);
+      const response = await getEmployees(); // await fetchUsers({ role: "employee" });
+      setEmployees(response.data.data);
     } catch (error) {
       console.error("Erreur lors du chargement des employés:", error);
       toast.error("Erreur lors du chargement des employés");
@@ -133,95 +137,45 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleOpenDialog = (employee = null) => {
-      setEditingEmployee(employee);
-
-    // if (employee) {
-    //   setEditingEmployee(employee);
-    //   setFormData({
-    //     username: employee.username || "",
-    //     email: employee.email || "",
-    //     role: employee.role || "employee",
-    //     recyclery_id: employee.recyclery_id || null,
-    //     phone: employee.phone || "",
-    //     contract_hours: employee.contract_hours || 35,
-    //   });
-    // } else {
-    //   setEditingEmployee(null);
-    //   setFormData({
-    //     username: "",
-    //     email: "",
-    //     role: "employee",
-    //     recyclery_id: null,
-    //     phone: "",
-    //     contract_hours: 35,
-    //   });
-    // }
+  const handleOpenDialog = (employee: EmployeeModel | null = null) => {
+    setEditingEmployee(employee);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingEmployee(null);
-    // setFormData({
-    //   username: "",
-    //   email: "",
-    //   role: "employee",
-    //   recyclery_id: null,
-    //   phone: "",
-    //   contract_hours: 35,
-    // });
   };
 
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     [name]: value,
-  //   }));
-  // };
-
-  const handleOpenStoreAssignment = (employee) => {
-    setSelectedEmployee(employee);
+  const handleOpenStoreAssignment = (employee: EmployeeModel) => {
+    setEditingEmployee(employee);
     setOpenStoreAssignmentDialog(true);
   };
 
-  const handleOpenWorkdays = (employee) => {
-    setSelectedEmployee(employee);
+  const handleOpenWorkdays = (employee: EmployeeModel) => {
+    setEditingEmployee(employee);
     setOpenWorkdaysDialog(true);
   };
 
   const handleCloseStoreAssignment = () => {
     setOpenStoreAssignmentDialog(false);
-    setSelectedEmployee(null);
+    setEditingEmployee(null);
   };
 
   const handleCloseWorkdays = () => {
     setOpenWorkdaysDialog(false);
-    setSelectedEmployee(null);
+    setEditingEmployee(null);
   };
 
   const handleSave = async (data) => {
     try {
-      // const token = localStorage.getItem('token');
-
       if (editingEmployee?.id) {
         // Mise à jour
-        await updateUser(editingEmployee.id, data);
-        // await axios.put(`/api/users/${editingEmployee.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+        await updateEmployee(editingEmployee.id, data);
         toast.success("Employé mis à jour avec succès");
       } else {
         // Création
-        await createUser({ ...data, password: "password123" });
-        // await axios.post('/api/users', {
-        //   ...formData,
-        //   //TODO FIXME FIXME FIXME TODO
-        //   password: 'password123' // Mot de passe par défaut ///////ARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRHHHHH
-        // }, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
+        await createEmployees({ ...data });
         toast.success("Employé créé avec succès");
       }
 
@@ -235,13 +189,13 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleDelete = async (employeeId) => {
+  const handleDelete = async (employeeId: number) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet employé ?")) {
       return;
     }
 
     try {
-      await deleteUser(employeeId);
+      await deleteEmployee(employeeId);
       toast.success("Employé supprimé avec succès");
       fetchEmployees();
     } catch (error) {
@@ -272,18 +226,19 @@ const EmployeeManagement = () => {
     return colors[availability] || "default";
   };
 
-  const filteredEmployees = employees.filter((employee) => {
-    const matchesSearch =
-      employee.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === "all" || employee.role === filterRole;
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "active" && employee.is_active !== false) ||
-      (filterStatus === "inactive" && employee.is_active === false);
+  const filteredEmployees =
+    employees?.filter((employee) => {
+      const matchesSearch =
+        employee.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      // const matchesRole = filterRole === "all" || employee.role === filterRole;
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "active" && employee.isActive !== false) ||
+        (filterStatus === "inactive" && employee.isActive === false);
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    }) || [];
 
   if (loading) {
     return (
@@ -405,7 +360,7 @@ const EmployeeManagement = () => {
                   </Avatar>
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="h6" component="div" fontWeight="bold">
-                      {employee.username}
+                      {employee.nom} {employee.prenom}
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
                       {employee.email}
@@ -434,7 +389,7 @@ const EmployeeManagement = () => {
                 </Box>
 
                 <Stack spacing={1}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Work fontSize="small" color="action" />
                     <Chip
                       label={
@@ -444,7 +399,7 @@ const EmployeeManagement = () => {
                       color={getRoleColor(employee.role)}
                       size="small"
                     />
-                  </Box>
+                  </Box> */}
 
                   {employee.phone && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -684,10 +639,10 @@ const EmployeeManagement = () => {
       >
         <DialogTitle>Affectation aux magasins</DialogTitle>
         <DialogContent>
-          {selectedEmployee && (
+          {editingEmployee && (
             <EmployeeStoreAssignment
-              employeeId={selectedEmployee.id}
-              employeeName={selectedEmployee.username}
+              employeeId={editingEmployee.id}
+              employeeName={editingEmployee.nom}
               onClose={handleCloseStoreAssignment}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés
@@ -706,10 +661,10 @@ const EmployeeManagement = () => {
       >
         <DialogTitle>Jours de travail</DialogTitle>
         <DialogContent>
-          {selectedEmployee && (
+          {editingEmployee && (
             <EmployeeWorkdays
-              employeeId={selectedEmployee.id}
-              employeeName={selectedEmployee.username}
+              employeeId={editingEmployee.id}
+              employeeName={editingEmployee.nom}
               onClose={handleCloseWorkdays}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés

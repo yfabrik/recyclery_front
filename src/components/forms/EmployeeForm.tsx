@@ -1,33 +1,25 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  MenuItem,
-} from "@mui/material";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
+import z from "zod";
+import type { StoreModel } from "../../interfaces/Models";
+import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 import {
   FormInput,
   FormSelect,
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
-import type { StoreModel } from "../../interfaces/Models";
-import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  username:z.string(),
-  prenom: z.string(),
-  nom: z.string(),
-  email: z.union([z.email(), z.literal("").transform((v) => null)]),
+  // username: z.string("username requis").trim().nonempty("username requis"),
+  prenom: z.string("prenom requis").trim().nonempty("prenom requis"),
+  nom: z.string("nom requis").trim().nonempty("nom requis"),
+  // email: z.union([z.email(), z.literal("").transform((v) => null)]),
   phone: z.union([phoneSchema(), z.literal("").transform((v) => null)]),
-  store: z.union([idSchema(), z.literal("").transform((v) => null)]),
-  active: z.boolean().default(true),
+  recyclery_id: z.union([idSchema(), z.literal("").transform((v) => null)]),
+  isActive: z.boolean().default(true),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -41,23 +33,24 @@ export const EmployeeForm = ({
   stores: StoreModel[];
 }) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm<Schema>({
+  const form = useForm({
     defaultValues: {
-      username:"",
+      // username: "",
       nom: "",
-      email: "",
+      // email: "",
       phone: "",
       prenom: "",
-      active: true,
-      store: "",
+      isActive: true,
+      recyclery_id: "",
       ...data,
     },
+    resolver: zodResolver(schema),
   });
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <FormInput
             name="email"
             control={form.control}
@@ -67,7 +60,7 @@ export const EmployeeForm = ({
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput name="username" control={form.control} label="username" />
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput name="prenom" control={form.control} label="Prénom" />
         </Grid>
@@ -79,7 +72,11 @@ export const EmployeeForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect name="store" label="Magasin" control={form.control}>
+          <FormSelect
+            name="recyclery_id"
+            label="Magasin"
+            control={form.control}
+          >
             <MenuItem key="no-store" value="">
               Aucun magasin assigné
             </MenuItem>
@@ -92,7 +89,7 @@ export const EmployeeForm = ({
         </Grid>
         <Grid size={{ xs: 12 }}>
           <FormSwitch
-            name="active"
+            name="isActive"
             control={form.control}
             label="employée actif"
           />
