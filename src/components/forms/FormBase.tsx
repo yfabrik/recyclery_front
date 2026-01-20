@@ -1,13 +1,19 @@
 import {
+  Box,
+  Card,
+  CardContent,
   FormControl,
   FormControlLabel,
   FormHelperText,
   FormLabel,
   InputLabel,
+  Radio,
   RadioGroup,
   Select,
   Switch,
   TextField,
+  Typography,
+  useRadioGroup,
   type FormControlOwnProps,
   type TextFieldProps
 } from "@mui/material";
@@ -247,3 +253,80 @@ export const FormRadio = <
   )
 }
 
+interface FormRadioCardProps {
+  value: string;
+  label: string;
+  icon?: ReactNode;
+}
+export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
+  const radioGroup = useRadioGroup();
+  const isSelected = radioGroup?.value === value;
+
+  return (
+    <Box
+      sx={{
+        position: "relative",
+        "&:hover": {
+          backgroundColor: "#f5f5f5",
+        },
+      }}
+    >
+      <FormControlLabel
+        value={value}
+        control={
+          <Radio
+            sx={{
+              position: "absolute",
+              opacity: 0,
+              width: 0,
+              height: 0,
+              margin: 0,
+              pointerEvents: "none",
+            }}
+          />
+        }
+        label=""
+        sx={{
+          margin: 0,
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          zIndex: 2,
+          cursor: "pointer",
+          backgroundColor: "transparent",
+        }}
+      />
+      <Card
+        sx={{
+          cursor: "pointer",
+          border: isSelected ? "2px solid #1976d2" : "1px solid #e0e0e0",
+          backgroundColor: isSelected ? "#e3f2fd" : "white",
+          minHeight: 100,
+          width: "100%",
+          position: "relative",
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
+      >
+        <CardContent sx={{ textAlign: "center" }}>
+          {icon && (
+            <Box
+              sx={{
+                color: isSelected ? "#1976d2" : "text.secondary",
+                mb: 1,
+              }}
+            >
+              {icon}
+            </Box>
+          )}
+          <Typography
+            variant="body1"
+            fontWeight={isSelected ? "bold" : "normal"}
+          >
+            {label}
+          </Typography>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};

@@ -9,48 +9,45 @@ import {
   Save,
   Scale,
   TouchApp,
-  VolunteerActivism
+  VolunteerActivism,
 } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  FormControlLabel,
-  Grid,
-  MenuItem,
-  Paper,
-  Radio,
-  Typography
-} from "@mui/material";
+import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import type {
   CategoryModel,
   CollectionPointModel,
 } from "../../interfaces/Models";
-import { FormDate, FormInput, FormRadio, FormSelect, FormTime, type BaseFormProps } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
+import { usePrompt } from "../Prompt";
+import {
+  FormDate,
+  FormInput,
+  FormRadio,
+  FormRadioCard,
+  FormSelect,
+  FormTime,
+  type BaseFormProps,
+} from "./FormBase";
 
-const sourceTypeEnum = z.enum([
-  "point",
-  "apport",
-  "house_clearance",
-]);
+const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
 const schema = z
   .object({
     category_id: idSchema("La catégorie est requise"),
-    subcategory_id: z.union([idSchema(), z.literal("").transform(v => null)]),
+    subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
     weight: z.coerce.number().nonnegative("Le poids est requis"),
     arrival_date: z.coerce.date("La date est requise"),
     arrival_time: z.coerce.date("La date est requise"),
     source_type: sourceTypeEnum,
-    collection_point_id: z.union([idSchema(), z.literal("").transform(v => null)]),
-    source_details: z.string().transform(v => v == "" ? null : v),
-    notes: z.string().transform(v => v == "" ? null : v),
+    collection_point_id: z.union([
+      idSchema(),
+      z.literal("").transform(() => null),
+    ]),
+    source_details: z.string().transform((v) => (v == "" ? null : v)),
+    notes: z.string().transform((v) => (v == "" ? null : v)),
   })
   .refine(
     (data) => {
@@ -62,7 +59,7 @@ const schema = z
     {
       message: "Veuillez sélectionner un point de collecte",
       path: ["collection_point_id"],
-    }
+    },
   );
 
 export type ArrivalFormSchema = z.infer<typeof schema>;
@@ -71,7 +68,7 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   onWeightFieldClick: () => void;
-  loading: boolean
+  loading: boolean;
 };
 
 export const ArrivalForm = ({
@@ -81,7 +78,7 @@ export const ArrivalForm = ({
   categories,
   collectionPoints,
   onWeightFieldClick,
-  loading = false
+  loading = false,
 }: ArrivalFormProps) => {
   const form = useForm({
     resolver: zodResolver(schema),
@@ -89,10 +86,8 @@ export const ArrivalForm = ({
       category_id: defaultValues?.category_id || "",
       subcategory_id: defaultValues?.subcategory_id || "",
       weight: defaultValues?.weight || "",
-      arrival_date:
-        defaultValues?.arrival_date || new Date(),
-      arrival_time:
-        defaultValues?.arrival_time || new Date(),
+      arrival_date: defaultValues?.arrival_date || new Date(),
+      arrival_time: defaultValues?.arrival_time || new Date(),
       source_type: defaultValues?.source_type || "point",
       collection_point_id: defaultValues?.collection_point_id || "",
       source_details: defaultValues?.source_details || "",
@@ -100,10 +95,10 @@ export const ArrivalForm = ({
     },
   });
 
-
   const categoryId = form.watch("category_id");
   const sourceType = form.watch("source_type");
   const weight = form.watch("weight");
+  const { prompt, PromptDialog } = usePrompt();
 
   const collectionPointId = form.watch("collection_point_id");
 
@@ -116,7 +111,7 @@ export const ArrivalForm = ({
   useEffect(() => {
     if (collectionPointId && sourceType === "point") {
       const selectedPoint = collectionPoints.find(
-        (p) => p.id == collectionPointId
+        (p) => p.id == collectionPointId,
       );
       if (selectedPoint) {
         // You can add these fields to the schema if needed
@@ -126,8 +121,7 @@ export const ArrivalForm = ({
   }, [collectionPointId, sourceType, collectionPoints]);
 
   const getSubcategories = () => {
-    return categories.find(c => c.id == categoryId)?.subcategories || []
-
+    return categories.find((c) => c.id == categoryId)?.subcategories || [];
   };
 
   const sourceTypeOptions = [
@@ -149,193 +143,150 @@ export const ArrivalForm = ({
   ];
 
   return (
-    <Grid size={{ xs: 12, lg: 8 }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-        >
-          <Add color="primary" />
-          Nouvel Arrivage
-        </Typography>
-        <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
-          <Grid container spacing={3}>
-            {/* Catégorie */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormSelect
-                control={form.control}
-                name="category_id"
-                label="Catégorie"
-              >
-                {categories?.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Category />
-                      {category.name}
-                    </Box>
-                  </MenuItem>
-                ))}
-              </FormSelect>
-            </Grid>
-
-            {/* Sous-catégorie */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormSelect
-                name="subcategory_id"
-                control={form.control}
-                label="Sous-catégorie"
-                extra={{ disabled: !categoryId }}
-              >
-                <MenuItem value="">Aucune</MenuItem>
-                {getSubcategories()?.map((subcategory) => (
-                  <MenuItem key={subcategory.id} value={subcategory.id}>
-                    {subcategory.name}
-                  </MenuItem>
-                ))}
-              </FormSelect>
-            </Grid>
-
-            {/* Poids */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormInput
-                control={form.control}
-                name="weight"
-                label="Poids (kg)"
-                extra={{
-                  onClick: onWeightFieldClick,
-                  placeholder: "Cliquez pour saisir le poids",
-                  sx: {
-                    "& .MuiInputBase-input": {
-                      fontSize: "1.2rem",
-                      padding: "16px 14px",
-                      cursor: "pointer",
-                      backgroundColor: "#f8f9fa",
-                    },
-                    "& .MuiInputBase-root:hover": {
-                      backgroundColor: "#e3f2fd",
-                    },
-                  },
-                  slotProps: {
-                    input: {
-                      startAdornment: (
-                        <Scale sx={{ mr: 1, color: "text.secondary" }} />
-                      ),
-                      endAdornment: (
-                        <TouchApp sx={{ ml: 1, color: "primary.main" }} />
-                      ),
-                      // readOnly: true,
-                    },
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Date et heure */}
-            <Grid size={{ xs: 6, md: 3 }}>
-              <FormDate
-                control={form.control}
-                name="arrival_date"
-                label="Date"
-              />
-
-            </Grid>
-
-            <Grid size={{ xs: 6, md: 3 }}>
-              <FormTime
-                control={form.control}
-                name="arrival_time"
-                label="Heure"
-              />
-
-            </Grid>
-
-            {/* Type de source */}
-            <Grid size={{ xs: 12 }}>
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ fontWeight: "bold" }}
-              >
-                Provenance
-              </Typography>
-              <FormRadio
-                name="source_type"
-                control={form.control}
-                label="Provenance" >
-                <Grid container spacing={2}>
-                  {sourceTypeOptions.map((source) => (
-                    <Grid size={{ xs: 12, md: 4 }} key={source.value}>
-                      <FormControlLabel value={source.value} control={<Radio />} label={source.label} />
-                    </Grid>
+    <>
+      <Grid size={{ xs: 12, lg: 8 }}>
+        <Paper sx={{ p: 4 }}>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Add color="primary" />
+            Nouvel Arrivage
+          </Typography>
+          <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+            <Grid container spacing={3}>
+              {/* Catégorie */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormSelect
+                  control={form.control}
+                  name="category_id"
+                  label="Catégorie"
+                >
+                  {categories?.map((category) => (
+                    <MenuItem key={category.id} value={category.id}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <Category />
+                        {category.name}
+                      </Box>
+                    </MenuItem>
                   ))}
-                </Grid>
-              </FormRadio>
-              <Grid container spacing={2}>
-
-                {sourceTypeOptions.map((source) => (
-                  <Grid size={{ xs: 12, md: 4 }} key={source.value}>
-                    <Controller
-                      name="source_type"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Card
-                          sx={{
-                            cursor: "pointer",
-                            border:
-                              field.value === source.value
-                                ? "2px solid #1976d2"
-                                : "1px solid #e0e0e0",
-                            backgroundColor:
-                              field.value === source.value ? "#e3f2fd" : "white",
-                            "&:hover": { backgroundColor: "#f5f5f5" },
-                            minHeight: 100,
-                          }}
-                          onClick={() => {
-                            field.onChange(source.value);
-                            // Reset related fields when source type changes
-                            form.setValue("collection_point_id", "");
-                            form.setValue("source_details", "");
-                          }}
-                        >
-                          <CardContent sx={{ textAlign: "center" }}>
-                            <Box
-                              sx={{
-                                color:
-                                  field.value === source.value
-                                    ? "#1976d2"
-                                    : "text.secondary",
-                                mb: 1,
-                              }}
-                            >
-                              {source.icon}
-                            </Box>
-                            <Typography
-                              variant="body1"
-                              fontWeight={
-                                field.value === source.value ? "bold" : "normal"
-                              }
-                            >
-                              {source.label}
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      )}
-                    />
-                  </Grid>
-                ))}
+                </FormSelect>
               </Grid>
-            </Grid>
 
-            {/* Détails selon le type de source */}
-            {
-              sourceType === "point" && (
+              {/* Sous-catégorie */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormSelect
+                  name="subcategory_id"
+                  control={form.control}
+                  label="Sous-catégorie"
+                  extra={{ disabled: !categoryId }}
+                >
+                  <MenuItem value="">Aucune</MenuItem>
+                  {getSubcategories()?.map((subcategory) => (
+                    <MenuItem key={subcategory.id} value={subcategory.id}>
+                      {subcategory.name}
+                    </MenuItem>
+                  ))}
+                </FormSelect>
+              </Grid>
+
+              {/* Poids */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormInput
+                  control={form.control}
+                  name="weight"
+                  label="Poids (kg)"
+                  extra={{
+                    onClick: async () =>
+                      form.setValue(
+                        "weight",
+                        await prompt(
+                          "",
+                          form.getValues("weight")?.toString() || "",
+                        ),
+                      ),
+                    placeholder: "Cliquez pour saisir le poids",
+                    sx: {
+                      "& .MuiInputBase-input": {
+                        fontSize: "1.2rem",
+                        padding: "16px 14px",
+                        cursor: "pointer",
+                        backgroundColor: "#f8f9fa",
+                      },
+                      "& .MuiInputBase-root:hover": {
+                        backgroundColor: "#e3f2fd",
+                      },
+                    },
+                    slotProps: {
+                      input: {
+                        startAdornment: (
+                          <Scale sx={{ mr: 1, color: "text.secondary" }} />
+                        ),
+                        endAdornment: (
+                          <TouchApp sx={{ ml: 1, color: "primary.main" }} />
+                        ),
+                        // readOnly: true,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Date et heure */}
+              <Grid size={{ xs: 6, md: 3 }}>
+                <FormDate
+                  control={form.control}
+                  name="arrival_date"
+                  label="Date"
+                />
+              </Grid>
+
+              <Grid size={{ xs: 6, md: 3 }}>
+                <FormTime
+                  control={form.control}
+                  name="arrival_time"
+                  label="Heure"
+                />
+              </Grid>
+
+              {/* Type de source */}
+              <Grid size={{ xs: 12 }}>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{ fontWeight: "bold" }}
+                >
+                  Provenance
+                </Typography>
+                <FormRadio
+                  name="source_type"
+                  control={form.control}
+                  label="Provenance"
+                >
+                  <Grid container spacing={2}>
+                    {sourceTypeOptions.map((source) => (
+                      <Grid size={{ xs: 12, md: 4 }} key={source.value}>
+
+                        <FormRadioCard
+                          label={source.label}
+                          icon={source.icon}
+                          value={source.value}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </FormRadio>
+              </Grid>
+
+              {/* Détails selon le type de source */}
+              {sourceType === "point" && (
                 <Grid size={{ xs: 12 }}>
                   <FormSelect
                     control={form.control}
@@ -353,7 +304,9 @@ export const ArrivalForm = ({
                         >
                           <LocationOn />
                           <Box>
-                            <Typography variant="body1">{point.name}</Typography>
+                            <Typography variant="body1">
+                              {point.name}
+                            </Typography>
                             <Typography variant="caption" color="textSecondary">
                               {point.city}
                             </Typography>
@@ -363,11 +316,9 @@ export const ArrivalForm = ({
                     ))}
                   </FormSelect>
                 </Grid>
-              )
-            }
+              )}
 
-            {
-              (sourceType === "apport" ||
+              {(sourceType === "apport" ||
                 sourceType === "house_clearance") && (
                 <Grid size={{ xs: 12 }}>
                   <FormInput
@@ -385,60 +336,54 @@ export const ArrivalForm = ({
                     }}
                   />
                 </Grid>
-              )
-            }
+              )}
 
-            {/* Notes */}
-            <Grid size={{ xs: 12 }}>
-              <FormInput
-                control={form.control}
-                name="notes"
-                label="Notes"
-                extra={{
-                  multiline: true,
-                  rows: 3,
-                  placeholder: "Observations, état des objets, remarques...",
-                  sx: {
-                    "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                  },
-                }}
-              />
+              {/* Notes */}
+              <Grid size={{ xs: 12 }}>
+                <FormInput
+                  control={form.control}
+                  name="notes"
+                  label="Notes"
+                  extra={{
+                    multiline: true,
+                    rows: 3,
+                    placeholder: "Observations, état des objets, remarques...",
+                    sx: {
+                      "& .MuiInputBase-input": { fontSize: "1.1rem" },
+                    },
+                  }}
+                />
+              </Grid>
             </Grid>
-          </Grid >
-
-        </form >
-        <Box
-          sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}
-        >
-          <Button
-            variant="outlined"
-            size="large"
-            type="reset"
-            onClick={() => form.reset()}
-            startIcon={<Clear />}
-            sx={{ minWidth: 150, fontSize: "1.1rem" }}
-          >
-            Effacer
-          </Button>
-          <Button
-            variant="contained"
-            size="large"
-            type="submit"
-            form={formId}
-            onClick={() => form.handleSubmit(onSubmit)}
-            disabled={
-              //   loading ||
-              !categoryId ||
-              // !weight ||
-              !sourceType
-            }
-            startIcon={<Save />}
-            sx={{ minWidth: 200, fontSize: "1.1rem" }}
-          >
-            {loading ? "Enregistrement..." : "Enregistrer"}
-          </Button>
-        </Box>
-      </Paper>
-    </Grid>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}
+            >
+              <Button
+                variant="outlined"
+                size="large"
+                type="reset"
+                onClick={() => form.reset()}
+                startIcon={<Clear />}
+                sx={{ minWidth: 150, fontSize: "1.1rem" }}
+              >
+                Effacer
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                type="submit"
+                form={formId}
+                disabled={loading || !categoryId || !weight || !sourceType}
+                startIcon={<Save />}
+                sx={{ minWidth: 200, fontSize: "1.1rem" }}
+              >
+                {loading ? "Enregistrement..." : "Enregistrer"}
+              </Button>
+            </Box>
+          </form>
+        </Paper>
+      </Grid>
+      {PromptDialog}
+    </>
   );
 };
