@@ -99,7 +99,7 @@ export const ListDays = ({
     (day) =>
       day.morning.length > 0 ||
       day.afternoon.length > 0 ||
-      day.allDay.length > 0
+      day.allDay.length > 0,
   );
   if (!hasEmployees && selectedStore) {
     return (
@@ -160,21 +160,56 @@ export const ListDays = ({
   );
 };
 
-export const EmployeeThisDay = ({ dayData }) => {
-  const allDayEmployees = dayData.allDay.filter((employee) => {
-    const worksMorning = dayData.morning.some((emp) => emp.id === employee.id);
-    const worksAfternoon = dayData.afternoon.some(
-      (emp) => emp.id === employee.id
-    );
-    return worksMorning && worksAfternoon;
-  });
+interface Employee {
+  id: number | string;
+  fullName: string;
+}
 
-  const morningOnlyEmployees = dayData.morning.filter(
-    (employee) => !dayData.afternoon.some((emp) => emp.id === employee.id)
+interface DayData {
+  allDay: Employee[];
+  morning: Employee[];
+  afternoon: Employee[];
+  label: string;
+}
+
+export const EmployeeThisDay = ({ dayData }: { dayData: DayData }) => {
+  // Helper function to deduplicate employees by id
+  const deduplicateEmployees = (employees: Employee[]): Employee[] => {
+    const seen = new Set<number | string>();
+    return employees.filter((employee: Employee) => {
+      if (seen.has(employee.id)) {
+        return false;
+      }
+      seen.add(employee.id);
+      return true;
+    });
+  };
+  console.log("dayData", dayData);
+
+  const allDayEmployees = deduplicateEmployees(
+    dayData.allDay.filter((employee: Employee) => {
+      const worksMorning = dayData.morning.some(
+        (emp: Employee) => emp.id === employee.id,
+      );
+      const worksAfternoon = dayData.afternoon.some(
+        (emp: Employee) => emp.id === employee.id,
+      );
+      return worksMorning && worksAfternoon;
+    }),
   );
 
-  const afternoonOnlyEmployees = dayData.afternoon.filter(
-    (employee) => !dayData.morning.some((emp) => emp.id === employee.id)
+  const morningOnlyEmployees = deduplicateEmployees(
+    dayData.morning.filter(
+      (employee: Employee) =>
+        !dayData.afternoon.some((emp: Employee) => emp.id === employee.id),
+    ),
+  );
+
+  const afternoonOnlyEmployees = deduplicateEmployees(
+    dayData.afternoon.filter(
+      (employee: Employee) =>
+        !dayData.morning.some((emp: Employee) => emp.id === employee.id),
+    ),
   );
 
   return (
@@ -194,9 +229,9 @@ export const EmployeeThisDay = ({ dayData }) => {
           >
             🌞 Journée
           </Typography>
-          {allDayEmployees.map((employee) => (
+          {allDayEmployees.map((employee: Employee, index: number) => (
             <Box
-              key={`${employee.id}-allday`}
+              key={`${employee.id}-allday-${index}`}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -221,7 +256,7 @@ export const EmployeeThisDay = ({ dayData }) => {
                   fontWeight: "bold",
                 }}
               >
-                {employee.name}
+                {employee.fullName}
               </Typography>
             </Box>
           ))}
@@ -243,9 +278,9 @@ export const EmployeeThisDay = ({ dayData }) => {
           >
             🌅 Matin
           </Typography>
-          {morningOnlyEmployees.map((employee) => (
+          {morningOnlyEmployees.map((employee: Employee, index: number) => (
             <Box
-              key={`${employee.id}-morning`}
+              key={`${employee.id}-morning-${index}`}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -270,7 +305,7 @@ export const EmployeeThisDay = ({ dayData }) => {
                   fontWeight: "medium",
                 }}
               >
-                {employee.name}
+                {employee.fullName}
               </Typography>
             </Box>
           ))}
@@ -292,9 +327,9 @@ export const EmployeeThisDay = ({ dayData }) => {
           >
             🌆 Après-midi
           </Typography>
-          {afternoonOnlyEmployees.map((employee) => (
+          {afternoonOnlyEmployees.map((employee: Employee, index: number) => (
             <Box
-              key={`${employee.id}-afternoon`}
+              key={`${employee.id}-afternoon-${index}`}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -319,7 +354,7 @@ export const EmployeeThisDay = ({ dayData }) => {
                   fontWeight: "medium",
                 }}
               >
-                {employee.name}
+                {employee.fullName}
               </Typography>
             </Box>
           ))}
