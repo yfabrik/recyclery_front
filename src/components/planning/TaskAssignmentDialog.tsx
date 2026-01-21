@@ -26,9 +26,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 
+interface TaskAssignmentDialogTitleProps {
+  taskName: string;
+  storeName: string;
+}
 // Dialog Title Component
-const TaskAssignmentDialogTitle = ({ taskName, storeName }) => {
+const TaskAssignmentDialogTitle = ({ taskName, storeName }:TaskAssignmentDialogTitleProps) => {
   return (
     <DialogTitle>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -45,9 +50,12 @@ const TaskAssignmentDialogTitle = ({ taskName, storeName }) => {
     </DialogTitle>
   );
 };
-
+interface TaskAssignmentDialogInfoProps {
+  storeName: string;
+  scheduledDate: string;
+}
 // Info Message Component
-const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }) => {
+const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }:TaskAssignmentDialogInfoProps) => {
   const dayName = scheduledDate
     ? new Date(scheduledDate).toLocaleDateString("fr-FR", {
         weekday: "long",
@@ -77,14 +85,21 @@ const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }) => {
   );
 };
 
-// Employee Card Component
+interface TaskAssignmentEmployeeCardProps {
+  employee: EmployeeModel;
+  type: "assigned" | "available";
+  onAssign?: (employeeId: number) => void;
+  onUnassign?: (employeeId: number) => void;
+  isAssignedToOtherTask: boolean;
+}
+  // Employee Card Component
 const TaskAssignmentEmployeeCard = ({
   employee,
   type = "available", // "assigned" or "available"
-  onAssign,
-  onUnassign,
+  onAssign = () => {},
+  onUnassign = () => {},
   isAssignedToOtherTask = false,
-}) => {
+}:TaskAssignmentEmployeeCardProps) => {
   const isAssigned = type === "assigned";
 
   if (isAssigned) {
@@ -119,10 +134,10 @@ const TaskAssignmentEmployeeCard = ({
                 fontWeight="medium"
                 sx={{ color: "#1976d2" }}
               >
-                {employee.username}
+                {employee.fullName}
               </Typography>
               <Chip
-                label={employee.role}
+                label="employee"
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -140,7 +155,7 @@ const TaskAssignmentEmployeeCard = ({
             <Tooltip title="Retirer cet employé de la tâche">
               <IconButton
                 size="small"
-                onClick={() => onUnassign(employee.id)}
+                onClick={() => onUnassign?.(employee.id)}
                 color="error"
                 sx={{
                   bgcolor: "#ffebee",
@@ -208,11 +223,11 @@ const TaskAssignmentEmployeeCard = ({
                 color: isAssignedToOtherTask ? "#d32f2f" : "inherit",
               }}
             >
-              {employee.username}
+              {employee.fullName}
             </Typography>
 
             <Chip
-              label={employee.role}
+              label="employee"
               size="small"
               color="info"
               variant="outlined"
@@ -311,6 +326,15 @@ const TaskAssignmentEmployeeCard = ({
   );
 };
 
+interface TaskAssignmentDialogProps {
+  open: boolean;
+  onClose: () => void;
+  selectedTask: TaskModel;
+  assignedEmployees: EmployeeModel[];
+  availableEmployees: EmployeeModel[];
+  onAssignEmployee: (employeeId: number) => void;
+  onUnassignEmployee: (employeeId: number) => void;
+}
 // Main Compound Component
 const TaskAssignmentDialog = ({
   open,
@@ -320,7 +344,7 @@ const TaskAssignmentDialog = ({
   availableEmployees,
   onAssignEmployee,
   onUnassignEmployee,
-}) => {
+}:TaskAssignmentDialogProps) => {
   const filteredAvailableEmployees = availableEmployees.filter(
     (emp) => !assignedEmployees.some((assigned) => assigned.id === emp.id)
   );
@@ -328,7 +352,7 @@ const TaskAssignmentDialog = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <TaskAssignmentDialogTitle
-        taskName={selectedTask?.task_name}
+        taskName={selectedTask?.name}
         storeName={selectedTask?.store_name}
       />
       <DialogContent>

@@ -22,7 +22,6 @@ const WeekViewSections = ({
   handleAssignEmployeesToTask,
   handleOpenDialog,
   handleDeleteTask,
-  handleAssignEmployeesToCollection,
   selectedDate
 }) => {
   const wd = () => {
@@ -591,7 +590,7 @@ const WeekViewSections = ({
         weekDays={weekDays}
         collections={collections}
         filteredSchedules={filteredSchedules("collection", 8, 12)}
-        handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
+        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
       />
 
       <WeekCollectionSection
@@ -601,7 +600,7 @@ const WeekViewSections = ({
         weekDays={weekDays}
         collections={collections}
         filteredSchedules={filteredSchedules("collection", 13, 17)}
-        handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
+        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
       />
     </Box>
   );

@@ -121,15 +121,24 @@ export interface UserModel extends BaseModel {
 
 export interface TaskModel extends BaseModel {
   name: string;
-  scheduled_date: Date;
-  task_employees: UserModel[];
-  assigned_employees: UserModel[];
-  notes: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  location_name: string;
-  priority: string;
+  description: string | null;
+  category: string;
+  priority: string | null;
+  required_skills: string | null;
+  location: string | null;
+  equipment_needed: string | null;
+  hourly_rate: number | null;
+  scheduled_date: Date | string;
+  start_time: Date | string;
+  end_time: Date | string;
+  notes: string | null;
+  status: string | null;
+  CollectionPointId: number | null;
+  RecycleryId: number | null;
+  schedule_id: number;
+  // Legacy/computed fields (may be populated by frontend)
+  task_employees?: UserModel[];
+  assigned_employees?: UserModel[];
   Employees?: EmployeeModel[];
 }
 

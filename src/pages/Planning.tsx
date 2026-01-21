@@ -126,25 +126,24 @@ const Planning = () => {
   const [openTaskAssignmentDialog, setOpenTaskAssignmentDialog] =
     useState(false);
   const [selectedTaskForAssignment, setSelectedTaskForAssignment] =
-    useState(null);
-  const [taskAssignedEmployees, setTaskAssignedEmployees] = useState([]);
-  const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState(
-    [],
-  );
+    useState<TaskModel|null>(null);
+  const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<EmployeeModel[]>([]);
+  const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<EmployeeModel[]>([]),
+  
 
   // État simple pour forcer la mise à jour
   // const [forceUpdate, setForceUpdate] = useState(0);
   // const [assignedEmployees, setAssignedEmployees] = useState(new Set());
 
   // États pour l'assignation des employés aux collectes
-  const [openCollectionAssignmentDialog, setOpenCollectionAssignmentDialog] =
-    useState(false);
-  const [selectedCollectionForAssignment, setSelectedCollectionForAssignment] =
-    useState(null);
-  const [collectionAssignedEmployees, setCollectionAssignedEmployees] =
-    useState([]);
-  const [availableEmployeesForCollection, setAvailableEmployeesForCollection] =
-    useState([]);
+  // const [openCollectionAssignmentDialog, setOpenCollectionAssignmentDialog] =
+  //   useState(false);
+  // const [selectedCollectionForAssignment, setSelectedCollectionForAssignment] =
+  //   useState(null);
+  // const [collectionAssignedEmployees, setCollectionAssignedEmployees] =
+  //   useState([]);
+  // const [availableEmployeesForCollection, setAvailableEmployeesForCollection] =
+  //   useState([]);
   // const [tabValue, setTabValue] = useState(0);
   // const [searchTerm, setSearchTerm] = useState("");
   // const [filterEmployee, setFilterEmployee] = useState("all");
@@ -870,161 +869,161 @@ const Planning = () => {
   // ========== FONCTIONS POUR L'ASSIGNATION AUX COLLECTES ==========
 
   // Fonction pour ouvrir le dialogue d'assignation des employés aux collectes
-  const handleAssignEmployeesToCollection = async (collection) => {
-    // Vérification de sécurité
-    if (!collection || !collection.id) {
-      console.error(
-        "Erreur: collection invalide dans handleAssignEmployeesToCollection",
-      );
-      return;
-    }
+  // const handleAssignEmployeesToCollection = async (collection) => {
+  //   // Vérification de sécurité
+  //   if (!collection || !collection.id) {
+  //     console.error(
+  //       "Erreur: collection invalide dans handleAssignEmployeesToCollection",
+  //     );
+  //     return;
+  //   }
 
-    setSelectedCollectionForAssignment(collection);
+  //   setSelectedCollectionForAssignment(collection);
 
-    try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-      const availableEmployeesResponse = await axios.get(
-        `${apiBaseUrl}/api/collection-schedules/${collection.id}/available-employees`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+  //     const availableEmployeesResponse = await axios.get(
+  //       `${apiBaseUrl}/api/collection-schedules/${collection.id}/available-employees`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
 
-      if (availableEmployeesResponse.data.success) {
-        // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
-        const employeesWithStatus =
-          availableEmployeesResponse.data.employees.map((emp) => ({
-            ...emp,
-            is_assigned_to_task: !emp.is_available,
-          }));
+  //     if (availableEmployeesResponse.data.success) {
+  //       // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
+  //       const employeesWithStatus =
+  //         availableEmployeesResponse.data.employees.map((emp) => ({
+  //           ...emp,
+  //           is_assigned_to_task: !emp.is_available,
+  //         }));
 
-        setAvailableEmployeesForCollection(employeesWithStatus);
+  //       setAvailableEmployeesForCollection(employeesWithStatus);
 
-        // Récupérer aussi l'employé déjà assigné à cette collecte
-        if (collection.employee_name) {
-          setCollectionAssignedEmployees([
-            {
-              id: collection.employee_id,
-              username: collection.employee_name,
-            },
-          ]);
-        } else {
-          setCollectionAssignedEmployees([]);
-        }
-      } else {
-        throw new Error("Erreur lors du chargement des employés disponibles");
-      }
+  //       // Récupérer aussi l'employé déjà assigné à cette collecte
+  //       if (collection.employee_name) {
+  //         setCollectionAssignedEmployees([
+  //           {
+  //             id: collection.employee_id,
+  //             username: collection.employee_name,
+  //           },
+  //         ]);
+  //       } else {
+  //         setCollectionAssignedEmployees([]);
+  //       }
+  //     } else {
+  //       throw new Error("Erreur lors du chargement des employés disponibles");
+  //     }
 
-      setOpenCollectionAssignmentDialog(true);
-    } catch (e) {
-      toast.error("Erreur lors du chargement des employés");
-    }
-  };
+  //     setOpenCollectionAssignmentDialog(true);
+  //   } catch (e) {
+  //     toast.error("Erreur lors du chargement des employés");
+  //   }
+  // };
 
   // Fonction pour fermer le dialogue d'assignation des collectes
-  const handleCloseCollectionAssignmentDialog = () => {
-    setOpenCollectionAssignmentDialog(false);
-    setSelectedCollectionForAssignment(null);
-    setCollectionAssignedEmployees([]);
-    setAvailableEmployeesForCollection([]);
-  };
+  // const handleCloseCollectionAssignmentDialog = () => {
+  //   setOpenCollectionAssignmentDialog(false);
+  //   setSelectedCollectionForAssignment(null);
+  //   setCollectionAssignedEmployees([]);
+  //   setAvailableEmployeesForCollection([]);
+  // };
 
   // Fonction pour assigner un employé à une collecte
-  const handleAssignEmployeeToCollection = async (employeeId: number) => {
-    // Vérification de sécurité
-    if (
-      !selectedCollectionForAssignment ||
-      !selectedCollectionForAssignment.id
-    ) {
-      console.error(
-        "Erreur: selectedCollectionForAssignment invalide dans handleAssignEmployeeToCollection",
-      );
-      toast.error("Erreur: Collecte non sélectionnée");
-      return;
-    }
+  // const handleAssignEmployeeToCollection = async (employeeId: number) => {
+  //   // Vérification de sécurité
+  //   if (
+  //     !selectedCollectionForAssignment ||
+  //     !selectedCollectionForAssignment.id
+  //   ) {
+  //     console.error(
+  //       "Erreur: selectedCollectionForAssignment invalide dans handleAssignEmployeeToCollection",
+  //     );
+  //     toast.error("Erreur: Collecte non sélectionnée");
+  //     return;
+  //   }
 
-    try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-      await axios.post(
-        `${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees`,
-        {
-          employee_id: employeeId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+  //     await axios.post(
+  //       `${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees`,
+  //       {
+  //         employee_id: employeeId,
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
 
-      // Mettre à jour la liste des employés assignés
-      const employee = availableEmployeesForCollection.find(
-        (emp) => emp.id === employeeId,
-      );
-      if (employee) {
-        setCollectionAssignedEmployees([employee]);
-      }
+  //     // Mettre à jour la liste des employés assignés
+  //     const employee = availableEmployeesForCollection.find(
+  //       (emp) => emp.id === employeeId,
+  //     );
+  //     if (employee) {
+  //       setCollectionAssignedEmployees([employee]);
+  //     }
 
-      toast.success("Employé assigné à la collecte avec succès");
+  //     toast.success("Employé assigné à la collecte avec succès");
 
-      // Fermer le dialogue et forcer le rechargement complet
-      handleCloseCollectionAssignmentDialog();
+  //     // Fermer le dialogue et forcer le rechargement complet
+  //     handleCloseCollectionAssignmentDialog();
 
-      // Forcer le rechargement complet des données
-      setTimeout(() => {
-        fetchCollections();
-        // setForceUpdate((prev) => prev + 1);
-      }, 500);
-    } catch (error) {
-      console.error("Erreur lors de l'assignation à la collecte:", error);
+  //     // Forcer le rechargement complet des données
+  //     setTimeout(() => {
+  //       fetchCollections();
+  //       // setForceUpdate((prev) => prev + 1);
+  //     }, 500);
+  //   } catch (error) {
+  //     console.error("Erreur lors de l'assignation à la collecte:", error);
 
-      // Gérer spécifiquement les erreurs de conflit d'horaires
-      if (
-        error.response &&
-        error.response.status === 400 &&
-        error.response.data.message
-      ) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Erreur lors de l'assignation à la collecte");
-      }
-    }
-  };
+  //     // Gérer spécifiquement les erreurs de conflit d'horaires
+  //     if (
+  //       error.response &&
+  //       error.response.status === 400 &&
+  //       error.response.data.message
+  //     ) {
+  //       toast.error(error.response.data.message);
+  //     } else {
+  //       toast.error("Erreur lors de l'assignation à la collecte");
+  //     }
+  //   }
+  // };
 
   // Fonction pour retirer un employé d'une collecte
-  const handleUnassignEmployeeFromCollection = async (employeeId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-      await axios.delete(
-        `${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees/${employeeId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+  // const handleUnassignEmployeeFromCollection = async (employeeId) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+  //     await axios.delete(
+  //       `${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees/${employeeId}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
 
-      // Mettre à jour la liste des employés assignés
-      setCollectionAssignedEmployees([]);
+  //     // Mettre à jour la liste des employés assignés
+  //     setCollectionAssignedEmployees([]);
 
-      toast.success("Employé retiré de la collecte avec succès");
+  //     toast.success("Employé retiré de la collecte avec succès");
 
-      // Fermer le dialogue et forcer le rechargement complet
-      handleCloseCollectionAssignmentDialog();
+  //     // Fermer le dialogue et forcer le rechargement complet
+  //     handleCloseCollectionAssignmentDialog();
 
-      // Forcer le rechargement complet des données
-      setTimeout(() => {
-        fetchCollections();
-        // setForceUpdate((prev) => prev + 1);
-      }, 500);
-    } catch (error) {
-      console.error(
-        "Erreur lors du retrait de l'employé de la collecte:",
-        error,
-      );
-      toast.error("Erreur lors du retrait de l'employé");
-    }
-  };
+  //     // Forcer le rechargement complet des données
+  //     setTimeout(() => {
+  //       fetchCollections();
+  //       // setForceUpdate((prev) => prev + 1);
+  //     }, 500);
+  //   } catch (error) {
+  //     console.error(
+  //       "Erreur lors du retrait de l'employé de la collecte:",
+  //       error,
+  //     );
+  //     toast.error("Erreur lors du retrait de l'employé");
+  //   }
+  // };
 
   // Fonction pour fermer le dialogue d'assignation
   const handleCloseTaskAssignmentDialog = () => {
@@ -2300,7 +2299,6 @@ const Planning = () => {
           handleDeleteTask={handleDeleteTask}
           handleOpenDialog={handleOpenDialog}
           selectedDate={selectedDate}
-          handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
         />
       </Box>
     );
@@ -3590,366 +3588,375 @@ const Planning = () => {
       />
 
       {/* Dialogue d'assignation des employés aux collectes */}
-      {openCollectionAssignmentDialog && selectedCollectionForAssignment && (
-        <Dialog
-          open={openCollectionAssignmentDialog}
-          onClose={handleCloseCollectionAssignmentDialog}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle
-            sx={{
-              bgcolor: "#9c27b0",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <LocalShipping sx={{ fontSize: 20 }} />
-            <Typography variant="h6">
-              Assigner un employé à la collecte
-            </Typography>
-            <Typography variant="body2" sx={{ ml: "auto", opacity: 0.8 }}>
-              {selectedCollectionForAssignment.collection_point_name}
-            </Typography>
-          </DialogTitle>
+      {/* {openCollectionAssignmentDialog && selectedCollectionForAssignment && (
+        // <TaskAssignmentDialog
+        //   open={openCollectionAssignmentDialog}
+        //   onClose={handleCloseCollectionAssignmentDialog}
+        //   selectedTask={selectedCollectionForAssignment}
+        //   assignedEmployees={collectionAssignedEmployees}
+        //   availableEmployees={availableEmployeesForCollection}
+        //   onAssignEmployee={handleAssignEmployeeToCollection}
+        //   onUnassignEmployee={handleUnassignEmployeeFromCollection}
+        // />
+        // <Dialog
+        //   open={openCollectionAssignmentDialog}
+        //   onClose={handleCloseCollectionAssignmentDialog}
+        //   maxWidth="md"
+        //   fullWidth
+        // >
+        //   <DialogTitle
+        //     sx={{
+        //       bgcolor: "#9c27b0",
+        //       color: "white",
+        //       display: "flex",
+        //       alignItems: "center",
+        //       gap: 1,
+        //     }}
+        //   >
+        //     <LocalShipping sx={{ fontSize: 20 }} />
+        //     <Typography variant="h6">
+        //       Assigner un employé à la collecte
+        //     </Typography>
+        //     <Typography variant="body2" sx={{ ml: "auto", opacity: 0.8 }}>
+        //       {selectedCollectionForAssignment.collection_point_name}
+        //     </Typography>
+        //   </DialogTitle>
 
-          <DialogContent sx={{ p: 3 }}>
-            {/* Informations sur la collecte */}
-            <Box
-              sx={{
-                mb: 3,
-                p: 2,
-                bgcolor: "#f3e5f5",
-                borderRadius: 1,
-                border: "1px solid #9c27b0",
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <Store sx={{ fontSize: 16, color: "#9c27b0" }} />
-                <strong>Filtrage par magasin et présence:</strong> Seuls les
-                employés du magasin "
-                {selectedCollectionForAssignment.collection_point_name}" qui
-                travaillent le{" "}
-                {selectedCollectionForAssignment.scheduled_date
-                  ? new Date(
-                      selectedCollectionForAssignment.scheduled_date,
-                    ).toLocaleDateString("fr-FR", { weekday: "long" })
-                  : "jour sélectionné"}{" "}
-                sont affichés.
-              </Typography>
-            </Box>
+        //   <DialogContent sx={{ p: 3 }}>
+        //     {/* Informations sur la collecte */}
+        //     <Box
+        //       sx={{
+        //         mb: 3,
+        //         p: 2,
+        //         bgcolor: "#f3e5f5",
+        //         borderRadius: 1,
+        //         border: "1px solid #9c27b0",
+        //       }}
+        //     >
+        //       <Typography
+        //         variant="body2"
+        //         sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        //       >
+        //         <Store sx={{ fontSize: 16, color: "#9c27b0" }} />
+        //         <strong>Filtrage par magasin et présence:</strong> Seuls les
+        //         employés du magasin "
+        //         {selectedCollectionForAssignment.collection_point_name}" qui
+        //         travaillent le{" "}
+        //         {selectedCollectionForAssignment.scheduled_date
+        //           ? new Date(
+        //               selectedCollectionForAssignment.scheduled_date,
+        //             ).toLocaleDateString("fr-FR", { weekday: "long" })
+        //           : "jour sélectionné"}{" "}
+        //         sont affichés.
+        //       </Typography>
+        //     </Box>
 
-            <Grid container spacing={3} sx={{ mt: 1 }}>
-              {/* Employés déjà assignés */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-                >
-                  <Person sx={{ fontSize: 20, color: "#2196f3" }} />
-                  Employé assigné
-                </Typography>
+        //     <Grid container spacing={3} sx={{ mt: 1 }}>
+        //       {/* Employés déjà assignés */}
+        //       <Grid size={{ xs: 12, md: 6 }}>
+        //         <Typography
+        //           variant="h6"
+        //           sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+        //         >
+        //           <Person sx={{ fontSize: 20, color: "#2196f3" }} />
+        //           Employé assigné
+        //         </Typography>
 
-                <Card
-                  sx={{
-                    bgcolor: "#e3f2fd",
-                    border: "2px solid #2196f3",
-                    minHeight: 200,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {collectionAssignedEmployees.length > 0 ? (
-                    <Stack spacing={2} sx={{ width: "100%", p: 2 }}>
-                      {collectionAssignedEmployees.map((employee) => (
-                        <Box
-                          key={employee.id}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            p: 2,
-                            bgcolor: "white",
-                            borderRadius: 1,
-                            boxShadow: 1,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                            }}
-                          >
-                            <Tooltip title={`Employé assigné à cette collecte`}>
-                              <Person sx={{ fontSize: 24, color: "#2196f3" }} />
-                            </Tooltip>
-                            <Box>
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                {employee.username}
-                              </Typography>
-                              <Chip
-                                label="Assigné"
-                                size="small"
-                                icon={<CheckCircle />}
-                                sx={{ bgcolor: "#e8f5e8", color: "#2e7d32" }}
-                              />
-                            </Box>
-                          </Box>
-                          <Tooltip title="Retirer l'employé de cette collecte">
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleUnassignEmployeeFromCollection(
-                                  employee.id,
-                                )
-                              }
-                              sx={{
-                                color: "#f44336",
-                                "&:hover": {
-                                  bgcolor: "#ffebee",
-                                  transform: "scale(1.1)",
-                                },
-                              }}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      ))}
-                    </Stack>
-                  ) : (
-                    <Box sx={{ textAlign: "center", color: "#999" }}>
-                      <PersonOff sx={{ fontSize: 48, mb: 1 }} />
-                      <Typography variant="body2">
-                        Aucun employé assigné à cette collecte
-                      </Typography>
-                    </Box>
-                  )}
-                </Card>
-              </Grid>
+        //         <Card
+        //           sx={{
+        //             bgcolor: "#e3f2fd",
+        //             border: "2px solid #2196f3",
+        //             minHeight: 200,
+        //             display: "flex",
+        //             alignItems: "center",
+        //             justifyContent: "center",
+        //           }}
+        //         >
+        //           {collectionAssignedEmployees.length > 0 ? (
+        //             <Stack spacing={2} sx={{ width: "100%", p: 2 }}>
+        //               {collectionAssignedEmployees.map((employee) => (
+        //                 <Box
+        //                   key={employee.id}
+        //                   sx={{
+        //                     display: "flex",
+        //                     alignItems: "center",
+        //                     justifyContent: "space-between",
+        //                     p: 2,
+        //                     bgcolor: "white",
+        //                     borderRadius: 1,
+        //                     boxShadow: 1,
+        //                   }}
+        //                 >
+        //                   <Box
+        //                     sx={{
+        //                       display: "flex",
+        //                       alignItems: "center",
+        //                       gap: 2,
+        //                     }}
+        //                   >
+        //                     <Tooltip title={`Employé assigné à cette collecte`}>
+        //                       <Person sx={{ fontSize: 24, color: "#2196f3" }} />
+        //                     </Tooltip>
+        //                     <Box>
+        //                       <Typography
+        //                         variant="body2"
+        //                         sx={{ fontWeight: "bold" }}
+        //                       >
+        //                         {employee.username}
+        //                       </Typography>
+        //                       <Chip
+        //                         label="Assigné"
+        //                         size="small"
+        //                         icon={<CheckCircle />}
+        //                         sx={{ bgcolor: "#e8f5e8", color: "#2e7d32" }}
+        //                       />
+        //                     </Box>
+        //                   </Box>
+        //                   <Tooltip title="Retirer l'employé de cette collecte">
+        //                     <IconButton
+        //                       size="small"
+        //                       onClick={() =>
+        //                         handleUnassignEmployeeFromCollection(
+        //                           employee.id,
+        //                         )
+        //                       }
+        //                       sx={{
+        //                         color: "#f44336",
+        //                         "&:hover": {
+        //                           bgcolor: "#ffebee",
+        //                           transform: "scale(1.1)",
+        //                         },
+        //                       }}
+        //                     >
+        //                       <Delete />
+        //                     </IconButton>
+        //                   </Tooltip>
+        //                 </Box>
+        //               ))}
+        //             </Stack>
+        //           ) : (
+        //             <Box sx={{ textAlign: "center", color: "#999" }}>
+        //               <PersonOff sx={{ fontSize: 48, mb: 1 }} />
+        //               <Typography variant="body2">
+        //                 Aucun employé assigné à cette collecte
+        //               </Typography>
+        //             </Box>
+        //           )}
+        //         </Card>
+        //       </Grid>
 
-              {/* Employés disponibles */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-                >
-                  <PersonAdd sx={{ fontSize: 20, color: "#4caf50" }} />
-                  Employés disponibles
-                </Typography>
+        //       {/* Employés disponibles */}
+        //       <Grid size={{ xs: 12, md: 6 }}>
+        //         <Typography
+        //           variant="h6"
+        //           sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+        //         >
+        //           <PersonAdd sx={{ fontSize: 20, color: "#4caf50" }} />
+        //           Employés disponibles
+        //         </Typography>
 
-                <Card
-                  sx={{
-                    bgcolor: "#f1f8e9",
-                    border: "2px solid #4caf50",
-                    maxHeight: 400,
-                    overflow: "auto",
-                  }}
-                >
-                  {availableEmployeesForCollection.length > 0 ? (
-                    <Stack spacing={1} sx={{ p: 1 }}>
-                      {availableEmployeesForCollection.map((employee) => (
-                        <Box
-                          key={employee.id}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            p: 1.5,
-                            bgcolor: employee.is_assigned_to_task
-                              ? "#ffebee"
-                              : "white",
-                            border: employee.is_assigned_to_task
-                              ? "2px solid #f44336"
-                              : "1px solid #e0e0e0",
-                            borderRadius: 1,
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1.5,
-                            }}
-                          >
-                            {employee.is_assigned_to_task ? (
-                              <Tooltip title="Employé occupé par une autre tâche">
-                                <Block
-                                  sx={{ fontSize: 20, color: "#f44336" }}
-                                />
-                              </Tooltip>
-                            ) : employee.already_assigned ? (
-                              <Tooltip title="Employé déjà assigné à cette collecte">
-                                <Person
-                                  sx={{ fontSize: 20, color: "#2196f3" }}
-                                />
-                              </Tooltip>
-                            ) : (
-                              <Tooltip title="Employé disponible">
-                                <CheckCircle
-                                  sx={{ fontSize: 20, color: "#4caf50" }}
-                                />
-                              </Tooltip>
-                            )}
-                            <Box>
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontWeight: "bold",
-                                  color: employee.is_assigned_to_task
-                                    ? "#f44336"
-                                    : "inherit",
-                                }}
-                              >
-                                {employee.username}
-                              </Typography>
-                              <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
-                                <Chip
-                                  label={employee.role}
-                                  size="small"
-                                  sx={{ fontSize: "0.65rem", height: 16 }}
-                                />
-                                {employee.is_assigned_to_task ? (
-                                  <Chip
-                                    label="Occupé"
-                                    size="small"
-                                    icon={<AccessTime />}
-                                    sx={{
-                                      bgcolor: "#ffcdd2",
-                                      color: "#d32f2f",
-                                      fontSize: "0.65rem",
-                                      height: 16,
-                                    }}
-                                  />
-                                ) : (
-                                  <Chip
-                                    label="Libre"
-                                    size="small"
-                                    icon={<CheckCircle />}
-                                    sx={{
-                                      bgcolor: "#c8e6c9",
-                                      color: "#388e3c",
-                                      fontSize: "0.65rem",
-                                      height: 16,
-                                    }}
-                                  />
-                                )}
-                              </Box>
-                              {employee.has_conflicts &&
-                                employee.conflicts &&
-                                employee.conflicts.length > 0 && (
-                                  <Box
-                                    sx={{
-                                      mt: 0.5,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 0.5,
-                                    }}
-                                  >
-                                    <Warning
-                                      sx={{ fontSize: 12, color: "#ff9800" }}
-                                    />
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        color: "#ff9800",
-                                        fontSize: "0.6rem",
-                                      }}
-                                    >
-                                      Conflit:{" "}
-                                      {employee.conflicts
-                                        .map(
-                                          (c) =>
-                                            c.collection_point_name || "Tâche",
-                                        )
-                                        .join(", ")}
-                                    </Typography>
-                                  </Box>
-                                )}
-                            </Box>
-                          </Box>
+        //         <Card
+        //           sx={{
+        //             bgcolor: "#f1f8e9",
+        //             border: "2px solid #4caf50",
+        //             maxHeight: 400,
+        //             overflow: "auto",
+        //           }}
+        //         >
+        //           {availableEmployeesForCollection.length > 0 ? (
+        //             <Stack spacing={1} sx={{ p: 1 }}>
+        //               {availableEmployeesForCollection.map((employee) => (
+        //                 <Box
+        //                   key={employee.id}
+        //                   sx={{
+        //                     display: "flex",
+        //                     alignItems: "center",
+        //                     justifyContent: "space-between",
+        //                     p: 1.5,
+        //                     bgcolor: employee.is_assigned_to_task
+        //                       ? "#ffebee"
+        //                       : "white",
+        //                     border: employee.is_assigned_to_task
+        //                       ? "2px solid #f44336"
+        //                       : "1px solid #e0e0e0",
+        //                     borderRadius: 1,
+        //                     transition: "all 0.2s ease",
+        //                   }}
+        //                 >
+        //                   <Box
+        //                     sx={{
+        //                       display: "flex",
+        //                       alignItems: "center",
+        //                       gap: 1.5,
+        //                     }}
+        //                   >
+        //                     {employee.is_assigned_to_task ? (
+        //                       <Tooltip title="Employé occupé par une autre tâche">
+        //                         <Block
+        //                           sx={{ fontSize: 20, color: "#f44336" }}
+        //                         />
+        //                       </Tooltip>
+        //                     ) : employee.already_assigned ? (
+        //                       <Tooltip title="Employé déjà assigné à cette collecte">
+        //                         <Person
+        //                           sx={{ fontSize: 20, color: "#2196f3" }}
+        //                         />
+        //                       </Tooltip>
+        //                     ) : (
+        //                       <Tooltip title="Employé disponible">
+        //                         <CheckCircle
+        //                           sx={{ fontSize: 20, color: "#4caf50" }}
+        //                         />
+        //                       </Tooltip>
+        //                     )}
+        //                     <Box>
+        //                       <Typography
+        //                         variant="body2"
+        //                         sx={{
+        //                           fontWeight: "bold",
+        //                           color: employee.is_assigned_to_task
+        //                             ? "#f44336"
+        //                             : "inherit",
+        //                         }}
+        //                       >
+        //                         {employee.username}
+        //                       </Typography>
+        //                       <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
+        //                         <Chip
+        //                           label={employee.role}
+        //                           size="small"
+        //                           sx={{ fontSize: "0.65rem", height: 16 }}
+        //                         />
+        //                         {employee.is_assigned_to_task ? (
+        //                           <Chip
+        //                             label="Occupé"
+        //                             size="small"
+        //                             icon={<AccessTime />}
+        //                             sx={{
+        //                               bgcolor: "#ffcdd2",
+        //                               color: "#d32f2f",
+        //                               fontSize: "0.65rem",
+        //                               height: 16,
+        //                             }}
+        //                           />
+        //                         ) : (
+        //                           <Chip
+        //                             label="Libre"
+        //                             size="small"
+        //                             icon={<CheckCircle />}
+        //                             sx={{
+        //                               bgcolor: "#c8e6c9",
+        //                               color: "#388e3c",
+        //                               fontSize: "0.65rem",
+        //                               height: 16,
+        //                             }}
+        //                           />
+        //                         )}
+        //                       </Box>
+        //                       {employee.has_conflicts &&
+        //                         employee.conflicts &&
+        //                         employee.conflicts.length > 0 && (
+        //                           <Box
+        //                             sx={{
+        //                               mt: 0.5,
+        //                               display: "flex",
+        //                               alignItems: "center",
+        //                               gap: 0.5,
+        //                             }}
+        //                           >
+        //                             <Warning
+        //                               sx={{ fontSize: 12, color: "#ff9800" }}
+        //                             />
+        //                             <Typography
+        //                               variant="caption"
+        //                               sx={{
+        //                                 color: "#ff9800",
+        //                                 fontSize: "0.6rem",
+        //                               }}
+        //                             >
+        //                               Conflit:{" "}
+        //                               {employee.conflicts
+        //                                 .map(
+        //                                   (c) =>
+        //                                     c.collection_point_name || "Tâche",
+        //                                 )
+        //                                 .join(", ")}
+        //                             </Typography>
+        //                           </Box>
+        //                         )}
+        //                     </Box>
+        //                   </Box>
 
-                          {employee.is_assigned_to_task ? (
-                            <Tooltip title="Employé occupé - impossible d'assigner">
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  disabled
-                                  sx={{ color: "#999" }}
-                                >
-                                  <Block />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : employee.already_assigned ? (
-                            <Tooltip title="Déjà assigné à cette collecte">
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  disabled
-                                  sx={{ color: "#2196f3" }}
-                                >
-                                  <CheckCircle />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip title="Assigner cet employé à la collecte">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleAssignEmployeeToCollection(employee.id)
-                                }
-                                sx={{
-                                  color: "#4caf50",
-                                  "&:hover": {
-                                    bgcolor: "#e8f5e8",
-                                    transform: "scale(1.1)",
-                                  },
-                                }}
-                              >
-                                <Add />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-                      ))}
-                    </Stack>
-                  ) : (
-                    <Box sx={{ textAlign: "center", color: "#999", py: 4 }}>
-                      <PersonOff sx={{ fontSize: 48, mb: 1 }} />
-                      <Typography variant="body2">
-                        Aucun employé disponible pour cette collecte
-                      </Typography>
-                    </Box>
-                  )}
-                </Card>
-              </Grid>
-            </Grid>
-          </DialogContent>
+        //                   {employee.is_assigned_to_task ? (
+        //                     <Tooltip title="Employé occupé - impossible d'assigner">
+        //                       <span>
+        //                         <IconButton
+        //                           size="small"
+        //                           disabled
+        //                           sx={{ color: "#999" }}
+        //                         >
+        //                           <Block />
+        //                         </IconButton>
+        //                       </span>
+        //                     </Tooltip>
+        //                   ) : employee.already_assigned ? (
+        //                     <Tooltip title="Déjà assigné à cette collecte">
+        //                       <span>
+        //                         <IconButton
+        //                           size="small"
+        //                           disabled
+        //                           sx={{ color: "#2196f3" }}
+        //                         >
+        //                           <CheckCircle />
+        //                         </IconButton>
+        //                       </span>
+        //                     </Tooltip>
+        //                   ) : (
+        //                     <Tooltip title="Assigner cet employé à la collecte">
+        //                       <IconButton
+        //                         size="small"
+        //                         onClick={() =>
+        //                           handleAssignEmployeeToCollection(employee.id)
+        //                         }
+        //                         sx={{
+        //                           color: "#4caf50",
+        //                           "&:hover": {
+        //                             bgcolor: "#e8f5e8",
+        //                             transform: "scale(1.1)",
+        //                           },
+        //                         }}
+        //                       >
+        //                         <Add />
+        //                       </IconButton>
+        //                     </Tooltip>
+        //                   )}
+        //                 </Box>
+        //               ))}
+        //             </Stack>
+        //           ) : (
+        //             <Box sx={{ textAlign: "center", color: "#999", py: 4 }}>
+        //               <PersonOff sx={{ fontSize: 48, mb: 1 }} />
+        //               <Typography variant="body2">
+        //                 Aucun employé disponible pour cette collecte
+        //               </Typography>
+        //             </Box>
+        //           )}
+        //         </Card>
+        //       </Grid>
+        //     </Grid>
+        //   </DialogContent>
 
-          <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-            <Button
-              onClick={handleCloseCollectionAssignmentDialog}
-              variant="outlined"
-              color="secondary"
-            >
-              Fermer
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+        //   <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+        //     <Button
+        //       onClick={handleCloseCollectionAssignmentDialog}
+        //       variant="outlined"
+        //       color="secondary"
+        //     >
+        //       Fermer
+        //     </Button>
+        //   </DialogActions>
+        // </Dialog>
+      )} */}
     </Box>
   );
 };
