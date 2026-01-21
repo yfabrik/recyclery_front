@@ -6,65 +6,83 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  Typography
+  Typography,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Backspace, Check, Clear } from "@mui/icons-material";
+
+type Resolver<T> = (value: T) => void;
 
 export function usePrompt() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [value, setValue] = useState("");
-  const [resolver, setResolver] = useState(null);
+  const resolverRef = useRef<Resolver<string | null> | null>(null);
 
-  const prompt = useCallback((msg, defaultValue = "") => {
-    setMessage(msg);
-    setValue(defaultValue);
-    setOpen(true);
+  const prompt = useCallback(
+    (msg: string, defaultValue = ""): Promise<string | null> => {
+      setMessage(msg);
+      setValue(defaultValue || "0");
+      setOpen(true);
 
-    return new Promise((resolve) => {
-      setResolver(() => resolve);
-    });
-  }, []);
+      return new Promise((resolve) => {
+        resolverRef.current = resolve;
+      });
+    },
+    [],
+  );
 
   const handleClose = () => {
     setOpen(false);
-    resolver?.(null);
+    if (resolverRef.current) {
+      resolverRef.current(null);
+      resolverRef.current = null;
+    }
   };
 
   const handleConfirm = () => {
     setOpen(false);
-    resolver?.(value);
+    if (resolverRef.current) {
+      // Always return a string when confirming (never null)
+      resolverRef.current(value || "0");
+      resolverRef.current = null;
+    }
   };
 
   const PromptDialog = (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={handleConfirm}>
       <DialogTitle>{message}</DialogTitle>
       <DialogContent>
-        <NumericKeypad onClose={handleConfirm} defaultValue={0} value={value} setValue={setValue} />
+        <NumericKeypad
+          onClose={handleConfirm}
+          defaultValue={value || "0"}
+          value={value}
+          setValue={setValue}
+        />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+      {/* <DialogActions>
+        <Button onClick={handleClose}>Annuler</Button>
         <Button onClick={handleConfirm} variant="contained">
           OK
         </Button>
-      </DialogActions>
+      </DialogActions> */}
     </Dialog>
   );
 
   return { prompt, PromptDialog };
 }
 
-interface keypadProps {
+interface KeypadProps {
   defaultValue: string | number;
   onClose: () => void;
   maxValue?: number;
   decimalPlaces?: number;
   unit?: string;
-  value:string,
-  setValue:React.Dispatch<React.SetStateAction<string>>
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
 }
+
 const NumericKeypad = ({
   value,
   setValue,
@@ -73,82 +91,60 @@ const NumericKeypad = ({
   maxValue = 9999,
   decimalPlaces = 1,
   unit = "kg",
-}: keypadProps) => {
-  // const [value, setValue] = useState<string>(defaultValue.toString() || "0");
-
+}: KeypadProps) => {
   const addChar = (char: string | number) => {
-    const c = char.toString();
-    const [entier, decimal] = value.split(".");
-    if (c == "." && value.includes(".")) return;
-    if (
-      entier.length >= maxValue.toString().length &&
-      decimal &&
-      decimal.length == decimalPlaces
-    )
-      return setValue(maxValue.toString());
-    if (entier.length >= maxValue.toString().length && !decimal)
-      return setValue((prev) => (c != "." ? prev + "." + c : prev + c));
-    if (value == "0") return setValue(c);
+    const charStr = char.toString();
+    const currentValue = value || "0";
+    const [, decimalPart] = currentValue.split(".");
 
-    return setValue((prev) => prev + c);
+    // Prevent adding decimal point if one already exists
+    if (charStr === "." && currentValue.includes(".")) {
+      return;
+    }
+
+    // Handle decimal point
+    if (charStr === ".") {
+      if (!currentValue.includes(".")) {
+        setValue((prev) => (prev === "0" ? "0." : prev + "."));
+      }
+      return;
+    }
+
+    // Check if we're at max value
+    const numericValue = parseFloat(currentValue + charStr);
+    if (numericValue > maxValue) {
+      return;
+    }
+
+    // Check decimal places limit
+    if (decimalPart && decimalPart.length >= decimalPlaces) {
+      return;
+    }
+
+    // Replace "0" with the new character (unless it's a decimal point)
+    if (currentValue === "0" && charStr !== ".") {
+      setValue(charStr);
+      return;
+    }
+
+    // Add character
+    setValue((prev) => prev + charStr);
   };
+
   const reset = () => {
-    setValue(defaultValue.toString());
+    setValue(defaultValue.toString() || "0");
   };
+
   const removeChar = () => {
-    setValue((prev) => prev.slice(0, -1));
+    setValue((prev) => {
+      if (prev.length <= 1) {
+        return "0";
+      }
+      return prev.slice(0, -1);
+    });
   };
-  // const addChar = (number) => {
-  //   const currentValue = value.toString();
 
-  // // Si c'est "0", remplacer par le nouveau chiffre
-  // if (currentValue === '0') {
-  //   onChange(number.toString());
-  //   return;
-  // }
-
-  // // Vérifier si on peut ajouter un décimal
-  // if (number === '.' || number === ',') {
-  //   if (currentValue.includes('.') || currentValue.includes(',')) {
-  //     return; // Déjà un décimal
-  //   }
-  //   onChange(currentValue + '.');
-  //   return;
-  // }
-
-  // // Vérifier la limite de décimales
-  // if (currentValue.includes('.')) {
-  //   const decimalPart = currentValue.split('.')[1];
-  //   if (decimalPart && decimalPart.length >= decimalPlaces) {
-  //     return;
-  //   }
-  // }
-
-  //   const newValue = currentValue + number.toString();
-  //   const numericValue = parseFloat(newValue);
-
-  //   if (numericValue <= maxValue) {
-  //     onChange(newValue);
-  //   }
-  // };
-
-  // const handleBackspace = () => {
-  //   const currentValue = value.toString();
-  //   if (currentValue.length > 1) {
-  //     onChange(currentValue.slice(0, -1));
-  //   } else {
-  //     onChange('0');
-  //   }
-  // };
-
-  // const handleClear = () => {
-  //   onChange('0');
-  // };
-
-  // const formatDisplayValue = () => {
-  //   if (!value || value === '0') return '0';
-  //   return value.toString();
-  // };
+  const displayValue = value || "0";
 
   return (
     <Box sx={{ minWidth: 280 }}>
@@ -164,7 +160,7 @@ const NumericKeypad = ({
         }}
       >
         <Typography variant="h3" fontWeight="bold" color="primary.main">
-          {value}
+          {displayValue}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
           {unit}
@@ -175,9 +171,8 @@ const NumericKeypad = ({
       <Grid container spacing={1}>
         {/* Ligne 1: 7, 8, 9 */}
         {[7, 8, 9].map((numero) => (
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 3 }} key={numero}>
             <Button
-              key={numero}
               fullWidth
               variant="outlined"
               size="large"
@@ -199,7 +194,7 @@ const NumericKeypad = ({
             fullWidth
             variant="outlined"
             size="large"
-            onClick={() => removeChar()}
+            onClick={removeChar}
             sx={{
               minHeight: 50,
               color: "error.main",
@@ -213,11 +208,11 @@ const NumericKeypad = ({
             <Backspace />
           </Button>
         </Grid>
+
         {/* Ligne 2: 4, 5, 6 */}
         {[4, 5, 6].map((numero) => (
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 3 }} key={numero}>
             <Button
-              key={numero}
               fullWidth
               variant="outlined"
               size="large"
@@ -256,9 +251,8 @@ const NumericKeypad = ({
 
         {/* Ligne 3: 1, 2, 3 */}
         {[1, 2, 3].map((numero) => (
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 3 }} key={numero}>
             <Button
-              key={numero}
               fullWidth
               variant="outlined"
               size="large"
@@ -307,7 +301,7 @@ const NumericKeypad = ({
               "&:hover": { backgroundColor: "#e3f2fd" },
             }}
           >
-            ,
+            .
           </Button>
         </Grid>
         <Grid size={{ xs: 3 }}>{/* Espace pour l'alignement */}</Grid>
