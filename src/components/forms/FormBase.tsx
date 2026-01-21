@@ -14,9 +14,11 @@ import {
   TextField,
   Typography,
   useRadioGroup,
+  useTheme,
   type FormControlOwnProps,
-  type TextFieldProps
+  type TextFieldProps,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import {
   Controller,
@@ -43,7 +45,7 @@ interface FormControlProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
 > {
-  control: ControllerProps<TFieldValues, TName, TTransformedValues>["control"];//Control<TFieldValues>
+  control: ControllerProps<TFieldValues, TName, TTransformedValues>["control"]; //Control<TFieldValues>
   name: TName;
   label: string;
   children?: ReactNode;
@@ -99,7 +101,7 @@ export const FormSwitch = <
             <Switch
               {...field}
               checked={field.value}
-            // onChange={field.onChange}
+              // onChange={field.onChange}
             />
           }
           label={label}
@@ -128,7 +130,9 @@ export const FormSelect = <
       control={control}
       render={({ field, fieldState }) => (
         <FormControl fullWidth {...extra} error={fieldState.invalid}>
-          <InputLabel id={`${name}_label`} shrink>{label}</InputLabel>
+          <InputLabel id={`${name}_label`} shrink>
+            {label}
+          </InputLabel>
           <Select
             labelId={`${name}_label`}
             label={label}
@@ -224,34 +228,33 @@ export const FormRadio = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
->({ name,
+>({
+  name,
   control,
   label,
   extra,
-  children
+  children,
 }: FormControlProps<TFieldValues, TName, TTransformedValues> & {
   extra?: FormControlOwnProps;
 }) => {
   return (
-
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState }) => (
         <FormControl error={fieldState.invalid} fullWidth {...extra}>
           <FormLabel id={name}>{label}</FormLabel>
-          <RadioGroup
-            aria-labelledby={name}
-            {...field}
-          >
+          <RadioGroup aria-labelledby={name} {...field}>
             {children}
           </RadioGroup>
           {fieldState.invalid && (
             <FormHelperText>{fieldState.error?.message}</FormHelperText>
           )}
-        </FormControl>)} />
-  )
-}
+        </FormControl>
+      )}
+    />
+  );
+};
 
 interface FormRadioCardProps {
   value: string;
@@ -260,6 +263,7 @@ interface FormRadioCardProps {
 }
 export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
   const radioGroup = useRadioGroup();
+  const theme = useTheme();
   const isSelected = radioGroup?.value === value;
 
   return (
@@ -267,7 +271,7 @@ export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
       sx={{
         position: "relative",
         "&:hover": {
-          backgroundColor: "#f5f5f5",
+          backgroundColor: theme.palette.action.hover,
         },
       }}
     >
@@ -299,8 +303,12 @@ export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
       <Card
         sx={{
           cursor: "pointer",
-          border: isSelected ? "2px solid #1976d2" : "1px solid #e0e0e0",
-          backgroundColor: isSelected ? "#e3f2fd" : "white",
+          border: isSelected
+            ? `2px solid ${theme.palette.primary.main}`
+            : `1px solid ${theme.palette.divider}`,
+          backgroundColor: isSelected
+            ? alpha(theme.palette.primary.main, 0.1)
+            : theme.palette.background.paper,
           minHeight: 100,
           width: "100%",
           position: "relative",
@@ -312,7 +320,9 @@ export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
           {icon && (
             <Box
               sx={{
-                color: isSelected ? "#1976d2" : "text.secondary",
+                color: isSelected
+                  ? theme.palette.primary.main
+                  : "text.secondary",
                 mb: 1,
               }}
             >
