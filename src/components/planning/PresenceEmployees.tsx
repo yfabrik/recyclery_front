@@ -12,82 +12,59 @@ import {
 } from "@mui/material";
 import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
 
-interface EmployeesDay {
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+interface DaySchedule {
   label: string;
   morning: EmployeeModel[];
   afternoon: EmployeeModel[];
   allDay: EmployeeModel[];
 }
-interface PresenceEmployeesProps {
-  selectedStore: StoreModel | null;
-  setShowMissingEmployeesDialog: (open: boolean) => void;
-  loadingEmployeesPresent: boolean;
-  EmployeeByDay:()=> { [key: string]: EmployeesDay };
+
+type TimeSlot = "allday" | "morning" | "afternoon";
+
+interface EmployeeScheduleByWeek {
+  [dayKey: string]: DaySchedule;
 }
 
-export const PrecenseEmployees = ({
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+interface EmployeePresenceScheduleProps {
+  selectedStore: StoreModel | null;
+  onShowMissingEmployees: () => void;
+  isLoading: boolean;
+  employeesByDay: EmployeeScheduleByWeek;
+}
+
+/**
+ * Main component displaying employee presence schedule by day of the week
+ */
+export const EmployeePresenceSchedule = ({
   selectedStore,
-  setShowMissingEmployeesDialog,
-  loadingEmployeesPresent,
-  EmployeeByDay,
-}: PresenceEmployeesProps) => {
-  const a= EmployeeByDay()
+  onShowMissingEmployees,
+  isLoading,
+  employeesByDay,
+}: EmployeePresenceScheduleProps) => {
   return (
     <Box sx={{ mb: 3 }}>
       <Card sx={{ bgcolor: "#f8f9fa", border: "2px solid #e0e0e0" }}>
         <CardContent>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mb: 2,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <CalendarToday sx={{ color: "#2196f3", fontSize: 28 }} />
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: "bold", color: "#2196f3" }}
-                >
-                  Planning des Employés par Jour
-                </Typography>
+          <EmployeePresenceHeader
+            selectedStore={selectedStore}
+            onShowMissingEmployees={onShowMissingEmployees}
+          />
 
-                <Typography variant="body2" sx={{ color: "#666", mt: 0.5 }}>
-                  Magasin sélectionné:{" "}
-                  {selectedStore?.name || "Magasin inconnu"}
-                </Typography>
-              </Box>
-            </Box>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Warning />}
-              onClick={() => setShowMissingEmployeesDialog(true)}
-              sx={{
-                borderColor: "#ff9800",
-                color: "#ff9800",
-                "&:hover": {
-                  borderColor: "#ff9800",
-                  backgroundColor: "#fff3e0",
-                },
-              }}
-            >
-              Vérifier les employés manquants
-            </Button>
-          </Box>
-
-          {loadingEmployeesPresent ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-              <CircularProgress size={24} />
-              <Typography sx={{ ml: 2 }}>Chargement des employés...</Typography>
-            </Box>
+          {isLoading ? (
+            <EmployeePresenceLoader />
           ) : (
-            <ListDays
-              EmployeeByDay={a}
+            <WeeklyScheduleGrid
+              employeesByDay={employeesByDay}
               selectedStore={selectedStore}
-            ></ListDays>
+            />
           )}
         </CardContent>
       </Card>
@@ -95,208 +72,298 @@ export const PrecenseEmployees = ({
   );
 };
 
-interface listDaysProps {
-  EmployeeByDay?: { [key: string]: EmployeesDay };
+// ============================================================================
+// HEADER COMPONENT
+// ============================================================================
+
+interface EmployeePresenceHeaderProps {
+  selectedStore: StoreModel | null;
+  onShowMissingEmployees: () => void;
+}
+
+const EmployeePresenceHeader = ({
+  selectedStore,
+  onShowMissingEmployees,
+}: EmployeePresenceHeaderProps) => {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        mb: 2,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <CalendarToday sx={{ color: "#2196f3", fontSize: 28 }} />
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: "bold", color: "#2196f3" }}
+          >
+            Planning des Employés par Jour
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#666", mt: 0.5 }}>
+            {selectedStore ? (
+              `Magasin sélectionné: ${selectedStore?.name}`
+            ) : (
+              "Tous les magasins"
+            )}
+          </Typography>
+        </Box>
+      </Box>
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={<Warning />}
+        onClick={onShowMissingEmployees}
+        sx={{
+          borderColor: "#ff9800",
+          color: "#ff9800",
+          "&:hover": {
+            borderColor: "#ff9800",
+            backgroundColor: "#fff3e0",
+          },
+        }}
+      >
+        Vérifier les employés manquants
+      </Button>
+    </Box>
+  );
+};
+
+// ============================================================================
+// LOADER COMPONENT
+// ============================================================================
+
+const EmployeePresenceLoader = () => {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+      <CircularProgress size={24} />
+      <Typography sx={{ ml: 2 }}>Chargement des employés...</Typography>
+    </Box>
+  );
+};
+
+// ============================================================================
+// WEEKLY SCHEDULE GRID
+// ============================================================================
+
+interface WeeklyScheduleGridProps {
+  employeesByDay: EmployeeScheduleByWeek;
   selectedStore: StoreModel | null;
 }
-export const ListDays = ({ EmployeeByDay, selectedStore }: listDaysProps) => {
-  if (!EmployeeByDay)
-    return (
-      <Box sx={{ textAlign: "center", py: 4 }}>
-        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-          Aucun employé trouvé
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          vérifiez les affectations d'employés.
-        </Typography>
-      </Box>
-    );
-  const hasEmployees = Object.values(EmployeeByDay).some(
+
+const WeeklyScheduleGrid = ({
+  employeesByDay,
+  selectedStore,
+}: WeeklyScheduleGridProps) => {
+  if (!employeesByDay || Object.keys(employeesByDay).length === 0) {
+    return <EmptyScheduleMessage message="Aucun employé trouvé" />;
+  }
+
+  const hasEmployees = Object.values(employeesByDay).some(
     (day) =>
       day.morning.length > 0 ||
       day.afternoon.length > 0 ||
       day.allDay.length > 0,
   );
+
   if (!hasEmployees && selectedStore) {
     return (
-      <Box sx={{ textAlign: "center", py: 4 }}>
-        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-          Aucun employé trouvé pour ce magasin
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Sélectionnez un autre magasin ou vérifiez les affectations d'employés.
-        </Typography>
-      </Box>
+      <EmptyScheduleMessage
+        message="Aucun employé trouvé pour ce magasin"
+        details="Sélectionnez un autre magasin ou vérifiez les affectations d'employés."
+      />
     );
   }
 
   return (
     <Grid container spacing={2}>
-      {Object.entries(EmployeeByDay).map(([dayKey, dayData]) => (
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 1.7 }} key={dayKey}>
-          <Card
-            sx={{
-              height: "100%",
-              border: "1px solid #e0e0e0",
-              bgcolor: dayData.allDay.length > 0 ? "#e8f5e8" : "#f5f5f5",
-              "&:hover": { boxShadow: 2 },
-            }}
-          >
-            <CardContent sx={{ p: 2 }}>
-              <Box sx={{ textAlign: "center", mb: 2 }}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  sx={{ color: "#333" }}
-                >
-                  {dayData.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {dayData.allDay.length} employé
-                  {dayData.allDay.length > 1 ? "s" : ""}
-                </Typography>
-              </Box>
-
-              {dayData.allDay.length > 0 ? (
-                <Stack spacing={1}>
-                  <EmployeeThisDay dayData={dayData}></EmployeeThisDay>
-                </Stack>
-              ) : (
-                <Box sx={{ textAlign: "center", py: 2 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Aucun employé
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+      {Object.entries(employeesByDay).map(([dayKey, daySchedule]) => (
+        <DayScheduleCard
+          key={dayKey}
+          dayKey={dayKey}
+          daySchedule={daySchedule}
+        />
       ))}
     </Grid>
   );
 };
 
-export const EmployeeThisDay = ({ dayData }: { dayData: EmployeesDay }) => {
-  // Helper function to deduplicate employees by id
-  // const deduplicateEmployees = (employees: EmployeesDay[]): EmployeesDay[] => {
-  //   const seen = new Set<number | string>();
-  //   return employees.filter((employee: EmployeesDay) => {
-  //     if (seen.has(employee.id)) {
-  //       return false;
-  //     }
-  //     seen.add(employee.id);
-  //     return true;
-  //   });
-  // };
-  // console.log("dayData", dayData);
+// ============================================================================
+// DAY SCHEDULE CARD
+// ============================================================================
 
-  // const allDayEmployees = deduplicateEmployees(
-  //   dayData.allDay.filter((employee: Employee) => {
-  //     const worksMorning = dayData.morning.some(
-  //       (emp: Employee) => emp.id === employee.id,
-  //     );
-  //     const worksAfternoon = dayData.afternoon.some(
-  //       (emp: Employee) => emp.id === employee.id,
-  //     );
-  //     return worksMorning && worksAfternoon;
-  //   }),
-  // );
+interface DayScheduleCardProps {
+  dayKey: string;
+  daySchedule: DaySchedule;
+}
 
-  // const morningOnlyEmployees = deduplicateEmployees(
-  //   dayData.morning.filter(
-  //     (employee: Employee) =>
-  //       !dayData.afternoon.some((emp: Employee) => emp.id === employee.id),
-  //   ),
-  // );
+const DayScheduleCard = ({ dayKey, daySchedule }: DayScheduleCardProps) => {
+  const totalEmployees =
+    daySchedule.allDay.length +
+    daySchedule.morning.length +
+    daySchedule.afternoon.length;
 
-  // const afternoonOnlyEmployees = deduplicateEmployees(
-  //   dayData.afternoon.filter(
-  //     (employee: Employee) =>
-  //       !dayData.morning.some((emp: Employee) => emp.id === employee.id),
-  //   ),
-  // );
+  const hasEmployees =
+    daySchedule.allDay.length > 0 ||
+    daySchedule.morning.length > 0 ||
+    daySchedule.afternoon.length > 0;
 
   return (
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 1.7 }} key={dayKey}>
+      <Card
+        sx={{
+          height: "100%",
+          border: "1px solid #e0e0e0",
+          bgcolor: daySchedule.allDay.length > 0 ? "#e8f5e8" : "#f5f5f5",
+          "&:hover": { boxShadow: 2 },
+        }}
+      >
+        <CardContent sx={{ p: 2 }}>
+          <DayScheduleHeader
+            dayLabel={daySchedule.label}
+            employeeCount={totalEmployees}
+          />
+
+          {hasEmployees ? (
+            <Stack spacing={1}>
+              <DayEmployeeList daySchedule={daySchedule} />
+            </Stack>
+          ) : (
+            <EmptyDayMessage />
+          )}
+        </CardContent>
+      </Card>
+    </Grid>
+  );
+};
+
+// ============================================================================
+// DAY SCHEDULE HEADER
+// ============================================================================
+
+interface DayScheduleHeaderProps {
+  dayLabel: string;
+  employeeCount: number;
+}
+
+const DayScheduleHeader = ({
+  dayLabel,
+  employeeCount,
+}: DayScheduleHeaderProps) => {
+  return (
+    <Box sx={{ textAlign: "center", mb: 2 }}>
+      <Typography
+        variant="subtitle1"
+        fontWeight="bold"
+        sx={{ color: "#333" }}
+      >
+        {dayLabel}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        {employeeCount} employé{employeeCount > 1 ? "s" : ""}
+      </Typography>
+    </Box>
+  );
+};
+
+// ============================================================================
+// DAY EMPLOYEE LIST
+// ============================================================================
+
+interface DayEmployeeListProps {
+  daySchedule: DaySchedule;
+}
+
+const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
+  return (
     <>
-      {/* Toute la journée */}
-      {dayData.allDay.length > 0 && (
-        <Box>
-          <Typography
-            variant="caption"
-            fontWeight="bold"
-            sx={{
-              color: "#4caf50",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-            }}
-          >
-            🌞 Journée
-          </Typography>
-          {dayData.allDay.map((employee: EmployeeModel, index: number) => (
-            <ShowEmployee
-              employee={employee}
-              key={`${employee.id}-allday-${index}`}
-            />
-          ))}
-        </Box>
+      {daySchedule.allDay.length > 0 && (
+        <TimeSlotSection
+          employees={daySchedule.allDay}
+          timeSlot="allday"
+          label="🌞 Journée"
+          color="#4caf50"
+        />
       )}
 
-      {/* Matin seulement */}
-      {dayData.morning.length > 0 && (
-        <Box>
-          <Typography
-            variant="caption"
-            fontWeight="bold"
-            sx={{
-              color: "#ff9800",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-            }}
-          >
-            🌅 Matin
-          </Typography>
-          {dayData.morning.map((employee: EmployeeModel, index: number) => (
-            <ShowEmployee
-              employee={employee}
-              key={`${employee.id}-morning-${index}`}
-            />
-          ))}
-        </Box>
+      {daySchedule.morning.length > 0 && (
+        <TimeSlotSection
+          employees={daySchedule.morning}
+          timeSlot="morning"
+          label="🌅 Matin"
+          color="#ff9800"
+        />
       )}
 
-      {/* Après-midi seulement */}
-      {dayData.afternoon.length > 0 && (
-        <Box>
-          <Typography
-            variant="caption"
-            fontWeight="bold"
-            sx={{
-              color: "#2196f3",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-            }}
-          >
-            🌆 Après-midi
-          </Typography>
-          {dayData.afternoon.map((employee: EmployeeModel, index: number) => (
-            <ShowEmployee
-              employee={employee}
-              key={`${employee.id}-afternoon-${index}`}
-            />
-          ))}
-        </Box>
+      {daySchedule.afternoon.length > 0 && (
+        <TimeSlotSection
+          employees={daySchedule.afternoon}
+          timeSlot="afternoon"
+          label="🌆 Après-midi"
+          color="#2196f3"
+        />
       )}
     </>
   );
 };
 
-interface ShowEmployeeProps {
-  employee: EmployeeModel;
+// ============================================================================
+// TIME SLOT SECTION
+// ============================================================================
+
+interface TimeSlotSectionProps {
+  employees: EmployeeModel[];
+  timeSlot: TimeSlot;
+  label: string;
+  color: string;
 }
-const ShowEmployee = ({ employee }: ShowEmployeeProps) => {
+
+const TimeSlotSection = ({
+  employees,
+  timeSlot,
+  label,
+  color,
+}: TimeSlotSectionProps) => {
+  return (
+    <Box>
+      <Typography
+        variant="caption"
+        fontWeight="bold"
+        sx={{
+          color,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+        }}
+      >
+        {label}
+      </Typography>
+      {employees.map((employee, index) => (
+        <EmployeeBadge
+          key={`${employee.id}-${timeSlot}-${index}`}
+          employee={employee}
+          timeSlot={timeSlot}
+        />
+      ))}
+    </Box>
+  );
+};
+
+// ============================================================================
+// EMPLOYEE BADGE
+// ============================================================================
+
+interface EmployeeBadgeProps {
+  employee: EmployeeModel;
+  timeSlot: TimeSlot;
+}
+
+const EmployeeBadge = ({ employee, timeSlot }: EmployeeBadgeProps) => {
+  const avatarColor = getTimeSlotColor(timeSlot);
+
   return (
     <Box
       sx={{
@@ -310,7 +377,7 @@ const ShowEmployee = ({ employee }: ShowEmployeeProps) => {
         sx={{
           width: 20,
           height: 20,
-          bgcolor: "#2196f3",
+          bgcolor: avatarColor,
           fontSize: 10,
         }}
       >
@@ -328,3 +395,62 @@ const ShowEmployee = ({ employee }: ShowEmployeeProps) => {
     </Box>
   );
 };
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const getTimeSlotColor = (timeSlot: TimeSlot): string => {
+  const colorMap: Record<TimeSlot, string> = {
+    allday: "#4caf50", // Green
+    morning: "#ff9800", // Orange
+    afternoon: "#2196f3", // Blue
+  };
+  return colorMap[timeSlot];
+};
+
+// ============================================================================
+// EMPTY STATE COMPONENTS
+// ============================================================================
+
+interface EmptyScheduleMessageProps {
+  message: string;
+  details?: string;
+}
+
+const EmptyScheduleMessage = ({
+  message,
+  details,
+}: EmptyScheduleMessageProps) => {
+  return (
+    <Box sx={{ textAlign: "center", py: 4 }}>
+      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+        {message}
+      </Typography>
+      {details && (
+        <Typography variant="body2" color="text.secondary">
+          {details}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+const EmptyDayMessage = () => {
+  return (
+    <Box sx={{ textAlign: "center", py: 2 }}>
+      <Typography variant="caption" color="text.secondary">
+        Aucun employé
+      </Typography>
+    </Box>
+  );
+};
+
+// ============================================================================
+// LEGACY EXPORTS (for backward compatibility)
+// ============================================================================
+
+/**
+ * @deprecated Use EmployeePresenceSchedule instead
+ */
+export const PrecenseEmployees = EmployeePresenceSchedule;

@@ -537,7 +537,7 @@ const Planning = () => {
   };
 
   // Fonction pour organiser les employés par jour de la semaine
-  const getEmployeesByDay = () => {
+  const getEmployeesByDay = (): { [key: string]: { label: string; morning: EmployeeModel[]; afternoon: EmployeeModel[]; allDay: EmployeeModel[] } } => {
     const daysOfWeek = [
       "monday",
       "tuesday",
@@ -558,11 +558,11 @@ const Planning = () => {
     ];
 
     // Filtrer les employés selon le magasin sélectionné
-    let employeesToProcess = [];
+    let employeesToProcess: EmployeeModel[] = [];
 
     if (selectedStore) {
       employeesToProcess =
-        employeesPresent.find((s) => (s.id = selectedStore.id))?.employees ||
+        employeesPresent.find((s) => s.id === selectedStore.id)?.employees ||
         [];
 
       // Si un magasin est sélectionné, ne prendre que les employés de ce magasin
@@ -592,18 +592,24 @@ const Planning = () => {
       //   });
     }
 
-    const employeesByDay = {};
+    const employeesByDay: { [key: string]: { label: string; morning: EmployeeModel[]; afternoon: EmployeeModel[]; allDay: EmployeeModel[] } } = {};
     daysOfWeek.forEach((day, index) => {
       const morning = employeesToProcess.filter((employee) => {
         const workday = employee.EmployeeWorkdays || [];
         return workday.some(
-          (wd) => wd.day_of_week == day && wd.time_slot == "morning",
+          (wd) =>
+            wd.day_of_week === day &&
+            wd.time_slot === "morning" &&
+            wd.is_working === true,
         );
       });
       const afternoon = employeesToProcess.filter((employee) => {
         const workday = employee.EmployeeWorkdays || [];
         return workday.some(
-          (wd) => wd.day_of_week == day && wd.time_slot == "afternoon",
+          (wd) =>
+            wd.day_of_week === day &&
+            wd.time_slot === "afternoon" &&
+            wd.is_working === true,
         );
       });
 
@@ -611,9 +617,9 @@ const Planning = () => {
       const map1 = new Map(morning.map((o) => [o.id, o]));
       const map2 = new Map(afternoon.map((o) => [o.id, o]));
 
-      const allDay = [];
-      const onlyMorning = [];
-      const onlyNoon = [];
+      const allDay: EmployeeModel[] = [];
+      const onlyMorning: EmployeeModel[] = [];
+      const onlyNoon: EmployeeModel[] = [];
 
       for (const [id, obj] of map1) {
         if (map2.has(id)) {
@@ -3010,8 +3016,8 @@ const Planning = () => {
       </Box>
 
       {/* Planning des employés par jour */}
-      <PrecenseEmployees
-        EmployeeByDay={getEmployeesByDay}
+      <PrecenseEmployees  
+        employeesByDay={getEmployeesByDay()}
         loadingEmployeesPresent={loadingEmployeesPresent}
         selectedStore={selectedStore}
         setShowMissingEmployeesDialog={setShowMissingEmployeesDialog}
