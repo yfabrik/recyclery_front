@@ -8,7 +8,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Backspace, Check, Clear } from "@mui/icons-material";
 
@@ -92,57 +92,119 @@ const NumericKeypad = ({
   decimalPlaces = 1,
   unit = "kg",
 }: KeypadProps) => {
-  const addChar = (char: string | number) => {
+  const addChar = useCallback((char: string | number) => {
     const charStr = char.toString();
-    const currentValue = value || "0";
-    const [, decimalPart] = currentValue.split(".");
+    setValue((prev) => {
+      const currentValue = prev || "0";
+      const [, decimalPart] = currentValue.split(".");
 
-    // Prevent adding decimal point if one already exists
-    if (charStr === "." && currentValue.includes(".")) {
-      return;
-    }
-
-    // Handle decimal point
-    if (charStr === ".") {
-      if (!currentValue.includes(".")) {
-        setValue((prev) => (prev === "0" ? "0." : prev + "."));
+      // Prevent adding decimal point if one already exists
+      if (charStr === "." && currentValue.includes(".")) {
+        return currentValue;
       }
-      return;
-    }
 
-    // Check if we're at max value
-    const numericValue = parseFloat(currentValue + charStr);
-    if (numericValue > maxValue) {
-      return;
-    }
+      // Handle decimal point
+      if (charStr === ".") {
+        if (!currentValue.includes(".")) {
+          return currentValue === "0" ? "0." : currentValue + ".";
+        }
+        return currentValue;
+      }
 
-    // Check decimal places limit
-    if (decimalPart && decimalPart.length >= decimalPlaces) {
-      return;
-    }
+      // Check if we're at max value
+      const numericValue = parseFloat(currentValue + charStr);
+      if (numericValue > maxValue) {
+        return currentValue;
+      }
 
-    // Replace "0" with the new character (unless it's a decimal point)
-    if (currentValue === "0" && charStr !== ".") {
-      setValue(charStr);
-      return;
-    }
+      // Check decimal places limit
+      if (decimalPart && decimalPart.length >= decimalPlaces) {
+        return currentValue;
+      }
 
-    // Add character
-    setValue((prev) => prev + charStr);
-  };
+      // Replace "0" with the new character (unless it's a decimal point)
+      if (currentValue === "0" && charStr !== ".") {
+        return charStr;
+      }
 
-  const reset = () => {
+      // Add character
+      return currentValue + charStr;
+    });
+  }, [setValue, maxValue, decimalPlaces]);
+
+  const reset = useCallback(() => {
     setValue(defaultValue.toString() || "0");
-  };
+  }, [setValue, defaultValue]);
 
-  const removeChar = () => {
+  const removeChar = useCallback(() => {
     setValue((prev) => {
       if (prev.length <= 1) {
         return "0";
       }
       return prev.slice(0, -1);
     });
-  };
+  }, [setValue]);
+
+  // Handle keyboard numpad input
+  useEffect(() => {
+    // Registry pattern: map event codes/keys to their handlers
+    const numpadRegistry: Record<string, () => void> = {
+      Numpad0: () => addChar(0),
+      Numpad1: () => addChar(1),
+      Numpad2: () => addChar(2),
+      Numpad3: () => addChar(3),
+      Numpad4: () => addChar(4),
+      Numpad5: () => addChar(5),
+      Numpad6: () => addChar(6),
+      Numpad7: () => addChar(7),
+      Numpad8: () => addChar(8),
+      Numpad9: () => addChar(9),
+      NumpadDecimal: () => addChar("."),
+      NumpadEnter: () => onClose(),
+    };
+
+    const keyRegistry: Record<string, () => void> = {
+      "0": () => addChar(0),
+      "1": () => addChar(1),
+      "2": () => addChar(2),
+      "3": () => addChar(3),
+      "4": () => addChar(4),
+      "5": () => addChar(5),
+      "6": () => addChar(6),
+      "7": () => addChar(7),
+      "8": () => addChar(8),
+      "9": () => addChar(9),
+      ".": () => addChar("."),
+      ",": () => addChar("."),
+      Backspace: () => removeChar(),
+      Delete: () => reset(),
+      Enter: () => onClose(),
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Handle numpad keys first (by event.code)
+      if (event.code.startsWith("Numpad")) {
+        const handler = numpadRegistry[event.code];
+        if (handler) {
+          event.preventDefault();
+          handler();
+          return; // Don't process regular keys if numpad was used
+        }
+      }
+
+      // Handle regular keys (by event.key)
+      const handler = keyRegistry[event.key];
+      if (handler) {
+        event.preventDefault();
+        handler();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [addChar, removeChar, reset, onClose]);
 
   const displayValue = value || "0";
 
