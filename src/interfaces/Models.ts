@@ -13,8 +13,7 @@ export interface CategoryModel extends BaseModel {
 }
 
 export interface StoreModel extends BaseModel {
-  employees: Array<number>;
-  // manager?: number
+  employees?: Array< EmployeeModel>;
   manager_id: string;
   caisses: [];
   name: string;
@@ -121,6 +120,7 @@ export interface UserModel extends BaseModel {
 }
 
 export interface TaskModel extends BaseModel {
+  name: string;
   scheduled_date: Date;
   task_employees: UserModel[];
   assigned_employees: UserModel[];
@@ -130,12 +130,28 @@ export interface TaskModel extends BaseModel {
   status: string;
   location_name: string;
   priority: string;
+  Employees?: EmployeeModel[];
 }
 
 export interface EmployeeModel extends BaseModel {
+  fullName: string;
   nom: string;
   prenom: string;
   isActive: boolean;
   phone?: string;
   email?: string;
+  EmployeeWorkdays?: WorkdaysModel[];
+  stores?: StoreModel[];
+  EmployeeStore?: {
+    is_primary: boolean;
+  }[];
+}
+
+export interface WorkdaysModel extends BaseModel {
+  day_of_week: string;
+  time_slot: string;
+  is_working: boolean;
+  start_time: string;
+  end_time: string;
+  notes: string;
 }

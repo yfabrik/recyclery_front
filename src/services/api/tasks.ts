@@ -1,6 +1,8 @@
 import axiosInstance from "./axios";
-
-export const getTasks = () => axiosInstance.get("/api/tasks")
+interface filterTask{
+    include?:"user"
+}
+export const getTasks = (filter?:filterTask) => axiosInstance.get("/api/tasks",{params:filter})
 export const getEmployeesForTask = (id:number)=>axiosInstance.get(`/api/tasks/${id}/employees`)
 
 export const updateTask = (id:number,data)=>axiosInstance.put(`/api/tasks/${id}`,data)

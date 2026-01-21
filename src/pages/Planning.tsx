@@ -71,17 +71,22 @@ import { fetchStores as fstore } from "../services/api/store";
 import { createTask, getTasks, updateTask } from "../services/api/tasks";
 import { getEmployees } from "../services/api/employee";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
+import type {
+  EmployeeModel,
+  StoreModel,
+  TaskModel,
+} from "../interfaces/Models";
 
 const Planning = () => {
-  const [schedules, setSchedules] = useState([]);
+  const [schedules, setSchedules] = useState<TaskModel[]>([]);
   // const [tasks, setTasks] = useState([]);
   // const [employees, setEmployees] = useState([]);
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<StoreModel[]>([]);
   // const [locations, setLocations] = useState([]);
   const [collections, setCollections] = useState([]);
 
   // Fonction pour générer une couleur basée sur le nom de l'employé
-  const getEmployeeColor = (employeeName) => {
+  const getEmployeeColor = (employeeName: string) => {
     if (!employeeName) return "#999";
     const colors = [
       "#4caf50",
@@ -101,7 +106,7 @@ const Planning = () => {
   };
 
   // Fonction pour obtenir les initiales d'un employé
-  const getEmployeeInitials = (employeeName) => {
+  const getEmployeeInitials = (employeeName: string) => {
     if (!employeeName) return "?";
     return employeeName
       .split(" ")
@@ -110,11 +115,12 @@ const Planning = () => {
       .toUpperCase()
       .slice(0, 2);
   };
-  const [selectedStore, setSelectedStore] = useState("");
+  const [selectedStore, setSelectedStore] = useState<StoreModel | null>();
   // const [selectedLocation, setSelectedLocation] = useState("");
   // const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [editingSchedule, setEditingSchedule] =
+    useState<Partial<TaskModel> | null>(null);
 
   // États pour l'assignation des employés depuis le planning
   const [openTaskAssignmentDialog, setOpenTaskAssignmentDialog] =
@@ -144,7 +150,7 @@ const Planning = () => {
   // const [filterEmployee, setFilterEmployee] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("week"); // semaine par défaut
+  const [viewMode, setViewMode] = useState<"week" | "calendar" | "day">("week"); // semaine par défaut
   // const [showCompleted, setShowCompleted] = useState(true);
   // const [groupBy, setGroupBy] = useState("employee"); // employee, date, priority
 
@@ -154,19 +160,19 @@ const Planning = () => {
   const [pendingScheduleData, setPendingScheduleData] = useState(null);
 
   // État pour les employés présents
-  const [employeesPresent, setEmployeesPresent] = useState({});
+  const [employeesPresent, setEmployeesPresent] = useState<StoreModel[]>([]);
   const [loadingEmployeesPresent, setLoadingEmployeesPresent] = useState(false);
   const [showMissingEmployeesDialog, setShowMissingEmployeesDialog] =
     useState(false);
-  const [missingEmployees, setMissingEmployees] = useState([]);
+  const [missingEmployees, setMissingEmployees] = useState<EmployeeModel[]>([]);
   // const [allEmployees, setAllEmployees] = useState([]);
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
   useEffect(() => {
-    // console.log("t", tasks);
+    console.log("e", employeesPresent);
     console.log("u", schedules);
-  }, [schedules]);
+  }, [schedules, employeesPresent]);
 
   const statusOptions = [
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
@@ -234,19 +240,20 @@ const Planning = () => {
       // setLoading(true);
       const params = {};
       if (selectedStore) {
-        params.store_id = parseInt(selectedStore);
+        // params.store_id = parseInt(selectedStore);
+        params.store_id = selectedStore.id;
       }
 
-      const r = await getTasks();
-      const tasks = r.data.tasks;
+      const r = await getTasks({ include: "user" });
+      const tasks: TaskModel[] = r.data.tasks;
       const synchronizedSchedules = tasks.map((task, i, array) => {
-        const users = task.Users || [];
+        const users = task.Employees || [];
         const occuped = [];
 
         array
           .filter((a, j) => i != j)
           .forEach((other) => {
-            const otherUsers = other.Users;
+            const otherUsers = other.Employees || [];
             users.forEach(
               (user) =>
                 otherUsers.some((o) => o.id == user.id) &&
@@ -421,6 +428,7 @@ const Planning = () => {
     }
   };
 
+  //TODO fixme
   const fetchEmployeesPresent = async () => {
     try {
       setLoadingEmployeesPresent(true);
@@ -429,18 +437,19 @@ const Planning = () => {
         getEmployees(),
       ]);
 
-      const employeesByStore = {};
-      infoStoreResponse.data.stores.forEach((store) => {
-        const employees = store.employees;
+      //TODO really needed ?
+      // const employeesByStore = {};
+      // infoStoreResponse.data.stores.forEach((store:StoreModel) => {
+      //   const employees = store.employees||[];
 
-        employeesByStore[store.id] = employees.map((employee) => {
-          return {
-            ...employee,
-            is_primary: employee.EmployeeStore.is_primary,
-            workdays: employee.EmployeeWorkdays,
-          };
-        });
-      });
+      //   employeesByStore[store.id] = employees.map((employee) => {
+      //     return {
+      //       ...employee,
+      //       is_primary: employee.EmployeeStore.is_primary,
+      //       workdays: employee.EmployeeWorkdays,
+      //     };
+      //   });
+      // });
 
       const filteredEmployees = employeesResponse.data.data;
 
@@ -492,21 +501,23 @@ const Planning = () => {
       //       });
       //     }
       //   });
-      setEmployeesPresent(employeesByStore);
+      setEmployeesPresent(infoStoreResponse.data.stores);
+      // setEmployeesPresent(employeesByStore);
       // setAllEmployees(filteredEmployees);
 
       // Détecter les employés manquants (sans affectations ou sans jours de travail)
-      const employeesInPlanning = new Set();
-      Object.values(employeesByStore).forEach((storeEmployees) => {
-        storeEmployees.forEach((employee) => {
-          if (employee.workdays && employee.workdays.length > 0) {
-            employeesInPlanning.add(employee.id);
-          }
-        });
-      });
+      // const employeesInPlanning = new Set();
+      // Object.values(employeesByStore).forEach((storeEmployees) => {
+      //   storeEmployees.forEach((employee) => {
+      //     if (employee.workdays && employee.workdays.length > 0) {
+      //       employeesInPlanning.add(employee.id);
+      //     }
+      //   });
+      // });
 
       const missingEmployeesList = filteredEmployees.filter(
-        (emp) => !employeesInPlanning.has(emp.id),
+        (emp: EmployeeModel) =>
+          emp.stores.length == 0 || emp.EmployeeWorkdays.length == 0,
       );
       setMissingEmployees(missingEmployeesList);
 
@@ -519,7 +530,7 @@ const Planning = () => {
         "❌ ERREUR lors du chargement des employés présents:",
         error,
       );
-      setEmployeesPresent({});
+      setEmployeesPresent([]);
     } finally {
       setLoadingEmployeesPresent(false);
     }
@@ -546,126 +557,174 @@ const Planning = () => {
       "Dimanche",
     ];
 
-    const employeesByDay = {};
-
-    daysOfWeek.forEach((day, index) => {
-      employeesByDay[day] = {
-        label: dayLabels[index],
-        morning: [],
-        afternoon: [],
-        allDay: [],
-      };
-    });
-
     // Filtrer les employés selon le magasin sélectionné
     let employeesToProcess = [];
 
     if (selectedStore) {
+      employeesToProcess =
+        employeesPresent.find((s) => (s.id = selectedStore.id))?.employees ||
+        [];
+
       // Si un magasin est sélectionné, ne prendre que les employés de ce magasin
-      const storeId = parseInt(selectedStore);
-      Object.entries(employeesPresent).forEach(
-        ([storeIdKey, storeEmployees]) => {
-          if (parseInt(storeIdKey) === storeId) {
-            employeesToProcess = storeEmployees;
-          }
-        },
-      );
+      // const storeId = selectedStore.id;
+      // Object.entries(employeesPresent).forEach(
+      //   ([storeIdKey, storeEmployees]) => {
+      //     if (parseInt(storeIdKey) === storeId) {
+      //       employeesToProcess = storeEmployees;
+      //     }
+      //   },
+      // );
     } else {
+      const tmpEmployeeToProcess = employeesPresent.reduce(
+        (prev: EmployeeModel[], current) => {
+          const employees = current.employees || [];
+          prev = [...prev, ...employees];
+          return prev;
+        },
+        [],
+      );
+      employeesToProcess = [
+        ...new Map(tmpEmployeeToProcess.map((obj) => [obj.id, obj])).values(),
+      ];
       // Si aucun magasin n'est sélectionné, prendre tous les employés
-      Object.values(employeesPresent).forEach((storeEmployees) => {
-        employeesToProcess = employeesToProcess.concat(storeEmployees);
-      });
+      //   Object.values(employeesPresent).forEach((storeEmployees) => {
+      //     employeesToProcess = employeesToProcess.concat(storeEmployees);
+      //   });
     }
 
-    // Parcourir les employés filtrés et leurs jours de travail
-    employeesToProcess.forEach((employee) => {
-      if (employee.workdays && employee.workdays.length > 0) {
-        employee.workdays.forEach((workday) => {
-          const day = workday.day_of_week;
-          const timeSlot = workday.time_slot;
-          const isWorking = workday.is_working;
+    const employeesByDay = {};
+    daysOfWeek.forEach((day, index) => {
+      const morning = employeesToProcess.filter((employee) => {
+        const workday = employee.EmployeeWorkdays || [];
+        return workday.some(
+          (wd) => wd.day_of_week == day && wd.time_slot == "morning",
+        );
+      });
+      const afternoon = employeesToProcess.filter((employee) => {
+        const workday = employee.EmployeeWorkdays || [];
+        return workday.some(
+          (wd) => wd.day_of_week == day && wd.time_slot == "afternoon",
+        );
+      });
 
-          if (employeesByDay[day] && isWorking) {
-            const employeeInfo = {
-              ...employee,
-              id: employee.id,
-              name: employee.username,
-              store: employee.is_primary ? "Principal" : "Secondaire",
-              startTime: workday.start_time,
-              endTime: workday.end_time,
-            };
+      //remove duplicate in morning and afternoon and put them in allday
+      const map1 = new Map(morning.map((o) => [o.id, o]));
+      const map2 = new Map(afternoon.map((o) => [o.id, o]));
 
-            if (timeSlot === "morning") {
-              employeesByDay[day].morning.push(employeeInfo);
-            } else if (timeSlot === "afternoon") {
-              employeesByDay[day].afternoon.push(employeeInfo);
-            }
+      const allDay = [];
+      const onlyMorning = [];
+      const onlyNoon = [];
 
-            // Ajouter aussi à allDay pour un aperçu global
-            const existingInAllDay = employeesByDay[day].allDay.find(
-              (emp) => emp.id === employee.id,
-            );
-            if (!existingInAllDay) {
-              employeesByDay[day].allDay.push(employeeInfo);
-            }
-          }
-        });
+      for (const [id, obj] of map1) {
+        if (map2.has(id)) {
+          allDay.push(obj);
+        } else {
+          onlyMorning.push(obj);
+        }
       }
+
+      for (const [id, obj] of map2) {
+        if (!map1.has(id)) {
+          onlyNoon.push(obj);
+        }
+      }
+      employeesByDay[day] = {
+        label: dayLabels[index],
+        morning: onlyMorning,
+        afternoon: onlyNoon,
+        allDay: allDay,
+      };
     });
+
+    // Parcourir les employés filtrés et leurs jours de travail
+    // employeesToProcess.forEach((employee) => {
+    //   if (employee.workdays && employee.workdays.length > 0) {
+    //     employee.workdays.forEach((workday) => {
+    //       const day = workday.day_of_week;
+    //       const timeSlot = workday.time_slot;
+    //       const isWorking = workday.is_working;
+
+    //       if (employeesByDay[day] && isWorking) {
+    //         const employeeInfo = {
+    //           ...employee,
+    //           id: employee.id,
+    //           name: employee.username,
+    //           store: employee.is_primary ? "Principal" : "Secondaire",
+    //           startTime: workday.start_time,
+    //           endTime: workday.end_time,
+    //         };
+
+    //         if (timeSlot === "morning") {
+    //           employeesByDay[day].morning.push(employeeInfo);
+    //         } else if (timeSlot === "afternoon") {
+    //           employeesByDay[day].afternoon.push(employeeInfo);
+    //         }
+
+    //         // Ajouter aussi à allDay pour un aperçu global
+    //         const existingInAllDay = employeesByDay[day].allDay.find(
+    //           (emp) => emp.id === employee.id,
+    //         );
+    //         if (!existingInAllDay) {
+    //           employeesByDay[day].allDay.push(employeeInfo);
+    //         }
+    //       }
+    //     });
+    //   }
+    // });
     return employeesByDay;
   };
 
   // Fonction pour vérifier si un employé travaille un jour donné
-  const checkEmployeeWorkday = (employeeId, date, timeSlot) => {
-    const dayOfWeek = date
-      .toLocaleDateString("en-US", { weekday: "long" })
-      .toLowerCase();
+  // const checkEmployeeWorkday = (employeeId, date, timeSlot) => {
+  //   const dayOfWeek = date
+  //     .toLocaleDateString("en-US", { weekday: "long" })
+  //     .toLowerCase();
 
-    // Parcourir les employés selon le magasin sélectionné
-    let employeeWorkdays = [];
-    let employeesToCheck = [];
+  //   // Parcourir les employés selon le magasin sélectionné
+  //   let employeeWorkdays = [];
+  //   let employeesToCheck = [];
 
-    if (selectedStore) {
-      // Si un magasin est sélectionné, ne vérifier que les employés de ce magasin
-      const storeId = parseInt(selectedStore);
-      Object.entries(employeesPresent).forEach(
-        ([storeIdKey, storeEmployees]) => {
-          if (parseInt(storeIdKey) === storeId) {
-            employeesToCheck = storeEmployees;
-          }
-        },
-      );
-    } else {
-      // Si aucun magasin n'est sélectionné, vérifier tous les employés
-      Object.values(employeesPresent).forEach((storeEmployees) => {
-        employeesToCheck = employeesToCheck.concat(storeEmployees);
-      });
-    }
+  //   if (selectedStore) {
+  //     // Si un magasin est sélectionné, ne vérifier que les employés de ce magasin
+  //     const storeId = parseInt(selectedStore);
+  //     Object.entries(employeesPresent).forEach(
+  //       ([storeIdKey, storeEmployees]) => {
+  //         if (parseInt(storeIdKey) === storeId) {
+  //           employeesToCheck = storeEmployees;
+  //         }
+  //       },
+  //     );
+  //   } else {
+  //     // Si aucun magasin n'est sélectionné, vérifier tous les employés
+  //     Object.values(employeesPresent).forEach((storeEmployees) => {
+  //       employeesToCheck = employeesToCheck.concat(storeEmployees);
+  //     });
+  //   }
 
-    employeesToCheck.forEach((employee) => {
-      if (employee.id === employeeId && employee.workdays) {
-        employeeWorkdays = employee.workdays;
-      }
-    });
+  //   employeesToCheck.forEach((employee) => {
+  //     if (employee.id === employeeId && employee.workdays) {
+  //       employeeWorkdays = employee.workdays;
+  //     }
+  //   });
 
-    // Vérifier si l'employé travaille ce jour
-    const worksThisDay = employeeWorkdays.some(
-      (workday) => workday.day_of_week === dayOfWeek && workday.is_working,
-    );
+  //   // Vérifier si l'employé travaille ce jour
+  //   const worksThisDay = employeeWorkdays.some(
+  //     (workday) => workday.day_of_week === dayOfWeek && workday.is_working,
+  //   );
 
-    // Vérifier le créneau spécifique si fourni
-    if (timeSlot && worksThisDay) {
-      const worksThisTimeSlot = employeeWorkdays.some(
-        (workday) =>
-          workday.day_of_week === dayOfWeek &&
-          workday.time_slot === timeSlot &&
-          workday.is_working,
-      );
-      return worksThisTimeSlot;
-    }
+  //   // Vérifier le créneau spécifique si fourni
+  //   if (timeSlot && worksThisDay) {
+  //     const worksThisTimeSlot = employeeWorkdays.some(
+  //       (workday) =>
+  //         workday.day_of_week === dayOfWeek &&
+  //         workday.time_slot === timeSlot &&
+  //         workday.is_working,
+  //     );
+  //     return worksThisTimeSlot;
+  //   }
 
-    return worksThisDay;
-  };
+  //   return worksThisDay;
+  // };
 
   const handleOpenDialog = (schedule = null, selectedDate = null) => {
     setEditingSchedule(
@@ -682,7 +741,7 @@ const Planning = () => {
 
   const handleSave = async (data) => {
     try {
-      if (editingSchedule) {
+      if (editingSchedule?.id) {
         await updateTask(editingSchedule.id, data);
         toast.success("Planning mis à jour avec succès");
       } else {
@@ -709,7 +768,7 @@ const Planning = () => {
   };
 
   //FIXME task et planning c'st le meme delete
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce planning ?")) {
       try {
         await deletePlanning(id);
@@ -723,10 +782,10 @@ const Planning = () => {
     }
   };
 
-  const handleDeleteTask = async (schedule) => {
+  const handleDeleteTask = async (schedule: TaskModel) => {
     if (
       window.confirm(
-        `Êtes-vous sûr de vouloir supprimer la tâche "${schedule.task_name}" ?`,
+        `Êtes-vous sûr de vouloir supprimer la tâche "${schedule.name}" ?`,
       )
     ) {
       try {
@@ -741,7 +800,7 @@ const Planning = () => {
   };
 
   // Fonction pour ouvrir le dialogue d'assignation des employés depuis le planning
-  const handleAssignEmployeesToTask = async (schedule) => {
+  const handleAssignEmployeesToTask = async (schedule: TaskModel) => {
     // Vérification de sécurité
     if (!schedule || !schedule.id) {
       console.error(
@@ -867,7 +926,7 @@ const Planning = () => {
   };
 
   // Fonction pour assigner un employé à une collecte
-  const handleAssignEmployeeToCollection = async (employeeId) => {
+  const handleAssignEmployeeToCollection = async (employeeId: number) => {
     // Vérification de sécurité
     if (
       !selectedCollectionForAssignment ||
@@ -2552,7 +2611,9 @@ const Planning = () => {
                                 sx={{ fontWeight: "bold", color: "#2196f3" }}
                               >
                                 🏪{" "}
-                                {schedule.store_name || "Magasin non assigné"}
+                                {stores.find(
+                                  (s) => s.id == schedule.RecycleryId,
+                                )?.name || "Magasin non assigné"}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -2814,7 +2875,9 @@ const Planning = () => {
                                 sx={{ fontWeight: "bold", color: "#2196f3" }}
                               >
                                 🏪{" "}
-                                {schedule.store_name || "Magasin non assigné"}
+                                {stores.find(
+                                  (s) => s.id == schedule.RecycleryId,
+                                )?.name || "Magasin non assigné"}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -2881,11 +2944,13 @@ const Planning = () => {
             <FormControl fullWidth>
               <InputLabel>Filtrer par magasin</InputLabel>
               <Select
-                value={selectedStore}
+                value={selectedStore?.id || ""}
                 onChange={(e) => {
-                  // console.log("🏪 STORE SELECTION CHANGED");
-                  // console.log("🏪 New selected store:", e.target.value);
-                  setSelectedStore(e.target.value);
+                  if (e.target.value == "") setSelectedStore(null);
+                  else
+                    setSelectedStore(
+                      stores.find((s) => s.id == e.target.value),
+                    );
                   // setSelectedLocation(""); // Reset location when store changes
                 }}
                 label="Filtrer par magasin"
@@ -2933,8 +2998,8 @@ const Planning = () => {
             <Typography variant="body2" color="text.secondary">
               {selectedStore
                 ? `Affichage des tâches pour ${
-                    stores.find((s) => s.id === parseInt(selectedStore))
-                      ?.name || "magasin sélectionné"
+                    stores.find((s) => s.id === selectedStore.id)?.name ||
+                    "magasin sélectionné"
                   }`
                 : "Affichage de toutes les tâches"}
               {/* {selectedLocation &&
@@ -2946,7 +3011,7 @@ const Planning = () => {
 
       {/* Planning des employés par jour */}
       <PrecenseEmployees
-        getEmployeesByDay={getEmployeesByDay}
+        EmployeeByDay={getEmployeesByDay}
         loadingEmployeesPresent={loadingEmployeesPresent}
         selectedStore={selectedStore}
         setShowMissingEmployeesDialog={setShowMissingEmployeesDialog}
@@ -3517,7 +3582,6 @@ const Planning = () => {
         onAssignEmployee={handleAssignEmployeeToTask}
         onUnassignEmployee={handleUnassignEmployeeFromTask}
       />
-
 
       {/* Dialogue d'assignation des employés aux collectes */}
       {openCollectionAssignmentDialog && selectedCollectionForAssignment && (

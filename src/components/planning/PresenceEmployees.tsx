@@ -10,19 +10,28 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { StoreModel } from "../../interfaces/Models";
+import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
+
+interface EmployeesDay {
+  label: string;
+  morning: EmployeeModel[];
+  afternoon: EmployeeModel[];
+  allDay: EmployeeModel[];
+}
 interface PresenceEmployeesProps {
-  selectedStore: StoreModel;
+  selectedStore: StoreModel | null;
   setShowMissingEmployeesDialog: (open: boolean) => void;
   loadingEmployeesPresent: boolean;
-  getEmployeesByDay: () => [];
+  EmployeeByDay:()=> { [key: string]: EmployeesDay };
 }
+
 export const PrecenseEmployees = ({
   selectedStore,
   setShowMissingEmployeesDialog,
   loadingEmployeesPresent,
-  getEmployeesByDay,
+  EmployeeByDay,
 }: PresenceEmployeesProps) => {
+  const a= EmployeeByDay()
   return (
     <Box sx={{ mb: 3 }}>
       <Card sx={{ bgcolor: "#f8f9fa", border: "2px solid #e0e0e0" }}>
@@ -76,7 +85,7 @@ export const PrecenseEmployees = ({
             </Box>
           ) : (
             <ListDays
-              getEmployeesByDay={getEmployeesByDay}
+              EmployeeByDay={a}
               selectedStore={selectedStore}
             ></ListDays>
           )}
@@ -87,15 +96,22 @@ export const PrecenseEmployees = ({
 };
 
 interface listDaysProps {
-  getEmployeesByDay: () => [];
-  selectedStore: StoreModel;
+  EmployeeByDay?: { [key: string]: EmployeesDay };
+  selectedStore: StoreModel | null;
 }
-export const ListDays = ({
-  getEmployeesByDay,
-  selectedStore,
-}: listDaysProps) => {
-  const employeesByDay = getEmployeesByDay();
-  const hasEmployees = Object.values(employeesByDay).some(
+export const ListDays = ({ EmployeeByDay, selectedStore }: listDaysProps) => {
+  if (!EmployeeByDay)
+    return (
+      <Box sx={{ textAlign: "center", py: 4 }}>
+        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+          Aucun employé trouvé
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          vérifiez les affectations d'employés.
+        </Typography>
+      </Box>
+    );
+  const hasEmployees = Object.values(EmployeeByDay).some(
     (day) =>
       day.morning.length > 0 ||
       day.afternoon.length > 0 ||
@@ -116,7 +132,7 @@ export const ListDays = ({
 
   return (
     <Grid container spacing={2}>
-      {Object.entries(employeesByDay).map(([dayKey, dayData]) => (
+      {Object.entries(EmployeeByDay).map(([dayKey, dayData]) => (
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 1.7 }} key={dayKey}>
           <Card
             sx={{
@@ -160,62 +176,50 @@ export const ListDays = ({
   );
 };
 
-interface Employee {
-  id: number | string;
-  fullName: string;
-}
-
-interface DayData {
-  allDay: Employee[];
-  morning: Employee[];
-  afternoon: Employee[];
-  label: string;
-}
-
-export const EmployeeThisDay = ({ dayData }: { dayData: DayData }) => {
+export const EmployeeThisDay = ({ dayData }: { dayData: EmployeesDay }) => {
   // Helper function to deduplicate employees by id
-  const deduplicateEmployees = (employees: Employee[]): Employee[] => {
-    const seen = new Set<number | string>();
-    return employees.filter((employee: Employee) => {
-      if (seen.has(employee.id)) {
-        return false;
-      }
-      seen.add(employee.id);
-      return true;
-    });
-  };
-  console.log("dayData", dayData);
+  // const deduplicateEmployees = (employees: EmployeesDay[]): EmployeesDay[] => {
+  //   const seen = new Set<number | string>();
+  //   return employees.filter((employee: EmployeesDay) => {
+  //     if (seen.has(employee.id)) {
+  //       return false;
+  //     }
+  //     seen.add(employee.id);
+  //     return true;
+  //   });
+  // };
+  // console.log("dayData", dayData);
 
-  const allDayEmployees = deduplicateEmployees(
-    dayData.allDay.filter((employee: Employee) => {
-      const worksMorning = dayData.morning.some(
-        (emp: Employee) => emp.id === employee.id,
-      );
-      const worksAfternoon = dayData.afternoon.some(
-        (emp: Employee) => emp.id === employee.id,
-      );
-      return worksMorning && worksAfternoon;
-    }),
-  );
+  // const allDayEmployees = deduplicateEmployees(
+  //   dayData.allDay.filter((employee: Employee) => {
+  //     const worksMorning = dayData.morning.some(
+  //       (emp: Employee) => emp.id === employee.id,
+  //     );
+  //     const worksAfternoon = dayData.afternoon.some(
+  //       (emp: Employee) => emp.id === employee.id,
+  //     );
+  //     return worksMorning && worksAfternoon;
+  //   }),
+  // );
 
-  const morningOnlyEmployees = deduplicateEmployees(
-    dayData.morning.filter(
-      (employee: Employee) =>
-        !dayData.afternoon.some((emp: Employee) => emp.id === employee.id),
-    ),
-  );
+  // const morningOnlyEmployees = deduplicateEmployees(
+  //   dayData.morning.filter(
+  //     (employee: Employee) =>
+  //       !dayData.afternoon.some((emp: Employee) => emp.id === employee.id),
+  //   ),
+  // );
 
-  const afternoonOnlyEmployees = deduplicateEmployees(
-    dayData.afternoon.filter(
-      (employee: Employee) =>
-        !dayData.morning.some((emp: Employee) => emp.id === employee.id),
-    ),
-  );
+  // const afternoonOnlyEmployees = deduplicateEmployees(
+  //   dayData.afternoon.filter(
+  //     (employee: Employee) =>
+  //       !dayData.morning.some((emp: Employee) => emp.id === employee.id),
+  //   ),
+  // );
 
   return (
     <>
       {/* Toute la journée */}
-      {allDayEmployees.length > 0 && (
+      {dayData.allDay.length > 0 && (
         <Box>
           <Typography
             variant="caption"
@@ -229,42 +233,17 @@ export const EmployeeThisDay = ({ dayData }: { dayData: DayData }) => {
           >
             🌞 Journée
           </Typography>
-          {allDayEmployees.map((employee: Employee, index: number) => (
-            <Box
+          {dayData.allDay.map((employee: EmployeeModel, index: number) => (
+            <ShowEmployee
+              employee={employee}
               key={`${employee.id}-allday-${index}`}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mt: 0.5,
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: 20,
-                  height: 20,
-                  bgcolor: "#4caf50",
-                  fontSize: 10,
-                }}
-              >
-                <Person sx={{ fontSize: 12 }} />
-              </Avatar>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: "bold",
-                }}
-              >
-                {employee.fullName}
-              </Typography>
-            </Box>
+            />
           ))}
         </Box>
       )}
 
       {/* Matin seulement */}
-      {morningOnlyEmployees.length > 0 && (
+      {dayData.morning.length > 0 && (
         <Box>
           <Typography
             variant="caption"
@@ -278,42 +257,17 @@ export const EmployeeThisDay = ({ dayData }: { dayData: DayData }) => {
           >
             🌅 Matin
           </Typography>
-          {morningOnlyEmployees.map((employee: Employee, index: number) => (
-            <Box
+          {dayData.morning.map((employee: EmployeeModel, index: number) => (
+            <ShowEmployee
+              employee={employee}
               key={`${employee.id}-morning-${index}`}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mt: 0.5,
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: 20,
-                  height: 20,
-                  bgcolor: "#ff9800",
-                  fontSize: 10,
-                }}
-              >
-                <Person sx={{ fontSize: 12 }} />
-              </Avatar>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: "medium",
-                }}
-              >
-                {employee.fullName}
-              </Typography>
-            </Box>
+            />
           ))}
         </Box>
       )}
 
       {/* Après-midi seulement */}
-      {afternoonOnlyEmployees.length > 0 && (
+      {dayData.afternoon.length > 0 && (
         <Box>
           <Typography
             variant="caption"
@@ -327,39 +281,50 @@ export const EmployeeThisDay = ({ dayData }: { dayData: DayData }) => {
           >
             🌆 Après-midi
           </Typography>
-          {afternoonOnlyEmployees.map((employee: Employee, index: number) => (
-            <Box
+          {dayData.afternoon.map((employee: EmployeeModel, index: number) => (
+            <ShowEmployee
+              employee={employee}
               key={`${employee.id}-afternoon-${index}`}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mt: 0.5,
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: 20,
-                  height: 20,
-                  bgcolor: "#2196f3",
-                  fontSize: 10,
-                }}
-              >
-                <Person sx={{ fontSize: 12 }} />
-              </Avatar>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: "medium",
-                }}
-              >
-                {employee.fullName}
-              </Typography>
-            </Box>
+            />
           ))}
         </Box>
       )}
     </>
+  );
+};
+
+interface ShowEmployeeProps {
+  employee: EmployeeModel;
+}
+const ShowEmployee = ({ employee }: ShowEmployeeProps) => {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        mt: 0.5,
+      }}
+    >
+      <Avatar
+        sx={{
+          width: 20,
+          height: 20,
+          bgcolor: "#2196f3",
+          fontSize: 10,
+        }}
+      >
+        <Person sx={{ fontSize: 12 }} />
+      </Avatar>
+      <Typography
+        variant="caption"
+        sx={{
+          fontSize: "0.7rem",
+          fontWeight: "medium",
+        }}
+      >
+        {employee.fullName}
+      </Typography>
+    </Box>
   );
 };
