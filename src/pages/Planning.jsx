@@ -36,7 +36,6 @@ import {
   CardContent,
   CardHeader,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -52,34 +51,33 @@ import {
   MenuItem,
   Select,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchStores as fstore } from "../services/api/store";
-import { fetchUsers } from "../services/api/users";
+import { PlaningForm } from "../components/forms/planningForm";
+import { PrecenseEmployees } from "../components/planning/PresenceEmployees";
+import WeekViewSections from "../components/planning/WeekViewSections";
+import { getCollectionSchedules } from "../services/api/collectionSchedules";
 import {
   createPlanning,
   deletePlanning,
   getAvailableUserForTask,
-  getPlanning,
   updatePlanning,
 } from "../services/api/planning";
+import { fetchStores as fstore } from "../services/api/store";
 import { createTask, getTasks, updateTask } from "../services/api/tasks";
-import { getCollectionSchedules } from "../services/api/collectionSchedules";
-import { PlaningForm } from "../components/forms/planningForm";
-import { PrecenseEmployees } from "../components/planning/PresenceEmployees";
-import WeekViewSections from "../components/planning/WeekViewSections";
+import { getEmployees } from "../services/api/employee";
+import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [employees, setEmployees] = useState([]);
+  // const [tasks, setTasks] = useState([]);
+  // const [employees, setEmployees] = useState([]);
   const [stores, setStores] = useState([]);
-  const [locations, setLocations] = useState([]);
+  // const [locations, setLocations] = useState([]);
   const [collections, setCollections] = useState([]);
 
   // Fonction pour générer une couleur basée sur le nom de l'employé
@@ -113,8 +111,8 @@ const Planning = () => {
       .slice(0, 2);
   };
   const [selectedStore, setSelectedStore] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [selectedLocation, setSelectedLocation] = useState("");
+  // const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
 
@@ -125,12 +123,12 @@ const Planning = () => {
     useState(null);
   const [taskAssignedEmployees, setTaskAssignedEmployees] = useState([]);
   const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState(
-    []
+    [],
   );
 
   // État simple pour forcer la mise à jour
-  const [forceUpdate, setForceUpdate] = useState(0);
-  const [assignedEmployees, setAssignedEmployees] = useState(new Set());
+  // const [forceUpdate, setForceUpdate] = useState(0);
+  // const [assignedEmployees, setAssignedEmployees] = useState(new Set());
 
   // États pour l'assignation des employés aux collectes
   const [openCollectionAssignmentDialog, setOpenCollectionAssignmentDialog] =
@@ -141,14 +139,14 @@ const Planning = () => {
     useState([]);
   const [availableEmployeesForCollection, setAvailableEmployeesForCollection] =
     useState([]);
-  const [tabValue, setTabValue] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterEmployee, setFilterEmployee] = useState("all");
+  // const [tabValue, setTabValue] = useState(0);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [filterEmployee, setFilterEmployee] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("week"); // semaine par défaut
-  const [showCompleted, setShowCompleted] = useState(true);
-  const [groupBy, setGroupBy] = useState("employee"); // employee, date, priority
+  // const [showCompleted, setShowCompleted] = useState(true);
+  // const [groupBy, setGroupBy] = useState("employee"); // employee, date, priority
 
   // États pour la gestion des conflits
   const [conflictDialog, setConflictDialog] = useState(false);
@@ -161,28 +159,14 @@ const Planning = () => {
   const [showMissingEmployeesDialog, setShowMissingEmployeesDialog] =
     useState(false);
   const [missingEmployees, setMissingEmployees] = useState([]);
-  const [allEmployees, setAllEmployees] = useState([]);
+  // const [allEmployees, setAllEmployees] = useState([]);
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
-  // const [formData, setFormData] = useState({
-  //   task_id: "",
-  //   scheduled_date: new Date(),
-  //   start_time: "",
-  //   end_time: "",
-  //   status: "new",
-  //   priority: "medium",
-  //   location: "",
-  //   location_id: "",
-  //   store_id: "",
-  //   notes: "",
-  //   estimated_duration: 60,
-  // });
-
   useEffect(() => {
-    console.log("t", tasks);
+    // console.log("t", tasks);
     console.log("u", schedules);
-  }, [tasks, schedules]);
+  }, [schedules]);
 
   const statusOptions = [
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
@@ -211,10 +195,10 @@ const Planning = () => {
 
   useEffect(() => {
     fetchSchedules();
-    fetchTasks();
-    fetchEmployees();
+    // fetchTasks();
+    // fetchEmployees();
     fetchStores();
-    fetchLocations();
+    // fetchLocations();
     fetchCollections();
   }, []);
 
@@ -228,15 +212,15 @@ const Planning = () => {
     fetchSchedules();
   }, [selectedStore]);
 
-  useEffect(() => {
-    if (selectedStore) {
-      // Filtrer les lieux par magasin sélectionné
-      const filteredLocations = locations.filter(
-        (loc) => loc.store_id === parseInt(selectedStore)
-      );
-      setLocations(filteredLocations);
-    }
-  }, [selectedStore, locations]);
+  // useEffect(() => {
+  //   if (selectedStore) {
+  //     // Filtrer les lieux par magasin sélectionné
+  //     const filteredLocations = locations.filter(
+  //       (loc) => loc.store_id === parseInt(selectedStore)
+  //     );
+  //     setLocations(filteredLocations);
+  //   }
+  // }, [selectedStore, locations]);
 
   // Recharger les employés quand le magasin sélectionné change
   useEffect(() => {
@@ -247,7 +231,7 @@ const Planning = () => {
 
   const fetchSchedules = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const params = {};
       if (selectedStore) {
         params.store_id = parseInt(selectedStore);
@@ -270,7 +254,7 @@ const Planning = () => {
                   ...user,
                   assigned_to_task_id: task.id,
                   assigned_to_task_name: task.name || "",
-                })
+                }),
             );
           });
         return { ...task, occupied_employees: occuped };
@@ -319,7 +303,7 @@ const Planning = () => {
       setSchedules(synchronizedSchedules);
 
       // Forcer la mise à jour de toutes les cartes
-      setForceUpdate((prev) => prev + 1);
+      // setForceUpdate((prev) => prev + 1);
 
       // Log de débogage supprimé pour éviter la boucle infinie
 
@@ -349,87 +333,75 @@ const Planning = () => {
       toast.error("Erreur lors du chargement des plannings");
       setSchedules([]);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
-  const fetchTasks = async () => {
-    try {
-      const response = await getTasks();
-      //  await axios.get('/api/tasks');
-      if (response.data.success) {
-        // Filtrer les tâches pour ne garder que celles pertinentes pour le planning
-        const allTasks = response.data.tasks || [];
-        const filteredTasks = allTasks.filter((task) => {
-          // Exclure seulement la tâche système par défaut créée automatiquement
-          if (task.name === "Tâche par défaut" && task.id === 1) {
-            return false;
-          }
+  // const fetchTasks = async () => {
+  //   try {
+  //     const response = await getTasks();
+  //     //  await axios.get('/api/tasks');
+  //     if (response.data.success) {
+  //       // Filtrer les tâches pour ne garder que celles pertinentes pour le planning
+  //       const allTasks = response.data.tasks || [];
+  //       const filteredTasks = allTasks.filter((task) => {
+  //         // Exclure seulement la tâche système par défaut créée automatiquement
+  //         if (task.name === "Tâche par défaut" && task.id === 1) {
+  //           return false;
+  //         }
 
-          // Garder toutes les tâches actives créées par l'utilisateur
-          // (y compris "Ouverture de magasin" et "Présence point de collecte" si créées par l'utilisateur)
-          // return task.status === "active";
-          return true;
-        });
+  //         // Garder toutes les tâches actives créées par l'utilisateur
+  //         // (y compris "Ouverture de magasin" et "Présence point de collecte" si créées par l'utilisateur)
+  //         // return task.status === "active";
+  //         return true;
+  //       });
 
-        // console.log('🔍 Tâches filtrées pour le planning:', filteredTasks.length);
-        // console.log('🔍 Tâches disponibles:', filteredTasks.map(t => ({ id: t.id, name: t.name, category: t.category })));
+  //       // console.log('🔍 Tâches filtrées pour le planning:', filteredTasks.length);
+  //       // console.log('🔍 Tâches disponibles:', filteredTasks.map(t => ({ id: t.id, name: t.name, category: t.category })));
 
-        setTasks(filteredTasks);
-      } else {
-        setTasks([]);
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des tâches:", error);
-      setTasks([]);
-    }
-  };
+  //       setTasks(filteredTasks);
+  //     } else {
+  //       setTasks([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des tâches:", error);
+  //     setTasks([]);
+  //   }
+  // };
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const response = await getEmployees();
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await fetchUsers({ role: "employee" });
-      if (response.data.success) {
-        setEmployees(response.data.users || []);
-      } else {
-        setEmployees([]);
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des employés:", error);
-      setEmployees([]);
-    }
-  };
+  //       setEmployees(response.data.data || []);
+
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des employés:", error);
+  //     setEmployees([]);
+  //   }
+  // };
 
   const fetchStores = async () => {
     try {
-      // console.log('🏪 FETCHING STORES...');
       const response = await fstore();
-      // await axios.get('/api/stores');
-      // console.log('🏪 Stores response:', response.data);
-      if (response.data.success) {
-        setStores(response.data.stores || []);
-        // console.log('🏪 Stores loaded:', response.data.stores?.length || 0);
-      } else {
-        // console.log('❌ Stores API returned success: false');
-        setStores([]);
-      }
+      setStores(response.data.stores || []);
     } catch (error) {
       console.error("❌ ERREUR lors du chargement des magasins:", error);
       setStores([]);
     }
   };
 
-  const fetchLocations = async () => {
-    try {
-      const response = await axios.get("/api/store-locations");
-      if (response.data.locations) {
-        setLocations(response.data.locations || []);
-      } else {
-        setLocations([]);
-      }
-    } catch (e) {
-      setLocations([]);
-    }
-  };
+  // const fetchLocations = async () => {
+  //   try {
+  //     const response = await axios.get("/api/store-locations");
+  //     if (response.data.locations) {
+  //       setLocations(response.data.locations || []);
+  //     } else {
+  //       setLocations([]);
+  //     }
+  //   } catch (e) {
+  //     setLocations([]);
+  //   }
+  // };
 
   const fetchCollections = async () => {
     try {
@@ -443,7 +415,7 @@ const Planning = () => {
     } catch (error) {
       console.error(
         "❌ ERREUR lors du chargement des plannings de collecte:",
-        error
+        error,
       );
       setCollections([]);
     }
@@ -454,7 +426,7 @@ const Planning = () => {
       setLoadingEmployeesPresent(true);
       const [infoStoreResponse, employeesResponse] = await Promise.all([
         fstore({ include: "employees" }),
-        fetchUsers({ role: "employee" }),
+        getEmployees(),
       ]);
 
       const employeesByStore = {};
@@ -470,7 +442,7 @@ const Planning = () => {
         });
       });
 
-      const filteredEmployees = employeesResponse.data.users;
+      const filteredEmployees = employeesResponse.data.data;
 
       // Récupérer les employés, leurs affectations aux magasins et leurs jours de travail
       // const [employeesResponse, assignmentsResponse, workdaysResponse] =
@@ -521,7 +493,7 @@ const Planning = () => {
       //     }
       //   });
       setEmployeesPresent(employeesByStore);
-      setAllEmployees(filteredEmployees);
+      // setAllEmployees(filteredEmployees);
 
       // Détecter les employés manquants (sans affectations ou sans jours de travail)
       const employeesInPlanning = new Set();
@@ -534,7 +506,7 @@ const Planning = () => {
       });
 
       const missingEmployeesList = filteredEmployees.filter(
-        (emp) => !employeesInPlanning.has(emp.id)
+        (emp) => !employeesInPlanning.has(emp.id),
       );
       setMissingEmployees(missingEmployeesList);
 
@@ -545,7 +517,7 @@ const Planning = () => {
     } catch (error) {
       console.error(
         "❌ ERREUR lors du chargement des employés présents:",
-        error
+        error,
       );
       setEmployeesPresent({});
     } finally {
@@ -596,7 +568,7 @@ const Planning = () => {
           if (parseInt(storeIdKey) === storeId) {
             employeesToProcess = storeEmployees;
           }
-        }
+        },
       );
     } else {
       // Si aucun magasin n'est sélectionné, prendre tous les employés
@@ -615,6 +587,7 @@ const Planning = () => {
 
           if (employeesByDay[day] && isWorking) {
             const employeeInfo = {
+              ...employee,
               id: employee.id,
               name: employee.username,
               store: employee.is_primary ? "Principal" : "Secondaire",
@@ -630,7 +603,7 @@ const Planning = () => {
 
             // Ajouter aussi à allDay pour un aperçu global
             const existingInAllDay = employeesByDay[day].allDay.find(
-              (emp) => emp.id === employee.id
+              (emp) => emp.id === employee.id,
             );
             if (!existingInAllDay) {
               employeesByDay[day].allDay.push(employeeInfo);
@@ -660,7 +633,7 @@ const Planning = () => {
           if (parseInt(storeIdKey) === storeId) {
             employeesToCheck = storeEmployees;
           }
-        }
+        },
       );
     } else {
       // Si aucun magasin n'est sélectionné, vérifier tous les employés
@@ -677,7 +650,7 @@ const Planning = () => {
 
     // Vérifier si l'employé travaille ce jour
     const worksThisDay = employeeWorkdays.some(
-      (workday) => workday.day_of_week === dayOfWeek && workday.is_working
+      (workday) => workday.day_of_week === dayOfWeek && workday.is_working,
     );
 
     // Vérifier le créneau spécifique si fourni
@@ -686,7 +659,7 @@ const Planning = () => {
         (workday) =>
           workday.day_of_week === dayOfWeek &&
           workday.time_slot === timeSlot &&
-          workday.is_working
+          workday.is_working,
       );
       return worksThisTimeSlot;
     }
@@ -696,40 +669,9 @@ const Planning = () => {
 
   const handleOpenDialog = (schedule = null, selectedDate = null) => {
     setEditingSchedule(
-      schedule || { scheduled_date: selectedDate || new Date() }
+      schedule || { scheduled_date: selectedDate || new Date() },
     );
-    // if (schedule) {
-    //   setEditingSchedule(schedule);
-    //   setFormData({
-    //     task_id: schedule.task_id || "",
-    //     scheduled_date: new Date(schedule.scheduled_date),
-    //     start_time: schedule.start_time || "",
-    //     end_time: schedule.end_time || "",
-    //     status: schedule.status || "new",
-    //     priority: schedule.priority || "medium",
-    //     location: schedule.location || "",
-    //     location_id: schedule.location_id || "",
-    //     store_id: schedule.store_id || "",
-    //     notes: schedule.notes || "",
-    //     estimated_duration: schedule.estimated_duration || 60,
-    //   });
-    // } else {
-    //   setEditingSchedule(null);
-    //   const dateToUse = selectedDate || new Date();
-    //   setFormData({
-    //     task_id: "",
-    //     scheduled_date: dateToUse,
-    //     start_time: "",
-    //     end_time: "",
-    //     status: "new",
-    //     priority: "medium",
-    //     location: "",
-    //     location_id: "",
-    //     store_id: "",
-    //     notes: "",
-    //     estimated_duration: 60,
-    //   });
-    // }
+
     setOpenDialog(true);
   };
 
@@ -738,91 +680,13 @@ const Planning = () => {
     setEditingSchedule(null);
   };
 
-  // const handleQuickTimeSlot = (slot) => {
-  //   if (slot === "morning") {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       start_time: "08:00",
-  //       end_time: "12:00",
-  //     }));
-  //   } else if (slot === "afternoon") {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       start_time: "13:30",
-  //       end_time: "17:00",
-  //     }));
-  //   }
-
-  //   // Pré-remplir le magasin si un filtre est sélectionné
-  //   if (selectedStore) {
-  //     const selectedStoreName = stores.find(
-  //       (s) => s.id === parseInt(selectedStore)
-  //     )?.name;
-  //     if (selectedStoreName) {
-  //       setFormData((prev) => ({ ...prev, location: selectedStoreName }));
-  //     }
-  //   }
-  // };
-
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => {
-  //     const newData = {
-  //       ...prev,
-  //       [name]: value,
-  //     };
-
-  //     // Réinitialiser le lieu si le magasin change
-  //     if (name === "store_id") {
-  //       newData.location_id = "";
-  //     }
-
-  //     return newData;
-  //   });
-  // };
-
-  // const handleDateChange = (e) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     scheduled_date: new Date(e.target.value),
-  //   }));
-  // };
-
-  // Fonction pour vérifier les conflits d'horaires supprimée
-  // Les conflits sont maintenant gérés lors de l'assignation des employés
-
   const handleSave = async (data) => {
     try {
-      // let scheduleData = {
-      //   ...formData,
-      //   scheduled_date: formData.scheduled_date.toISOString().split("T")[0],
-      //   store_id: formData.store_id || selectedStore || null,
-      // };
-
-      // // Traitement spécial pour les tâches de "Vente"
-      // if (formData.task_id === "vente") {
-      //   scheduleData = {
-      //     ...scheduleData,
-      //     task_id: null, // Pas de task_id pour les tâches d'ouverture
-      //     store_id: formData.store_id || selectedStore || 1, // S'assurer qu'il y a un store_id
-      //     notes: "Vente - " + (formData.notes || "Tâche de vente"),
-      //   };
-      // }
-
-      // Les conflits d'horaires sont maintenant gérés lors de l'assignation des employés
-
-      // L'assignation des employés se fait après la création de la tâche
-
-      // Pas de conflit, procéder à la sauvegarde
       if (editingSchedule) {
         await updateTask(editingSchedule.id, data);
-        // await updatePlanning(editingSchedule.id, scheduleData);
-        // await axios.put(`/api/planning/${editingSchedule.id}`, scheduleData);
         toast.success("Planning mis à jour avec succès");
       } else {
         await createTask(data);
-        // await createPlanning(scheduleData);
-        // await axios.post('/api/planning', scheduleData);
         toast.success("Planning créé avec succès");
       }
 
@@ -862,12 +726,11 @@ const Planning = () => {
   const handleDeleteTask = async (schedule) => {
     if (
       window.confirm(
-        `Êtes-vous sûr de vouloir supprimer la tâche "${schedule.task_name}" ?`
+        `Êtes-vous sûr de vouloir supprimer la tâche "${schedule.task_name}" ?`,
       )
     ) {
       try {
         await deletePlanning(schedule.id);
-        // await axios.delete(`/api/planning/${schedule.id}`);
         toast.success("Tâche supprimée avec succès");
         fetchSchedules();
       } catch (error) {
@@ -882,18 +745,15 @@ const Planning = () => {
     // Vérification de sécurité
     if (!schedule || !schedule.id) {
       console.error(
-        "Erreur: schedule invalide dans handleAssignEmployeesToTask"
+        "Erreur: schedule invalide dans handleAssignEmployeesToTask",
       );
       return;
     }
-
     setSelectedTaskForAssignment(schedule);
-
     // Log de débogage pour les tâches de présence
     if (isPresenceTask(schedule)) {
       // Log de débogage supprimé pour éviter la boucle infinie
     }
-
     try {
       // Vérification supplémentaire pour s'assurer que schedule a toutes les propriétés nécessaires
       if (
@@ -903,14 +763,14 @@ const Planning = () => {
       ) {
         console.error(
           "Erreur: schedule incomplet dans handleAssignEmployeesToTask",
-          schedule
+          schedule,
         );
         toast.error("Erreur: Informations de tâche incomplètes");
         return;
       }
 
       const availableEmployeesResponse = await getAvailableUserForTask(
-        schedule.id
+        schedule.id,
       );
 
       if (availableEmployeesResponse.data.success) {
@@ -926,8 +786,8 @@ const Planning = () => {
         // Récupérer aussi les employés déjà assignés à cette tâche
         setTaskAssignedEmployees(
           availableEmployeesResponse.data.employees.filter(
-            (emp) => emp.already_assigned
-          )
+            (emp) => emp.already_assigned,
+          ),
         );
       } else {
         throw new Error("Erreur lors du chargement des employés disponibles");
@@ -949,7 +809,7 @@ const Planning = () => {
     // Vérification de sécurité
     if (!collection || !collection.id) {
       console.error(
-        "Erreur: collection invalide dans handleAssignEmployeesToCollection"
+        "Erreur: collection invalide dans handleAssignEmployeesToCollection",
       );
       return;
     }
@@ -964,7 +824,7 @@ const Planning = () => {
         `${apiBaseUrl}/api/collection-schedules/${collection.id}/available-employees`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (availableEmployeesResponse.data.success) {
@@ -1014,7 +874,7 @@ const Planning = () => {
       !selectedCollectionForAssignment.id
     ) {
       console.error(
-        "Erreur: selectedCollectionForAssignment invalide dans handleAssignEmployeeToCollection"
+        "Erreur: selectedCollectionForAssignment invalide dans handleAssignEmployeeToCollection",
       );
       toast.error("Erreur: Collecte non sélectionnée");
       return;
@@ -1030,12 +890,12 @@ const Planning = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // Mettre à jour la liste des employés assignés
       const employee = availableEmployeesForCollection.find(
-        (emp) => emp.id === employeeId
+        (emp) => emp.id === employeeId,
       );
       if (employee) {
         setCollectionAssignedEmployees([employee]);
@@ -1049,7 +909,7 @@ const Planning = () => {
       // Forcer le rechargement complet des données
       setTimeout(() => {
         fetchCollections();
-        setForceUpdate((prev) => prev + 1);
+        // setForceUpdate((prev) => prev + 1);
       }, 500);
     } catch (error) {
       console.error("Erreur lors de l'assignation à la collecte:", error);
@@ -1076,7 +936,7 @@ const Planning = () => {
         `${apiBaseUrl}/api/collection-schedules/${selectedCollectionForAssignment.id}/employees/${employeeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // Mettre à jour la liste des employés assignés
@@ -1090,12 +950,12 @@ const Planning = () => {
       // Forcer le rechargement complet des données
       setTimeout(() => {
         fetchCollections();
-        setForceUpdate((prev) => prev + 1);
+        // setForceUpdate((prev) => prev + 1);
       }, 500);
     } catch (error) {
       console.error(
         "Erreur lors du retrait de l'employé de la collecte:",
-        error
+        error,
       );
       toast.error("Erreur lors du retrait de l'employé");
     }
@@ -1114,7 +974,7 @@ const Planning = () => {
     // Vérification de sécurité
     if (!selectedTaskForAssignment || !selectedTaskForAssignment.id) {
       console.error(
-        "Erreur: selectedTaskForAssignment invalide dans handleAssignEmployeeToTask"
+        "Erreur: selectedTaskForAssignment invalide dans handleAssignEmployeeToTask",
       );
       toast.error("Erreur: Tâche non sélectionnée");
       return;
@@ -1130,12 +990,12 @@ const Planning = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // Mettre à jour la liste des employés assignés
       const employee = availableEmployeesForTask.find(
-        (emp) => emp.id === employeeId
+        (emp) => emp.id === employeeId,
       );
       if (employee) {
         setTaskAssignedEmployees((prev) => [...prev, employee]);
@@ -1149,7 +1009,7 @@ const Planning = () => {
       // Forcer le rechargement complet des données
       setTimeout(() => {
         fetchSchedules();
-        setForceUpdate((prev) => prev + 1);
+        // setForceUpdate((prev) => prev + 1);
       }, 500);
     } catch (error) {
       console.error("Erreur lors de l'assignation:", error);
@@ -1176,12 +1036,12 @@ const Planning = () => {
         `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees/${employeeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // Mettre à jour la liste des employés assignés
       setTaskAssignedEmployees((prev) =>
-        prev.filter((emp) => emp.id !== employeeId)
+        prev.filter((emp) => emp.id !== employeeId),
       );
 
       toast.success("Employé retiré avec succès");
@@ -1235,13 +1095,13 @@ const Planning = () => {
 
           // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
           toast.success(
-            "Planning créé avec succès (malgré l'absence de l'employé)"
+            "Planning créé avec succès (malgré l'absence de l'employé)",
           );
         } else {
           await createPlanning(pendingScheduleData);
           // await axios.post('/api/planning', pendingScheduleData);
           toast.success(
-            "Planning créé avec succès (malgré l'absence de l'employé)"
+            "Planning créé avec succès (malgré l'absence de l'employé)",
           );
         }
         fetchSchedules();
@@ -1272,61 +1132,44 @@ const Planning = () => {
 
   const filteredSchedules = Array.isArray(schedules)
     ? schedules.filter((schedule) => {
-        const matchesSearch =
-          !searchTerm ||
-          schedule.task_name
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          getValidEmployeeName(schedule.employee_name)
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
+        return true;
+        // const matchesSearch =
+        //   !searchTerm ||
+        //   schedule.task_name
+        //     ?.toLowerCase()
+        //     .includes(searchTerm.toLowerCase()) ||
+        //   getValidEmployeeName(schedule.employee_name)
+        //     ?.toLowerCase()
+        //     .includes(searchTerm.toLowerCase());
 
-        const matchesEmployee =
-          filterEmployee === "all" ||
-          schedule.assigned_to?.toString() === filterEmployee;
+        // const matchesEmployee =
+        //   filterEmployee === "all" ||
+        //   schedule.assigned_to?.toString() === filterEmployee;
 
-        const matchesStatus =
-          filterStatus === "all" || schedule.status === filterStatus;
+        // const matchesStatus =
+        //   filterStatus === "all" || schedule.status === filterStatus;
 
-        const matchesCompleted =
-          showCompleted || schedule.status !== "completed";
+        // const matchesCompleted =
+        //   showCompleted || schedule.status !== "completed";
 
-        const matchesStore =
-          !selectedStore ||
-          schedule.store_id?.toString() === selectedStore.toString();
+        // const matchesStore =
+        //   !selectedStore ||
+        //   schedule.store_id?.toString() === selectedStore.toString();
 
-        const matchesLocation =
-          !selectedLocation ||
-          schedule.location_id?.toString() === selectedLocation.toString();
+        // const matchesLocation =
+        //   !selectedLocation ||
+        //   schedule.location_id?.toString() === selectedLocation.toString();
 
-        // Log de débogage pour le filtrage
-        // if (schedule.task_name?.includes('Vente') || schedule.notes?.includes('Vente')) {
-        //   console.log('🔍 VENTE TASK FILTERING:', {
-        //     task_name: schedule.task_name,
-        //     store_id: schedule.store_id,
-        //     selectedStore: selectedStore,
-        //     matchesStore: matchesStore,
-        //     matchesSearch,
-        //     matchesEmployee,
-        //     matchesStatus,
-        //     matchesCompleted
-        //   });
-        // }
-
-        // Log de débogage supprimé pour éviter la boucle infinie
-
-        return (
-          matchesSearch &&
-          matchesEmployee &&
-          matchesStatus &&
-          matchesCompleted &&
-          matchesStore &&
-          matchesLocation
-        );
+        // return (
+        //   matchesSearch &&
+        //   matchesEmployee &&
+        //   matchesStatus &&
+        //   matchesCompleted &&
+        //   matchesStore &&
+        //   matchesLocation
+        // );
       })
     : [];
-
-  // Log de débogage supprimé pour éviter la boucle infinie
 
   const getStatusInfo = (status) => {
     return statusOptions.find((s) => s.value === status) || statusOptions[1]; // Utiliser 'planned' par défaut
@@ -1349,16 +1192,6 @@ const Planning = () => {
       schedule.notes?.includes("Ouverture du magasin") ||
       schedule.notes?.includes("Vente -") || // Les tâches de vente sont des tâches d'ouverture
       schedule.task_id === null; // Les tâches d'ouverture n'ont pas de task_id
-
-    // Log de débogage seulement pour les tâches Vente
-    // if (isOpening && schedule.notes?.includes('Vente -')) {
-    //   console.log('🔍 VENTE TASK DETECTED:', {
-    //     task_name: schedule.task_name,
-    //     notes: schedule.notes,
-    //     task_id: schedule.task_id,
-    //     store_id: schedule.store_id
-    //   });
-    // }
 
     return isOpening;
   };
@@ -1386,16 +1219,6 @@ const Planning = () => {
       schedule.notes?.includes("Collecte") ||
       schedule.notes?.includes("collecte") ||
       schedule.task_category === "collection_operations";
-
-    // Log de débogage pour les tâches de collecte
-    // if (isCollection) {
-    //   console.log('🔍 COLLECTION TASK DETECTED:', {
-    //     task_name: schedule.task_name,
-    //     notes: schedule.notes,
-    //     task_category: schedule.task_category,
-    //     task_id: schedule.task_id
-    //   });
-    // }
 
     return isCollection;
   };
@@ -1501,48 +1324,48 @@ const Planning = () => {
     return schedule.task_name || "Tâche sans nom";
   };
 
-  const getProgressPercentage = (schedule) => {
-    switch (schedule.status) {
-      case "completed":
-        return 100;
-      case "in_progress":
-        return 50;
-      case "planned":
-        return 25;
-      case "on_hold":
-        return 25;
-      default:
-        return 0;
-    }
-  };
+  // const getProgressPercentage = (schedule) => {
+  //   switch (schedule.status) {
+  //     case "completed":
+  //       return 100;
+  //     case "in_progress":
+  //       return 50;
+  //     case "planned":
+  //       return 25;
+  //     case "on_hold":
+  //       return 25;
+  //     default:
+  //       return 0;
+  //   }
+  // };
 
-  const getSchedulesByGroup = () => {
-    const grouped = {};
-    if (Array.isArray(filteredSchedules)) {
-      filteredSchedules.forEach((schedule) => {
-        let key;
-        switch (groupBy) {
-          case "employee":
-            key = getValidEmployeeName(schedule.employee_name) || "Non assigné";
-            break;
-          case "date":
-            key = formatDate(schedule.scheduled_date);
-            break;
-          case "priority":
-            key = getPriorityInfo(schedule.priority).label;
-            break;
-          default:
-            key = "Tous";
-        }
+  // const getSchedulesByGroup = () => {
+  //   const grouped = {};
+  //   if (Array.isArray(filteredSchedules)) {
+  //     filteredSchedules.forEach((schedule) => {
+  //       let key;
+  //       switch (groupBy) {
+  //         case "employee":
+  //           key = getValidEmployeeName(schedule.employee_name) || "Non assigné";
+  //           break;
+  //         case "date":
+  //           key = formatDate(schedule.scheduled_date);
+  //           break;
+  //         case "priority":
+  //           key = getPriorityInfo(schedule.priority).label;
+  //           break;
+  //         default:
+  //           key = "Tous";
+  //       }
 
-        if (!grouped[key]) {
-          grouped[key] = [];
-        }
-        grouped[key].push(schedule);
-      });
-    }
-    return grouped;
-  };
+  //       if (!grouped[key]) {
+  //         grouped[key] = [];
+  //       }
+  //       grouped[key].push(schedule);
+  //     });
+  //   }
+  //   return grouped;
+  // };
 
   const renderViewSelector = () => (
     <Box sx={{ display: "flex", gap: 1 }}>
@@ -1583,7 +1406,8 @@ const Planning = () => {
     // Premier lundi de la semaine contenant le premier jour
     const startDate = new Date(firstDay);
     startDate.setDate(
-      firstDay.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1)
+      firstDay.getDate() -
+        (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1),
     );
 
     const days = [];
@@ -1680,7 +1504,7 @@ const Planning = () => {
                 key={status.value}
                 onClick={() =>
                   setFilterStatus(
-                    filterStatus === status.value ? "all" : status.value
+                    filterStatus === status.value ? "all" : status.value,
                   )
                 }
                 sx={{
@@ -1694,24 +1518,24 @@ const Planning = () => {
                       ? status.color === "primary"
                         ? "#e3f2fd"
                         : status.color === "warning"
-                        ? "#fff3e0"
-                        : status.color === "success"
-                        ? "#e8f5e8"
-                        : status.color === "error"
-                        ? "#ffebee"
-                        : "#f5f5f5"
+                          ? "#fff3e0"
+                          : status.color === "success"
+                            ? "#e8f5e8"
+                            : status.color === "error"
+                              ? "#ffebee"
+                              : "#f5f5f5"
                       : "#f5f5f5",
                   color:
                     filterStatus === status.value
                       ? status.color === "primary"
                         ? "#1976d2"
                         : status.color === "warning"
-                        ? "#f57c00"
-                        : status.color === "success"
-                        ? "#388e3c"
-                        : status.color === "error"
-                        ? "#d32f2f"
-                        : "#666"
+                          ? "#f57c00"
+                          : status.color === "success"
+                            ? "#388e3c"
+                            : status.color === "error"
+                              ? "#d32f2f"
+                              : "#666"
                       : "#666",
                   border: "1px solid",
                   borderColor:
@@ -1719,12 +1543,12 @@ const Planning = () => {
                       ? status.color === "primary"
                         ? "#bbdefb"
                         : status.color === "warning"
-                        ? "#ffcc02"
-                        : status.color === "success"
-                        ? "#c8e6c9"
-                        : status.color === "error"
-                        ? "#ffcdd2"
-                        : "#e0e0e0"
+                          ? "#ffcc02"
+                          : status.color === "success"
+                            ? "#c8e6c9"
+                            : status.color === "error"
+                              ? "#ffcdd2"
+                              : "#e0e0e0"
                       : "#e0e0e0",
                   "&:hover": {
                     transform: "translateY(-1px)",
@@ -1755,8 +1579,8 @@ const Planning = () => {
                   setSelectedDate(
                     new Date(
                       selectedDate.getFullYear(),
-                      selectedDate.getMonth() - 1
-                    )
+                      selectedDate.getMonth() - 1,
+                    ),
                   )
                 }
                 sx={{
@@ -1787,8 +1611,8 @@ const Planning = () => {
                   setSelectedDate(
                     new Date(
                       selectedDate.getFullYear(),
-                      selectedDate.getMonth() + 1
-                    )
+                      selectedDate.getMonth() + 1,
+                    ),
                   )
                 }
                 sx={{
@@ -1920,28 +1744,28 @@ const Planning = () => {
                               bgcolor: isOpeningTask(schedule)
                                 ? "#f1f8e9"
                                 : isPresenceTask(schedule)
-                                ? "#fff8e1"
-                                : "#e3f2fd",
+                                  ? "#fff8e1"
+                                  : "#e3f2fd",
                               borderRadius: 1,
                               cursor: "pointer",
                               border: isOpeningTask(schedule)
                                 ? "1px solid #c8e6c9"
                                 : isPresenceTask(schedule)
-                                ? "1px solid #ffcc02"
-                                : "1px solid #bbdefb",
+                                  ? "1px solid #ffcc02"
+                                  : "1px solid #bbdefb",
                               transition: "all 0.2s",
                               "&:hover": {
                                 bgcolor: isOpeningTask(schedule)
                                   ? "#e8f5e8"
                                   : isPresenceTask(schedule)
-                                  ? "#fff3e0"
-                                  : "#bbdefb",
+                                    ? "#fff3e0"
+                                    : "#bbdefb",
                                 transform: "translateY(-1px)",
                                 boxShadow: isOpeningTask(schedule)
                                   ? "0 2px 4px rgba(76, 175, 80, 0.2)"
                                   : isPresenceTask(schedule)
-                                  ? "0 2px 4px rgba(255, 152, 0, 0.2)"
-                                  : "0 2px 4px rgba(0,0,0,0.1)",
+                                    ? "0 2px 4px rgba(255, 152, 0, 0.2)"
+                                    : "0 2px 4px rgba(0,0,0,0.1)",
                               },
                             }}
                           >
@@ -1968,8 +1792,8 @@ const Planning = () => {
                                       color: isOpeningTask(schedule)
                                         ? "#4caf50"
                                         : isPresenceTask(schedule)
-                                        ? "#ff9800"
-                                        : "#1976d2",
+                                          ? "#ff9800"
+                                          : "#1976d2",
                                       fontSize: "0.75rem",
                                     }}
                                   >
@@ -2040,7 +1864,7 @@ const Planning = () => {
                                                 height: 14,
                                                 fontSize: "0.5rem",
                                                 bgcolor: getEmployeeColor(
-                                                  emp.username
+                                                  emp.username,
                                                 ),
                                                 color: "white",
                                                 fontWeight: "bold",
@@ -2048,7 +1872,7 @@ const Planning = () => {
                                               title={emp.username}
                                             >
                                               {getEmployeeInitials(
-                                                emp.username
+                                                emp.username,
                                               )}
                                             </Avatar>
                                           ))}
@@ -2114,7 +1938,7 @@ const Planning = () => {
                                                     height: 24,
                                                     fontSize: "0.8rem",
                                                     bgcolor: getEmployeeColor(
-                                                      emp.username
+                                                      emp.username,
                                                     ),
                                                     color: "white",
                                                     fontWeight: "bold",
@@ -2123,7 +1947,7 @@ const Planning = () => {
                                                   title={emp.username}
                                                 >
                                                   {getEmployeeInitials(
-                                                    emp.username
+                                                    emp.username,
                                                   )}
                                                 </Avatar>
                                                 <Typography
@@ -2141,7 +1965,7 @@ const Planning = () => {
                                                   {emp.username}
                                                 </Typography>
                                               </Box>
-                                            )
+                                            ),
                                           )}
                                         </Box>
                                       </Box>
@@ -2186,7 +2010,7 @@ const Planning = () => {
                                   e.stopPropagation();
                                   console.log(
                                     "Modification de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleOpenDialog(schedule);
                                 }}
@@ -2213,7 +2037,7 @@ const Planning = () => {
                                   e.stopPropagation();
                                   console.log(
                                     "Suppression de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleDeleteTask(schedule);
                                 }}
@@ -2342,7 +2166,7 @@ const Planning = () => {
               <IconButton
                 onClick={() =>
                   setSelectedDate(
-                    new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+                    new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000),
                   )
                 }
                 sx={{
@@ -2366,7 +2190,7 @@ const Planning = () => {
               <IconButton
                 onClick={() =>
                   setSelectedDate(
-                    new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+                    new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000),
                   )
                 }
                 sx={{
@@ -2402,7 +2226,6 @@ const Planning = () => {
           </Box>
         </Box>
 
- 
         <WeekViewSections
           collections={collections}
           schedules={filteredSchedules}
@@ -2414,8 +2237,6 @@ const Planning = () => {
           selectedDate={selectedDate}
           handleAssignEmployeesToCollection={handleAssignEmployeesToCollection}
         />
-
-
       </Box>
     );
   };
@@ -2457,7 +2278,7 @@ const Planning = () => {
               <IconButton
                 onClick={() =>
                   setSelectedDate(
-                    new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000)
+                    new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000),
                   )
                 }
                 sx={{
@@ -2485,7 +2306,7 @@ const Planning = () => {
               <IconButton
                 onClick={() =>
                   setSelectedDate(
-                    new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000)
+                    new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000),
                   )
                 }
                 sx={{
@@ -2539,14 +2360,14 @@ const Planning = () => {
                       label={`${
                         daySchedules.filter((s) => {
                           const startHour = parseInt(
-                            s.start_time?.split(":")[0] || "0"
+                            s.start_time?.split(":")[0] || "0",
                           );
                           return startHour >= 8 && startHour < 12;
                         }).length
                       } tâche${
                         daySchedules.filter((s) => {
                           const startHour = parseInt(
-                            s.start_time?.split(":")[0] || "0"
+                            s.start_time?.split(":")[0] || "0",
                           );
                           return startHour >= 8 && startHour < 12;
                         }).length > 1
@@ -2577,14 +2398,14 @@ const Planning = () => {
                 <Stack spacing={2}>
                   {daySchedules.filter((schedule) => {
                     const startHour = parseInt(
-                      schedule.start_time?.split(":")[0] || "0"
+                      schedule.start_time?.split(":")[0] || "0",
                     );
                     return startHour >= 8 && startHour < 12;
                   }).length > 0 ? (
                     daySchedules
                       .filter((schedule) => {
                         const startHour = parseInt(
-                          schedule.start_time?.split(":")[0] || "0"
+                          schedule.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 8 && startHour < 12;
                       })
@@ -2620,8 +2441,8 @@ const Planning = () => {
                                     color: isOpeningTask(schedule)
                                       ? "#4caf50"
                                       : isPresenceTask(schedule)
-                                      ? "#ff9800"
-                                      : "inherit",
+                                        ? "#ff9800"
+                                        : "inherit",
                                   }}
                                 >
                                   {getTaskDisplayName(schedule)}
@@ -2676,7 +2497,7 @@ const Planning = () => {
                                     e.stopPropagation();
                                     console.log(
                                       "Modification de la tâche:",
-                                      schedule
+                                      schedule,
                                     );
                                     handleOpenDialog(schedule);
                                   }}
@@ -2703,7 +2524,7 @@ const Planning = () => {
                                     e.stopPropagation();
                                     console.log(
                                       "Suppression de la tâche:",
-                                      schedule
+                                      schedule,
                                     );
                                     handleDeleteTask(schedule);
                                   }}
@@ -2801,14 +2622,14 @@ const Planning = () => {
                       label={`${
                         daySchedules.filter((s) => {
                           const startHour = parseInt(
-                            s.start_time?.split(":")[0] || "0"
+                            s.start_time?.split(":")[0] || "0",
                           );
                           return startHour >= 13 && startHour < 17;
                         }).length
                       } tâche${
                         daySchedules.filter((s) => {
                           const startHour = parseInt(
-                            s.start_time?.split(":")[0] || "0"
+                            s.start_time?.split(":")[0] || "0",
                           );
                           return startHour >= 13 && startHour < 17;
                         }).length > 1
@@ -2839,14 +2660,14 @@ const Planning = () => {
                 <Stack spacing={2}>
                   {daySchedules.filter((schedule) => {
                     const startHour = parseInt(
-                      schedule.start_time?.split(":")[0] || "0"
+                      schedule.start_time?.split(":")[0] || "0",
                     );
                     return startHour >= 13 && startHour < 17;
                   }).length > 0 ? (
                     daySchedules
                       .filter((schedule) => {
                         const startHour = parseInt(
-                          schedule.start_time?.split(":")[0] || "0"
+                          schedule.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 13 && startHour < 17;
                       })
@@ -2882,8 +2703,8 @@ const Planning = () => {
                                     color: isOpeningTask(schedule)
                                       ? "#4caf50"
                                       : isPresenceTask(schedule)
-                                      ? "#ff9800"
-                                      : "inherit",
+                                        ? "#ff9800"
+                                        : "inherit",
                                   }}
                                 >
                                   {getTaskDisplayName(schedule)}
@@ -2938,7 +2759,7 @@ const Planning = () => {
                                     e.stopPropagation();
                                     console.log(
                                       "Modification de la tâche:",
-                                      schedule
+                                      schedule,
                                     );
                                     handleOpenDialog(schedule);
                                   }}
@@ -2965,7 +2786,7 @@ const Planning = () => {
                                     e.stopPropagation();
                                     console.log(
                                       "Suppression de la tâche:",
-                                      schedule
+                                      schedule,
                                     );
                                     handleDeleteTask(schedule);
                                   }}
@@ -3062,10 +2883,10 @@ const Planning = () => {
               <Select
                 value={selectedStore}
                 onChange={(e) => {
-                  console.log("🏪 STORE SELECTION CHANGED");
-                  console.log("🏪 New selected store:", e.target.value);
+                  // console.log("🏪 STORE SELECTION CHANGED");
+                  // console.log("🏪 New selected store:", e.target.value);
                   setSelectedStore(e.target.value);
-                  setSelectedLocation(""); // Reset location when store changes
+                  // setSelectedLocation(""); // Reset location when store changes
                 }}
                 label="Filtrer par magasin"
               >
@@ -3154,7 +2975,6 @@ const Planning = () => {
             defaultValues={editingSchedule}
             onSubmit={handleSave}
             stores={stores}
-            tasks={tasks}
           />
           {/* <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -3414,7 +3234,7 @@ const Planning = () => {
               le <strong>{conflictInfo?.halfDay}</strong> du{" "}
               <strong>
                 {new Date(
-                  pendingScheduleData?.scheduled_date
+                  pendingScheduleData?.scheduled_date,
                 ).toLocaleDateString("fr-FR")}
               </strong>
               .
@@ -3688,347 +3508,16 @@ const Planning = () => {
       </Dialog>
 
       {/* Dialogue d'assignation des employés depuis le planning */}
-      <Dialog
+      <TaskAssignmentDialog
         open={openTaskAssignmentDialog}
         onClose={handleCloseTaskAssignmentDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Store color="primary" />
-            <Box>
-              <Typography variant="h6">
-                Assigner des employés à la tâche:{" "}
-                {selectedTaskForAssignment?.task_name}
-              </Typography>
-              <Typography variant="caption" color="textSecondary">
-                Magasin:{" "}
-                {selectedTaskForAssignment?.store_name || "Non spécifié"}
-              </Typography>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {/* Message informatif sur le filtrage par magasin */}
-          <Box
-            sx={{
-              mb: 2,
-              p: 2,
-              bgcolor: "#e3f2fd",
-              borderRadius: 1,
-              border: "1px solid #2196f3",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Store sx={{ fontSize: 16, color: "#1976d2" }} />
-              <strong>Filtrage par magasin et présence:</strong> Seuls les
-              employés du magasin "
-              {selectedTaskForAssignment?.store_name || "Non spécifié"}" qui
-              travaillent le{" "}
-              {selectedTaskForAssignment?.scheduled_date
-                ? new Date(
-                    selectedTaskForAssignment.scheduled_date
-                  ).toLocaleDateString("fr-FR", { weekday: "long" })
-                : "jour sélectionné"}{" "}
-              sont affichés.
-            </Typography>
-          </Box>
+        selectedTask={selectedTaskForAssignment}
+        assignedEmployees={taskAssignedEmployees}
+        availableEmployees={availableEmployeesForTask}
+        onAssignEmployee={handleAssignEmployeeToTask}
+        onUnassignEmployee={handleUnassignEmployeeFromTask}
+      />
 
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Employés déjà assignés */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <Person color="primary" />
-                Employés assignés ({taskAssignedEmployees.length})
-              </Typography>
-              <Box sx={{ maxHeight: 300, overflow: "auto" }}>
-                {taskAssignedEmployees.length > 0 ? (
-                  <Stack spacing={1}>
-                    {taskAssignedEmployees.map((employee) => (
-                      <Card
-                        key={employee.id}
-                        variant="outlined"
-                        sx={{
-                          bgcolor: "#e3f2fd",
-                          border: "2px solid #2196f3",
-                        }}
-                      >
-                        <CardContent sx={{ py: 1, px: 2 }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <Tooltip title="Employé assigné à cette tâche">
-                                <Person color="primary" />
-                              </Tooltip>
-                              <Typography
-                                variant="body2"
-                                fontWeight="medium"
-                                sx={{ color: "#1976d2" }}
-                              >
-                                {employee.username}
-                              </Typography>
-                              <Chip
-                                label={employee.role}
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                                sx={{ fontSize: "0.7rem" }}
-                              />
-                              <Chip
-                                icon={<CheckCircle />}
-                                label="Assigné"
-                                size="small"
-                                color="primary"
-                                variant="filled"
-                                sx={{ fontSize: "0.7rem" }}
-                              />
-                            </Box>
-                            <Tooltip title="Retirer cet employé de la tâche">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleUnassignEmployeeFromTask(employee.id)
-                                }
-                                color="error"
-                                sx={{
-                                  bgcolor: "#ffebee",
-                                  "&:hover": {
-                                    bgcolor: "#ffcdd2",
-                                    transform: "scale(1.1)",
-                                  },
-                                }}
-                              >
-                                <Delete />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Stack>
-                ) : (
-                  <Box
-                    sx={{
-                      textAlign: "center",
-                      py: 3,
-                      bgcolor: "#f5f5f5",
-                      borderRadius: 1,
-                      border: "2px dashed #ccc",
-                    }}
-                  >
-                    <PersonOff sx={{ fontSize: 40, color: "#ccc", mb: 1 }} />
-                    <Typography variant="body2" color="textSecondary">
-                      Aucun employé assigné
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      Cliquez sur "+" pour assigner des employés
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-
-            {/* Employés disponibles */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <PersonAdd color="action" />
-                Employés disponibles
-              </Typography>
-              <Box sx={{ maxHeight: 300, overflow: "auto" }}>
-                {availableEmployeesForTask
-                  .filter(
-                    (emp) =>
-                      !taskAssignedEmployees.some(
-                        (assigned) => assigned.id === emp.id
-                      )
-                  )
-                  .map((employee) => (
-                    <Card
-                      key={employee.id}
-                      variant="outlined"
-                      sx={{
-                        mb: 1,
-                        bgcolor: employee.is_assigned_to_task
-                          ? "#ffebee"
-                          : "#f1f8e9",
-                        border: employee.is_assigned_to_task
-                          ? "2px solid #f44336"
-                          : "1px solid #e0e0e0",
-                      }}
-                    >
-                      <CardContent sx={{ py: 1, px: 2 }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            {/* Icône selon le statut */}
-                            {employee.is_assigned_to_task ? (
-                              <Tooltip title="Employé occupé à ce moment">
-                                <Block color="error" sx={{ fontSize: 20 }} />
-                              </Tooltip>
-                            ) : employee.already_assigned ? (
-                              <Tooltip title="Déjà assigné à cette tâche">
-                                <Person color="primary" sx={{ fontSize: 20 }} />
-                              </Tooltip>
-                            ) : (
-                              <Tooltip title="Disponible">
-                                <Person color="success" sx={{ fontSize: 20 }} />
-                              </Tooltip>
-                            )}
-
-                            <Typography
-                              variant="body2"
-                              fontWeight="medium"
-                              sx={{
-                                color: employee.is_assigned_to_task
-                                  ? "#d32f2f"
-                                  : "inherit",
-                              }}
-                            >
-                              {employee.username}
-                            </Typography>
-
-                            <Chip
-                              label={employee.role}
-                              size="small"
-                              color="info"
-                              variant="outlined"
-                            />
-
-                            {/* Statut avec icône */}
-                            {employee.is_assigned_to_task ? (
-                              <Tooltip title="Occupé par une autre tâche à ce moment">
-                                <Chip
-                                  icon={<AccessTime />}
-                                  label="Occupé"
-                                  size="small"
-                                  color="error"
-                                  variant="filled"
-                                  sx={{ fontSize: "0.7rem" }}
-                                />
-                              </Tooltip>
-                            ) : employee.already_assigned ? (
-                              <Tooltip title="Déjà assigné à cette tâche">
-                                <Chip
-                                  icon={<Person />}
-                                  label="Assigné"
-                                  size="small"
-                                  color="primary"
-                                  variant="filled"
-                                  sx={{ fontSize: "0.7rem" }}
-                                />
-                              </Tooltip>
-                            ) : (
-                              <Tooltip title="Libre pour cette tâche">
-                                <Chip
-                                  icon={<CheckCircle />}
-                                  label="Libre"
-                                  size="small"
-                                  color="success"
-                                  variant="filled"
-                                  sx={{ fontSize: "0.7rem" }}
-                                />
-                              </Tooltip>
-                            )}
-                          </Box>
-
-                          {/* Bouton d'assignation avec icône appropriée */}
-                          {employee.is_assigned_to_task ? (
-                            <Tooltip title="Impossible d'assigner - Employé occupé">
-                              <span>
-                                <IconButton size="small" color="error" disabled>
-                                  <Block />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip title="Assigner cet employé">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleAssignEmployeeToTask(employee.id)
-                                }
-                                color="success"
-                                sx={{
-                                  bgcolor: "#e8f5e8",
-                                  "&:hover": {
-                                    bgcolor: "#c8e6c9",
-                                    transform: "scale(1.1)",
-                                  },
-                                }}
-                              >
-                                <Add />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-
-                        {/* Message d'information pour les employés occupés */}
-                        {employee.is_assigned_to_task &&
-                          employee.conflicts &&
-                          employee.conflicts.length > 0 && (
-                            <Box
-                              sx={{
-                                mt: 1,
-                                p: 1,
-                                bgcolor: "#fff3e0",
-                                borderRadius: 1,
-                                border: "1px solid #ffcc02",
-                              }}
-                            >
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "#e65100", fontSize: "0.7rem" }}
-                              >
-                                <Warning sx={{ fontSize: 12, mr: 0.5 }} />
-                                Conflit d'horaires détecté
-                              </Typography>
-                            </Box>
-                          )}
-                      </CardContent>
-                    </Card>
-                  ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseTaskAssignmentDialog}>Fermer</Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Dialogue d'assignation des employés aux collectes */}
       {openCollectionAssignmentDialog && selectedCollectionForAssignment && (
@@ -4078,7 +3567,7 @@ const Planning = () => {
                 travaillent le{" "}
                 {selectedCollectionForAssignment.scheduled_date
                   ? new Date(
-                      selectedCollectionForAssignment.scheduled_date
+                      selectedCollectionForAssignment.scheduled_date,
                     ).toLocaleDateString("fr-FR", { weekday: "long" })
                   : "jour sélectionné"}{" "}
                 sont affichés.
@@ -4151,7 +3640,7 @@ const Planning = () => {
                               size="small"
                               onClick={() =>
                                 handleUnassignEmployeeFromCollection(
-                                  employee.id
+                                  employee.id,
                                 )
                               }
                               sx={{
@@ -4312,7 +3801,7 @@ const Planning = () => {
                                       {employee.conflicts
                                         .map(
                                           (c) =>
-                                            c.collection_point_name || "Tâche"
+                                            c.collection_point_name || "Tâche",
                                         )
                                         .join(", ")}
                                     </Typography>
