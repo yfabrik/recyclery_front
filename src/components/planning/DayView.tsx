@@ -29,17 +29,17 @@ interface DayViewProps {
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
   setSelectedDate: (a: Date) => Date;
-  statusOptions: { value: string; color: string; label: string }[];
-  setFilterStatus: (a: string) => void;
-  filterStatus: string;
+  // statusOptions: { value: string; color: string; label: string }[];
+  // setFilterStatus: (a: string) => void;
+  // filterStatus: string;
   renderViewSelector: () => ReactNode;
   formatTime: (s: string) => string;
-  handleQuickTimeSlot: (s: string) => void;
+  // handleQuickTimeSlot: (s: string) => void;
   getOpeningTaskStyle: (t: TaskModel) => object;
   getOpeningCardStyle: (t: TaskModel) => object;
   getPresenceTaskStyle: (t: TaskModel) => object;
   getPresenceCardStyle: (t: TaskModel) => object;
-  getPriorityInfo:(s:string)=>string
+  getPriorityInfo: (s: string) => string;
 }
 
 export const DayView = ({
@@ -53,12 +53,12 @@ export const DayView = ({
   setSelectedDate,
   renderViewSelector,
   formatTime,
-  handleQuickTimeSlot,
+  // handleQuickTimeSlot,
   getOpeningTaskStyle,
   getOpeningCardStyle,
   getPresenceTaskStyle,
   getPresenceCardStyle,
-  getPriorityInfo
+  getPriorityInfo,
 }: DayViewProps) => {
   const daySchedules = Array.isArray(filteredSchedules)
     ? filteredSchedules.filter((schedule) => {
@@ -96,7 +96,7 @@ export const DayView = ({
             <IconButton
               onClick={() =>
                 setSelectedDate(
-                  new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000)
+                  new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000),
                 )
               }
               sx={{
@@ -121,7 +121,7 @@ export const DayView = ({
             <IconButton
               onClick={() =>
                 setSelectedDate(
-                  new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000)
+                  new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000),
                 )
               }
               sx={{
@@ -175,14 +175,14 @@ export const DayView = ({
                     label={`${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0"
+                          s.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 8 && startHour < 12;
                       }).length
                     } tâche${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0"
+                          s.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 8 && startHour < 12;
                       }).length > 1
@@ -201,7 +201,7 @@ export const DayView = ({
                   startIcon={<Add />}
                   onClick={() => {
                     handleOpenDialog();
-                    handleQuickTimeSlot("morning");
+                    // handleQuickTimeSlot("morning");
                   }}
                   sx={{ borderColor: "#4caf50", color: "#4caf50" }}
                 >
@@ -213,14 +213,14 @@ export const DayView = ({
               <Stack spacing={2}>
                 {daySchedules.filter((schedule) => {
                   const startHour = parseInt(
-                    schedule.start_time?.split(":")[0] || "0"
+                    schedule.start_time?.split(":")[0] || "0",
                   );
                   return startHour >= 8 && startHour < 12;
                 }).length > 0 ? (
                   daySchedules
                     .filter((schedule) => {
                       const startHour = parseInt(
-                        schedule.start_time?.split(":")[0] || "0"
+                        schedule.start_time?.split(":")[0] || "0",
                       );
                       return startHour >= 8 && startHour < 12;
                     })
@@ -312,7 +312,7 @@ export const DayView = ({
                                   e.stopPropagation();
                                   console.log(
                                     "Modification de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleOpenDialog(schedule);
                                 }}
@@ -339,7 +339,7 @@ export const DayView = ({
                                   e.stopPropagation();
                                   console.log(
                                     "Suppression de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleDeleteTask(schedule);
                                 }}
@@ -436,14 +436,14 @@ export const DayView = ({
                     label={`${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0"
+                          s.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 13 && startHour < 17;
                       }).length
                     } tâche${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0"
+                          s.start_time?.split(":")[0] || "0",
                         );
                         return startHour >= 13 && startHour < 17;
                       }).length > 1
@@ -462,7 +462,7 @@ export const DayView = ({
                   startIcon={<Add />}
                   onClick={() => {
                     handleOpenDialog();
-                    handleQuickTimeSlot("afternoon");
+                    // handleQuickTimeSlot("afternoon");
                   }}
                   sx={{ borderColor: "#ff9800", color: "#ff9800" }}
                 >
@@ -474,14 +474,14 @@ export const DayView = ({
               <Stack spacing={2}>
                 {daySchedules.filter((schedule) => {
                   const startHour = parseInt(
-                    schedule.start_time?.split(":")[0] || "0"
+                    schedule.start_time?.split(":")[0] || "0",
                   );
                   return startHour >= 13 && startHour < 17;
                 }).length > 0 ? (
                   daySchedules
                     .filter((schedule) => {
                       const startHour = parseInt(
-                        schedule.start_time?.split(":")[0] || "0"
+                        schedule.start_time?.split(":")[0] || "0",
                       );
                       return startHour >= 13 && startHour < 17;
                     })
@@ -573,7 +573,7 @@ export const DayView = ({
                                   e.stopPropagation();
                                   console.log(
                                     "Modification de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleOpenDialog(schedule);
                                 }}
@@ -600,7 +600,7 @@ export const DayView = ({
                                   e.stopPropagation();
                                   console.log(
                                     "Suppression de la tâche:",
-                                    schedule
+                                    schedule,
                                   );
                                   handleDeleteTask(schedule);
                                 }}

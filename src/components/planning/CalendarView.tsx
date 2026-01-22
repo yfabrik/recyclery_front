@@ -11,9 +11,8 @@ import {
   Store,
 } from "@mui/icons-material";
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
-import { Calendar } from "../Calendar";
-import { useEmployee } from "../../services/useEmployee";
 import type { ReactNode } from "react";
+import { useEmployee } from "../../services/useEmployee";
 interface Task {
   scheduled_date: Date;
   task_employees: { username: string }[];
