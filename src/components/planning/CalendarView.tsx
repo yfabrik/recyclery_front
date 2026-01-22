@@ -1,9 +1,6 @@
 import {
   Add,
-  ArrowBackIos,
-  ArrowForwardIos,
   Assignment,
-  CalendarToday,
   Delete,
   Edit,
   LocationOn,
@@ -11,7 +8,6 @@ import {
   Store,
 } from "@mui/icons-material";
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
-import type { ReactNode } from "react";
 import { useEmployee } from "../../services/useEmployee";
 interface Task {
   scheduled_date: Date;
@@ -25,12 +21,7 @@ interface CalendarViewProps {
   isPresenceTask: (t: Task) => boolean;
   getTaskDisplayName: (t: Task) => string;
   handleDeleteTask: (t: Task) => void;
-  selectedDate:Date
-  setSelectedDate:(a:Date)=>Date
-  statusOptions:{value:string,color:string,label:string}[]
-  setFilterStatus:(a:string)=>void
-  filterStatus:string
-  renderViewSelector:()=>ReactNode
+  selectedDate: Date;
 }
 interface CalendarDay {
   date: Date;
@@ -46,12 +37,6 @@ export const CalendarView = ({
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
-  statusOptions,
-  filterStatus,
-  setFilterStatus,
-  setSelectedDate,
-  renderViewSelector
-  
 }: CalendarViewProps) => {
   const getScheduleDays = (currentDate: Date) => {
     const daySchedules = Array.isArray(filteredSchedules)
@@ -74,8 +59,6 @@ export const CalendarView = ({
 
     // Premier jour du mois
     const firstDay = new Date(year, month, 1);
-    // Dernier jour du mois
-    const lastDay = new Date(year, month + 1, 0);
     // Premier lundi de la semaine contenant le premier jour
     const startDate = new Date(firstDay);
     startDate.setDate(
@@ -100,20 +83,6 @@ export const CalendarView = ({
     return days;
   };
   const calendarDays = generateCalendarDays(selectedDate);
-  const monthNames = [
-    "janvier",
-    "février",
-    "mars",
-    "avril",
-    "mai",
-    "juin",
-    "juillet",
-    "août",
-    "septembre",
-    "octobre",
-    "novembre",
-    "décembre",
-  ];
   const dayNames = [
     "lundi",
     "mardi",
@@ -127,172 +96,7 @@ export const CalendarView = ({
   const {getEmployeeColor,getEmployeeInitials}=useEmployee()
 
   return (
-    <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
-      {/* En-tête principal */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h3"
-          component="h1"
-          sx={{
-            fontWeight: "bold",
-            color: "#333",
-            mb: 3,
-            fontSize: "2.5rem",
-          }}
-        >
-          Calendrier des Lieux de collecte
-        </Typography>
-
-        {/* Filtres de statut - style pills */}
-        <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
-          {statusOptions.map((status) => (
-            <Box
-              key={status.value}
-              onClick={() =>
-                setFilterStatus(
-                  filterStatus === status.value ? "all" : status.value
-                )
-              }
-              sx={{
-                px: 3,
-                py: 1.5,
-                borderRadius: "20px",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                bgcolor:
-                  filterStatus === status.value
-                    ? status.color === "primary"
-                      ? "#e3f2fd"
-                      : status.color === "warning"
-                        ? "#fff3e0"
-                        : status.color === "success"
-                          ? "#e8f5e8"
-                          : status.color === "error"
-                            ? "#ffebee"
-                            : "#f5f5f5"
-                    : "#f5f5f5",
-                color:
-                  filterStatus === status.value
-                    ? status.color === "primary"
-                      ? "#1976d2"
-                      : status.color === "warning"
-                        ? "#f57c00"
-                        : status.color === "success"
-                          ? "#388e3c"
-                          : status.color === "error"
-                            ? "#d32f2f"
-                            : "#666"
-                    : "#666",
-                border: "1px solid",
-                borderColor:
-                  filterStatus === status.value
-                    ? status.color === "primary"
-                      ? "#bbdefb"
-                      : status.color === "warning"
-                        ? "#ffcc02"
-                        : status.color === "success"
-                          ? "#c8e6c9"
-                          : status.color === "error"
-                            ? "#ffcdd2"
-                            : "#e0e0e0"
-                    : "#e0e0e0",
-                "&:hover": {
-                  transform: "translateY(-1px)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <Typography variant="body2" fontWeight="500">
-                {status.label}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-
-        {/* Navigation et sélecteur de vue */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          {/* Navigation mois */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <IconButton
-              onClick={() =>
-                setSelectedDate(
-                  new Date(
-                    selectedDate.getFullYear(),
-                    selectedDate.getMonth() - 1
-                  )
-                )
-              }
-              sx={{
-                bgcolor: "#f5f5f5",
-                "&:hover": { bgcolor: "#e0e0e0" },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <ArrowBackIos fontSize="small" />
-            </IconButton>
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mx: 2 }}>
-              <CalendarToday sx={{ color: "#666", fontSize: 20 }} />
-              <Typography
-                variant="h5"
-                sx={{ color: "#333", fontWeight: "bold" }}
-              >
-                {monthNames[selectedDate.getMonth()]}{" "}
-                {selectedDate.getFullYear()}
-              </Typography>
-            </Box>
-
-            <IconButton
-              onClick={() =>
-                setSelectedDate(
-                  new Date(
-                    selectedDate.getFullYear(),
-                    selectedDate.getMonth() + 1
-                  )
-                )
-              }
-              sx={{
-                bgcolor: "#f5f5f5",
-                "&:hover": { bgcolor: "#e0e0e0" },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <ArrowForwardIos fontSize="small" />
-            </IconButton>
-          </Box>
-
-          {/* Bouton d'ajout et sélecteur de vue */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog()}
-              sx={{
-                bgcolor: "#4caf50",
-                "&:hover": { bgcolor: "#45a049" },
-                px: 3,
-                py: 1.5,
-                borderRadius: "20px",
-              }}
-            >
-              Nouvelle Tâche
-            </Button>
-
-            {/* Sélecteur de vue */}
-            {renderViewSelector()}
-          </Box>
-        </Box>
-      </Box>
-
+    <Box>
       {/* Grille du calendrier */}
       {/* <Calendar
         filteredSchedules={filteredSchedules}

@@ -1,7 +1,5 @@
 import {
   Add,
-  ArrowBackIos,
-  ArrowForwardIos,
   Delete,
   Edit,
 } from "@mui/icons-material";
@@ -28,11 +26,6 @@ interface DayViewProps {
   getTaskDisplayName: (t: TaskModel) => string;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
-  setSelectedDate: (a: Date) => Date;
-  // statusOptions: { value: string; color: string; label: string }[];
-  // setFilterStatus: (a: string) => void;
-  // filterStatus: string;
-  renderViewSelector: () => ReactNode;
   formatTime: (s: string) => string;
   // handleQuickTimeSlot: (s: string) => void;
   getOpeningTaskStyle: (t: TaskModel) => object;
@@ -50,8 +43,6 @@ export const DayView = ({
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
-  setSelectedDate,
-  renderViewSelector,
   formatTime,
   // handleQuickTimeSlot,
   getOpeningTaskStyle,
@@ -72,91 +63,7 @@ export const DayView = ({
     : [];
 
   return (
-    <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
-      {/* En-tête */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ fontWeight: "bold", color: "#333", mb: 3 }}
-        >
-          Vue Jour
-        </Typography>
-
-        {/* Navigation jour */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <IconButton
-              onClick={() =>
-                setSelectedDate(
-                  new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000),
-                )
-              }
-              sx={{
-                bgcolor: "#f5f5f5",
-                "&:hover": { bgcolor: "#e0e0e0" },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <ArrowBackIos fontSize="small" />
-            </IconButton>
-
-            <Typography variant="h5" sx={{ color: "#333", fontWeight: "bold" }}>
-              {selectedDate.toLocaleDateString("fr-FR", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </Typography>
-
-            <IconButton
-              onClick={() =>
-                setSelectedDate(
-                  new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000),
-                )
-              }
-              sx={{
-                bgcolor: "#f5f5f5",
-                "&:hover": { bgcolor: "#e0e0e0" },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <ArrowForwardIos fontSize="small" />
-            </IconButton>
-          </Box>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog()}
-              sx={{
-                bgcolor: "#4caf50",
-                "&:hover": { bgcolor: "#45a049" },
-                px: 3,
-                py: 1.5,
-                borderRadius: "20px",
-              }}
-            >
-              Nouvelle Tâche
-            </Button>
-
-            {/* Sélecteur de vue */}
-            {renderViewSelector()}
-          </Box>
-        </Box>
-      </Box>
-
+    <Box>
       {/* Calendrier par créneaux */}
       <Grid container spacing={3}>
         {/* Créneau Matin */}

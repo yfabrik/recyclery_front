@@ -1,14 +1,9 @@
 import {
   Add,
-  ArrowBackIos,
-  ArrowForwardIos,
   Assignment,
   CalendarToday,
-  Delete,
-  Edit,
   Flag,
   FlagOutlined,
-  LocationOn,
   Person,
   PersonAdd,
   PlayArrow,
@@ -16,7 +11,6 @@ import {
   Save,
   Settings,
   Stop,
-  Store,
   Task,
   ViewDay,
   ViewWeek,
@@ -27,9 +21,6 @@ import {
   Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Chip,
   Dialog,
   DialogActions,
@@ -37,7 +28,6 @@ import {
   DialogTitle,
   FormControl,
   Grid,
-  IconButton,
   InputLabel,
   List,
   ListItem,
@@ -45,7 +35,6 @@ import {
   ListItemText,
   MenuItem,
   Select,
-  Stack,
   Typography,
 } from "@mui/material";
 import axios from "axios";
@@ -71,6 +60,7 @@ import { fetchStores as fstore } from "../services/api/store";
 import { createTask, getTasks, updateTask } from "../services/api/tasks";
 import { DayView } from "../components/planning/DayView";
 import { CalendarView } from "../components/planning/CalendarView";
+import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState<TaskModel[]>([]);
@@ -165,11 +155,6 @@ const Planning = () => {
     { value: "high", label: "Élevée", color: "error", icon: <PriorityHigh /> },
   ];
 
-  const viewModes = [
-    { value: "calendar", label: "Calendrier", icon: <CalendarToday /> },
-    { value: "week", label: "Semaine", icon: <ViewWeek /> },
-    { value: "day", label: "Jour", icon: <ViewDay /> },
-  ];
 
   useEffect(() => {
     fetchSchedules();
@@ -679,8 +664,8 @@ const Planning = () => {
 
   const filteredSchedules = Array.isArray(schedules)
     ? schedules.filter((schedule) => {
-        return true;
-      })
+      return true;
+    })
     : [];
 
   const getStatusInfo = (status) => {
@@ -803,155 +788,6 @@ const Planning = () => {
     return schedule.task_name || "Tâche sans nom";
   };
 
-  const renderViewSelector = () => (
-    <Box sx={{ display: "flex", gap: 1 }}>
-      {viewModes.map((view) => (
-        <Box
-          key={view.value}
-          onClick={() => setViewMode(view.value)}
-          sx={{
-            px: 3,
-            py: 1.5,
-            borderRadius: "20px",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            bgcolor: viewMode === view.value ? "#4caf50" : "white",
-            color: viewMode === view.value ? "white" : "#666",
-            border: "1px solid #e0e0e0",
-            "&:hover": {
-              bgcolor: viewMode === view.value ? "#45a049" : "#f5f5f5",
-            },
-          }}
-        >
-          <Typography variant="body2" fontWeight="500">
-            {view.label}
-          </Typography>
-        </Box>
-      ))}
-    </Box>
-  );
-
-  const renderWeekView = () => {
-    const startOfWeek = new Date(selectedDate);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Ajuster pour commencer le lundi
-    startOfWeek.setDate(diff);
-
-    const weekDays = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      weekDays.push(date);
-    }
-
-    const dayNames = [
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-      "Dimanche",
-    ];
-
-    return (
-      <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
-        {/* En-tête */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{ fontWeight: "bold", color: "#333", mb: 3 }}
-          >
-            Vue Semaine
-          </Typography>
-
-          {/* Navigation semaine */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <IconButton
-                onClick={() =>
-                  setSelectedDate(
-                    new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000),
-                  )
-                }
-                sx={{
-                  bgcolor: "#f5f5f5",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  width: 40,
-                  height: 40,
-                }}
-              >
-                <ArrowBackIos fontSize="small" />
-              </IconButton>
-
-              <Typography
-                variant="h5"
-                sx={{ color: "#333", fontWeight: "bold" }}
-              >
-                Semaine du {startOfWeek.toLocaleDateString("fr-FR")} au{" "}
-                {weekDays[6].toLocaleDateString("fr-FR")}
-              </Typography>
-
-              <IconButton
-                onClick={() =>
-                  setSelectedDate(
-                    new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000),
-                  )
-                }
-                sx={{
-                  bgcolor: "#f5f5f5",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  width: 40,
-                  height: 40,
-                }}
-              >
-                <ArrowForwardIos fontSize="small" />
-              </IconButton>
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog()}
-                sx={{
-                  bgcolor: "#4caf50",
-                  "&:hover": { bgcolor: "#45a049" },
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: "20px",
-                }}
-              >
-                Nouvelle Tâche
-              </Button>
-
-              {/* Sélecteur de vue */}
-              {renderViewSelector()}
-            </Box>
-          </Box>
-        </Box>
-
-        <WeekViewSections
-          // collections={collections}
-          schedules={filteredSchedules}
-          getEmployeeColor={getEmployeeColor}
-          getEmployeeInitials={getEmployeeInitials}
-          handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-          handleDeleteTask={handleDeleteTask}
-          handleOpenDialog={handleOpenDialog}
-          selectedDate={selectedDate}
-        />
-      </Box>
-    );
-  };
 
   return (
     <Box>
@@ -1015,10 +851,9 @@ const Planning = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="body2" color="text.secondary">
               {selectedStore
-                ? `Affichage des tâches pour ${
-                    stores.find((s) => s.id === selectedStore.id)?.name ||
-                    "magasin sélectionné"
-                  }`
+                ? `Affichage des tâches pour ${stores.find((s) => s.id === selectedStore.id)?.name ||
+                "magasin sélectionné"
+                }`
                 : "Affichage de toutes les tâches"}
               {/* {selectedLocation &&
                 ` - Lieu: ${locations.find((l) => l.id === parseInt(selectedLocation))?.name || "lieu sélectionné"}`} */}
@@ -1035,391 +870,409 @@ const Planning = () => {
         setShowMissingEmployeesDialog={setShowMissingEmployeesDialog}
       ></PrecenseEmployees>
 
-      {viewMode === "calendar" && (
-        <CalendarView
-          filterStatus={filterStatus}
-          filteredSchedules={filteredSchedules}
-          getTaskDisplayName={getTaskDisplayName}
-          handleDeleteTask={handleDeleteTask}
-          handleOpenDialog={handleOpenDialog}
-          isOpeningTask={isOpeningTask}
-          isPresenceTask={isPresenceTask}
-          renderViewSelector={renderViewSelector}
+      <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
+        <PlanningViewHeader
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          setFilterStatus={setFilterStatus}
-          statusOptions={statusOptions}
+          onDateChange={setSelectedDate}
+          onNewTask={() => handleOpenDialog()}
+          statusFilters={viewMode === "calendar" ? statusOptions : undefined}
+          filterStatus={viewMode === "calendar" ? filterStatus : undefined}
+          onFilterStatusChange={
+            viewMode === "calendar" ? setFilterStatus : undefined
+          }
         />
-      )}
-      {viewMode === "week" && renderWeekView()}
-      {viewMode === "day" && (
-        <DayView
-          filteredSchedules={filteredSchedules}
-          formatTime={formatTime}
-          getOpeningCardStyle={getOpeningCardStyle}
-          getOpeningTaskStyle={getOpeningTaskStyle}
-          getPresenceCardStyle={getPresenceCardStyle}
-          getPresenceTaskStyle={getPresenceCardStyle}
-          getPriorityInfo={getPriorityInfo}
-          getTaskDisplayName={getTaskDisplayName}
-          handleDeleteTask={handleDeleteTask}
-          handleOpenDialog={handleOpenDialog}
-          // handleQuickTimeSlot={handleQuickTimeSlot}
-          isOpeningTask={isOpeningTask}
-          isPresenceTask={isPresenceTask}
-          renderViewSelector={renderViewSelector}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-        />
-      )}
-
-      {/* Dialog de création/édition amélioré */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Assignment />
-            {editingSchedule ? "Modifier la tâche" : "Nouvelle tâche"}
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <PlaningForm
-            formId="planningForm"
-            defaultValues={editingSchedule}
-            onSubmit={handleSave}
-            stores={stores}
+        {viewMode === "calendar" && (
+          <CalendarView
+            filteredSchedules={filteredSchedules}
+            getTaskDisplayName={getTaskDisplayName}
+            handleDeleteTask={handleDeleteTask}
+            handleOpenDialog={handleOpenDialog}
+            isOpeningTask={isOpeningTask}
+            isPresenceTask={isPresenceTask}
+            selectedDate={selectedDate}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button
-            onClick={handleSave}
-            type="submit"
-            form="planningForm"
-            variant="contained"
-            startIcon={<Save />}
-          >
-            {editingSchedule?.id ? "Mettre à jour" : "Créer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        )}
+        {viewMode === "week" && (
+          <WeekViewSections
+            // collections={collections}
+            schedules={filteredSchedules}
+            getEmployeeColor={getEmployeeColor}
+            getEmployeeInitials={getEmployeeInitials}
+            handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+            handleDeleteTask={handleDeleteTask}
+            handleOpenDialog={handleOpenDialog}
+            selectedDate={selectedDate}
+          />
+        )}
+        {viewMode === "day" && (
+          <DayView
+            filteredSchedules={filteredSchedules}
+            formatTime={formatTime}
+            getOpeningCardStyle={getOpeningCardStyle}
+            getOpeningTaskStyle={getOpeningTaskStyle}
+            getPresenceCardStyle={getPresenceCardStyle}
+            getPresenceTaskStyle={getPresenceCardStyle}
+            getPriorityInfo={getPriorityInfo}
+            getTaskDisplayName={getTaskDisplayName}
+            handleDeleteTask={handleDeleteTask}
+            handleOpenDialog={handleOpenDialog}
+            // handleQuickTimeSlot={handleQuickTimeSlot}
+            isOpeningTask={isOpeningTask}
+            isPresenceTask={isPresenceTask}
+            selectedDate={selectedDate}
+          />
+        )}
+      </Box>
 
-      {/* Dialog de conflit d'horaires */}
-      <Dialog
-        open={conflictDialog}
-        onClose={handleCancelConflict}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box
+        {/* Dialog de création/édition amélioré */}
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Assignment />
+              {editingSchedule ? "Modifier la tâche" : "Nouvelle tâche"}
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <PlaningForm
+              formId="planningForm"
+              defaultValues={editingSchedule}
+              onSubmit={handleSave}
+              stores={stores}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button
+              onClick={handleSave}
+              type="submit"
+              form="planningForm"
+              variant="contained"
+              startIcon={<Save />}
+            >
+              {editingSchedule?.id ? "Mettre à jour" : "Créer"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog de conflit d'horaires */}
+        <Dialog
+          open={conflictDialog}
+          onClose={handleCancelConflict}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "warning.main",
+              }}
+            >
+              <Warning />
+              Conflit d'horaires détecté
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                <strong>{conflictInfo?.employeeName}</strong> est déjà assigné(e)
+                le <strong>{conflictInfo?.halfDay}</strong> du{" "}
+                <strong>
+                  {new Date(
+                    pendingScheduleData?.scheduled_date,
+                  ).toLocaleDateString("fr-FR")}
+                </strong>
+                .
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Tâches en conflit :
+              </Typography>
+
+              <Box
+                sx={{
+                  maxHeight: 200,
+                  overflow: "auto",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                  p: 1,
+                }}
+              >
+                {conflictInfo?.conflicts?.map((conflict, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      py: 1,
+                      borderBottom:
+                        index < conflictInfo.conflicts.length - 1
+                          ? "1px solid #f0f0f0"
+                          : "none",
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {conflict.task_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {conflict.store_name}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="primary">
+                      {conflict.start_time} - {conflict.end_time}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Voulez-vous continuer malgré le conflit ?
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelConflict} color="inherit">
+              Annuler
+            </Button>
+            <Button
+              onClick={handleConfirmConflict}
+              variant="contained"
+              color="warning"
+            >
+              Continuer malgré le conflit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog pour l'alerte de jour de travail */}
+        <Dialog
+          open={showWorkdayWarning}
+          onClose={handleCancelWorkdayWarning}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 1,
-              color: "warning.main",
+              color: "#ff9800",
             }}
           >
-            <Warning />
-            Conflit d'horaires détecté
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              <strong>{conflictInfo?.employeeName}</strong> est déjà assigné(e)
-              le <strong>{conflictInfo?.halfDay}</strong> du{" "}
-              <strong>
-                {new Date(
-                  pendingScheduleData?.scheduled_date,
-                ).toLocaleDateString("fr-FR")}
-              </strong>
-              .
+            <Warning sx={{ fontSize: 28 }} />
+            <Typography variant="h6" fontWeight="bold">
+              Employé Non Disponible
+            </Typography>
+          </DialogTitle>
+
+          <DialogContent>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              L'employé sélectionné ne travaille pas le jour choisi.
+            </Alert>
+
+            {workdayWarningInfo && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>{workdayWarningInfo.employeeName}</strong> ne travaille
+                  pas le <strong>{workdayWarningInfo.dayOfWeek}</strong> (
+                  {workdayWarningInfo.date}).
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Créneau sélectionné :{" "}
+                  <strong>{workdayWarningInfo.timeSlot}</strong>
+                </Typography>
+
+                <Alert severity="info">
+                  <Typography variant="body2">
+                    <strong>Conseil :</strong> Vérifiez les jours de travail de
+                    cet employé dans la section Administration ou choisissez un
+                    autre employé disponible ce jour.
+                  </Typography>
+                </Alert>
+              </Box>
+            )}
+          </DialogContent>
+
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={handleCancelWorkdayWarning} variant="outlined">
+              Annuler
+            </Button>
+            <Button
+              onClick={handleConfirmWorkdayWarning}
+              variant="contained"
+              color="warning"
+              startIcon={<Warning />}
+            >
+              Créer malgré tout
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog pour les employés manquants */}
+        {/* TODO fusionner avec celle des collectes ? */}
+        <Dialog
+          open={showMissingEmployeesDialog}
+          onClose={() => setShowMissingEmployeesDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              color: "#ff9800",
+            }}
+          >
+            <Warning sx={{ fontSize: 28 }} />
+            <Typography variant="h6" fontWeight="bold">
+              Employés Non Configurés
+            </Typography>
+          </DialogTitle>
+
+          <DialogContent>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Certains employés ne sont pas visibles dans le planning car ils ne
+              sont pas encore configurés.
+            </Alert>
+
+            <Typography variant="body1" sx={{ mb: 2, fontWeight: "medium" }}>
+              Pour qu'un employé apparaisse dans le planning, il doit :
             </Typography>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Tâches en conflit :
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="body2"
+                sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <Settings sx={{ fontSize: 16, color: "#2196f3" }} />
+                <strong>1. Être affecté à un magasin</strong>
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <PersonAdd sx={{ fontSize: 16, color: "#4caf50" }} />
+                <strong>2. Avoir des jours de travail configurés</strong>
+              </Typography>
+            </Box>
+
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+              Employés à configurer ({missingEmployees.length}) :
             </Typography>
 
-            <Box
+            <List
               sx={{
-                maxHeight: 200,
+                maxHeight: 300,
                 overflow: "auto",
                 border: "1px solid #e0e0e0",
                 borderRadius: 1,
-                p: 1,
               }}
             >
-              {conflictInfo?.conflicts?.map((conflict, index) => (
-                <Box
-                  key={index}
+              {missingEmployees.map((employee, index) => (
+                <ListItem
+                  key={employee.id}
                   sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    py: 1,
                     borderBottom:
-                      index < conflictInfo.conflicts.length - 1
+                      index < missingEmployees.length - 1
                         ? "1px solid #f0f0f0"
                         : "none",
+                    py: 1.5,
                   }}
                 >
-                  <Box>
-                    <Typography variant="body2" fontWeight="bold">
-                      {conflict.task_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {conflict.store_name}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="primary">
-                    {conflict.start_time} - {conflict.end_time}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Voulez-vous continuer malgré le conflit ?
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelConflict} color="inherit">
-            Annuler
-          </Button>
-          <Button
-            onClick={handleConfirmConflict}
-            variant="contained"
-            color="warning"
-          >
-            Continuer malgré le conflit
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog pour l'alerte de jour de travail */}
-      <Dialog
-        open={showWorkdayWarning}
-        onClose={handleCancelWorkdayWarning}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "#ff9800",
-          }}
-        >
-          <Warning sx={{ fontSize: 28 }} />
-          <Typography variant="h6" fontWeight="bold">
-            Employé Non Disponible
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            L'employé sélectionné ne travaille pas le jour choisi.
-          </Alert>
-
-          {workdayWarningInfo && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                <strong>{workdayWarningInfo.employeeName}</strong> ne travaille
-                pas le <strong>{workdayWarningInfo.dayOfWeek}</strong> (
-                {workdayWarningInfo.date}).
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Créneau sélectionné :{" "}
-                <strong>{workdayWarningInfo.timeSlot}</strong>
-              </Typography>
-
-              <Alert severity="info">
-                <Typography variant="body2">
-                  <strong>Conseil :</strong> Vérifiez les jours de travail de
-                  cet employé dans la section Administration ou choisissez un
-                  autre employé disponible ce jour.
-                </Typography>
-              </Alert>
-            </Box>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleCancelWorkdayWarning} variant="outlined">
-            Annuler
-          </Button>
-          <Button
-            onClick={handleConfirmWorkdayWarning}
-            variant="contained"
-            color="warning"
-            startIcon={<Warning />}
-          >
-            Créer malgré tout
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog pour les employés manquants */}
-      {/* TODO fusionner avec celle des collectes ? */}
-      <Dialog
-        open={showMissingEmployeesDialog}
-        onClose={() => setShowMissingEmployeesDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "#ff9800",
-          }}
-        >
-          <Warning sx={{ fontSize: 28 }} />
-          <Typography variant="h6" fontWeight="bold">
-            Employés Non Configurés
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Certains employés ne sont pas visibles dans le planning car ils ne
-            sont pas encore configurés.
-          </Alert>
-
-          <Typography variant="body1" sx={{ mb: 2, fontWeight: "medium" }}>
-            Pour qu'un employé apparaisse dans le planning, il doit :
-          </Typography>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              variant="body2"
-              sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Settings sx={{ fontSize: 16, color: "#2196f3" }} />
-              <strong>1. Être affecté à un magasin</strong>
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <PersonAdd sx={{ fontSize: 16, color: "#4caf50" }} />
-              <strong>2. Avoir des jours de travail configurés</strong>
-            </Typography>
-          </Box>
-
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-            Employés à configurer ({missingEmployees.length}) :
-          </Typography>
-
-          <List
-            sx={{
-              maxHeight: 300,
-              overflow: "auto",
-              border: "1px solid #e0e0e0",
-              borderRadius: 1,
-            }}
-          >
-            {missingEmployees.map((employee, index) => (
-              <ListItem
-                key={employee.id}
-                sx={{
-                  borderBottom:
-                    index < missingEmployees.length - 1
-                      ? "1px solid #f0f0f0"
-                      : "none",
-                  py: 1.5,
-                }}
-              >
-                <ListItemIcon>
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: "#ff9800" }}>
-                    <Person sx={{ fontSize: 18 }} />
-                  </Avatar>
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Typography variant="body1" fontWeight="medium">
-                      {employee.fullName}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {employee.email}
+                  <ListItemIcon>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: "#ff9800" }}>
+                      <Person sx={{ fontSize: 18 }} />
+                    </Avatar>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography variant="body1" fontWeight="medium">
+                        {employee.fullName}
                       </Typography>
-                      <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          label="Pas d'affectation magasin"
-                          size="small"
-                          color="warning"
-                          sx={{ mr: 1, fontSize: "0.7rem" }}
-                        />
-                        <Chip
-                          label="Pas de jours de travail"
-                          size="small"
-                          color="error"
-                          sx={{ fontSize: "0.7rem" }}
-                        />
+                    }
+                    secondary={
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {employee.email}
+                        </Typography>
+                        <Box sx={{ mt: 0.5 }}>
+                          <Chip
+                            label="Pas d'affectation magasin"
+                            size="small"
+                            color="warning"
+                            sx={{ mr: 1, fontSize: "0.7rem" }}
+                          />
+                          <Chip
+                            label="Pas de jours de travail"
+                            size="small"
+                            color="error"
+                            sx={{ fontSize: "0.7rem" }}
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
 
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Solution :</strong> Allez dans{" "}
-              <strong>Administration → Gestion des Employés</strong>
-              et configurez les affectations aux magasins et les jours de
-              travail pour ces employés.
-            </Typography>
-          </Alert>
-        </DialogContent>
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Solution :</strong> Allez dans{" "}
+                <strong>Administration → Gestion des Employés</strong>
+                et configurez les affectations aux magasins et les jours de
+                travail pour ces employés.
+              </Typography>
+            </Alert>
+          </DialogContent>
 
-        <DialogActions sx={{ p: 2 }}>
-          <Button
-            onClick={() => setShowMissingEmployeesDialog(false)}
-            variant="outlined"
-          >
-            Fermer
-          </Button>
-          <Button
-            onClick={() => {
-              setShowMissingEmployeesDialog(false);
-              // Rediriger vers la page d'administration
-              window.location.href = "/admin";
-            }}
-            variant="contained"
-            color="primary"
-            startIcon={<Settings />}
-          >
-            Aller à l'Administration
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <DialogActions sx={{ p: 2 }}>
+            <Button
+              onClick={() => setShowMissingEmployeesDialog(false)}
+              variant="outlined"
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={() => {
+                setShowMissingEmployeesDialog(false);
+                // Rediriger vers la page d'administration
+                window.location.href = "/admin";
+              }}
+              variant="contained"
+              color="primary"
+              startIcon={<Settings />}
+            >
+              Aller à l'Administration
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Dialogue d'assignation des employés depuis le planning */}
-      <TaskAssignmentDialog
-        open={openTaskAssignmentDialog}
-        onClose={handleCloseTaskAssignmentDialog}
-        selectedTask={selectedTaskForAssignment}
-        assignedEmployees={taskAssignedEmployees}
-        availableEmployees={availableEmployeesForTask}
-        onAssignEmployee={handleAssignEmployeeToTask}
-        onUnassignEmployee={handleUnassignEmployeeFromTask}
-      />
-    </Box>
-  );
+        {/* Dialogue d'assignation des employés depuis le planning */}
+        <TaskAssignmentDialog
+          open={openTaskAssignmentDialog}
+          onClose={handleCloseTaskAssignmentDialog}
+          selectedTask={selectedTaskForAssignment}
+          assignedEmployees={taskAssignedEmployees}
+          availableEmployees={availableEmployeesForTask}
+          onAssignEmployee={handleAssignEmployeeToTask}
+          onUnassignEmployee={handleUnassignEmployeeFromTask}
+        />
+      </Box>
+      );
 };
 
-export default Planning;
+      export default Planning;

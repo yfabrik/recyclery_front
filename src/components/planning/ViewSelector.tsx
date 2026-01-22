@@ -1,16 +1,30 @@
 import { CalendarToday, ViewDay, ViewWeek } from "@mui/icons-material";
 import { Box, Typography } from "@mui/material";
+import type { ReactNode } from "react";
 
-interface ViewProps {
-  viewMode: string;
-  setViewMode: (s: string) => void;
+export type ViewMode = "calendar" | "day" | "week";
+
+interface ViewSelectorProps {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 }
-export const ViewSelector = ({ setViewMode, viewMode }: ViewProps) => {
-  const viewModes = [
+
+interface ViewOption {
+  value: ViewMode;
+  label: string;
+  icon: ReactNode;
+}
+
+export const ViewSelector = ({
+  setViewMode,
+  viewMode,
+}: ViewSelectorProps) => {
+  const viewModes: ViewOption[] = [
     { value: "calendar", label: "Calendrier", icon: <CalendarToday /> },
     { value: "week", label: "Semaine", icon: <ViewWeek /> },
     { value: "day", label: "Jour", icon: <ViewDay /> },
   ];
+
   return (
     <Box sx={{ display: "flex", gap: 1 }}>
       {viewModes.map((view) => (
@@ -31,7 +45,11 @@ export const ViewSelector = ({ setViewMode, viewMode }: ViewProps) => {
             },
           }}
         >
-          <Typography variant="body2" fontWeight="500">
+          <Typography
+            variant="body2"
+            fontWeight="500"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
             {view.icon} {view.label}
           </Typography>
         </Box>
