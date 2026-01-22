@@ -27,13 +27,17 @@ import {
   Typography,
 } from "@mui/material";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import { addEmployeeToTask, getEmployeesForTask, removeEmployeeFromTask } from "../../services/api/tasks";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { getAvailableUserForTask } from "../../services/api/planning";
 
 interface TaskAssignmentDialogTitleProps {
   taskName: string;
   storeName: string;
 }
 // Dialog Title Component
-const TaskAssignmentDialogTitle = ({ taskName, storeName }:TaskAssignmentDialogTitleProps) => {
+const TaskAssignmentDialogTitle = ({ taskName, storeName }: TaskAssignmentDialogTitleProps) => {
   return (
     <DialogTitle>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -55,11 +59,11 @@ interface TaskAssignmentDialogInfoProps {
   scheduledDate: string;
 }
 // Info Message Component
-const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }:TaskAssignmentDialogInfoProps) => {
+const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }: TaskAssignmentDialogInfoProps) => {
   const dayName = scheduledDate
     ? new Date(scheduledDate).toLocaleDateString("fr-FR", {
-        weekday: "long",
-      })
+      weekday: "long",
+    })
     : "jour sélectionné";
 
   return (
@@ -92,14 +96,14 @@ interface TaskAssignmentEmployeeCardProps {
   onUnassign?: (employeeId: number) => void;
   isAssignedToOtherTask: boolean;
 }
-  // Employee Card Component
+// Employee Card Component
 const TaskAssignmentEmployeeCard = ({
   employee,
   type = "available", // "assigned" or "available"
-  onAssign = () => {},
-  onUnassign = () => {},
+  onAssign = () => { },
+  onUnassign = () => { },
   isAssignedToOtherTask = false,
-}:TaskAssignmentEmployeeCardProps) => {
+}: TaskAssignmentEmployeeCardProps) => {
   const isAssigned = type === "assigned";
 
   if (isAssigned) {
@@ -206,7 +210,7 @@ const TaskAssignmentEmployeeCard = ({
               <Tooltip title="Employé occupé à ce moment">
                 <Block color="error" sx={{ fontSize: 20 }} />
               </Tooltip>
-            ) : employee.already_assigned ? (
+            ) : (employee as any).already_assigned ? (
               <Tooltip title="Déjà assigné à cette tâche">
                 <Person color="primary" sx={{ fontSize: 20 }} />
               </Tooltip>
@@ -245,7 +249,7 @@ const TaskAssignmentEmployeeCard = ({
                   sx={{ fontSize: "0.7rem" }}
                 />
               </Tooltip>
-            ) : employee.already_assigned ? (
+            ) : (employee as any).already_assigned ? (
               <Tooltip title="Déjà assigné à cette tâche">
                 <Chip
                   icon={<Person />}
@@ -301,8 +305,8 @@ const TaskAssignmentEmployeeCard = ({
 
         {/* Message d'information pour les employés occupés */}
         {isAssignedToOtherTask &&
-          employee.conflicts &&
-          employee.conflicts.length > 0 && (
+          (employee as any).conflicts &&
+          (employee as any).conflicts.length > 0 && (
             <Box
               sx={{
                 mt: 1,
@@ -334,6 +338,7 @@ interface TaskAssignmentDialogProps {
   availableEmployees: EmployeeModel[];
   onAssignEmployee: (employeeId: number) => void;
   onUnassignEmployee: (employeeId: number) => void;
+  onCloseWithChanges?: () => void; // Callback triggered when dialog closes AND changes were made
 }
 // Main Compound Component
 const TaskAssignmentDialog = ({
@@ -344,21 +349,136 @@ const TaskAssignmentDialog = ({
   availableEmployees,
   onAssignEmployee,
   onUnassignEmployee,
-}:TaskAssignmentDialogProps) => {
-  const filteredAvailableEmployees = availableEmployees.filter(
-    (emp) => !assignedEmployees.some((assigned) => assigned.id === emp.id)
+  onCloseWithChanges,
+}: TaskAssignmentDialogProps) => {
+  const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<EmployeeModel[]>(assignedEmployees);
+  const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<EmployeeModel[]>(availableEmployees);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for useEffect
+  const [hasChanges, setHasChanges] = useState(false); // Track if any changes were made
+
+  // Refetch data when dialog opens, selectedTask changes, or refreshTrigger changes
+  useEffect(() => {
+    if (!open || !selectedTask?.id) return;
+
+    const fetchData = async () => {
+      try {
+        // Fetch assigned employees
+        const assignedResponse = await getEmployeesForTask(selectedTask.id);
+        setTaskAssignedEmployees(assignedResponse.data.employees || []);
+
+        // Fetch available employees
+        const availableResponse = await getAvailableUserForTask(selectedTask.id);
+        // const availableResponse = await getEmployees({}); // TODO add in backend filter for day
+        setAvailableEmployeesForTask(availableResponse.data.employees || []);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      }
+    };
+
+    fetchData();
+  }, [open, selectedTask?.id, refreshTrigger]);
+
+  // Filter available employees (exclude already assigned)
+  const filteredAvailableEmployees = availableEmployeesForTask.filter(
+    (emp) => !taskAssignedEmployees.some((assigned) => assigned.id === emp.id)
   );
+  // Fonction pour assigner un employé à une tâche spécifique
+  const handleAssignEmployee = async (employeeId: number) => {
+    if (!selectedTask?.id) {
+      toast.error("Erreur: Tâche non sélectionnée");
+      return;
+    }
+
+    try {
+      await addEmployeeToTask(selectedTask.id, employeeId);
+
+      // Mettre à jour la liste des employés assignés
+      const employee = availableEmployeesForTask.find(
+        (emp) => emp.id === employeeId,
+      );
+      if (employee) {
+        setTaskAssignedEmployees((prev) => [...prev, employee]);
+      }
+
+      toast.success("Employé assigné avec succès");
+
+      // Mark that changes were made
+      setHasChanges(true);
+
+      // Trigger refresh
+      setRefreshTrigger((prev) => prev + 1);
+
+      // Also call parent handler if provided
+      onAssignEmployee?.(employeeId);
+    } catch (error: any) {
+      console.error("Erreur lors de l'assignation:", error);
+
+      // Gérer spécifiquement les erreurs de conflit d'horaires
+      if (
+        error.response &&
+        error.response.status === 400 &&
+        error.response.data.message
+      ) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Erreur lors de l'assignation");
+      }
+    }
+  };
+
+  // Fonction pour retirer un employé d'une tâche spécifique
+  const handleUnassignEmployee = async (employeeId: number) => {
+    if (!selectedTask?.id) {
+      toast.error("Erreur: Tâche non sélectionnée");
+      return;
+    }
+
+    try {
+      await removeEmployeeFromTask(selectedTask.id, employeeId);
+
+      // Mettre à jour la liste des employés assignés
+      setTaskAssignedEmployees((prev) =>
+        prev.filter((emp) => emp.id !== employeeId),
+      );
+
+      toast.success("Employé retiré avec succès");
+
+      // Mark that changes were made
+      setHasChanges(true);
+
+      // Trigger refresh
+      setRefreshTrigger((prev) => prev + 1);
+
+      // Also call parent handler if provided
+      onUnassignEmployee?.(employeeId);
+    } catch (error: unknown) {
+      console.error("Erreur lors du retrait:", error);
+      toast.error("Erreur lors du retrait");
+    }
+  };
+
+  // Handle dialog close - trigger callback if changes were made
+  const handleClose = () => {
+    if (hasChanges && onCloseWithChanges) {
+      onCloseWithChanges();
+    }
+    onClose();
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <TaskAssignmentDialogTitle
         taskName={selectedTask?.name}
         storeName={selectedTask?.store_name}
       />
       <DialogContent>
         <TaskAssignmentDialogInfo
-          storeName={selectedTask?.store_name}
-          scheduledDate={selectedTask?.scheduled_date}
+          storeName={(selectedTask as any)?.store_name || ""}
+          scheduledDate={
+            selectedTask?.scheduled_date
+              ? String(selectedTask.scheduled_date)
+              : ""
+          }
         />
 
         <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -370,17 +490,18 @@ const TaskAssignmentDialog = ({
               sx={{ display: "flex", alignItems: "center", gap: 1 }}
             >
               <Person color="primary" />
-              Employés assignés ({assignedEmployees.length})
+              Employés assignés ({taskAssignedEmployees.length})
             </Typography>
             <Box sx={{ maxHeight: 300, overflow: "auto" }}>
-              {assignedEmployees.length > 0 ? (
+              {taskAssignedEmployees.length > 0 ? (
                 <Stack spacing={1}>
-                  {assignedEmployees.map((employee) => (
+                  {taskAssignedEmployees.map((employee) => (
                     <TaskAssignmentEmployeeCard
                       key={employee.id}
                       employee={employee}
                       type="assigned"
-                      onUnassign={onUnassignEmployee}
+                      onUnassign={handleUnassignEmployee}
+                      isAssignedToOtherTask={false}
                     />
                   ))}
                 </Stack>
@@ -422,8 +543,8 @@ const TaskAssignmentDialog = ({
                   key={employee.id}
                   employee={employee}
                   type="available"
-                  onAssign={onAssignEmployee}
-                  isAssignedToOtherTask={employee.is_assigned_to_task}
+                  onAssign={handleAssignEmployee}
+                  isAssignedToOtherTask={(employee as any).is_assigned_to_task || false}
                 />
               ))}
             </Box>
@@ -431,7 +552,7 @@ const TaskAssignmentDialog = ({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Fermer</Button>
+        <Button onClick={handleClose}>Fermer</Button>
       </DialogActions>
     </Dialog>
   );

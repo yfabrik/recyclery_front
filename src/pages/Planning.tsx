@@ -1,7 +1,6 @@
 import {
   Add,
   Assignment,
-  CalendarToday,
   Flag,
   FlagOutlined,
   Person,
@@ -12,8 +11,6 @@ import {
   Settings,
   Stop,
   Task,
-  ViewDay,
-  ViewWeek,
   Warning,
 } from "@mui/icons-material";
 import {
@@ -1268,8 +1265,12 @@ const Planning = () => {
           selectedTask={selectedTaskForAssignment}
           assignedEmployees={taskAssignedEmployees}
           availableEmployees={availableEmployeesForTask}
-          onAssignEmployee={handleAssignEmployeeToTask}
-          onUnassignEmployee={handleUnassignEmployeeFromTask}
+          // onAssignEmployee={handleAssignEmployeeToTask}
+          // onUnassignEmployee={handleUnassignEmployeeFromTask}
+          onCloseWithChanges={() => {
+            // Only refetch schedules if changes were made when dialog closes
+            fetchSchedules();
+          }}
         />
       </Box>
       );
