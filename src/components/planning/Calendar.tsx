@@ -1,5 +1,5 @@
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
-import { DAYS_OF_WEEK } from "../interfaces/shared";
+import { DAYS_OF_WEEK } from "../../interfaces/shared";
 import {
   Add,
   Assignment,
@@ -10,7 +10,7 @@ import {
   Store,
 } from "@mui/icons-material";
 import { useState } from "react";
-import { useEmployee } from "../services/useEmployee";
+import { useEmployee } from "../../services/useEmployee";
 interface Task {
   scheduled_date: Date;
   task_employees: { username: string }[];

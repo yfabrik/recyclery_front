@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Calendar } from "./Calendar";
+import { Calendar } from "./planning/Calendar";
 
 const meta = {
   component: Calendar,
