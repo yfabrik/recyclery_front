@@ -221,7 +221,6 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   handleOpenDialog,
   handleDeleteTask,
 }) => {
-  console.log(schedule)
   const periode = `${new Date(schedule.start_time).toLocaleTimeString("fr-FR", {
     hour: "2-digit",
     minute: "2-digit",

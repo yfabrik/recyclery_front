@@ -136,7 +136,6 @@ const WeekViewSections = ({
               emptyText="Aucune tâche"
             >
               {daySchedules.map((schedule, j) => {
-                console.log("sss", schedule);
 
                 return (
                   <TaskCardContent
