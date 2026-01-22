@@ -15,7 +15,7 @@ import {
 
 } from "@mui/material";
 import React, { type ReactNode } from "react";
-import type { UserModel } from "../../../interfaces/Models";
+import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 
 // Extended schedule interface with additional fields used in the component
 interface Schedule {
@@ -25,7 +25,7 @@ interface Schedule {
   end_time: string;
   scheduled_date: Date | string;
   store_name?: string;
-  assigned_employees?: (UserModel & { initials?: string })[];
+  assigned_employees?: (EmployeeModel & { initials?: string })[];
   location_name?: string;
   [key: string]: unknown;
 }
@@ -50,19 +50,19 @@ interface TaskCardProps {
 }
 
 interface TaskCardContentProps {
-  schedule: Schedule;
+  schedule: TaskModel;
   getEmployeeColor: (username: string) => string;
   getEmployeeInitials: (username: string) => string;
-  handleAssignEmployeesToTask: (schedule: Schedule) => void;
-  handleOpenDialog: (schedule: Schedule) => void;
-  handleDeleteTask: (schedule: Schedule) => void;
+  handleAssignEmployeesToTask: (schedule: TaskModel) => void;
+  handleOpenDialog: (schedule: TaskModel) => void;
+  handleDeleteTask: (schedule: TaskModel) => void;
 }
 
 interface TaskCardControlsProps {
-  handleAssignEmployeesToTask: (schedule: Schedule) => void;
-  handleOpenDialog: (schedule: Schedule) => void;
-  handleDeleteTask: (schedule: Schedule) => void;
-  schedule: Schedule;
+  handleAssignEmployeesToTask: (schedule: TaskModel) => void;
+  handleOpenDialog: (schedule: TaskModel) => void;
+  handleDeleteTask: (schedule: TaskModel) => void;
+  schedule: TaskModel;
 }
 
 interface TaskCss {
@@ -221,6 +221,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   handleOpenDialog,
   handleDeleteTask,
 }) => {
+  console.log(schedule)
   const periode = `${new Date(schedule.start_time).toLocaleTimeString("fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -343,14 +344,15 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
           display="block"
           sx={{ fontWeight: "bold", color: "#2196f3" }}
         >
-          🏪 {schedule.store_name || "Magasin non assigné"}
+          🏪 {schedule.name || "Magasin non assigné"}
+        
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           {periode}
         </Typography>
-
-        {schedule.assigned_employees &&
-          schedule.assigned_employees.length > 0 && (
+          {/* //TODO assigned doesnt exist */}
+        {schedule.Employees &&
+          schedule.Employees.length > 0 && (
             <Box
               sx={{
                 display: "flex",
@@ -372,7 +374,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                   textAlign: "center",
                 }}
               >
-                👥 Employés ({schedule.assigned_employees.length})
+                👥 Employés ({schedule?.Employees?.length ||"0"})
               </Typography>
               <Box
                 sx={{
@@ -382,7 +384,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                   alignItems: "center",
                 }}
               >
-                {schedule.assigned_employees.map((emp, idx) => (
+                {schedule?.Employees?.map((emp, idx) => (
                   <Box
                     key={idx}
                     sx={{
@@ -402,13 +404,13 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                         width: 16,
                         height: 16,
                         fontSize: taskCss.fontSize,
-                        bgcolor: getEmployeeColor(emp.username),
+                        bgcolor: getEmployeeColor(emp.fullName),
                         color: "white",
                         fontWeight: "bold",
                       }}
-                      title={emp.username}
+                      title={emp.fullName}
                     >
-                      {emp.initials || getEmployeeInitials(emp.username)}
+                      {emp.initials || getEmployeeInitials(emp.fullName)}
                     </Avatar>
                     <Typography
                       variant="caption"
@@ -419,7 +421,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {emp.username}
+                      {emp.fullName}
                     </Typography>
                   </Box>
                 ))}
