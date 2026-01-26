@@ -7,14 +7,19 @@ import { Euro } from "@mui/icons-material";
 import * as z from "zod";
 import { emptyStringToNull } from "../../services/zodTransform";
 
-const schema = z.object({
-  payment_method: z.enum(["cash", "card", "check"]),
-  payment_amount: z.coerce.number(),
-  customer_name: z.string().transform((val) => (val == "" ? null : val)),
-  customer_email: z.union([z.email(), z.literal("").transform(() => null)]),
-});
+type Schema = z.infer<ReturnType<typeof createSchema>>;
 
-type Schema = z.infer<typeof schema>;
+const createSchema = (totalCart: number) =>
+  z.object({
+    payment_method: z.enum(["cash", "card", "check"]),
+    payment_amount: z
+      .coerce.number()
+      .min(totalCart, {
+        message: `Le montant payé ne peut pas être inférieur au total du panier (${totalCart.toFixed(2)}€)`,
+      }),
+    customer_name: z.string().transform((val) => (val == "" ? null : val)),
+    customer_email: z.union([z.email(), z.literal("").transform(() => null)]),
+  });
 
 export const EncaissementForm = ({
   formId,
@@ -23,11 +28,12 @@ export const EncaissementForm = ({
   totalCart,
 }: BaseFormProps<Schema> & { totalCart: number }) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
+  const schema = createSchema(totalCart);
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      payment_method: "",
+      payment_method: "cash" as const,
       payment_amount: "",
       customer_name: "",
       customer_email: "",
@@ -36,6 +42,12 @@ export const EncaissementForm = ({
   });
 
   const payment_amount = form.watch("payment_amount");
+  const paymentAmountNum =
+    typeof payment_amount === "string"
+      ? parseFloat(payment_amount) || 0
+      : typeof payment_amount === "number"
+        ? payment_amount
+        : 0;
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -76,11 +88,10 @@ export const EncaissementForm = ({
           />
         </Grid>
 
-        {parseFloat(payment_amount) > totalCart && (
+        {paymentAmountNum > totalCart && (
           <Grid size={{ xs: 12 }}>
             <Alert severity="info">
-              Rendu à donner:{" "}
-              {(parseFloat(data.payment_amount) - totalCart).toFixed(2)}€
+              Rendu à donner: {(paymentAmountNum - totalCart).toFixed(2)}€
             </Alert>
           </Grid>
         )}
