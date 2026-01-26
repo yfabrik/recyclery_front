@@ -1,22 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useForm, useWatch, type Control } from "react-hook-form";
-import {
-    FormInput,
-    FormSelect,
-    type BaseFormProps
-} from "./FormBase";
+import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
 import { Euro, Scale } from "@mui/icons-material";
 import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
+import { usePrompt } from "../Prompt";
+import { idSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  category_id: z.coerce.number(),
-  subcategory_id: z.coerce.number(),
-  weight: z.coerce.number(),
-  price: z.coerce.number(),
-  description:z.string()
+  category_id: idSchema("categorie requis"),
+  subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
+  weight: z.coerce.number().positive(),
+  price: z.coerce.number("prix requis").positive("prix requis"),
+  description: z.string(),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -25,21 +24,26 @@ export const ManualItemForm = ({
   onSubmit,
   defaultValues,
   categories,
-  OpenKeypad,
 }: BaseFormProps<Schema> & {
   categories: CategoryModel[];
-  OpenKeypad: (a: boolean) => void;
 }) => {
-  const form = useForm<Schema>({
+  const { prompt, PromptDialog } = usePrompt();
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      ...(defaultValues ?? {}),
+      category_id: "",
+      subcategory_id: "",
+      weight: "",
+      price: "",
+      description: "",
+      ...data,
     },
   });
 
   const SubCategories = ({ control }: { control: Control<Schema> }) => {
     const category = useWatch({
-      control:control,
+      control: control,
       name: "category_id",
     });
     const subcats =
@@ -62,82 +66,103 @@ export const ManualItemForm = ({
   };
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect
-            control={form.control}
-            name="category_id"
-            label="Catégorie"
-          >
-            {categories.map((category) => (
-              <MenuItem key={category.id} value={category.id}>
-                {category.name}
-              </MenuItem>
-            ))}
-          </FormSelect>
-        </Grid>
+    <>
+      <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormSelect
+              control={form.control}
+              name="category_id"
+              label="Catégorie"
+            >
+              {categories.map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </FormSelect>
+          </Grid>
 
-        {/* Sous-catégorie si disponible */}
+          {/* Sous-catégorie si disponible */}
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SubCategories control={form.control} />
-        </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <SubCategories control={form.control} />
+          </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput
-            control={form.control}
-            label="Poids (kg) - Optionnel"
-            name="weight"
-            extra={{
-              onClick: () => OpenKeypad(true),
-              sx: {
-                "& .MuiInputBase-input": {
-                  cursor: "pointer",
-                  backgroundColor: "#f8f9fa",
-                },
-              },
-              placeholder: "Cliquez pour saisir",
-              slotProps: {
-                input: {
-                  startAdornment: (
-                    <Scale sx={{ mr: 1, color: "text.secondary" }} />
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormInput
+              control={form.control}
+              label="Poids (kg) - Optionnel"
+              name="weight"
+              extra={{
+                onClick: async () =>
+                  form.setValue(
+                    "weight",
+                    await prompt(
+                      "",
+                      form.getValues("weight")?.toString() || "",
+                      {
+                        unit: "Kg",
+                      },
+                    ),
                   ),
-                  readOnly: true,
+                sx: {
+                  "& .MuiInputBase-input": {
+                    cursor: "pointer",
+                    backgroundColor: "#f8f9fa",
+                  },
                 },
-              },
-            }}
-          />
-        </Grid>
+                placeholder: "Cliquez pour saisir",
+                slotProps: {
+                  input: {
+                    startAdornment: (
+                      <Scale sx={{ mr: 1, color: "text.secondary" }} />
+                    ),
+                    readOnly: true,
+                  },
+                },
+              }}
+            />
+          </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput
-            label="Prix de vente (€)"
-            control={form.control}
-            name="price"
-            extra={{
-              onClick: () => OpenKeypad(true),
-              sx: {
-                "& .MuiInputBase-input": {
-                  cursor: "pointer",
-                  backgroundColor: "#f8f9fa",
-                },
-              },
-              placeholder: "Cliquez pour saisir",
-              slotProps: {
-                input: {
-                  startAdornment: (
-                    <Euro sx={{ mr: 1, color: "text.secondary" }} />
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormInput
+              label="Prix de vente (€)"
+              control={form.control}
+              name="price"
+              extra={{
+                onClick: async () =>
+                  form.setValue(
+                    "price",
+                    await prompt(
+                      "",
+                      form.getValues("price")?.toString() || "",
+                      {
+                        unit: "€",
+                      },
+                    ),
                   ),
-                  readOnly: true,
+                sx: {
+                  "& .MuiInputBase-input": {
+                    cursor: "pointer",
+                    backgroundColor: "#f8f9fa",
+                  },
                 },
-              },
-            }}
-          />
-        </Grid>
+                placeholder: "Cliquez pour saisir",
+                slotProps: {
+                  input: {
+                    startAdornment: (
+                      <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                    ),
+                    readOnly: true,
+                  },
+                },
+              }}
+            />
+          </Grid>
 
-        {/* Aperçu du nom généré */}
-        {/* {(manualItemData.category_id || manualItemData.subcategory_id) && (
+          {/* Aperçu du nom généré */}
+          {/* {(manualItemData.category_id || manualItemData.subcategory_id) && (
           <Grid size={{ xs: 12 }}>
             <Box
               sx={{
@@ -176,19 +201,21 @@ export const ManualItemForm = ({
           </Grid>
         )} */}
 
-        <Grid size={{ xs: 12 }}>
-          <FormInput
-            label="Description (optionnelle)"
-            control={form.control}
-            name="description"
-            extra={{
-              multiline: true,
-              rows: 2,
-              placeholder: "Description de l'article...",
-            }}
-          />
+          <Grid size={{ xs: 12 }}>
+            <FormInput
+              label="Description (optionnelle)"
+              control={form.control}
+              name="description"
+              extra={{
+                multiline: true,
+                rows: 2,
+                placeholder: "Description de l'article...",
+              }}
+            />
+          </Grid>
         </Grid>
-      </Grid>
-    </form>
+      </form>
+      {PromptDialog}
+    </>
   );
 };

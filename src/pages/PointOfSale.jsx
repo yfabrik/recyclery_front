@@ -1,16 +1,12 @@
 import {
   AccountBalance,
   Add,
-  AttachMoney,
-  CheckCircle,
   Close,
-  Euro,
   Payment,
   PointOfSale as PosIcon,
   QrCodeScanner,
   Remove,
-  Scale,
-  ShoppingCart,
+  ShoppingCart
 } from "@mui/icons-material";
 import {
   Alert,
@@ -23,14 +19,9 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  FormControl,
   Grid,
   IconButton,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -38,12 +29,14 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import MoneyCounter from "../components/MoneyCounter";
-import NumericKeypad from "../components/NumericKeypad";
+import { CloseCaisseForm } from "../components/forms/CloseCaisseForm";
+import { EncaissementForm } from "../components/forms/EncaissementForm";
+import { ManualItemForm } from "../components/forms/ManualItemForm";
+import { OpenCaisseForm } from "../components/forms/OpenCaisseForm";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getItemFromBarcode } from "../services/api/labeledItems";
@@ -51,15 +44,13 @@ import {
   OpenCaisse,
   closeCaisse,
   fetchStores as fStores,
-  fetchCaisses,
-  getActiveCaisses,
+  getActiveCaisses
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 const PointOfSale = () => {
   const { user } = useAuth();
   const [activeSession, setActiveSession] = useState(null);
   const [stores, setStores] = useState([]);
-  const [cashRegisters, setCashRegisters] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,28 +58,9 @@ const PointOfSale = () => {
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
-  const [scannerDialog, setScannerDialog] = useState(false);
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [manualItemDialog, setManualItemDialog] = useState(false);
-  const [showOpeningKeypad, setShowOpeningKeypad] = useState(false);
-  const [showClosingKeypad, setShowClosingKeypad] = useState(false);
-  const [showManualWeightKeypad, setShowManualWeightKeypad] = useState(false);
-  const [showManualPriceKeypad, setShowManualPriceKeypad] = useState(false);
-  const [showMoneyCounter, setShowMoneyCounter] = useState(false);
-  const [showClosingMoneyCounter, setShowClosingMoneyCounter] = useState(false);
 
-  // Form data
-  const [sessionData, setSessionData] = useState({
-    store_id: "",
-    cash_register_id: "",
-    opening_amount: "0",
-    notes: "",
-  });
-
-  const [closingData, setClosingData] = useState({
-    closing_amount: "0",
-    notes: "",
-  });
 
   const [scanInput, setScanInput] = useState("");
   const [paymentData, setPaymentData] = useState({
@@ -98,13 +70,6 @@ const PointOfSale = () => {
     customer_email: "",
   });
 
-  const [manualItemData, setManualItemData] = useState({
-    category_id: "",
-    subcategory_id: "",
-    weight: "",
-    price: "",
-    description: "",
-  });
 
   useEffect(() => {
     checkActiveSession();
@@ -134,82 +99,34 @@ const PointOfSale = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat();
+      const response = await fcat({ include: "Category", only_category: true });
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error("Erreur lors du chargement des catégories:", error);
     }
   };
 
-  const fetchCashRegisters = async (storeId) => {
-    try {
-      const response = await fetchCaisses(storeId);
-      setCashRegisters(response.data.data || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des caisses:", error);
-      toast.error("Erreur lors du chargement des caisses");
-    }
-  };
 
-  const handleStoreChange = (storeId) => {
-    setSessionData((prev) => ({
-      ...prev,
-      store_id: storeId,
-      cash_register_id: "",
-    }));
-    if (storeId) {
-      fetchCashRegisters(storeId);
-    } else {
-      setCashRegisters([]);
-    }
-  };
-
-  const handleOpenSession = async () => {
+  const handleOpenSession = async (data) => {
     try {
-      if (!sessionData.store_id || !sessionData.cash_register_id) {
-        toast.error("Veuillez sélectionner un magasin et une caisse");
-        return;
-      }
-      const response = await OpenCaisse(sessionData);
+     
+      const response = await OpenCaisse(data);
 
       toast.success("Session ouverte avec succès");
       setOpenSessionDialog(false);
       checkActiveSession();
 
-      // Reset form
-      setSessionData({
-        store_id: "",
-        cash_register_id: "",
-        opening_amount: "0",
-        notes: "",
-      });
     } catch (error) {
       console.error("Erreur lors de l'ouverture:", error);
       toast.error(error.response?.data?.error || "Erreur lors de l'ouverture");
     }
   };
 
-  const handleMoneyCounterChange = (totalAmount) => {
-    setSessionData((prev) => ({
-      ...prev,
-      opening_amount: totalAmount.toFixed(2),
-    }));
-  };
-
-  const handleClosingMoneyCounterChange = (totalAmount) => {
-    setClosingData((prev) => ({
-      ...prev,
-      closing_amount: totalAmount.toFixed(2),
-    }));
-  };
-
-  const handleCloseSession = async () => {
+ 
+  const handleCloseSession = async (data) => {
     try {
-      if (!closingData.closing_amount) {
-        toast.error("Veuillez saisir le montant de fermeture");
-        return;
-      }
-      const response = await closeCaisse(activeSession.id, closingData);
+     
+      const response = await closeCaisse(activeSession.id, data);
 
       const { expected_amount, difference_amount } = response.data;
 
@@ -223,11 +140,6 @@ const PointOfSale = () => {
       setActiveSession(null);
       setCart([]);
 
-      // Reset form
-      setClosingData({
-        closing_amount: "0",
-        notes: "",
-      });
     } catch (error) {
       console.error("Erreur lors de la fermeture:", error);
       toast.error(error.response?.data?.error || "Erreur lors de la fermeture");
@@ -307,20 +219,16 @@ const PointOfSale = () => {
     setCart((prev) => prev.filter((item) => item.barcode !== barcode));
   };
 
-  const handleAddManualItem = () => {
-    if (!manualItemData.category_id || !manualItemData.price) {
-      toast.error("Catégorie et prix sont obligatoires");
-      return;
-    }
+  const handleAddManualItem = (data) => {
 
     // Générer un code-barres temporaire pour l'article manuel
     const tempBarcode = `MANUAL${Date.now()}`;
 
     const selectedCategory = categories.find(
-      (cat) => cat.id == manualItemData.category_id,
+      (cat) => cat.id == data.category_id,
     );
-    const selectedSubcategory = categories.find(
-      (cat) => cat.id == manualItemData.subcategory_id,
+    const selectedSubcategory = selectedCategory.subcategories.find(
+      (cat) => cat.id == data.subcategory_id,
     );
 
     // Générer un nom basé sur la catégorie et sous-catégorie
@@ -335,26 +243,17 @@ const PointOfSale = () => {
       category_id: selectedCategory?.id,
       subcategory_id: selectedSubcategory?.id,
       name: itemName,
-      description: manualItemData.description || "",
+      description: data.description || "",
       category_name: selectedCategory?.name || "",
       subcategory_name: selectedSubcategory?.name || "",
-      price: parseFloat(manualItemData.price),
-      weight: manualItemData.weight ? parseFloat(manualItemData.weight) : null,
+      price: parseFloat(data.price),
+      weight: data.weight ? parseFloat(data.weight) : null,
       quantity: 1,
-      total_price: parseFloat(manualItemData.price),
+      total_price: parseFloat(data.price),
       is_manual: true, // Flag pour identifier les articles manuels
     };
 
     setCart((prev) => [...prev, manualItem]);
-
-    // Reset du formulaire
-    setManualItemData({
-      category_id: "",
-      subcategory_id: "",
-      weight: "",
-      price: "",
-      description: "",
-    });
 
     setManualItemDialog(false);
     toast.success(`${itemName} ajouté au panier`);
@@ -364,14 +263,14 @@ const PointOfSale = () => {
     return cart.reduce((sum, item) => sum + item.total_price, 0);
   };
 
-  const handleProcessPayment = async () => {
+  const handleProcessPayment = async (data) => {
     if (cart.length === 0) {
       toast.error("Le panier est vide");
       return;
     }
 
     const total = getCartTotal();
-    const paymentAmount = parseFloat(paymentData.payment_amount);
+    const paymentAmount = parseFloat(data.payment_amount);
 
     if (paymentAmount < total) {
       toast.error("Le montant payé est insuffisant");
@@ -386,11 +285,11 @@ const PointOfSale = () => {
         cash_session_id: activeSession.id,
         store_id: activeSession.store_id,
         total_amount: total,
-        payment_method: paymentData.payment_method,
+        payment_method: data.payment_method,
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
-        customer_name: paymentData.customer_name || null,
-        customer_email: paymentData.customer_email || null,
+        customer_name: data.customer_name || null,
+        customer_email: data.customer_email || null,
         items: cart.map((item) => ({
           labeled_item_id: item.is_manual ? null : item.id,
           barcode: item.barcode,
@@ -525,7 +424,13 @@ const PointOfSale = () => {
         >
           <DialogTitle>Ouverture de Caisse</DialogTitle>
           <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+            <OpenCaisseForm
+              formId="OpenCaisseForm"
+              onSubmit={handleOpenSession}
+              stores={stores}
+              // cashRegisters={cashRegisters}
+            />
+            {/* <Grid container spacing={2} sx={{ mt: 1 }}>
               <Grid size={{ xs: 12 }}>
                 <FormControl fullWidth required>
                   <InputLabel>Magasin</InputLabel>
@@ -617,17 +522,17 @@ const PointOfSale = () => {
                   }
                 />
               </Grid>
-            </Grid>
+            </Grid> */}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenSessionDialog(false)}>Annuler</Button>
-            <Button onClick={handleOpenSession} variant="contained">
+            <Button type="submit" form="OpenCaisseForm" variant="contained">
               Ouvrir la Caisse
             </Button>
           </DialogActions>
         </Dialog>
         {/* Pavé numérique pour fonds de caisse */}
-        <Dialog
+        {/* <Dialog
           open={showOpeningKeypad}
           onClose={() => setShowOpeningKeypad(false)}
           maxWidth="xs"
@@ -648,9 +553,9 @@ const PointOfSale = () => {
               unit="€"
             />
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
         {/* Dialog compteur de pièces et billets */}
-        <Dialog
+        {/* <Dialog
           open={showMoneyCounter}
           onClose={() => setShowMoneyCounter(false)}
           maxWidth="lg"
@@ -675,7 +580,7 @@ const PointOfSale = () => {
               Valider le montant
             </Button>
           </DialogActions>
-        </Dialog>
+        </Dialog> */}
       </Container>
     );
   }
@@ -945,185 +850,26 @@ const PointOfSale = () => {
       >
         <DialogTitle>Ajouter un Article Manuel</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Catégorie</InputLabel>
-                <Select
-                  value={manualItemData.category_id}
-                  label="Catégorie"
-                  onChange={(e) =>
-                    setManualItemData((prev) => ({
-                      ...prev,
-                      category_id: e.target.value,
-                      subcategory_id: "", // Reset sous-catégorie
-                    }))
-                  }
-                >
-                  {categories
-                    .filter((cat) => !cat.parent_id)
-                    .map((category) => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Sous-catégorie si disponible */}
-            {manualItemData.category_id &&
-              categories.filter(
-                (cat) => cat.parent_id == manualItemData.category_id,
-              ).length > 0 && (
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Sous-catégorie</InputLabel>
-                    <Select
-                      value={manualItemData.subcategory_id}
-                      label="Sous-catégorie"
-                      onChange={(e) =>
-                        setManualItemData((prev) => ({
-                          ...prev,
-                          subcategory_id: e.target.value,
-                        }))
-                      }
-                    >
-                      <MenuItem value="">Aucune</MenuItem>
-                      {categories
-                        .filter(
-                          (cat) => cat.parent_id == manualItemData.category_id,
-                        )
-                        .map((subcategory) => (
-                          <MenuItem key={subcategory.id} value={subcategory.id}>
-                            {subcategory.name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              )}
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Poids (kg) - Optionnel"
-                value={manualItemData.weight}
-                onClick={() => setShowManualWeightKeypad(true)}
-                sx={{
-                  "& .MuiInputBase-input": {
-                    cursor: "pointer",
-                    backgroundColor: "#f8f9fa",
-                  },
-                }}
-                placeholder="Cliquez pour saisir"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <Scale sx={{ mr: 1, color: "text.secondary" }} />
-                    ),
-                    readOnly: true,
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                label="Prix de vente (€)"
-                value={manualItemData.price}
-                onClick={() => setShowManualPriceKeypad(true)}
-                sx={{
-                  "& .MuiInputBase-input": {
-                    cursor: "pointer",
-                    backgroundColor: "#f8f9fa",
-                  },
-                }}
-                placeholder="Cliquez pour saisir"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                    ),
-                    readOnly: true,
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Aperçu du nom généré */}
-            {(manualItemData.category_id || manualItemData.subcategory_id) && (
-              <Grid size={{ xs: 12 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: "grey.50",
-                    borderRadius: 1,
-                    border: "1px solid",
-                    borderColor: "grey.300",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    color="textSecondary"
-                    gutterBottom
-                  >
-                    Aperçu de l'article :
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {(() => {
-                      const selectedCategory = categories.find(
-                        (cat) => cat.id == manualItemData.category_id,
-                      );
-                      const selectedSubcategory = categories.find(
-                        (cat) => cat.id == manualItemData.subcategory_id,
-                      );
-
-                      if (selectedSubcategory) {
-                        return `${selectedSubcategory.name} (${selectedCategory?.name})`;
-                      } else if (selectedCategory) {
-                        return selectedCategory.name;
-                      }
-                      return "Sélectionnez une catégorie";
-                    })()}
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                label="Description (optionnelle)"
-                value={manualItemData.description}
-                onChange={(e) =>
-                  setManualItemData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Description de l'article..."
-              />
-            </Grid>
-          </Grid>
+          <ManualItemForm
+            formId="manualItemForm"
+            categories={categories}
+            onSubmit={handleAddManualItem}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setManualItemDialog(false)}>Annuler</Button>
           <Button
-            onClick={handleAddManualItem}
+            type="submit"
+            form="manualItemForm"
             variant="contained"
-            disabled={!manualItemData.category_id || !manualItemData.price}
+            // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>
         </DialogActions>
       </Dialog>
       {/* Pavé numérique pour poids manuel */}
-      <Dialog
+      {/* <Dialog
         open={showManualWeightKeypad}
         onClose={() => setShowManualWeightKeypad(false)}
         maxWidth="xs"
@@ -1144,9 +890,9 @@ const PointOfSale = () => {
             unit="kg"
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
       {/* Pavé numérique pour prix manuel */}
-      <Dialog
+      {/* <Dialog
         open={showManualPriceKeypad}
         onClose={() => setShowManualPriceKeypad(false)}
         maxWidth="xs"
@@ -1165,7 +911,7 @@ const PointOfSale = () => {
             unit="€"
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
       {/* Dialog de fermeture de session */}
       <Dialog
         open={closeSessionDialog}
@@ -1179,8 +925,12 @@ const PointOfSale = () => {
             Attention: Cette action fermera définitivement votre session de
             caisse.
           </Alert>
+          <CloseCaisseForm
+            formId="closeCaisseForm"
+            onSubmit={handleCloseSession}
+          />
 
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -1230,12 +980,13 @@ const PointOfSale = () => {
                 }
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCloseSessionDialog(false)}>Annuler</Button>
           <Button
-            onClick={handleCloseSession}
+            type="submit"
+            form="closeCaisseForm"
             variant="contained"
             color="error"
           >
@@ -1244,7 +995,7 @@ const PointOfSale = () => {
         </DialogActions>
       </Dialog>
       {/* Pavé numérique pour fermeture */}
-      <Dialog
+      {/* <Dialog
         open={showClosingKeypad}
         onClose={() => setShowClosingKeypad(false)}
         maxWidth="xs"
@@ -1265,9 +1016,9 @@ const PointOfSale = () => {
             unit="€"
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
       {/* Dialog compteur de pièces et billets pour fermeture */}
-      <Dialog
+      {/* <Dialog
         open={showClosingMoneyCounter}
         onClose={() => setShowClosingMoneyCounter(false)}
         maxWidth="lg"
@@ -1279,7 +1030,7 @@ const PointOfSale = () => {
         <DialogContent sx={{ p: 3 }}>
           <MoneyCounter
             onTotalChange={handleClosingMoneyCounterChange}
-            initialAmount={parseFloat(closingData.closing_amount) || 0}
+            initialAmount={ 0}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
@@ -1294,7 +1045,7 @@ const PointOfSale = () => {
             Valider le montant
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
       {/* Dialog de paiement */}
       <Dialog
         open={paymentDialog}
@@ -1304,7 +1055,13 @@ const PointOfSale = () => {
       >
         <DialogTitle>Encaissement</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <EncaissementForm
+            formId="encaissementForm"
+            onSubmit={handleProcessPayment}
+            totalCart={getCartTotal()}
+            defaultValues={paymentData}
+          />
+          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12 }}>
               <Typography variant="h5" color="primary" textAlign="center">
                 Total à encaisser: {getCartTotal().toFixed(2)}€
@@ -1396,12 +1153,13 @@ const PointOfSale = () => {
                 }
               />
             </Grid>
-          </Grid>
+          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPaymentDialog(false)}>Annuler</Button>
           <Button
-            onClick={handleProcessPayment}
+            type="submit"
+            form="encaissementForm"
             variant="contained"
             disabled={
               loading || parseFloat(paymentData.payment_amount) < getCartTotal()
