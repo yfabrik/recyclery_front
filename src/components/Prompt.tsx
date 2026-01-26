@@ -2,28 +2,51 @@ import {
   Box,
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
   Typography,
+  IconButton,
+  TextField,
+  Stack,
+  Card,
+  CardContent,
+  Divider,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Backspace, Check, Clear } from "@mui/icons-material";
+import {
+  Backspace,
+  Check,
+  Clear,
+  Add,
+  Remove,
+  AttachMoney,
+  Euro,
+} from "@mui/icons-material";
 
 type Resolver<T> = (value: T) => void;
+
+type PromptMode = "numeric" | "money";
 
 export function usePrompt() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [value, setValue] = useState("");
+  const [unit, setUnit] = useState("kg");
+  const [mode, setMode] = useState<PromptMode>("numeric");
   const resolverRef = useRef<Resolver<string | null> | null>(null);
 
   const prompt = useCallback(
-    (msg: string, defaultValue = ""): Promise<string | null> => {
+    (
+      msg: string,
+      defaultValue = "",
+      options?: { unit?: string; mode?: PromptMode },
+    ): Promise<string | null> => {
       setMessage(msg);
       setValue(defaultValue || "0");
+      setUnit(options?.unit || "kg");
+      setMode(options?.mode || "numeric");
       setOpen(true);
 
       return new Promise((resolve) => {
@@ -51,15 +74,27 @@ export function usePrompt() {
   };
 
   const PromptDialog = (
-    <Dialog open={open} onClose={handleConfirm}>
+    <Dialog open={open} onClose={handleConfirm} maxWidth={mode === "money" ? "lg" : "sm"}
+      fullWidth>
       <DialogTitle>{message}</DialogTitle>
       <DialogContent>
-        <NumericKeypad
-          onClose={handleConfirm}
-          defaultValue={value || "0"}
-          value={value}
-          setValue={setValue}
-        />
+        {mode === "money" ? (
+          <MoneyCounterPrompt
+            onClose={handleConfirm}
+            defaultValue={value || "0"}
+            value={value}
+            setValue={setValue}
+          />
+        ) : (
+          <NumericKeypad
+            onClose={handleConfirm}
+            defaultValue={value || "0"}
+            value={value}
+            setValue={setValue}
+            unit={unit}
+
+          />
+        )}
       </DialogContent>
       {/* <DialogActions>
         <Button onClick={handleClose}>Annuler</Button>
@@ -92,6 +127,7 @@ const NumericKeypad = ({
   decimalPlaces = 1,
   unit = "kg",
 }: KeypadProps) => {
+
   const addChar = useCallback((char: string | number) => {
     const charStr = char.toString();
     setValue((prev) => {
@@ -405,6 +441,358 @@ const NumericKeypad = ({
           ))}
         </Grid>
       </Box>
+
+      {/* Bouton fermer en bas */}
+      <Box sx={{ mt: 2, textAlign: "center" }}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          startIcon={<Check />}
+          sx={{
+            minWidth: 120,
+            "&:hover": { backgroundColor: "#e8f5e8" },
+          }}
+        >
+          Valider
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+interface MoneyCounterPromptProps {
+  defaultValue: string | number;
+  onClose: () => void;
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+}
+
+// Définition des pièces et billets français
+const MONEY_DENOMINATIONS = [
+  // Pièces
+  { value: 0.01, label: "1 centime", type: "coin", color: "#FFD700" },
+  { value: 0.02, label: "2 centimes", type: "coin", color: "#FFD700" },
+  { value: 0.05, label: "5 centimes", type: "coin", color: "#FFD700" },
+  { value: 0.1, label: "10 centimes", type: "coin", color: "#FFD700" },
+  { value: 0.2, label: "20 centimes", type: "coin", color: "#FFD700" },
+  { value: 0.5, label: "50 centimes", type: "coin", color: "#FFD700" },
+  { value: 1, label: "1 €", type: "coin", color: "#C0C0C0" },
+  { value: 2, label: "2 €", type: "coin", color: "#C0C0C0" },
+
+  // Billets
+  { value: 5, label: "5 €", type: "bill", color: "#87CEEB" },
+  { value: 10, label: "10 €", type: "bill", color: "#98FB98" },
+  { value: 20, label: "20 €", type: "bill", color: "#F0E68C" },
+  { value: 50, label: "50 €", type: "bill", color: "#DDA0DD" },
+  { value: 100, label: "100 €", type: "bill", color: "#F4A460" },
+  { value: 200, label: "200 €", type: "bill", color: "#CD853F" },
+  { value: 500, label: "500 €", type: "bill", color: "#B0C4DE" },
+] as const;
+
+const MoneyCounterPrompt = ({
+  value,
+  setValue,
+  defaultValue,
+  onClose,
+}: MoneyCounterPromptProps) => {
+
+  const [counts, setCounts] = useState<Record<number, number>>({});
+
+  // Initialize counts from defaultValue if provided
+  useEffect(() => {
+    const defaultNum = parseFloat(defaultValue?.toString() || "0");
+    if (defaultNum > 0) {
+      // Try to parse the default value into counts
+      // For simplicity, we'll just set the total value
+      // The user can adjust the counts manually
+    }
+  }, [defaultValue]);
+
+  // Calculate total and update value
+  useEffect(() => {
+    const newTotal = MONEY_DENOMINATIONS.reduce((sum, denom) => {
+      const count = counts[denom.value] || 0;
+      return sum + count * denom.value;
+    }, 0);
+    setValue(newTotal.toFixed(2));
+  }, [counts, setValue]);
+
+  const updateCount = (denomValue: number, change: number) => {
+    setCounts((prev) => ({
+      ...prev,
+      [denomValue]: Math.max(0, (prev[denomValue] || 0) + change),
+    }));
+  };
+
+  const setCount = (denomValue: number, newCount: string) => {
+    setCounts((prev) => ({
+      ...prev,
+      [denomValue]: Math.max(0, parseInt(newCount) || 0),
+    }));
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(amount);
+  };
+
+  const getTotalByType = (type: string) => {
+    return MONEY_DENOMINATIONS.filter((denom) => denom.type === type)
+      .reduce((sum, denom) => {
+        const count = counts[denom.value] || 0;
+        return sum + count * denom.value;
+      }, 0);
+  };
+
+  const coinsTotal = getTotalByType("coin");
+  const billsTotal = getTotalByType("bill");
+  const total = parseFloat(value || "0");
+
+  return (
+    <Box sx={{ minWidth: 280, maxHeight: "70vh", overflow: "auto" }}>
+      {/* Affichage du total */}
+      <Box
+        sx={{
+          mb: 2,
+          p: 2,
+          backgroundColor: "primary.main",
+          borderRadius: 2,
+          color: "white",
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold">
+          {formatCurrency(total)}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+          {formatCurrency(coinsTotal)} en pièces + {formatCurrency(billsTotal)}{" "}
+          en billets
+        </Typography>
+      </Box>
+
+      <Grid container spacing={1}>
+        {/* Pièces */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" sx={{ maxHeight: "50vh", overflow: "auto" }}>
+            <CardContent>
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+              >
+                <Euro fontSize="small" color="primary" />
+                Pièces
+              </Typography>
+              <Stack spacing={0.5}>
+                {MONEY_DENOMINATIONS.filter((d) => d.type === "coin")
+                  .map((denom) => (
+                    <Box
+                      key={denom.value}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        width: "100%",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          backgroundColor: denom.color,
+                          border: "1px solid #333",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "8px",
+                          fontWeight: "bold",
+                          color: "#333",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {denom.value < 1
+                          ? `${denom.value * 100}c`
+                          : `${denom.value}€`}
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{ minWidth: 70, flexShrink: 0 }}
+                      >
+                        {denom.label}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCount(denom.value, -1)}
+                        disabled={!counts[denom.value]}
+                        sx={{ p: 0.5, flexShrink: 0 }}
+                      >
+                        <Remove fontSize="small" />
+                      </IconButton>
+                      <TextField
+                        size="small"
+                        value={counts[denom.value] || 0}
+                        onChange={(e) => setCount(denom.value, e.target.value)}
+                        type="number"
+                        slotProps={{
+                          htmlInput: {
+                            style: { textAlign: "center", width: 50 },
+                            min: 0,
+                          },
+                        }}
+                        sx={{ "& .MuiInputBase-root": { height: 28 }, flexShrink: 0 }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCount(denom.value, 1)}
+                        sx={{ p: 0.5, flexShrink: 0 }}
+                      >
+                        <Add fontSize="small" />
+                      </IconButton>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          minWidth: 70,
+                          textAlign: "right",
+                          ml: "auto",
+                          fontWeight: "medium",
+                        }}
+                      >
+                        {formatCurrency((counts[denom.value] || 0) * denom.value)}
+                      </Typography>
+                    </Box>
+                  ))}
+              </Stack>
+              <Divider sx={{ my: 1 }} />
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="caption" fontWeight="bold">
+                  Total pièces:
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" color="primary">
+                  {formatCurrency(coinsTotal)}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Billets */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" sx={{ maxHeight: "50vh", overflow: "auto" }}>
+            <CardContent>
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+              >
+                <AttachMoney fontSize="small" color="success" />
+                Billets
+              </Typography>
+              <Stack spacing={0.5}>
+                {MONEY_DENOMINATIONS.filter((d) => d.type === "bill")
+                  .map((denom) => (
+                    <Box
+                      key={denom.value}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        width: "100%",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 16,
+                          backgroundColor: denom.color,
+                          border: "1px solid #333",
+                          borderRadius: 0.5,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "7px",
+                          fontWeight: "bold",
+                          color: "#333",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {denom.value}€
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{ minWidth: 70, flexShrink: 0 }}
+                      >
+                        {denom.label}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCount(denom.value, -1)}
+                        disabled={!counts[denom.value]}
+                        sx={{ p: 0.5, flexShrink: 0 }}
+                      >
+                        <Remove fontSize="small" />
+                      </IconButton>
+                      <TextField
+                        size="small"
+                        value={counts[denom.value] || 0}
+                        onChange={(e) => setCount(denom.value, e.target.value)}
+                        type="number"
+                        slotProps={{
+                          htmlInput: {
+                            style: { textAlign: "center", width: 50 },
+                            min: 0,
+                          },
+                        }}
+                        sx={{ "& .MuiInputBase-root": { height: 28 }, flexShrink: 0 }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCount(denom.value, 1)}
+                        sx={{ p: 0.5, flexShrink: 0 }}
+                      >
+                        <Add fontSize="small" />
+                      </IconButton>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          minWidth: 70,
+                          textAlign: "right",
+                          ml: "auto",
+                          fontWeight: "medium",
+                        }}
+                      >
+                        {formatCurrency((counts[denom.value] || 0) * denom.value)}
+                      </Typography>
+                    </Box>
+                  ))}
+              </Stack>
+              <Divider sx={{ my: 1 }} />
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="caption" fontWeight="bold">
+                  Total billets:
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" color="success.main">
+                  {formatCurrency(billsTotal)}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Bouton fermer en bas */}
       <Box sx={{ mt: 2, textAlign: "center" }}>
