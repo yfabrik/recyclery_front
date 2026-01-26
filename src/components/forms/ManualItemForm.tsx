@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
-import { useForm, useWatch, type Control } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
 import { Euro, Scale } from "@mui/icons-material";
@@ -41,7 +41,11 @@ export const ManualItemForm = ({
     },
   });
 
-  const SubCategories = ({ control }: { control: Control<Schema> }) => {
+  const SubCategories = ({
+    control,
+  }: {
+    control: typeof form.control;
+  }) => {
     const category = useWatch({
       control: control,
       name: "category_id",
@@ -50,7 +54,7 @@ export const ManualItemForm = ({
       categories.find((c) => c.id == category)?.subcategories ?? [];
     return (
       <FormSelect
-        control={form.control}
+        control={control}
         name="subcategory_id"
         label="Sous-catégorie"
         extra={{ disabled: subcats.length < 1 }}
