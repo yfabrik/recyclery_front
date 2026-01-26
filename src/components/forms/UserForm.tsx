@@ -13,14 +13,20 @@ import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
-  username: z.string("username requis"),
+  username: z.string().trim().nonempty("username requis"),
   email: z.email("email requis"),
-  first_name: z.string(),
-  last_name: z.string(),
-  phone: z.union([phoneSchema(), z.literal("").transform(v=>null)]),
+  first_name: z
+    .string()
+    .trim()
+    .transform((val) => (val == "" ? null : val)),
+  last_name: z
+    .string()
+    .trim()
+    .transform((val) => (val == "" ? null : val)),
+  phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   password: z.string(),
   role: z.string(),
-  recyclery_id: idSchema(),
+  recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   is_active: z.boolean().default(true),
 });
 
