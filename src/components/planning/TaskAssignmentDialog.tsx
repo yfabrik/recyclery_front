@@ -27,7 +27,11 @@ import {
   Typography,
 } from "@mui/material";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
-import { addEmployeeToTask, getEmployeesForTask, removeEmployeeFromTask } from "../../services/api/tasks";
+import {
+  addEmployeeToTask,
+  getEmployeesForTask,
+  removeEmployeeFromTask,
+} from "../../services/api/tasks";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAvailableUserForTask } from "../../services/api/planning";
@@ -37,7 +41,10 @@ interface TaskAssignmentDialogTitleProps {
   storeName: string;
 }
 // Dialog Title Component
-const TaskAssignmentDialogTitle = ({ taskName, storeName }: TaskAssignmentDialogTitleProps) => {
+const TaskAssignmentDialogTitle = ({
+  taskName,
+  storeName,
+}: TaskAssignmentDialogTitleProps) => {
   return (
     <DialogTitle>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -59,11 +66,14 @@ interface TaskAssignmentDialogInfoProps {
   scheduledDate: string;
 }
 // Info Message Component
-const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }: TaskAssignmentDialogInfoProps) => {
+const TaskAssignmentDialogInfo = ({
+  storeName,
+  scheduledDate,
+}: TaskAssignmentDialogInfoProps) => {
   const dayName = scheduledDate
     ? new Date(scheduledDate).toLocaleDateString("fr-FR", {
-      weekday: "long",
-    })
+        weekday: "long",
+      })
     : "jour sélectionné";
 
   return (
@@ -81,8 +91,8 @@ const TaskAssignmentDialogInfo = ({ storeName, scheduledDate }: TaskAssignmentDi
         sx={{ display: "flex", alignItems: "center", gap: 1 }}
       >
         <Store sx={{ fontSize: 16, color: "#1976d2" }} />
-        <strong>Filtrage par magasin et présence:</strong> Seuls les employés
-        du magasin "{storeName || "Non spécifié"}" qui travaillent le {dayName}{" "}
+        <strong>Filtrage par magasin et présence:</strong> Seuls les employés du
+        magasin "{storeName || "Non spécifié"}" qui travaillent le {dayName}{" "}
         sont affichés.
       </Typography>
     </Box>
@@ -100,8 +110,8 @@ interface TaskAssignmentEmployeeCardProps {
 const TaskAssignmentEmployeeCard = ({
   employee,
   type = "available", // "assigned" or "available"
-  onAssign = () => { },
-  onUnassign = () => { },
+  onAssign = () => {},
+  onUnassign = () => {},
   isAssignedToOtherTask = false,
 }: TaskAssignmentEmployeeCardProps) => {
   const isAssigned = type === "assigned";
@@ -351,8 +361,10 @@ const TaskAssignmentDialog = ({
   onUnassignEmployee,
   onCloseWithChanges,
 }: TaskAssignmentDialogProps) => {
-  const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<EmployeeModel[]>(assignedEmployees);
-  const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<EmployeeModel[]>(availableEmployees);
+  const [taskAssignedEmployees, setTaskAssignedEmployees] =
+    useState<EmployeeModel[]>(assignedEmployees);
+  const [availableEmployeesForTask, setAvailableEmployeesForTask] =
+    useState<EmployeeModel[]>(availableEmployees);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for useEffect
   const [hasChanges, setHasChanges] = useState(false); // Track if any changes were made
 
@@ -364,12 +376,16 @@ const TaskAssignmentDialog = ({
       try {
         // Fetch assigned employees
         const assignedResponse = await getEmployeesForTask(selectedTask.id);
-        setTaskAssignedEmployees(assignedResponse.data.employees || []);
+        setTaskAssignedEmployees(
+          assignedResponse.data.employees || [],
+        );
 
         // Fetch available employees
-        const availableResponse = await getAvailableUserForTask(selectedTask.id);
+        const availableResponse = await getAvailableUserForTask(
+          selectedTask.id,
+        );
         // const availableResponse = await getEmployees({}); // TODO add in backend filter for day
-        setAvailableEmployeesForTask(availableResponse.data.employees || []);
+        setAvailableEmployeesForTask(availableResponse.data.employees.filter((e) => e.is_available) || []);
       } catch (error) {
         console.error("Error fetching employees:", error);
       }
@@ -380,7 +396,7 @@ const TaskAssignmentDialog = ({
 
   // Filter available employees (exclude already assigned)
   const filteredAvailableEmployees = availableEmployeesForTask.filter(
-    (emp) => !taskAssignedEmployees.some((assigned) => assigned.id === emp.id)
+    (emp) => !taskAssignedEmployees.some((assigned) => assigned.id === emp.id),
   );
   // Fonction pour assigner un employé à une tâche spécifique
   const handleAssignEmployee = async (employeeId: number) => {
@@ -544,7 +560,9 @@ const TaskAssignmentDialog = ({
                   employee={employee}
                   type="available"
                   onAssign={handleAssignEmployee}
-                  isAssignedToOtherTask={(employee as any).is_assigned_to_task || false}
+                  isAssignedToOtherTask={
+                    (employee as any).is_assigned_to_task || false
+                  }
                 />
               ))}
             </Box>

@@ -1,3 +1,7 @@
+/**
+ * @deprecated
+ */
+
 import {
   AccessTime,
   Add,

@@ -1,24 +1,22 @@
 import {
-  AccessTime,
   Category,
   LocationOn,
   Nature,
   People,
-  Schedule,
   Store,
-  Work,
+  Work
 } from "@mui/icons-material";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
+import { useState } from "react";
+import { useLocation } from "react-router";
 import { CategoriesTab } from "./config/CategorieTab";
+import CollectionPointPresenceTab from "./config/CollectionPointPresenceTab";
 import CollectionPointsTab from "./config/CollectionPointsTab";
-import StoresTab from "./config/StoresTab";
 import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
 import EmployeeManagement from "./config/EmployeeManagement";
-import TaskManagement from "./config/TaskManagement";
 import StoreHoursTab from "./config/StoreHoursTab";
-import CollectionPointPresenceTab from "./config/CollectionPointPresenceTab";
-import { useState } from "react";
-import { Link, Route, Routes, useLocation } from "react-router";
+import StoresTab from "./config/StoresTab";
+import TaskManagement from "./config/TaskManagement";
 
 export const ConfigurationTab = () => {
   const location = useLocation();
@@ -132,7 +130,7 @@ export const ConfigurationTab = () => {
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
         />
-        <Tab
+        {/* <Tab
           label="Horaires des magasins"
           // value="store-hour"
           // to="store-hour"
@@ -153,7 +151,7 @@ export const ConfigurationTab = () => {
           sx={{
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
-        />
+        /> */}
       </Tabs>
 
       <Box sx={{ p: 3 }}>

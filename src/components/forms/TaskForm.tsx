@@ -1,11 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Box,
-  Chip,
-  Grid,
-  MenuItem,
-  Typography
-} from "@mui/material";
+import { Box, Chip, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm, useWatch, type Control } from "react-hook-form";
 import * as z from "zod";
 
@@ -21,60 +15,47 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
+import type { EmployeeModel } from "../../interfaces/Models";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  name: z.string().nonempty("Le nom de la tâche est requis"),
+  name: z.string().trim().nonempty("Le nom de la tâche est requis"),
   hourly_rate: z.coerce.number().optional(),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .trim()
+    .transform((v) => (v == "" ? null : v)),
   category: z.string().nonempty("La catégorie est requise"),
   priority: z.string().nonempty("La priorité est requise"),
   // estimated_duration: z.coerce
   //   .number()
   //   .min(15, "Minimum 15 minutes")
   //   .max(480, "Maximum 480 minutes"),
-  location: z.string().optional(),
+  location: z
+    .string()
+    .trim()
+    .transform((v) => (v == "" ? null : v)),
   assigned_to: z.union([z.string(), z.number()]).optional().nullable(),
   required_skills: z.array(z.string()).default([]),
   equipment_needed: z.array(z.string()).default([]),
   is_recurring: z.boolean().default(false),
-  recurrence_pattern: z.string(),
-  notes: z.string().optional(),
-  scheduled_date: z.date(),
-  start_time: z.date(),
-  end_time: z.date(),
+  recurrence_pattern: z.union([
+    z.enum(["daily", "weekly", "monthly"]),
+    z.literal("").transform(() => null),
+  ]),
+  notes: z
+    .string()
+    .trim()
+    .transform((v) => (v == "" ? null : v)),
+  scheduled_date: z.coerce.date(),
+  start_time: z.coerce.date(),
+  end_time: z.coerce.date(),
 });
 
 export type TaskFormSchema = z.infer<typeof schema>;
 
-type CategoryOption = {
-  value: string;
-  label: string;
-  icon?: string;
-};
-
-type PriorityOption = {
-  value: string;
-  label: string;
-};
-
-type EmployeeOption = {
-  id: number;
-  username: string;
-  role: string;
-};
-
-type RecurrencePatternOption = {
-  value: string;
-  label: string;
-};
-
 export type TaskFormProps = BaseFormProps<TaskFormSchema> & {
-  //   categories: CategoryOption[];
-  //   priorities: PriorityOption[];
-  employees: EmployeeOption[];
-  //   skillsOptions: string[];
-  //   equipmentOptions: string[];
-  //   recurrencePatterns: RecurrencePatternOption[];
+  employees: EmployeeModel[];
 };
 
 export const RecurseWatch = ({
@@ -153,29 +134,30 @@ export const TaskForm = ({
     "Balance",
     "Scanner",
   ];
-
-  const form = useForm<TaskFormSchema>({
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: defaultValues?.name || "",
-      description: defaultValues?.description || "",
-      category: defaultValues?.category || "collection",
-      priority: defaultValues?.priority || "medium",
+      name: "",
+      description: "",
+      category: "collection",
+      priority: "medium",
       // estimated_duration:
       //   defaultValues?.estimated_duration !== undefined
       //     ? defaultValues.estimated_duration
       //     : 60,
-      required_skills: defaultValues?.required_skills || [],
-      location: defaultValues?.location || "",
-      equipment_needed: defaultValues?.equipment_needed || [],
-      hourly_rate: defaultValues?.hourly_rate ?? "",
-      is_recurring: defaultValues?.is_recurring ?? false,
-      recurrence_pattern: defaultValues?.recurrence_pattern || "none",
-      assigned_to: defaultValues?.assigned_to ?? "",
-      scheduled_date: defaultValues?.scheduled_date ?? null,
-      notes: defaultValues?.notes || "",
-      start_time: defaultValues?.start_time || null,
-      end_time: defaultValues?.end_time || null,
+      required_skills: [],
+      location: "",
+      equipment_needed: [],
+      hourly_rate: "",
+      is_recurring: false,
+      recurrence_pattern: "",
+      assigned_to: "",
+      scheduled_date: new Date(),
+      notes: "",
+      start_time: new Date(),
+      end_time: new Date(),
+      ...data,
     },
   });
 
@@ -184,19 +166,15 @@ export const TaskForm = ({
   const isRecurring = form.watch("is_recurring");
   const pattern = form.watch("recurrence_pattern");
 
-  // useEffect(() => {
-  //   form.resetField("scheduled_date");
-  // }, [pattern]);
-
   const toggleArrayField = (
     field: "required_skills" | "equipment_needed",
-    value: string
+    value: string,
   ) => {
     const current = form.getValues(field) || [];
     if (current.includes(value)) {
       form.setValue(
         field,
-        current.filter((item: string) => item !== value)
+        current.filter((item: string) => item !== value),
       );
     } else {
       form.setValue(field, [...current, value]);
@@ -291,7 +269,7 @@ export const TaskForm = ({
             {employees && employees.length > 0 ? (
               employees.map((employee) => (
                 <MenuItem key={employee.id} value={employee.id}>
-                  {employee.username} ({employee.role})
+                  {employee.fullName} - Employee
                 </MenuItem>
               ))
             ) : (

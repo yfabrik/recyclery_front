@@ -20,19 +20,16 @@ const schema = z.object({
   address: z.string().trim().nonempty(),
   city: z.string().trim().nonempty(),
   postal_code: postalSchema(),
-  contact_person: z.string().transform(val => val == "" ? null : val),
-  contact_phone: z.union([
-    phoneSchema(),
-    z.literal("").transform(v => null)
-  ]),
-  contact_email: z.union([z.email(), z.literal("").transform(v => null)]),
+  contact_person: z.string().transform((val) => (val == "" ? null : val)),
+  contact_phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
+  contact_email: z.union([z.email(), z.literal("").transform(() => null)]),
   // type: z.string(),
-  notes: z.string().transform(val => val == "" ? null : val),
+  notes: z.string().transform((val) => (val == "" ? null : val)),
   is_active: z.boolean(),
-  recyclery_id: z.union([idSchema(), z.literal("").transform(v => null)])
+  recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const CollectionPointForm = ({
   formId,
@@ -40,7 +37,7 @@ export const CollectionPointForm = ({
   defaultValues,
   recycleries,
 }: CollectionPointFormProps) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     defaultValues: {
       name: "",
@@ -54,7 +51,7 @@ export const CollectionPointForm = ({
       notes: "",
       is_active: true,
       recyclery_id: "",
-      ...data
+      ...data,
       // ...(defaultValues ?? {}),
     },
     resolver: zodResolver(schema),

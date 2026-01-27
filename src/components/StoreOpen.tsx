@@ -17,25 +17,13 @@ import {
 } from "@mui/material";
 
 import { DAYS_OF_WEEK as daysOfWeek } from "../interfaces/shared";
-interface Hours {
-  id: number;
-  day_of_week: string;
-  is_open: boolean;
-  is_24h: boolean;
-  notes: string;
-  open_time: string;
-  close_time: string;
-}
-interface StoreProp {
-  id: number;
-  name: string;
-}
+import type { StoreHoursModel, StoreModel } from "../interfaces/Models";
 
 interface StoreOpenProps {
-  store: StoreProp;
-  handleOpenHoursDialog: (hours?: Hours | null, storeId?: number) => void;
+  store: StoreModel;
+  handleOpenHoursDialog: (hours?: StoreHoursModel | null, storeId?: number) => void;
   handleDeleteHours: (hourId: number) => void;
-  hours: Hours[];
+  hours: StoreHoursModel[];
 }
 export const StoreOpen = ({
   store,

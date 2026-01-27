@@ -58,17 +58,7 @@ export const UsersTab = () => {
     activeEmployees: 0,
     recentLogins: 0,
   });
-  // const [userForm, setUserForm] = useState<userModel>({
-  //   username: "",
-  //   email: "",
-  //   password: "",
-  //   first_name: "",
-  //   last_name: "",
-  //   phone: "",
-  //   role: "",
-  //   recyclery_id: "",
-  //   is_active: true,
-  // });
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -107,7 +97,7 @@ export const UsersTab = () => {
 
   const fetchStores = async () => {
     try {
-      const response = await fStores({ active: 1 });
+      const response = await fStores({ active: true });
 
       setStores(response.data.stores);
     } catch (error) {
@@ -126,51 +116,12 @@ export const UsersTab = () => {
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
     setEditingUser(user);
-
-    // if (user) {
-    //   setEditingUser(user);
-    //   setUserForm({
-    //     username: user.username,
-    //     email: user.email,
-    //     password: "",
-    //     first_name: user.first_name || "",
-    //     last_name: user.last_name || "",
-    //     phone: user.phone || "",
-    //     role: user.role || "",
-    //     recyclery_id: user.recyclery_id || "",
-    //     is_active: user.is_active !== 0,
-    //   });
-    // } else {
-    //   setEditingUser(null);
-    //   setUserForm({
-    //     username: "",
-    //     email: "",
-    //     password: "",
-    //     first_name: "",
-    //     last_name: "",
-    //     phone: "",
-    //     role: "",
-    //     recyclery_id: "",
-    //     is_active: true,
-    //   });
-    // }
     setUserDialog(true);
   };
 
   const handleCloseUserDialog = () => {
     setUserDialog(false);
     setEditingUser(null);
-    // setUserForm({
-    //   username: "",
-    //   email: "",
-    //   password: "",
-    //   first_name: "",
-    //   last_name: "",
-    //   phone: "",
-    //   role: "",
-    //   recyclery_id: "",
-    //   is_active: true,
-    // });
   };
 
   const handleSaveUser = async (data) => {
@@ -201,7 +152,7 @@ export const UsersTab = () => {
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
       toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde"
+        error.response?.data?.error || "Erreur lors de la sauvegarde",
       );
     }
   };
@@ -249,7 +200,7 @@ export const UsersTab = () => {
       console.error("Erreur lors du changement de mot de passe:", error);
       toast.error(
         error.response?.data?.error ||
-          "Erreur lors du changement de mot de passe"
+          "Erreur lors du changement de mot de passe",
       );
     }
   };
@@ -274,7 +225,7 @@ export const UsersTab = () => {
     } catch (error) {
       console.error("Erreur lors du changement de statut:", error);
       toast.error(
-        error.response?.data?.error || "Erreur lors du changement de statut"
+        error.response?.data?.error || "Erreur lors du changement de statut",
       );
     }
   };
@@ -523,139 +474,6 @@ export const UsersTab = () => {
             defaultValues={editingUser}
             onSubmit={handleSaveUser}
           />
-          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Nom d'utilisateur *"
-                value={userForm.username}
-                onChange={(e) =>
-                  setUserForm((prev) => ({ ...prev, username: e.target.value }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Email *"
-                type="email"
-                value={userForm.email}
-                onChange={(e) =>
-                  setUserForm((prev) => ({ ...prev, email: e.target.value }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Prénom"
-                value={userForm.first_name}
-                onChange={(e) =>
-                  setUserForm((prev) => ({
-                    ...prev,
-                    first_name: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Nom"
-                value={userForm.last_name}
-                onChange={(e) =>
-                  setUserForm((prev) => ({
-                    ...prev,
-                    last_name: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Téléphone"
-                value={userForm.phone}
-                onChange={(e) =>
-                  setUserForm((prev) => ({ ...prev, phone: e.target.value }))
-                }
-              />
-            </Grid>
-            {!editingUser && (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Mot de passe *"
-                  type="password"
-                  value={userForm.password}
-                  onChange={(e) =>
-                    setUserForm((prev) => ({
-                      ...prev,
-                      password: e.target.value,
-                    }))
-                  }
-                />
-              </Grid>
-            )}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Rôle *</InputLabel>
-                <Select
-                  value={userForm.role}
-                  label="Rôle *"
-                  onChange={(e) =>
-                    setUserForm((prev) => ({ ...prev, role: e.target.value }))
-                  }
-                >
-                  {roles.map((role) => (
-                    <MenuItem key={role.name} value={role.name}>
-                      {role.display_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Magasin</InputLabel>
-                <Select
-                  value={userForm.recyclery_id}
-                  label="Magasin"
-                  onChange={(e) =>
-                    setUserForm((prev) => ({
-                      ...prev,
-                      recyclery_id: e.target.value,
-                    }))
-                  }
-                >
-                  <MenuItem key="no-store" value="">
-                    Aucun magasin assigné
-                  </MenuItem>
-                  {stores.map((store) => (
-                    <MenuItem key={store.id} value={store.id}>
-                      {store.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={userForm.is_active}
-                    onChange={(e) =>
-                      setUserForm((prev) => ({
-                        ...prev,
-                        is_active: e.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Utilisateur actif"
-              />
-            </Grid>
-          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUserDialog}>Annuler</Button>

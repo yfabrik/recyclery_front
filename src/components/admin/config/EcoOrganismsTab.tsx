@@ -9,16 +9,12 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   Grid,
   IconButton,
   Paper,
@@ -28,13 +24,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import type { EcoOrgModel } from "../../../interfaces/Models";
 import {
   createEcoOrganism,
   deleteEcoOrganism,
@@ -42,9 +38,8 @@ import {
   getEcoOrganisms,
   updateEcoOrganism,
 } from "../../../services/api/ecoOrganism";
-import { StatCard } from "../../StatCard";
-import type { EcoOrgModel } from "../../../interfaces/Models";
 import { EcoOrganismForm } from "../../forms/EcoOrganismForm";
+import { StatCard } from "../../StatCard";
 
 export const EcoOrganismsTab = () => {
   const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
@@ -52,15 +47,7 @@ export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
   const [editingEcoOrganism, setEditingEcoOrganism] =
     useState<EcoOrgModel | null>(null);
-  // const [ecoOrganismForm, setEcoOrganismForm] = useState<EcoOrgModel>({
-  //   name: "",
-  //   description: "",
-  //   contact_email: "",
-  //   contact_phone: "",
-  //   address: "",
-  //   website: "",
-  //   is_active: true,
-  // });
+
   const [ecoOrganismStats, setEcoOrganismStats] = useState(null);
 
   useEffect(() => {
@@ -93,30 +80,6 @@ export const EcoOrganismsTab = () => {
     ecoOrganism: EcoOrgModel | null = null
   ) => {
       setEditingEcoOrganism(ecoOrganism);
-
-    // if (ecoOrganism) {
-    //   setEditingEcoOrganism(ecoOrganism);
-    //   setEcoOrganismForm({
-    //     name: ecoOrganism.name,
-    //     description: ecoOrganism.description || "",
-    //     contact_email: ecoOrganism.contact_email || "",
-    //     contact_phone: ecoOrganism.contact_phone || "",
-    //     address: ecoOrganism.address || "",
-    //     website: ecoOrganism.website || "",
-    //     is_active: ecoOrganism.is_active,
-    //   });
-    // } else {
-    //   setEditingEcoOrganism(null);
-    //   setEcoOrganismForm({
-    //     name: "",
-    //     description: "",
-    //     contact_email: "",
-    //     contact_phone: "",
-    //     address: "",
-    //     website: "",
-    //     is_active: true,
-    //   });
-    // }
     setEcoOrganismDialog(true);
   };
 

@@ -13,8 +13,9 @@ export interface CategoryModel extends BaseModel {
 }
 
 export interface StoreModel extends BaseModel {
-  employees?: Array< EmployeeModel>;
+  employees?: Array<EmployeeModel>;
   manager_id: string;
+  manager?: UserModel;
   caisses: [];
   name: string;
   address: string;
@@ -163,4 +164,57 @@ export interface WorkdaysModel extends BaseModel {
   start_time: string;
   end_time: string;
   notes: string;
+}
+
+export interface StoreHoursModel extends BaseModel {
+  day_of_week: string;
+  name: string;
+  is_open: boolean;
+  open_time: string;
+  close_time: string;
+  notes: string;
+  is_24h: boolean;
+  store_id: number;
+}
+
+export interface CaisseModel extends BaseModel {
+  name: string;
+  is_active: boolean;
+  sessions?: CashSession[];
+  recyclery_id: number;
+  store_name?: string;
+  total_sessions?: number;
+  last_session?: Date;
+  Recyclery?: StoreModel;
+}
+
+export interface CashSession extends BaseModel {
+  opening_amount: number;
+  closing_amount: number;
+  expected_amount: number;
+  difference_amount: number;
+  status: "open" | "close";
+  closed_at: Date;
+  notes: string;
+  cash_register_id: number;
+  user_id?: number;
+
+  CashRegister?: CaisseModel;
+  User?:UserModel
+}
+
+export interface TransactionModel extends BaseModel {
+  change_amount: number;
+  total_amount: number;
+  payment_method: "cash" | "card" | "check";
+  transactionType: "sell" | "refund";
+  payment_amount: number;
+  customer_name?: string;
+  customer_email?: string;
+  customer_postal_code?: string;
+  status: "completed";
+
+  cash_session_id: number;
+  CashSession?:CashSession
+  sold_by: number;
 }

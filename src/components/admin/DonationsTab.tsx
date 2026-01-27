@@ -51,13 +51,7 @@ export const DonationsTab = () => {
   const [loading, setLoading] = useState(true);
   const [donationDialog, setDonationDialog] = useState(false);
   const [editingDonation, setEditingDonation] = useState<DonModel | null>(null);
-  // const [donationForm, setDonationForm] = useState<DonModel>({
-  //   donor_name: "",
-  //   donor_contact: "",
-  //   item_description: "",
-  //   estimated_value: "",
-  //   status: "pending",
-  // });
+
   const [donationStats, setDonationStats] = useState<donStats | null>(null);
 
   useEffect(() => {
@@ -89,26 +83,6 @@ export const DonationsTab = () => {
 
   const handleOpenDonationDialog = (donation: DonModel | null = null) => {
     setEditingDonation(donation);
-
-    // if (donation) {
-    //   setEditingDonation(donation);
-    //   setDonationForm({
-    //     donor_name: donation.donor_name || "",
-    //     donor_contact: donation.donor_contact || "",
-    //     item_description: donation.item_description || "",
-    //     estimated_value: donation.estimated_value?.toString() || "",
-    //     status: donation.status || "pending",
-    //   });
-    // } else {
-    //   setEditingDonation(null);
-    //   setDonationForm({
-    //     donor_name: "",
-    //     donor_contact: "",
-    //     item_description: "",
-    //     estimated_value: "",
-    //     status: "pending",
-    //   });
-    // }
     setDonationDialog(true);
   };
 
@@ -122,19 +96,6 @@ export const DonationsTab = () => {
       const result = editingDonation?.id
         ? await updateDonation(editingDonation.id, data)
         : await createDonation(data);
-      // const token = localStorage.getItem("token");
-      // const url = editingDonation
-      //   ? `/api/donations/${editingDonation.id}`
-      //   : "/api/donations";
-
-      // const method = editingDonation ? "put" : "post";
-
-      // console.log("Données envoyées:", donationForm);
-
-      // await axios[method](url, donationForm, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-
       toast.success(
         editingDonation
           ? "Don mis à jour avec succès"
@@ -254,7 +215,7 @@ export const DonationsTab = () => {
             {donations.map((donation) => (
               <TableRow key={donation.id}>
                 <TableCell>
-                  {new Date(donation.created_at).toLocaleDateString("fr-FR")}
+                  {new Date(donation.createdAt).toLocaleDateString("fr-FR")}
                 </TableCell>
                 <TableCell>
                   <Box>
@@ -285,7 +246,7 @@ export const DonationsTab = () => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{donation.received_by_name || "-"}</TableCell>
+                <TableCell>{donation.received_by || "-"}</TableCell>
                 <TableCell>
                   <IconButton
                     size="small"
