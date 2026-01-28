@@ -1,5 +1,6 @@
 import {
   Category,
+  FireTruck,
   LocationOn,
   Nature,
   People,
@@ -12,9 +13,9 @@ import { useLocation } from "react-router";
 import { CategoriesTab } from "./config/CategorieTab";
 import CollectionPointPresenceTab from "./config/CollectionPointPresenceTab";
 import CollectionPointsTab from "./config/CollectionPointsTab";
+import { CollectTab } from "./config/CollectTab";
 import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
 import EmployeeManagement from "./config/EmployeeManagement";
-import StoreHoursTab from "./config/StoreHoursTab";
 import StoresTab from "./config/StoresTab";
 import TaskManagement from "./config/TaskManagement";
 
@@ -76,7 +77,7 @@ export const ConfigurationTab = () => {
           }}
         />
         <Tab
-          label="Lieux de collecte"
+          label="Déchetteries"
           // value="collect-point"
           // to="collect-point"
           // component={Link}
@@ -130,6 +131,17 @@ export const ConfigurationTab = () => {
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
         />
+         <Tab
+          label="Collectes"
+          // value="tasks"
+          // to="tasks"
+          // component={Link}
+          icon={<FireTruck />}
+          iconPosition="start"
+          sx={{
+            "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
+          }}
+        />
         {/* <Tab
           label="Horaires des magasins"
           // value="store-hour"
@@ -175,7 +187,7 @@ export const ConfigurationTab = () => {
         {tabValue === 3 && <EcoOrganismsTab />}
         {tabValue === 4 && <EmployeeManagement />}
         {tabValue === 5 && <TaskManagement />}
-        {tabValue === 6 && <StoreHoursTab />}
+        {tabValue === 6 && <CollectTab />}
         {tabValue === 7 && <CollectionPointPresenceTab />}
       </Box>
     </Box>
