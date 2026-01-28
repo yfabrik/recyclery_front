@@ -263,9 +263,10 @@ const Labels = () => {
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, barcode, {
       format: "CODE128",
-      width: 2,
-      height: 100,
-      displayValue: true
+      width: 1.5,
+      height: 50,
+      displayValue: true,
+      fontSize: 10
     });
     return canvas.toDataURL();
   };
@@ -273,70 +274,95 @@ const Labels = () => {
   const printLabel = (item) => {
     const barcodeImage = generateBarcode(item.barcode);
 
-    const printWindow = window.open('', '', 'width=400,height=600');
+    const printWindow = window.open('', '', 'width=400,height=200');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Étiquette - ${item.name}</title>
+          <title>Étiquette - ${item.barcode}</title>
           <style>
+            @page {
+              size: 60mm 40mm;
+              margin: 0;
+              padding: 0;
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
             body { 
               font-family: Arial, sans-serif; 
-              margin: 20px;
-              text-align: center;
+              margin: 0;
+              padding: 2mm;
+              width: 60mm;
+              height: 40mm;
+              overflow: hidden;
             }
             .label {
-              border: 2px solid #000;
-              padding: 15px;
-              max-width: 300px;
-              margin: 0 auto;
-            }
-            .name { 
-              font-size: 18px; 
-              font-weight: bold; 
-              margin-bottom: 10px;
-            }
-            .category { 
-              font-size: 14px; 
-              color: #666; 
-              margin-bottom: 10px;
-            }
-            .price { 
-              font-size: 24px; 
-              font-weight: bold; 
-              color: #d32f2f; 
-              margin: 15px 0;
-            }
-            .weight { 
-              font-size: 14px; 
-              margin-bottom: 10px;
+              width: 100%;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
             }
             .barcode { 
-              margin: 15px 0;
+              width: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-bottom: 1mm;
             }
-            .condition { 
-              font-size: 12px; 
-              margin-top: 10px;
+            .barcode img {
+              max-width: 100%;
+              max-height: 70%;
+              object-fit: contain;
+            }
+            .info-row {
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 8px;
+              margin-top: 0.5mm;
+            }
+            .price { 
+              font-size: 10px; 
+              font-weight: bold; 
+              color: #d32f2f;
+            }
+            .weight { 
+              font-size: 8px;
+            }
+            .category { 
+              width: 100%;
+              text-align: center;
+              font-size: 7px; 
+              color: #666;
+              margin-top: 0.3mm;
             }
           </style>
         </head>
         <body>
           <div class="label">
-            <div class="name">${item.name}</div>
-            <div class="category">${item.category_name}${item.subcategory_name ? ' > ' + item.subcategory_name : ''}</div>
-            <div class="price">${parseFloat(item.price).toFixed(2)} €</div>
-            ${item.weight ? `<div class="weight">Poids: ${item.weight} kg</div>` : ''}
             <div class="barcode">
               <img src="${barcodeImage}" alt="Code-barres" />
             </div>
-            <div class="condition">État: ${conditionOptions.find(c => c.value === item.condition_state)?.label}</div>
-            ${item.location ? `<div class="condition">Emplacement: ${item.location}</div>` : ''}
+            <div class="info-row">
+              <div class="price">${parseFloat(item.price).toFixed(2)} €</div>
+              ${item.weight ? `<div class="weight">${item.weight} kg</div>` : '<div></div>'}
+            </div>
+            <div class="category">${item.category_name || item?.category?.name || ''}${item.subcategory_name || item?.subcategory?.name ? ' > ' + (item.subcategory_name || item?.subcategory?.name) : ''}</div>
           </div>
         </body>
       </html>
     `);
 
     printWindow.document.close();
-    printWindow.print();
+    // Wait a bit for the image to load before printing
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   // const selectedCategory = categories.find(cat => cat.id == formData.category_id);
