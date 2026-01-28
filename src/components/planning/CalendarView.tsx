@@ -9,23 +9,20 @@ import {
 } from "@mui/icons-material";
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
 import { useEmployee } from "../../services/useEmployee";
-interface Task {
-  scheduled_date: Date;
-  task_employees: { username: string }[];
-  assigned_employees: { username: string }[];
-}
+import type { TaskModel } from "../../interfaces/Models";
+
 interface CalendarViewProps {
-  filteredSchedules: Task[];
-  handleOpenDialog: (a?: Task | null, b?: Date) => void;
-  isOpeningTask: (t: Task) => boolean;
-  isPresenceTask: (t: Task) => boolean;
-  getTaskDisplayName: (t: Task) => string;
-  handleDeleteTask: (t: Task) => void;
+  filteredSchedules: TaskModel[];
+  handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
+  isOpeningTask: (t: TaskModel) => boolean;
+  isPresenceTask: (t: TaskModel) => boolean;
+  getTaskDisplayName: (t: TaskModel) => string;
+  handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
 }
 interface CalendarDay {
   date: Date;
-  schedules: Task[];
+  schedules: TaskModel[];
   isCurrentMonth: boolean;
   isToday: boolean;
 }

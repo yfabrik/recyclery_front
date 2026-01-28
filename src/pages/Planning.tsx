@@ -36,8 +36,12 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { PlaningForm } from "../components/forms/planningForm";
+import { CalendarView } from "../components/planning/CalendarView";
+import { DayView } from "../components/planning/DayView";
+import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
 import { PrecenseEmployees } from "../components/planning/PresenceEmployees";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
@@ -55,10 +59,6 @@ import {
 } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
 import { createTask, getTasks, updateTask } from "../services/api/tasks";
-import { DayView } from "../components/planning/DayView";
-import { CalendarView } from "../components/planning/CalendarView";
-import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
-import { useNavigate } from "react-router";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState<TaskModel[]>([]);
@@ -372,7 +372,10 @@ const Planning = () => {
     return employeesByDay;
   };
 
-  const handleOpenDialog = (schedule = null, selectedDate = null) => {
+  const handleOpenDialog = (
+    schedule: TaskModel | null = null,
+    selectedDate: Date | null = null,
+  ) => {
     setEditingSchedule(
       schedule || { scheduled_date: selectedDate || new Date() },
     );
@@ -1118,7 +1121,6 @@ const Planning = () => {
       </Dialog>
 
       {/* Dialog pour les employés manquants */}
-      {/* TODO fusionner avec celle des collectes ? */}
       <Dialog
         open={showMissingEmployeesDialog}
         onClose={() => setShowMissingEmployeesDialog(false)}

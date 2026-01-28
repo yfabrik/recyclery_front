@@ -11,18 +11,8 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
+import type { CategoryModel, EcoOrgModel } from "../../interfaces/Models";
 
-type Category = {
-  id: number;
-  name: string;
-  subcategories: Category[]
-};
-
-
-type EcoOrganism = {
-  id: number;
-  name: string;
-};
 
 const disposalTypeEnum = z.enum(["eco_organism", "landfill", "other"]);
 
@@ -43,8 +33,8 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>;
 
 type WasteFormProps = BaseFormProps<Schema> & {
-  categories: Category[];
-  ecoOrganisms: EcoOrganism[];
+  categories: CategoryModel[];
+  ecoOrganisms: EcoOrgModel[];
   onWeightFieldClick: () => void;
 };
 
@@ -57,7 +47,7 @@ export const WasteForm = ({
   onWeightFieldClick,
 }: WasteFormProps) => {
   console.log(defaultValues)
-  const form = useForm<Schema>({
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       disposal_date: defaultValues?.disposal_date || new Date(),
