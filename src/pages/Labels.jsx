@@ -189,10 +189,10 @@ const Labels = () => {
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, barcode, {
       format: "CODE128",
-      width: 1.5,
-      height: 50,
+      width: 2,
+      height: 80,
       displayValue: true,
-      fontSize: 10
+      fontSize: 14
     });
     return canvas.toDataURL();
   };
@@ -238,10 +238,10 @@ const Labels = () => {
               justify-content: center;
               align-items: center;
               margin-bottom: 1mm;
+              padding: 0 1mm;
             }
             .barcode img {
-              max-width: 100%;
-              max-height: 70%;
+              height: auto;
               object-fit: contain;
             }
             .info-row {
