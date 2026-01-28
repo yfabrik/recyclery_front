@@ -1,7 +1,9 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { PRIORITIES as priorities } from "../../interfaces/shared";
+import { idSchema } from "../../interfaces/ZodTypes";
 import {
   FormDate,
   FormInput,
@@ -9,41 +11,22 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-import { PRIORITIES as priorities } from "../../interfaces/shared";
-import { useEffect } from "react";
-import { idSchema } from "../../interfaces/ZodTypes";
 
-type TaskOption = {
-  id: number | string;
-  name: string;
-  category: string;
-};
-
-type PriorityOption = {
-  value: string;
-  label: string;
-  icon?: React.ReactNode;
-};
 
 type StoreOption = {
   id: number;
   name: string;
 };
 
-type LocationOption = {
-  id: number | string;
-  name: string;
-  store_id: number;
-};
 
 const schema = z.object({
-  category: z.string("La tâche est requise").nonempty("La tâche est requise"),//TODO enum
+  category: z.enum(["vente","point","collection","custom"],"La tâche est requise"),
   scheduled_date: z.coerce.date("La date est requise"),
   start_time: z.coerce.date("L'heure de début est requise"),
   end_time: z.coerce.date("L'heure de fin est requise"),
-  priority: z.string().nonempty("La priorité est requise"),
-  store_id: z.union([idSchema(), z.literal("").transform(v => null)]),
-  reccurence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
+  priority: z.string().trim().nonempty("La priorité est requise"),
+  store_id: z.union([idSchema(), z.literal("").transform(() => null)]),
+  reccurence_pattern: z.enum(["", "daily", "weekly", "monthly"]).transform(v=>v==""?null:v),
   notes: z.string().transform(v => v == "" ? null : v),
 });
 
@@ -59,7 +42,7 @@ export const PlaningForm = ({
   defaultValues,
   stores,
 }: ScheduleFormProps) => {
-  const form = useForm<Schema>({
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       category: "",
