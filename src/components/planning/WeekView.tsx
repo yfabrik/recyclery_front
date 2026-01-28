@@ -1,3 +1,7 @@
+/**
+ * @deprecated
+ */
+
 import {
   Add,
   ArrowBackIos,
@@ -41,6 +45,9 @@ interface WeekViewProps {
   isCollectionTask:(t:TaskModel)=>boolean
 }
 
+/**
+ * @deprecated
+ */
 
 export const WeekView = ({
   filteredSchedules,

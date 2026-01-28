@@ -37,8 +37,6 @@ import {
 import JsBarcode from 'jsbarcode';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import NumericKeypad from '../components/NumericKeypad';
-import { useAuth } from '../contexts/AuthContext';
 
 import { StatCardNoIcon } from '../components/StatCard';
 import { LabeledItemForm } from '../components/forms/LabeledItemForm';
@@ -46,31 +44,17 @@ import { fetchCategories as fcat } from '../services/api/categories';
 import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
 
 const Labels = () => {
-  // const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [showWeightKeypad, setShowWeightKeypad] = useState(false);
-  const [showPriceKeypad, setShowPriceKeypad] = useState(false);
+
   const [filters, setFilters] = useState({
     status: '',
     category_id: '',
     search: ''
   });
-
-  // const [formData, setFormData] = useState({
-  //   description: '',
-  //   category_id: '',
-  //   subcategory_id: '',
-  //   weight: '',
-  //   price: '',
-  //   cost: '',
-  //   condition_state: 'good',
-  //   location: '',
-  //   autoPrint: false,
-  // });
 
   const conditionOptions = [
     { value: 'excellent', label: 'Excellent', color: 'success' },
@@ -94,7 +78,6 @@ const Labels = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem('token');
       const params = new URLSearchParams();
 
       if (filters.status) params.append('status', filters.status);
@@ -114,37 +97,12 @@ const Labels = () => {
 
   const fetchCategories = async () => {
     try {
-      // const token = localStorage.getItem('token');
       const response = await fcat({ only_category: true, include: "category" })
-      // await axios.get('/api/categories', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-
-      // Organiser les catégories comme dans les autres pages
-      // const allCategories = response.data.categories || [];
-      // const mainCategories = allCategories.filter(cat => !cat.parent_id);
-      // const subcategories = allCategories.filter(cat => cat.parent_id);
-
-      // const organizedCategories = mainCategories.map(category => ({
-      //   ...category,
-      //   subcategories: subcategories.filter(sub => sub.parent_id === category.id)
-      // }));
-
       setCategories(response.data.categories);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
     }
   };
-
-  // const handleInputChange = (field, value) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     [field]: value,
-  //     // Réinitialiser la sous-catégorie si la catégorie change
-  //     ...(field === 'category_id' ? { subcategory_id: '' } : {})
-  //   }));
-  // };
-
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
       ...prev,
@@ -152,46 +110,15 @@ const Labels = () => {
     }));
   };
 
-  // const resetForm = () => {
-  //   setFormData({
-  //     description: '',
-  //     category_id: '',
-  //     subcategory_id: '',
-  //     weight: '',
-  //     price: '',
-  //     cost: '',
-  //     condition_state: 'good',
-  //     location: '',
-  //     autoPrint: false,
-  //   });
-  //   setEditingItem(null);
-  // };
 
   const handleOpenDialog = (item = null) => {
     setEditingItem(item);
-
-    // if (item) {
-    //   setEditingItem(item);
-    //   setFormData({
-    //     description: item.description || '',
-    //     category_id: item.category_id || '',
-    //     subcategory_id: item.subcategory_id || '',
-    //     weight: item.weight || '',
-    //     price: item.price || '',
-    //     cost: item.cost || '',
-    //     condition_state: item.condition_state || 'good',
-    //     location: item.location || '',
-    //     autoPrint: false, // Par défaut désactivé pour la modification
-    //   });
-    // } else {
-    //   resetForm();
-    // }
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    // resetForm();
+
   };
 
   const handleSave = async (data) => {
@@ -201,7 +128,6 @@ const Labels = () => {
 
       if (editingItem?.id) {
         // Mise à jour
-
         const response = await updateLabeledItem(editingItem.id, data)
         savedItem = response.data.item;
         toast.success('Article mis à jour avec succès');
@@ -568,155 +494,7 @@ const Labels = () => {
         <DialogContent>
           <LabeledItemForm formId='labelItemForm' categories={categories} onSubmit={handleSave} defaultValues={editingItem} />
         </DialogContent>
-        {/* <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Catégories</InputLabel>
-                <Select
-                  value={formData.category_id}
-                  label="Catégories"
-                  onChange={(e) => handleInputChange('category_id', e.target.value)}
-                >
-                  {categories.filter(cat => !cat.parent_id).map(category => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Sous-catégories</InputLabel>
-                <Select
-                  value={formData.subcategory_id}
-                  label="Sous-catégories"
-                  onChange={(e) => handleInputChange('subcategory_id', e.target.value)}
-                  disabled={!formData.category_id}
-                >
-                  <MenuItem value="">Aucune</MenuItem>
-                  {categories.find(cat => cat.id === formData.category_id)?.subcategories?.map(subcategory => (
-                    <MenuItem key={subcategory.id} value={subcategory.id}>
-                      {subcategory.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Poids (kg)"
-                value={formData.weight}
-                onClick={() => setShowWeightKeypad(true)}
-                sx={{
-                  '& .MuiInputBase-input': {
-                    cursor: 'pointer',
-                    backgroundColor: '#f8f9fa'
-                  }
-                }}
-                placeholder="Cliquez pour saisir"
-                slotProps={{
-                  input: {
-                    startAdornment: <Scale sx={{ mr: 1, color: 'text.secondary' }} />,
-                    readOnly: true,
-                  }
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                label="Prix de vente (€)"
-                value={formData.price}
-                onClick={() => setShowPriceKeypad(true)}
-                sx={{
-                  '& .MuiInputBase-input': {
-                    cursor: 'pointer',
-                    backgroundColor: '#f8f9fa'
-                  }
-                }}
-                placeholder="Cliquez pour saisir"
-                slotProps={{
-                  input: {
-                    startAdornment: <Euro sx={{ mr: 1, color: 'text.secondary' }} />,
-                    readOnly: true,
-                  }
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>État</InputLabel>
-                <Select
-                  value={formData.condition_state}
-                  label="État"
-                  onChange={(e) => handleInputChange('condition_state', e.target.value)}
-                >
-                  {conditionOptions.map(condition => (
-                    <MenuItem key={condition.value} value={condition.value}>
-                      {condition.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Emplacement"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Ex: Rayon A, Étagère 2"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Description détaillée de l'article..."
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                p: 2,
-                backgroundColor: '#f8f9fa',
-                borderRadius: 1,
-                border: '1px solid #e0e0e0'
-              }}>
-                <Print sx={{ color: 'primary.main' }} />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle2" fontWeight="medium">
-                    Impression automatique
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Imprimer l'étiquette automatiquement après la sauvegarde
-                  </Typography>
-                </Box>
-                <Switch
-                  checked={formData.autoPrint}
-                  onChange={(e) => handleInputChange('autoPrint', e.target.checked)}
-                  color="primary"
-                />
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent> */}
+        
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type='submit' form='labelItemForm' variant="contained">
@@ -724,34 +502,6 @@ const Labels = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Modale pavé numérique pour le poids */}
-      {/* <Dialog open={showWeightKeypad} onClose={() => setShowWeightKeypad(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ textAlign: 'center' }}>Saisie du poids</DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <NumericKeypad
-            value={'0'}
-            onChange={(value) => handleInputChange('weight', value)}
-            onClose={() => setShowWeightKeypad(false)}
-            maxValue={9999}
-            decimalPlaces={1}
-            unit="kg"
-          />
-        </DialogContent>
-      </Dialog> */}
-      {/* Modale pavé numérique pour le prix */}
-      {/* <Dialog open={showPriceKeypad} onClose={() => setShowPriceKeypad(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ textAlign: 'center' }}>Saisie du prix</DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <NumericKeypad
-            value={'0'}
-            onChange={(value) => handleInputChange('price', value)}
-            onClose={() => setShowPriceKeypad(false)}
-            maxValue={99999}
-            decimalPlaces={2}
-            unit="€"
-          />
-        </DialogContent>
-      </Dialog> */}
     </Container>
   );
 };

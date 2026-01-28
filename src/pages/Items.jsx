@@ -23,6 +23,10 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
+/**
+ * @deprecated
+ * @returns 
+ */
 const Items = () => {
   // Données simulées
   const items = [

@@ -57,7 +57,9 @@ import {
 } from "../../../services/api/collectionPointPresence";
 import { fetchStores as fStores } from "../../../services/api/store";
 import { DAYS_OF_WEEK as dayOptions ,TIME_SLOTS as timeSlotOptions } from "../../../interfaces/shared";
-
+/**
+ * @deprecated
+ */
 const CollectionPointPresenceTab = () => {
   const [presenceHours, setPresenceHours] = useState([]);
   const [collectionPoints, setCollectionPoints] = useState([]);

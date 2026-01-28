@@ -52,7 +52,9 @@ import axios from 'axios';
 import { fetchStores as fStores } from '../../../services/api/store';
 import { createStoreHours, deleteStoreHours, fetchStoreHours as fStoreHours, updateStoreHours } from '../../../services/api/storeHours';
 import { DAYS_OF_WEEK as daysOfWeek ,TIME_SLOTS as timeSlots} from '../../../interfaces/shared';
-
+/**
+ * @deprecated
+ */
 const StoreHoursTab = () => {
   const [stores, setStores] = useState([]);
   const [storeHours, setStoreHours] = useState([]);

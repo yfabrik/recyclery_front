@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -19,7 +22,10 @@ import {
   Euro,
 } from '@mui/icons-material';
 
-const MoneyCounter = ({ onTotalChange, initialAmount = 0 }) => {
+/**
+ * @deprecated
+ */
+const MoneyCounter = ({ onTotalChange=()=>console.log("changed"), initialAmount = 0 }) => {
   // Définition des pièces et billets français
   const denominations = [
     // Pièces

@@ -14,6 +14,10 @@ import { useEffect, useState } from "react";
 import type { TaskModel } from "../interfaces/Models";
 import { getPlanning } from "../services/api/planning";
 
+/**
+ * @deprecated
+ * @returns 
+ */
 export const TestPage = () => {
   const [tasks, setTasks] = useState<TaskModel[]>([]);
   const [schedules, setSchedules] = useState([]);

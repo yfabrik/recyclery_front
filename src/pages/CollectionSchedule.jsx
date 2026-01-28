@@ -8,7 +8,10 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import CollectionCalendar from '../components/CollectionCalendar';
-
+/**
+ * @deprecated
+ * @returns 
+ */
 const CollectionSchedule = () => {
 
   return (

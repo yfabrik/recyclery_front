@@ -60,6 +60,10 @@ import {
   updateCaisse,
 } from "../services/api/store";
 
+/**
+ * @deprecated mais j'aime bien les card
+ * @returns 
+ */
 const Recycleries = () => {
   const { user, isAdmin } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);

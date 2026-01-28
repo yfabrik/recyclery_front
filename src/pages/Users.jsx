@@ -23,7 +23,10 @@ import {
   Work,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-
+/**
+ * 
+ * @returns @deprecated mais j'aime bien les card
+ */
 const Users = () => {
   const users = [
     {

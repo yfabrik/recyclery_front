@@ -21,7 +21,10 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-
+/**
+ * @deprecated
+ * @returns 
+ */
 const Donations = () => {
   const donations = [
     {

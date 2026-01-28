@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 import React from 'react';
 import {
   Box,
@@ -11,7 +14,9 @@ import {
   Check,
 } from '@mui/icons-material';
 
-
+/**
+ * @deprecated
+ */
 const NumericKeypad = ({
   value,
   onChange,

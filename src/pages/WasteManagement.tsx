@@ -6,7 +6,7 @@ import {
   Edit,
   FilterList,
   Nature,
-  TrendingUp
+  TrendingUp,
 } from "@mui/icons-material";
 import {
   Box,
@@ -35,15 +35,12 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import NumericKeypad from "../components/NumericKeypad";
-import {
-  fetchCategories as fcat,
-  getSubcategories,
-} from "../services/api/categories";
+import { WasteForm } from "../components/forms/WasteForm";
+import { fetchCategories as fcat } from "../services/api/categories";
 import { getEcoOrganisms } from "../services/api/ecoOrganism";
 import {
   createWaste,
@@ -52,21 +49,21 @@ import {
   getWasteStats,
   updateWaste,
 } from "../services/api/wasteDisposal";
-import { WasteForm } from "../components/forms/WasteForm";
+import type { CategoryModel, EcoOrgModel } from "../interfaces/Models";
 
 const WasteManagement = () => {
   // États principaux
   const [disposals, setDisposals] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [ecoOrganisms, setEcoOrganisms] = useState([]);
+  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  // const [subcategories, setSubcategories] = useState([]);
+  const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
   // États pour les dialogues
   const [disposalDialog, setDisposalDialog] = useState(false);
   const [editingDisposal, setEditingDisposal] = useState(null);
-  const [showWeightKeypad, setShowWeightKeypad] = useState(false);
+  // const [showWeightKeypad, setShowWeightKeypad] = useState(false);
   // const [disposalForm, setDisposalForm] = useState({
   //   disposal_date: new Date().toISOString().split("T")[0],
   //   category_id: "",
@@ -128,7 +125,7 @@ const WasteManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat({ only_category: true, include: 'category' });
+      const response = await fcat({ only_category: true, include: "category" });
       //  await axios.get('/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
@@ -148,7 +145,7 @@ const WasteManagement = () => {
 
   const fetchEcoOrganisms = async () => {
     try {
-      const response = await getEcoOrganisms({ active: 1 })
+      const response = await getEcoOrganisms({ active: 1 });
       setEcoOrganisms(response.data.eco_organisms || []);
     } catch (error) {
       console.error("Erreur lors du chargement des éco-organismes:", error);
@@ -161,7 +158,7 @@ const WasteManagement = () => {
         page: pagination.page,
         limit: pagination.limit,
         ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== "")
+          Object.entries(filters).filter(([_, value]) => value !== ""),
         ),
       });
 
@@ -230,7 +227,7 @@ const WasteManagement = () => {
   const handleSaveDisposal = async (data) => {
     try {
       const url = editingDisposal?.id
-        ? await updateWaste(editingDisposal.id,data)
+        ? await updateWaste(editingDisposal.id, data)
         : await createWaste(data);
       //
       // ? `/api/waste-disposals/${editingDisposal.id}`
@@ -244,7 +241,7 @@ const WasteManagement = () => {
       toast.success(
         editingDisposal?.id
           ? "Sortie de déchets mise à jour avec succès"
-          : "Sortie de déchets créée avec succès"
+          : "Sortie de déchets créée avec succès",
       );
 
       handleCloseDisposalDialog();
@@ -259,14 +256,14 @@ const WasteManagement = () => {
   const handleDeleteDisposal = async (id) => {
     if (
       !window.confirm(
-        "Êtes-vous sûr de vouloir supprimer cette sortie de déchets ?"
+        "Êtes-vous sûr de vouloir supprimer cette sortie de déchets ?",
       )
     ) {
       return;
     }
 
     try {
-      await deleteWaste(id)
+      await deleteWaste(id);
       // await axios.delete(`/api/waste-disposals/${id}`);
       toast.success("Sortie de déchets supprimée avec succès");
       fetchDisposals();
@@ -327,9 +324,13 @@ const WasteManagement = () => {
       <Typography variant="h4" gutterBottom>
         🗑️ Gestion des Déchets
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{
-        marginBottom: "16px"
-      }}>
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{
+          marginBottom: "16px",
+        }}
+      >
         Suivez et gérez les sorties de déchets vers les éco-organismes et
         déchetteries
       </Typography>
@@ -545,12 +546,12 @@ const WasteManagement = () => {
                 <TableRow key={disposal.id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">
-                      {disposal.disposal_number}
+                      {disposal.id}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     {new Date(disposal.disposal_date).toLocaleDateString(
-                      "fr-FR"
+                      "fr-FR",
                     )}
                   </TableCell>
                   <TableCell>
@@ -618,7 +619,14 @@ const WasteManagement = () => {
             : "Nouvelle Sortie de Déchets"}
         </DialogTitle>
         <DialogContent>
-          <WasteForm formId="wasteForm" defaultValues={editingDisposal} onSubmit={handleSaveDisposal} categories={categories} ecoOrganisms={ecoOrganisms} onWeightFieldClick={() => { }} />
+          <WasteForm
+            formId="wasteForm"
+            defaultValues={editingDisposal}
+            onSubmit={handleSaveDisposal}
+            categories={categories}
+            ecoOrganisms={ecoOrganisms}
+            onWeightFieldClick={() => {}}
+          />
           {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField

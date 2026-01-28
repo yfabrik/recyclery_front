@@ -1,3 +1,6 @@
+/***
+ * @deprecated maybe ?
+ */
 import { CalendarToday, Person, Warning } from "@mui/icons-material";
 import {
   Avatar,
@@ -10,7 +13,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-
+/***
+ * @deprecated maybe ?
+ */
 export const PlanningEmployeesBydays = () => {
   return (
     <Box sx={{ mb: 3 }}>

@@ -30,6 +30,9 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
+/**
+ * @deprecated
+ */
 const Sales = () => {
   const sales = [
     {

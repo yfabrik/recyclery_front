@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 import {
   AttachMoney,
   Inventory,
@@ -11,7 +14,9 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-
+/**
+ * @deprecated
+ */
 const QuickStat = ({ title, value, target, color = 'primary', icon }) => {
   const percentage = target ? (value / target) * 100 : 0;
   

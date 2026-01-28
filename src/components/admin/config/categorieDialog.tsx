@@ -31,6 +31,9 @@ interface CategoryDialogProps {
   categories:Array<CategorieModel>
   availableIcons:Array<{name:string,label:string}>
 }
+/**
+ * @deprecated
+ */
 export const CategoryDialog = ({
   openDialog,
   editingCategory,

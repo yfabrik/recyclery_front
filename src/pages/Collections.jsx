@@ -25,6 +25,11 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
+/**
+ * 
+ * @returns 
+ * @deprecated
+ */
 const Collections = () => {
   const [syncing, setSyncing] = useState(false);
 

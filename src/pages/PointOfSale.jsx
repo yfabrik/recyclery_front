@@ -6,7 +6,7 @@ import {
   PointOfSale as PosIcon,
   QrCodeScanner,
   Remove,
-  ShoppingCart
+  ShoppingCart,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -29,7 +29,7 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -44,7 +44,7 @@ import {
   OpenCaisse,
   closeCaisse,
   fetchStores as fStores,
-  getActiveCaisses
+  getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 const PointOfSale = () => {
@@ -61,7 +61,6 @@ const PointOfSale = () => {
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [manualItemDialog, setManualItemDialog] = useState(false);
 
-
   const [scanInput, setScanInput] = useState("");
   const [paymentData, setPaymentData] = useState({
     payment_method: "cash",
@@ -69,7 +68,6 @@ const PointOfSale = () => {
     customer_name: "",
     customer_email: "",
   });
-
 
   useEffect(() => {
     checkActiveSession();
@@ -106,26 +104,21 @@ const PointOfSale = () => {
     }
   };
 
-
   const handleOpenSession = async (data) => {
     try {
-     
       const response = await OpenCaisse(data);
 
       toast.success("Session ouverte avec succès");
       setOpenSessionDialog(false);
       checkActiveSession();
-
     } catch (error) {
       console.error("Erreur lors de l'ouverture:", error);
       toast.error(error.response?.data?.error || "Erreur lors de l'ouverture");
     }
   };
 
- 
   const handleCloseSession = async (data) => {
     try {
-     
       const response = await closeCaisse(activeSession.id, data);
 
       const { expected_amount, difference_amount } = response.data;
@@ -139,7 +132,6 @@ const PointOfSale = () => {
       setCloseSessionDialog(false);
       setActiveSession(null);
       setCart([]);
-
     } catch (error) {
       console.error("Erreur lors de la fermeture:", error);
       toast.error(error.response?.data?.error || "Erreur lors de la fermeture");
@@ -220,7 +212,6 @@ const PointOfSale = () => {
   };
 
   const handleAddManualItem = (data) => {
-
     // Générer un code-barres temporaire pour l'article manuel
     const tempBarcode = `MANUAL${Date.now()}`;
 
@@ -430,99 +421,6 @@ const PointOfSale = () => {
               stores={stores}
               // cashRegisters={cashRegisters}
             />
-            {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{ xs: 12 }}>
-                <FormControl fullWidth required>
-                  <InputLabel>Magasin</InputLabel>
-                  <Select
-                    value={sessionData.store_id}
-                    label="Magasin"
-                    onChange={(e) => handleStoreChange(e.target.value)}
-                  >
-                    {stores.map((store) => (
-                      <MenuItem key={store.id} value={store.id}>
-                        {store.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <FormControl fullWidth required>
-                  <InputLabel>Caisse</InputLabel>
-                  <Select
-                    value={sessionData.cash_register_id}
-                    label="Caisse"
-                    onChange={(e) =>
-                      setSessionData((prev) => ({
-                        ...prev,
-                        cash_register_id: e.target.value,
-                      }))
-                    }
-                    disabled={!sessionData.store_id}
-                  >
-                    {cashRegisters.map((register) => (
-                      <MenuItem key={register.id} value={register.id}>
-                        {register.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Fonds de caisse (€)"
-                  value={sessionData.opening_amount}
-                  onClick={() => setShowOpeningKeypad(true)}
-                  sx={{
-                    "& .MuiInputBase-input": {
-                      cursor: "pointer",
-                      backgroundColor: "#f8f9fa",
-                    },
-                  }}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                      ),
-                      readOnly: true,
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => setShowMoneyCounter(true)}
-                            startIcon={<AttachMoney />}
-                          >
-                            Compteur
-                          </Button>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label="Notes (optionnel)"
-                  value={sessionData.notes}
-                  onChange={(e) =>
-                    setSessionData((prev) => ({
-                      ...prev,
-                      notes: e.target.value,
-                    }))
-                  }
-                />
-              </Grid>
-            </Grid> */}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenSessionDialog(false)}>Annuler</Button>
@@ -531,56 +429,6 @@ const PointOfSale = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* Pavé numérique pour fonds de caisse */}
-        {/* <Dialog
-          open={showOpeningKeypad}
-          onClose={() => setShowOpeningKeypad(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle sx={{ textAlign: "center" }}>
-            Fonds de caisse
-          </DialogTitle>
-          <DialogContent sx={{ p: 2 }}>
-            <NumericKeypad
-              value={sessionData.opening_amount || "0"}
-              onChange={(value) =>
-                setSessionData((prev) => ({ ...prev, opening_amount: value }))
-              }
-              onClose={() => setShowOpeningKeypad(false)}
-              maxValue={99999}
-              decimalPlaces={2}
-              unit="€"
-            />
-          </DialogContent>
-        </Dialog> */}
-        {/* Dialog compteur de pièces et billets */}
-        {/* <Dialog
-          open={showMoneyCounter}
-          onClose={() => setShowMoneyCounter(false)}
-          maxWidth="lg"
-          fullWidth
-        >
-          <DialogTitle sx={{ textAlign: "center" }}>
-            Comptage des fonds de caisse
-          </DialogTitle>
-          <DialogContent sx={{ p: 3 }}>
-            <MoneyCounter
-              onTotalChange={handleMoneyCounterChange}
-              initialAmount={parseFloat(sessionData.opening_amount) || 0}
-            />
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setShowMoneyCounter(false)}>Annuler</Button>
-            <Button
-              onClick={() => setShowMoneyCounter(false)}
-              variant="contained"
-              startIcon={<CheckCircle />}
-            >
-              Valider le montant
-            </Button>
-          </DialogActions>
-        </Dialog> */}
       </Container>
     );
   }
@@ -868,50 +716,7 @@ const PointOfSale = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Pavé numérique pour poids manuel */}
-      {/* <Dialog
-        open={showManualWeightKeypad}
-        onClose={() => setShowManualWeightKeypad(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ textAlign: "center" }}>
-          Poids de l'article
-        </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <NumericKeypad
-            value={manualItemData.weight || "0"}
-            onChange={(value) =>
-              setManualItemData((prev) => ({ ...prev, weight: value }))
-            }
-            onClose={() => setShowManualWeightKeypad(false)}
-            maxValue={9999}
-            decimalPlaces={1}
-            unit="kg"
-          />
-        </DialogContent>
-      </Dialog> */}
-      {/* Pavé numérique pour prix manuel */}
-      {/* <Dialog
-        open={showManualPriceKeypad}
-        onClose={() => setShowManualPriceKeypad(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ textAlign: "center" }}>Prix de vente</DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <NumericKeypad
-            value={manualItemData.price || "0"}
-            onChange={(value) =>
-              setManualItemData((prev) => ({ ...prev, price: value }))
-            }
-            onClose={() => setShowManualPriceKeypad(false)}
-            maxValue={99999}
-            decimalPlaces={2}
-            unit="€"
-          />
-        </DialogContent>
-      </Dialog> */}
+
       {/* Dialog de fermeture de session */}
       <Dialog
         open={closeSessionDialog}
@@ -929,58 +734,6 @@ const PointOfSale = () => {
             formId="closeCaisseForm"
             onSubmit={handleCloseSession}
           />
-
-          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                required
-                label="Montant en caisse (€)"
-                value={closingData.closing_amount}
-                onClick={() => setShowClosingKeypad(true)}
-                sx={{
-                  "& .MuiInputBase-input": {
-                    cursor: "pointer",
-                    backgroundColor: "#f8f9fa",
-                  },
-                }}
-                helperText="Comptez l'argent physiquement présent dans la caisse"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                    ),
-                    readOnly: true,
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => setShowClosingMoneyCounter(true)}
-                          startIcon={<AttachMoney />}
-                        >
-                          Compteur
-                        </Button>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Notes de fermeture (optionnel)"
-                value={closingData.notes}
-                onChange={(e) =>
-                  setClosingData((prev) => ({ ...prev, notes: e.target.value }))
-                }
-              />
-            </Grid>
-          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCloseSessionDialog(false)}>Annuler</Button>
@@ -994,59 +747,7 @@ const PointOfSale = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Pavé numérique pour fermeture */}
-      {/* <Dialog
-        open={showClosingKeypad}
-        onClose={() => setShowClosingKeypad(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ textAlign: "center" }}>
-          Montant en caisse
-        </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <NumericKeypad
-            value={closingData.closing_amount || "0"}
-            onChange={(value) =>
-              setClosingData((prev) => ({ ...prev, closing_amount: value }))
-            }
-            onClose={() => setShowClosingKeypad(false)}
-            maxValue={99999}
-            decimalPlaces={2}
-            unit="€"
-          />
-        </DialogContent>
-      </Dialog> */}
-      {/* Dialog compteur de pièces et billets pour fermeture */}
-      {/* <Dialog
-        open={showClosingMoneyCounter}
-        onClose={() => setShowClosingMoneyCounter(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle sx={{ textAlign: "center" }}>
-          Comptage de fermeture de caisse
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <MoneyCounter
-            onTotalChange={handleClosingMoneyCounterChange}
-            initialAmount={ 0}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setShowClosingMoneyCounter(false)}>
-            Annuler
-          </Button>
-          <Button
-            onClick={() => setShowClosingMoneyCounter(false)}
-            variant="contained"
-            startIcon={<CheckCircle />}
-          >
-            Valider le montant
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-      {/* Dialog de paiement */}
+
       <Dialog
         open={paymentDialog}
         onClose={() => setPaymentDialog(false)}
@@ -1061,99 +762,6 @@ const PointOfSale = () => {
             totalCart={getCartTotal()}
             defaultValues={paymentData}
           />
-          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="h5" color="primary" textAlign="center">
-                Total à encaisser: {getCartTotal().toFixed(2)}€
-              </Typography>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth>
-                <InputLabel>Mode de paiement</InputLabel>
-                <Select
-                  value={paymentData.payment_method}
-                  label="Mode de paiement"
-                  onChange={(e) =>
-                    setPaymentData((prev) => ({
-                      ...prev,
-                      payment_method: e.target.value,
-                    }))
-                  }
-                >
-                  <MenuItem value="cash">Espèces</MenuItem>
-                  <MenuItem value="card">Carte bancaire</MenuItem>
-                  <MenuItem value="check">Chèque</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                required
-                label="Montant payé (€)"
-                value={paymentData.payment_amount}
-                onChange={(e) =>
-                  setPaymentData((prev) => ({
-                    ...prev,
-                    payment_amount: e.target.value,
-                  }))
-                }
-                type="number"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                    ),
-                  },
-
-                  htmlInput: { min: 0, step: 0.01 },
-                }}
-              />
-            </Grid>
-
-            {parseFloat(paymentData.payment_amount) > getCartTotal() && (
-              <Grid size={{ xs: 12 }}>
-                <Alert severity="info">
-                  Rendu à donner:{" "}
-                  {(
-                    parseFloat(paymentData.payment_amount) - getCartTotal()
-                  ).toFixed(2)}
-                  €
-                </Alert>
-              </Grid>
-            )}
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Nom du client (optionnel)"
-                value={paymentData.customer_name}
-                onChange={(e) =>
-                  setPaymentData((prev) => ({
-                    ...prev,
-                    customer_name: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Email du client (optionnel)"
-                type="email"
-                value={paymentData.customer_email}
-                onChange={(e) =>
-                  setPaymentData((prev) => ({
-                    ...prev,
-                    customer_email: e.target.value,
-                  }))
-                }
-              />
-            </Grid>
-          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPaymentDialog(false)}>Annuler</Button>
