@@ -23,7 +23,7 @@ const schema = z.object({
   parent_id: idSchema().nullable()
 })
 
-type Schema = z.infer<typeof schema>
+export type Schema = z.infer<typeof schema>
 
 export const CategorieForm = ({
   icons,

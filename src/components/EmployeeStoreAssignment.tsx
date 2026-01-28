@@ -161,7 +161,6 @@ const EmployeeStoreAssignment = ({
       <Grid container spacing={2}>
         {stores.map((store) => {
           const assignment = assignments.find((a) => a.id === store.id);
-          console.log("assigned",assignment)
           const isAssigned = !!assignment;
           const isPrimary = assignment?.is_primary || false;
 

@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 import { Assessment, LocalShipping, Receipt, Schedule } from "@mui/icons-material";
 import { Box, Button, Card, CardContent, Grid, Typography } from "@mui/material";
 

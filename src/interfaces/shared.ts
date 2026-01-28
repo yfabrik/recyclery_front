@@ -25,7 +25,7 @@ export const PRIORITIES = [
 ];
 
 export const RECURRENCE_PATTERNS = [
-  { value: "none", label: "Aucune" },
+  { value: "", label: "Aucune" },
   { value: "daily", label: "Quotidienne" },
   { value: "weekly", label: "Hebdomadaire" },
   { value: "monthly", label: "Mensuelle" },

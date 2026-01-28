@@ -1,61 +1,52 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
+  Add,
+  Delete,
+  Edit,
+  FilterList,
+  PointOfSale,
+  Print,
+  QrCode,
+  Search
+} from '@mui/icons-material';
+import {
   Box,
-  Paper,
-  Grid,
   Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Chip,
+  Container,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
+  TextField,
   Tooltip,
-  Card,
-  CardContent,
-  InputAdornment,
-  Switch,
+  Typography
 } from '@mui/material';
-import {
-  Add,
-  QrCode,
-  Print,
-  Edit,
-  Delete,
-  Search,
-  FilterList,
-  LocalOffer,
-  Scale,
-  Euro,
-  Visibility,
-  PointOfSale,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
-import NumericKeypad from '../components/NumericKeypad';
 import JsBarcode from 'jsbarcode';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import NumericKeypad from '../components/NumericKeypad';
+import { useAuth } from '../contexts/AuthContext';
 
-import { fetchCategories as fcat } from '../services/api/categories';
-import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
 import { StatCardNoIcon } from '../components/StatCard';
 import { LabeledItemForm } from '../components/forms/LabeledItemForm';
+import { fetchCategories as fcat } from '../services/api/categories';
+import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
 
 const Labels = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -549,7 +540,7 @@ const Labels = () => {
           {editingItem ? 'Modifier l\'article' : 'Nouvel article'}
         </DialogTitle>
         <DialogContent>
-          <LabeledItemForm formId='labelItemForm' categories={categories} onSubmit={handleSave} setShowPriceKeypad={setShowPriceKeypad} setShowWeightKeypad={setShowWeightKeypad} defaultValues={editingItem} />
+          <LabeledItemForm formId='labelItemForm' categories={categories} onSubmit={handleSave} defaultValues={editingItem} />
         </DialogContent>
         {/* <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -708,7 +699,7 @@ const Labels = () => {
         </DialogActions>
       </Dialog>
       {/* Modale pavé numérique pour le poids */}
-      <Dialog open={showWeightKeypad} onClose={() => setShowWeightKeypad(false)} maxWidth="xs" fullWidth>
+      {/* <Dialog open={showWeightKeypad} onClose={() => setShowWeightKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du poids</DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <NumericKeypad
@@ -720,9 +711,9 @@ const Labels = () => {
             unit="kg"
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
       {/* Modale pavé numérique pour le prix */}
-      <Dialog open={showPriceKeypad} onClose={() => setShowPriceKeypad(false)} maxWidth="xs" fullWidth>
+      {/* <Dialog open={showPriceKeypad} onClose={() => setShowPriceKeypad(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>Saisie du prix</DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <NumericKeypad
@@ -734,7 +725,7 @@ const Labels = () => {
             unit="€"
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </Container>
   );
 };

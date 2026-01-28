@@ -10,8 +10,7 @@ import {
   Refresh,
   Schedule,
   Search,
-  Store,
-  Work,
+  Store
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -40,17 +39,17 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
-import EmployeeWorkdays from "../../EmployeeWorkdays";
-import { EmployeeForm } from "../../forms/EmployeeForm";
-import { fetchStores } from "../../../services/api/store";
+import type { EmployeeModel, StoreModel } from "../../../interfaces/Models";
 import {
   createEmployees,
   deleteEmployee,
   getEmployees,
   updateEmployee,
 } from "../../../services/api/employee";
-import type { EmployeeModel, StoreModel } from "../../../interfaces/Models";
+import { fetchStores } from "../../../services/api/store";
+import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
+import EmployeeWorkdays from "../../EmployeeWorkdays";
+import { EmployeeForm } from "../../forms/EmployeeForm";
 
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState<EmployeeModel[]>([]);
@@ -67,21 +66,7 @@ const EmployeeManagement = () => {
   const [openStoreAssignmentDialog, setOpenStoreAssignmentDialog] =
     useState(false);
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
-  //   const [editingEmployee
-  // , setEditingEmployee
-  // ] =
-  //     useState<EmployeeModel | null>(null);
-
   const [stores, setStores] = useState<StoreModel[]>([]);
-
-  // const [formData, setFormData] = useState({
-  //   username: '',
-  //   email: '',
-  //   role: 'employee',
-  //   recyclery_id: null,
-  //   phone: '',
-  //   contract_hours: 35
-  // });
 
   const skillsOptions = [
     "Collecte",
@@ -547,81 +532,7 @@ const EmployeeManagement = () => {
             stores={stores}
             defaultValues={editingEmployee}
           />
-          {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12,sm:6}}>
-              <TextField
-                fullWidth
-                required
-                label="Nom d'utilisateur"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12,sm:6}}>
-              <TextField
-                fullWidth
-                required
-                type="email"
-                label="Email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12,sm:6}}>
-              <FormControl fullWidth required>
-                <InputLabel>Rôle</InputLabel>
-                <Select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  label="Rôle"
-                >
-                  {roleOptions.map(role => (
-                    <MenuItem key={role.value} value={role.value}>
-                      {role.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12,sm:6}}>
-              <TextField
-                fullWidth
-                label="Téléphone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="06 12 34 56 78"
-              />
-            </Grid>
-            <Grid size={{ xs: 12,sm:6}}>
-              <TextField
-                fullWidth
-                label="Heures de contrat par semaine"
-                name="contract_hours"
-                type="number"
-                value={formData.contract_hours}
-                onChange={handleInputChange}
-                helperText="Nombre d'heures par semaine (défaut: 35h)"
-                slotProps={{
-                  htmlInput: { min: 1, max: 60 }
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12,sm:6}}>
-              <TextField
-                fullWidth
-                label="ID Recyclerie"
-                name="recyclery_id"
-                type="number"
-                value={formData.recyclery_id || ''}
-                onChange={handleInputChange}
-                helperText="ID de la recyclerie (optionnel)"
-              />
-            </Grid>
-          </Grid> */}
+
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>

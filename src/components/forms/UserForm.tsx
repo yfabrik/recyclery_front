@@ -25,7 +25,7 @@ const schema = z.object({
     .transform((val) => (val == "" ? null : val)),
   phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   password: z.string(),
-  role: z.string(),
+  role: z.string().nonempty("role requis"),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   is_active: z.boolean().default(true),
 });

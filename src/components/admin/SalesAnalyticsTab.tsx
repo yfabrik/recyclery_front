@@ -37,40 +37,44 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import apiConfig from "../../config/api";
 
+import type { StoreModel, TransactionModel } from "../../interfaces/Models";
 import { fetchStores as fStore } from "../../services/api/store";
-import { createCreditNote, createRefund, getRefundForTransaction, getTransactions, getTranscationPostalStats, getTranscationStats } from "../../services/api/transactions";
-import type { StoreModel } from "../../interfaces/Models";
+import {
+  createCreditNote,
+  createRefund,
+  getRefundForTransaction,
+  getTransactions,
+  getTranscationPostalStats,
+  getTranscationStats,
+} from "../../services/api/transactions";
 
-interface transcation{
-    id?:number
-transaction_number:string
-created_at:Date
-store_name:string
-payment_method:string
-cashier_name:string
-total_amount:string
-refunded_at?:Date
+// interface transcation {
+//   id?: number;
+//   transaction_number: string;
+//   created_at: Date;
+//   store_name: string;
+//   payment_method: string;
+//   cashier_name: string;
+//   total_amount: string;
+//   refunded_at?: Date;
+// }
+
+interface refund {
+  id?: number;
+  refund_type: string;
+  refund_amount: string;
+  refund_reason: string;
+  refund_method: string;
+  created_at: Date;
+  created_by_name: string;
+  status: string;
 }
-
-interface refund{
-id?:number
-refund_type:string
-refund_amount:string
-refund_reason:string
-refund_method:string
-created_at:Date
-created_by_name:string
-status:string
-}
-
 
 export const SalesAnalyticsTab = () => {
-  const [salesData, setSalesData] = useState<transcation[]>([]);
+  const [salesData, setSalesData] = useState<TransactionModel[]>([]);
   const [stores, setStores] = useState<StoreModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -95,7 +99,8 @@ export const SalesAnalyticsTab = () => {
 
   // États pour la pop-up de remboursement
   const [refundDialog, setRefundDialog] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<transcation|null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionModel | null>(null);
   const [refundForm, setRefundForm] = useState({
     refund_type: "full", // 'full' ou 'partial'
     refund_amount: "",
@@ -116,7 +121,7 @@ export const SalesAnalyticsTab = () => {
   // États pour la pop-up des avoirs
   const [creditNoteDialog, setCreditNoteDialog] = useState(false);
   const [selectedTransactionForCredit, setSelectedTransactionForCredit] =
-    useState<transcation|null>(null);
+    useState<TransactionModel | null>(null);
   const [creditNoteForm, setCreditNoteForm] = useState({
     reason: "",
     credit_amount: "",
@@ -133,8 +138,7 @@ export const SalesAnalyticsTab = () => {
 
   const fetchStores = async () => {
     try {
-
-      const response =await fStore({active:true})
+      const response = await fStore({ active: true });
 
       setStores(response.data.stores);
     } catch (error) {
@@ -155,22 +159,20 @@ export const SalesAnalyticsTab = () => {
       };
 
       // Récupérer les transactions
-      const transactionsResponse = await getTransactions(apiParams)
+      const transactionsResponse = await getTransactions(apiParams);
       // Récupérer les statistiques
-      const statsResponse = await getTranscationStats(apiParams)
+      const statsResponse = await getTranscationStats(apiParams);
       // Récupérer les statistiques par code postal
-      const postalResponse = await getTranscationPostalStats(apiParams)
+      const postalResponse = await getTranscationPostalStats(apiParams);
 
       let transactions = transactionsResponse.data.transactions || [];
 
       // Filtrage côté client par numéro de transaction si spécifié
       if (filters.transaction_number) {
         transactions = transactions.filter(
-          (transaction:transcation) =>
-            transaction.transaction_number &&
-            transaction.transaction_number
-              .toLowerCase()
-              .includes(filters.transaction_number.toLowerCase())
+          (transaction: TransactionModel) =>
+            transaction.id &&
+            transaction.id.toString().includes(filters.transaction_number),
         );
       }
 
@@ -188,7 +190,7 @@ export const SalesAnalyticsTab = () => {
     }
   };
 
-  const handlePeriodChange = (period:string) => {
+  const handlePeriodChange = (period: string) => {
     const today = new Date();
     let date_from, date_to;
 
@@ -218,14 +220,14 @@ export const SalesAnalyticsTab = () => {
     }));
   };
 
-  const formatCurrency = (amount:number) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
     }).format(amount || 0);
   };
 
-  const getPaymentMethodLabel = (method:"cash"|"card"|"check") => {
+  const getPaymentMethodLabel = (method: "cash" | "card" | "check") => {
     const labels = {
       cash: "Espèces",
       card: "Carte bancaire",
@@ -235,7 +237,7 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonctions de gestion des actions
-  const handleCreditNote = (transaction:transcation) => {
+  const handleCreditNote = (transaction: TransactionModel) => {
     setSelectedTransactionForCredit(transaction);
     setCreditNoteForm({
       reason: "",
@@ -245,15 +247,15 @@ export const SalesAnalyticsTab = () => {
     setCreditNoteDialog(true);
   };
 
-  const handleReprintReceipt = (transactionId:number) => {
+  const handleReprintReceipt = (transactionId: number) => {
     // Fonction pour réimprimer le ticket de caisse
     toast.success(
-      `Réimpression du ticket de caisse ${transactionId} en cours...`
+      `Réimpression du ticket de caisse ${transactionId} en cours...`,
     );
     // Ici on pourrait ajouter la logique d'impression réelle
   };
 
-  const handleRefund = (transaction:transcation) => {
+  const handleRefund = (transaction: TransactionModel) => {
     // Ouvrir la pop-up de remboursement avec les données de la transaction
     setSelectedTransaction(transaction);
     setRefundForm({
@@ -308,7 +310,7 @@ export const SalesAnalyticsTab = () => {
         notes: refundForm.notes,
       };
 
-      await createRefund(refundData)
+      await createRefund(refundData);
 
       toast.success("Remboursement effectué avec succès");
       setRefundDialog(false);
@@ -340,11 +342,11 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonction pour récupérer les remboursements d'une transaction
-  const fetchTransactionRefunds = async (transactionId) => {
+  const fetchTransactionRefunds = async (transactionId: number) => {
     try {
       setLoadingRefunds(true);
 
-      const response = await getRefundForTransaction(transactionId)
+      const response = await getRefundForTransaction(transactionId);
       if (response.data.success) {
         setTransactionRefunds(response.data.refunds || []);
       }
@@ -390,8 +392,7 @@ export const SalesAnalyticsTab = () => {
         notes: creditNoteForm.notes,
       };
 
-      await createCreditNote(creditNoteData)
-
+      await createCreditNote(creditNoteData);
 
       toast.success("Avoir créé avec succès");
       setCreditNoteDialog(false);
@@ -418,7 +419,7 @@ export const SalesAnalyticsTab = () => {
     try {
       const refundsPromises = transactions.map(async (transaction) => {
         try {
-          const response = await getRefundForTransaction(transaction.id)
+          const response = await getRefundForTransaction(transaction.id);
 
           return {
             transactionId: transaction.id,
@@ -427,7 +428,7 @@ export const SalesAnalyticsTab = () => {
         } catch (error) {
           console.error(
             `Erreur récupération remboursements transaction ${transaction.id}:`,
-            error
+            error,
           );
           return {
             transactionId: transaction.id,
@@ -607,7 +608,7 @@ export const SalesAnalyticsTab = () => {
                       <Clear />
                     </IconButton>
                   ),
-                }
+                },
               }}
             />
           </Grid>
@@ -625,7 +626,7 @@ export const SalesAnalyticsTab = () => {
                     date_from: new Date(
                       new Date().getFullYear(),
                       new Date().getMonth(),
-                      1
+                      1,
                     )
                       .toISOString()
                       .split("T")[0],
@@ -675,7 +676,7 @@ export const SalesAnalyticsTab = () => {
                     Brut:{" "}
                     {formatCurrency(
                       statistics.total_sales_before_refunds ||
-                        statistics.total_sales
+                        statistics.total_sales,
                     )}
                   </Typography>
                   <Typography variant="caption" color="error" display="block">
@@ -890,15 +891,20 @@ export const SalesAnalyticsTab = () => {
                             year: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
+                          },
                         )}
                       </TableCell>
-                      <TableCell>{transaction?.CashSession?.CashRegister?.Recyclery.name || "N/A"}</TableCell>
-                      <TableCell>{transaction?.CashSession?.User?.username || "N/A"}</TableCell>
+                      <TableCell>
+                        {transaction?.CashSession?.CashRegister?.Recyclery
+                          .name || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {transaction?.CashSession?.User?.username || "N/A"}
+                      </TableCell>
                       <TableCell>
                         <Chip
                           label={getPaymentMethodLabel(
-                            transaction.payment_method
+                            transaction.payment_method,
                           )}
                           size="small"
                           color={
@@ -932,13 +938,13 @@ export const SalesAnalyticsTab = () => {
                           const totalRefunded = refunds.reduce(
                             (sum, refund) =>
                               sum + parseFloat(refund.refund_amount),
-                            0
+                            0,
                           );
                           const isFullRefund = refunds.some(
-                            (refund) => refund.refund_type === "full"
+                            (refund) => refund.refund_type === "full",
                           );
                           const hasCreditNote = refunds.some(
-                            (refund) => refund.refund_type === "credit_note"
+                            (refund) => refund.refund_type === "credit_note",
                           );
 
                           return (
@@ -970,20 +976,20 @@ export const SalesAnalyticsTab = () => {
                                       refund.refund_type === "full"
                                         ? "Total"
                                         : refund.refund_type === "partial"
-                                        ? "Partiel"
-                                        : refund.refund_type === "credit_note"
-                                        ? "Avoir"
-                                        : refund.refund_type
+                                          ? "Partiel"
+                                          : refund.refund_type === "credit_note"
+                                            ? "Avoir"
+                                            : refund.refund_type
                                     }
                                     size="small"
                                     color={
                                       refund.refund_type === "full"
                                         ? "error"
                                         : refund.refund_type === "partial"
-                                        ? "warning"
-                                        : refund.refund_type === "credit_note"
-                                        ? "info"
-                                        : "default"
+                                          ? "warning"
+                                          : refund.refund_type === "credit_note"
+                                            ? "info"
+                                            : "default"
                                     }
                                     variant="outlined"
                                   />
@@ -1038,9 +1044,7 @@ export const SalesAnalyticsTab = () => {
                               size="small"
                               color="info"
                               onClick={() =>
-                                handleReprintReceipt(
-                                  transaction.transaction_number
-                                )
+                                handleReprintReceipt(transaction.id)
                               }
                             >
                               <Print />
@@ -1077,8 +1081,7 @@ export const SalesAnalyticsTab = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Undo color="error" />
             <Typography variant="h6">
-              Remboursement - Transaction #
-              {selectedTransaction?.transaction_number}
+              Remboursement - Transaction #{selectedTransaction?.id}
             </Typography>
           </Box>
         </DialogTitle>
@@ -1105,7 +1108,7 @@ export const SalesAnalyticsTab = () => {
                         Mode de paiement:{" "}
                         <strong>
                           {getPaymentMethodLabel(
-                            selectedTransaction.payment_method
+                            selectedTransaction.payment_method,
                           )}
                         </strong>
                       </Typography>
@@ -1115,7 +1118,7 @@ export const SalesAnalyticsTab = () => {
                         Date:{" "}
                         <strong>
                           {new Date(
-                            selectedTransaction.created_at
+                            selectedTransaction.createdAt,
                           ).toLocaleDateString("fr-FR")}
                         </strong>
                       </Typography>
@@ -1124,7 +1127,8 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="body2" color="textSecondary">
                         Caissier:{" "}
                         <strong>
-                          {selectedTransaction.cashier_name || "N/A"}
+                          {selectedTransaction.CashSession?.User?.username ||
+                            "N/A"}
                         </strong>
                       </Typography>
                     </Grid>
@@ -1161,14 +1165,14 @@ export const SalesAnalyticsTab = () => {
                       handleRefundFormChange("refund_amount", e.target.value)
                     }
                     helperText={`Maximum: ${formatCurrency(
-                      selectedTransaction.total_amount
+                      selectedTransaction.total_amount,
                     )}`}
                     slotProps={{
                       htmlInput: {
                         min: 0.01,
                         max: selectedTransaction.total_amount,
                         step: 0.01,
-                      }
+                      },
                     }}
                   />
                 </Grid>
@@ -1244,7 +1248,7 @@ export const SalesAnalyticsTab = () => {
                       {formatCurrency(
                         refundForm.refund_type === "full"
                           ? selectedTransaction.total_amount
-                          : parseFloat(refundForm.refund_amount || 0)
+                          : parseFloat(refundForm.refund_amount || 0),
                       )}
                     </strong>
                   </Typography>
@@ -1282,8 +1286,7 @@ export const SalesAnalyticsTab = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Visibility color="primary" />
             <Typography variant="h6">
-              Détails de la Transaction #
-              {selectedTransaction?.transaction_number}
+              Détails de la Transaction #{selectedTransaction?.id}
             </Typography>
           </Box>
         </DialogTitle>
@@ -1303,10 +1306,7 @@ export const SalesAnalyticsTab = () => {
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 6, md: 3 }}>
                       <Typography variant="body2" color="textSecondary">
-                        Numéro:{" "}
-                        <strong>
-                          #{selectedTransaction.transaction_number}
-                        </strong>
+                        Numéro: <strong>#{selectedTransaction.id}</strong>
                       </Typography>
                     </Grid>
                     <Grid size={{ xs: 6, md: 3 }}>
@@ -1322,7 +1322,7 @@ export const SalesAnalyticsTab = () => {
                         Mode de paiement:{" "}
                         <strong>
                           {getPaymentMethodLabel(
-                            selectedTransaction.payment_method
+                            selectedTransaction.payment_method,
                           )}
                         </strong>
                       </Typography>
@@ -1332,7 +1332,7 @@ export const SalesAnalyticsTab = () => {
                         Date:{" "}
                         <strong>
                           {new Date(
-                            selectedTransaction.created_at
+                            selectedTransaction.createdAt,
                           ).toLocaleDateString("fr-FR")}
                         </strong>
                       </Typography>
@@ -1342,7 +1342,7 @@ export const SalesAnalyticsTab = () => {
                         Heure:{" "}
                         <strong>
                           {new Date(
-                            selectedTransaction.created_at
+                            selectedTransaction.createdAt,
                           ).toLocaleTimeString("fr-FR")}
                         </strong>
                       </Typography>
@@ -1351,7 +1351,8 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="body2" color="textSecondary">
                         Caissier:{" "}
                         <strong>
-                          {selectedTransaction.cashier_name || "N/A"}
+                          {selectedTransaction.CashSession?.User?.username ||
+                            "N/A"}
                         </strong>
                       </Typography>
                     </Grid>
@@ -1359,7 +1360,8 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="body2" color="textSecondary">
                         Magasin:{" "}
                         <strong>
-                          {selectedTransaction.store_name || "N/A"}
+                          {selectedTransaction.CashSession?.CashRegister
+                            ?.Recyclery?.name || "N/A"}
                         </strong>
                       </Typography>
                     </Grid>
@@ -1459,7 +1461,7 @@ export const SalesAnalyticsTab = () => {
                               <TableCell>
                                 <Chip
                                   label={getPaymentMethodLabel(
-                                    refund.refund_method
+                                    refund.refund_method,
                                   )}
                                   color="info"
                                   size="small"
@@ -1468,7 +1470,7 @@ export const SalesAnalyticsTab = () => {
                               <TableCell>
                                 <Typography variant="body2">
                                   {new Date(refund.created_at).toLocaleString(
-                                    "fr-FR"
+                                    "fr-FR",
                                   )}
                                 </Typography>
                               </TableCell>
@@ -1536,8 +1538,8 @@ export const SalesAnalyticsTab = () => {
                           transactionRefunds.reduce(
                             (sum, refund) =>
                               sum + parseFloat(refund.refund_amount),
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </Typography>
                     </Grid>
@@ -1551,8 +1553,8 @@ export const SalesAnalyticsTab = () => {
                             transactionRefunds.reduce(
                               (sum, refund) =>
                                 sum + parseFloat(refund.refund_amount),
-                              0
-                            )
+                              0,
+                            ),
                         )}
                       </Typography>
                     </Grid>
@@ -1577,8 +1579,7 @@ export const SalesAnalyticsTab = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Receipt color="warning" />
             <Typography variant="h6">
-              Créer un avoir - Transaction #
-              {selectedTransactionForCredit?.transaction_number}
+              Créer un avoir - Transaction #{selectedTransactionForCredit?.id}
             </Typography>
           </Box>
         </DialogTitle>
@@ -1597,7 +1598,7 @@ export const SalesAnalyticsTab = () => {
                         Montant total:{" "}
                         <strong>
                           {formatCurrency(
-                            selectedTransactionForCredit.total_amount
+                            selectedTransactionForCredit.total_amount,
                           )}
                         </strong>
                       </Typography>
@@ -1607,7 +1608,7 @@ export const SalesAnalyticsTab = () => {
                         Mode de paiement:{" "}
                         <strong>
                           {getPaymentMethodLabel(
-                            selectedTransactionForCredit.payment_method
+                            selectedTransactionForCredit.payment_method,
                           )}
                         </strong>
                       </Typography>
@@ -1617,7 +1618,7 @@ export const SalesAnalyticsTab = () => {
                         Date:{" "}
                         <strong>
                           {new Date(
-                            selectedTransactionForCredit.created_at
+                            selectedTransactionForCredit.createdAt,
                           ).toLocaleDateString("fr-FR")}
                         </strong>
                       </Typography>
@@ -1626,7 +1627,8 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="body2" color="textSecondary">
                         Caissier:{" "}
                         <strong>
-                          {selectedTransactionForCredit.cashier_name || "N/A"}
+                          {selectedTransactionForCredit.CashSession?.User
+                            ?.username || "N/A"}
                         </strong>
                       </Typography>
                     </Grid>
@@ -1671,14 +1673,14 @@ export const SalesAnalyticsTab = () => {
                     handleCreditNoteFormChange("credit_amount", e.target.value)
                   }
                   helperText={`Maximum: ${formatCurrency(
-                    selectedTransactionForCredit.total_amount
+                    selectedTransactionForCredit.total_amount,
                   )}`}
                   slotProps={{
                     htmlInput: {
                       min: 0.01,
                       max: selectedTransactionForCredit.total_amount,
                       step: 0.01,
-                    }
+                    },
                   }}
                 />
               </Grid>

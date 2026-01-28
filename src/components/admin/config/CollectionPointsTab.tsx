@@ -44,45 +44,35 @@ import {
   updatePointPresence,
 } from "../../../services/api/collectionPointPresence";
 import { fetchStores } from "../../../services/api/store";
-import { CollectionPointForm } from "../../forms/CollectionPointForm";
+import {
+  CollectionPointForm,
+  type Schema,
+} from "../../forms/CollectionPointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
+import {
+  type CollectionPointModel,
+  type StoreModel,
+  type PointPresenceModel,
+} from "../../../interfaces/Models";
 
 const CollectionPointsTab = () => {
-  const [collectionPoints, setCollectionPoints] = useState([]);
-  const [recycleries, setRecycleries] = useState([]);
+  const [collectionPoints, setCollectionPoints] = useState<
+    CollectionPointModel[]
+  >([]);
+  const [recycleries, setRecycleries] = useState<StoreModel[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingPoint, setEditingPoint] = useState(null);
+  const [editingPoint, setEditingPoint] = useState<CollectionPointModel | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   // États pour les onglets et présence
   const [tabValue, setTabValue] = useState(0);
-  const [presenceData, setPresenceData] = useState([]);
+  const [presenceData, setPresenceData] = useState<PointPresenceModel[]>([]);
   const [presenceLoading, setPresenceLoading] = useState(false);
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
-  const [editingPresence, setEditingPresence] = useState(null);
-  // const [formData, setFormData] = useState({
-  //   name: "",
-  //   address: "",
-  //   city: "",
-  //   postal_code: "",
-  //   contact_person: "",
-  //   contact_phone: "",
-  //   contact_email: "",
-  //   type: "standard",
-  //   notes: "",
-  //   is_active: true,
-  //   recyclery_id: null,
-  // });
-
-  // const [presenceFormData, setPresenceFormData] = useState({
-  //   collection_point_id: "",
-  //   date: "",
-  //   start_time: "",
-  //   end_time: "",
-  //   employee_name: "",
-  //   notes: "",
-  //   is_present: true,
-  // });
+  const [editingPresence, setEditingPresence] =
+    useState<PointPresenceModel | null>(null);
 
   useEffect(() => {
     fetchCollectionPoints();
@@ -113,40 +103,8 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const handleOpenDialog = (point = null) => {
+  const handleOpenDialog = (point: CollectionPointModel | null = null) => {
     setEditingPoint(point);
-    // if (point) {
-    //   setEditingPoint(point);
-    //   setFormData({
-    //     name: point.name || "",
-    //     address: point.address || "",
-    //     city: point.city || "",
-    //     postal_code: point.postal_code || "",
-    //     contact_person: point.contact_person || "",
-    //     contact_phone: point.contact_phone || "",
-    //     contact_email: point.contact_email || "",
-    //     type: point.type || "standard",
-    //     notes: point.notes || "",
-    //     is_active:
-    //       point.is_active !== undefined ? Boolean(point.is_active) : true,
-    //     recyclery_id: point.recyclery_id || null,
-    //   });
-    // } else {
-    //   setEditingPoint(null);
-    //   setFormData({
-    //     name: "",
-    //     address: "",
-    //     city: "",
-    //     postal_code: "",
-    //     contact_person: "",
-    //     contact_phone: "",
-    //     contact_email: "",
-    //     type: "standard",
-    //     notes: "",
-    //     is_active: true,
-    //     recyclery_id: null,
-    //   });
-    // }
     setOpenDialog(true);
   };
 
@@ -155,15 +113,7 @@ const CollectionPointsTab = () => {
     setEditingPoint(null);
   };
 
-  // const handleInputChange = (e) => {
-  //   const { name, value, type, checked } = e.target;
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     [name]: type === "checkbox" ? checked : value,
-  //   }));
-  // };
-
-  const handleSave = async (data) => {
+  const handleSave = async (data: Schema) => {
     try {
       //FIXME
       //faudrait pas faire data = {...editing,...data} ?
@@ -185,7 +135,7 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const handleDelete = async (point) => {
+  const handleDelete = async (point: CollectionPointModel) => {
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${point.name}" ?`)
     ) {
@@ -202,7 +152,7 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (type: string) => {
     const types = {
       standard: "Standard",
       enterprise: "Entreprise",
@@ -214,7 +164,7 @@ const CollectionPointsTab = () => {
     return types[type] || type;
   };
 
-  const getTypeColor = (type) => {
+  const getTypeColor = (type: string) => {
     const colors = {
       standard: "default",
       enterprise: "primary",
@@ -240,56 +190,17 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const handleOpenPresenceDialog = (presence = null) => {
+  const handleOpenPresenceDialog = (
+    presence: PointPresenceModel | null = null,
+  ) => {
     setEditingPresence(presence);
-
-    // if (presence) {
-    //   setEditingPresence(presence);
-    //   setPresenceFormData({
-    //     collection_point_id: presence.collection_point_id,
-    //     date: presence.date,
-    //     start_time: presence.start_time,
-    //     end_time: presence.end_time,
-    //     employee_name: presence.employee_name,
-    //     notes: presence.notes,
-    //     is_present: presence.is_present,
-    //   });
-    // } else {
-    //   setEditingPresence(null);
-    //   setPresenceFormData({
-    //     collection_point_id: "",
-    //     date: new Date().toISOString().split("T")[0],
-    //     start_time: "09:00",
-    //     end_time: "17:00",
-    //     employee_name: "",
-    //     notes: "",
-    //     is_present: true,
-    //   });
-    // }
     setPresenceDialogOpen(true);
   };
 
   const handleClosePresenceDialog = () => {
     setPresenceDialogOpen(false);
     setEditingPresence(null);
-    // setPresenceFormData({
-    //   collection_point_id: "",
-    //   date: new Date().toISOString().split("T")[0],
-    //   start_time: "09:00",
-    //   end_time: "17:00",
-    //   employee_name: "",
-    //   notes: "",
-    //   is_present: true,
-    // });
   };
-
-  // const handlePresenceInputChange = (e) => {
-  //   const { name, value, type, checked } = e.target;
-  //   setPresenceFormData((prev) => ({
-  //     ...prev,
-  //     [name]: type === "checkbox" ? checked : value,
-  //   }));
-  // };
 
   const handleSavePresence = async (data) => {
     try {
@@ -311,7 +222,7 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const handleDeletePresence = async (id) => {
+  const handleDeletePresence = async (id: number) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette présence ?")) {
       try {
         await deletePointPresence(id);
@@ -487,142 +398,10 @@ const CollectionPointsTab = () => {
                 onSubmit={handleSave}
                 defaultValues={editingPoint}
               />
-              {/* <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Nom du point"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Type</InputLabel>
-                    <Select
-                      name="type"
-                      value={formData.type}
-                      onChange={handleInputChange}
-                      label="Type"
-                    >
-                      <MenuItem value="standard">Standard</MenuItem>
-                      <MenuItem value="enterprise">Entreprise</MenuItem>
-                      <MenuItem value="association">Association</MenuItem>
-                      <MenuItem value="school">École</MenuItem>
-                      <MenuItem value="hospital">Hôpital</MenuItem>
-                      <MenuItem value="other">Autre</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Adresse"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    required
-                    multiline
-                    rows={2}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 8 }}>
-                  <TextField
-                    fullWidth
-                    label="Ville"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <TextField
-                    fullWidth
-                    label="Code postal"
-                    name="postal_code"
-                    value={formData.postal_code}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Personne de contact"
-                    name="contact_person"
-                    value={formData.contact_person}
-                    onChange={handleInputChange}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Téléphone"
-                    name="contact_phone"
-                    value={formData.contact_phone}
-                    onChange={handleInputChange}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    name="contact_email"
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={handleInputChange}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Recyclerie</InputLabel>
-                    <Select
-                      name="recyclery_id"
-                      value={formData.recyclery_id || ""}
-                      onChange={handleInputChange}
-                      label="Recyclerie"
-                    >
-                      <MenuItem value="">Aucune</MenuItem>
-                      {recycleries.map((recyclery) => (
-                        <MenuItem key={recyclery.id} value={recyclery.id}>
-                          {recyclery.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    multiline
-                    rows={3}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.is_active}
-                        onChange={handleInputChange}
-                        name="is_active"
-                      />
-                    }
-                    label="Point actif"
-                  />
-                </Grid>
-              </Grid> */}
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDialog}>Annuler</Button>
               <Button
-                // onClick={handleSave}
                 type="submit"
                 form="collectionPointForm"
                 variant="contained"
@@ -716,13 +495,10 @@ const CollectionPointsTab = () => {
                             },
                           )}{" "}
                           -{" "}
-                          {new Date(presence.end_time).toLocaleString(
-                            "fr-FR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            },
-                          )}
+                          {new Date(presence.end_time).toLocaleString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -782,91 +558,6 @@ const CollectionPointsTab = () => {
             onSubmit={handleSavePresence}
             defaultValues={editingPresence}
           />
-          {/* <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Point de Collecte</InputLabel>
-                <Select
-                  name="collection_point_id"
-                  value={presenceFormData.collection_point_id}
-                  onChange={handlePresenceInputChange}
-                  label="Point de Collecte"
-                >
-                  {collectionPoints.map((point) => (
-                    <MenuItem key={point.id} value={point.id}>
-                      {point.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Date"
-                name="date"
-                type="date"
-                value={presenceFormData.date}
-                onChange={handlePresenceInputChange}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Heure de début"
-                name="start_time"
-                type="time"
-                value={presenceFormData.start_time}
-                onChange={handlePresenceInputChange}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Heure de fin"
-                name="end_time"
-                type="time"
-                value={presenceFormData.end_time}
-                onChange={handlePresenceInputChange}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Nom de l'employé"
-                name="employee_name"
-                value={presenceFormData.employee_name}
-                onChange={handlePresenceInputChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={presenceFormData.is_present}
-                    onChange={handlePresenceInputChange}
-                    name="is_present"
-                  />
-                }
-                label="Présent"
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Notes (optionnel)"
-                name="notes"
-                multiline
-                rows={3}
-                value={presenceFormData.notes}
-                onChange={handlePresenceInputChange}
-                placeholder="Ex: Collecte exceptionnelle, problème technique..."
-              />
-            </Grid>
-          </Grid> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePresenceDialog}>Annuler</Button>
