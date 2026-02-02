@@ -18,6 +18,7 @@ interface CalendarViewProps {
   isPresenceTask: (t: TaskModel) => boolean;
   getTaskDisplayName: (t: TaskModel) => string;
   handleDeleteTask: (t: TaskModel) => void;
+  handleAssignEmployeesToTask: (t: TaskModel) => void;
   selectedDate: Date;
 }
 interface CalendarDay {
@@ -34,6 +35,7 @@ export const CalendarView = ({
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
+  handleAssignEmployeesToTask,
 }: CalendarViewProps) => {
   const getScheduleDays = (currentDate: Date) => {
     const daySchedules = Array.isArray(filteredSchedules)
@@ -58,7 +60,8 @@ export const CalendarView = ({
     // Premier lundi de la semaine contenant le premier jour
     const startDate = new Date(firstDay);
     startDate.setDate(
-      firstDay.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1)
+      firstDay.getDate() -
+        (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1),
     );
 
     const days = [];
@@ -89,7 +92,7 @@ export const CalendarView = ({
     "dimanche",
   ];
 
-  const {getEmployeeColor,getEmployeeInitials}=useEmployee()
+  const { getEmployeeColor, getEmployeeInitials } = useEmployee();
 
   return (
     <Box>
@@ -177,8 +180,6 @@ export const CalendarView = ({
                   sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
                 >
                   {day.schedules.slice(0, 2).map((schedule, scheduleIndex) => {
-                   
-
                     return (
                       <Box
                         key={scheduleIndex}
@@ -310,7 +311,7 @@ export const CalendarView = ({
                                             height: 14,
                                             fontSize: "0.5rem",
                                             bgcolor: getEmployeeColor(
-                                              emp.username
+                                              emp.username,
                                             ),
                                             color: "white",
                                             fontWeight: "bold",
@@ -382,7 +383,7 @@ export const CalendarView = ({
                                                 height: 24,
                                                 fontSize: "0.8rem",
                                                 bgcolor: getEmployeeColor(
-                                                  emp.username
+                                                  emp.username,
                                                 ),
                                                 color: "white",
                                                 fontWeight: "bold",
@@ -391,7 +392,7 @@ export const CalendarView = ({
                                               title={emp.username}
                                             >
                                               {getEmployeeInitials(
-                                                emp.username
+                                                emp.username,
                                               )}
                                             </Avatar>
                                             <Typography
@@ -409,7 +410,7 @@ export const CalendarView = ({
                                               {emp.username}
                                             </Typography>
                                           </Box>
-                                        )
+                                        ),
                                       )}
                                     </Box>
                                   </Box>
@@ -432,7 +433,7 @@ export const CalendarView = ({
                             variant="contained"
                             onClick={(e) => {
                               e.stopPropagation();
-                              alert("Bouton cliqué !");
+                              handleAssignEmployeesToTask(schedule);
                             }}
                             sx={{
                               bgcolor: "#4caf50",
@@ -454,7 +455,7 @@ export const CalendarView = ({
                               e.stopPropagation();
                               console.log(
                                 "Modification de la tâche:",
-                                schedule
+                                schedule,
                               );
                               handleOpenDialog(schedule);
                             }}

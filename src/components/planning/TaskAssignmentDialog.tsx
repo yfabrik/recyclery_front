@@ -344,10 +344,10 @@ interface TaskAssignmentDialogProps {
   open: boolean;
   onClose: () => void;
   selectedTask: TaskModel;
-  assignedEmployees: EmployeeModel[];
-  availableEmployees: EmployeeModel[];
-  onAssignEmployee: (employeeId: number) => void;
-  onUnassignEmployee: (employeeId: number) => void;
+  // assignedEmployees: EmployeeModel[];
+  // availableEmployees: EmployeeModel[];
+  onAssignEmployee?: (employeeId: number) => void;
+  onUnassignEmployee?: (employeeId: number) => void;
   onCloseWithChanges?: () => void; // Callback triggered when dialog closes AND changes were made
 }
 // Main Compound Component
@@ -355,16 +355,16 @@ const TaskAssignmentDialog = ({
   open,
   onClose,
   selectedTask,
-  assignedEmployees,
-  availableEmployees,
+  // assignedEmployees,
+  // availableEmployees,
   onAssignEmployee,
   onUnassignEmployee,
   onCloseWithChanges,
 }: TaskAssignmentDialogProps) => {
   const [taskAssignedEmployees, setTaskAssignedEmployees] =
-    useState<EmployeeModel[]>(assignedEmployees);
+    useState<EmployeeModel[]>([]);
   const [availableEmployeesForTask, setAvailableEmployeesForTask] =
-    useState<EmployeeModel[]>(availableEmployees);
+    useState<EmployeeModel[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for useEffect
   const [hasChanges, setHasChanges] = useState(false); // Track if any changes were made
 

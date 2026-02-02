@@ -34,7 +34,6 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -53,9 +52,7 @@ import type {
 import { getEmployees } from "../services/api/employee";
 import {
   createPlanning,
-  deletePlanning,
-  getAvailableUserForTask,
-  updatePlanning,
+  updatePlanning
 } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
 import {
@@ -109,12 +106,12 @@ const Planning = () => {
     useState(false);
   const [selectedTaskForAssignment, setSelectedTaskForAssignment] =
     useState<TaskModel | null>(null);
-  const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<
-    EmployeeModel[]
-  >([]);
-  const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<
-    EmployeeModel[]
-  >([]);
+  // const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<
+  //   EmployeeModel[]
+  // >([]);
+  // const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<
+  //   EmployeeModel[]
+  // >([]);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -452,10 +449,8 @@ const Planning = () => {
       return;
     }
     setSelectedTaskForAssignment(schedule);
-    // Log de débogage pour les tâches de présence
-    if (isPresenceTask(schedule)) {
-      // Log de débogage supprimé pour éviter la boucle infinie
-    }
+    setOpenTaskAssignmentDialog(true);
+
     try {
       // Vérification supplémentaire pour s'assurer que schedule a toutes les propriétés nécessaires
       if (
@@ -471,29 +466,29 @@ const Planning = () => {
         return;
       }
 
-      const availableEmployeesResponse = await getAvailableUserForTask(
-        schedule.id,
-      );
+      // const availableEmployeesResponse = await getAvailableUserForTask(
+      //   schedule.id,
+      // );
 
-      if (availableEmployeesResponse.data.success) {
-        // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
-        const employeesWithStatus =
-          availableEmployeesResponse.data.employees.map((emp) => ({
-            ...emp,
-            is_assigned_to_task: !emp.is_available,
-          }));
+      // if (availableEmployeesResponse.data.success) {
+      //   // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
+      //   const employeesWithStatus =
+      //     availableEmployeesResponse.data.employees.map((emp) => ({
+      //       ...emp,
+      //       is_assigned_to_task: !emp.is_available,
+      //     }));
 
-        setAvailableEmployeesForTask(employeesWithStatus);
+      //   setAvailableEmployeesForTask(employeesWithStatus);
 
-        // Récupérer aussi les employés déjà assignés à cette tâche
-        setTaskAssignedEmployees(
-          availableEmployeesResponse.data.employees.filter(
-            (emp) => emp.already_assigned,
-          ),
-        );
-      } else {
-        throw new Error("Erreur lors du chargement des employés disponibles");
-      }
+      //   // Récupérer aussi les employés déjà assignés à cette tâche
+      //   setTaskAssignedEmployees(
+      //     availableEmployeesResponse.data.employees.filter(
+      //       (emp) => emp.already_assigned,
+      //     ),
+      //   );
+      // } else {
+      //   throw new Error("Erreur lors du chargement des employés disponibles");
+      // }
 
       setOpenTaskAssignmentDialog(true);
     } catch (error) {
@@ -506,96 +501,94 @@ const Planning = () => {
   const handleCloseTaskAssignmentDialog = () => {
     setOpenTaskAssignmentDialog(false);
     setSelectedTaskForAssignment(null);
-    setTaskAssignedEmployees([]);
-    setAvailableEmployeesForTask([]);
   };
 
   // Fonction pour assigner un employé à une tâche spécifique
-  const handleAssignEmployeeToTask = async (employeeId) => {
-    // Vérification de sécurité
-    if (!selectedTaskForAssignment || !selectedTaskForAssignment.id) {
-      console.error(
-        "Erreur: selectedTaskForAssignment invalide dans handleAssignEmployeeToTask",
-      );
-      toast.error("Erreur: Tâche non sélectionnée");
-      return;
-    }
+  // const handleAssignEmployeeToTask = async (employeeId) => {
+  //   // Vérification de sécurité
+  //   if (!selectedTaskForAssignment || !selectedTaskForAssignment.id) {
+  //     console.error(
+  //       "Erreur: selectedTaskForAssignment invalide dans handleAssignEmployeeToTask",
+  //     );
+  //     toast.error("Erreur: Tâche non sélectionnée");
+  //     return;
+  //   }
 
-    try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl = "";
-      await axios.post(
-        `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees`,
-        {
-          employee_id: employeeId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const apiBaseUrl = "";
+  //     await axios.post(
+  //       `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees`,
+  //       {
+  //         employee_id: employeeId,
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
 
-      // Mettre à jour la liste des employés assignés
-      const employee = availableEmployeesForTask.find(
-        (emp) => emp.id === employeeId,
-      );
-      if (employee) {
-        setTaskAssignedEmployees((prev) => [...prev, employee]);
-      }
+  //     // Mettre à jour la liste des employés assignés
+  //     const employee = availableEmployeesForTask.find(
+  //       (emp) => emp.id === employeeId,
+  //     );
+  //     if (employee) {
+  //       setTaskAssignedEmployees((prev) => [...prev, employee]);
+  //     }
 
-      toast.success("Employé assigné avec succès");
+  //     toast.success("Employé assigné avec succès");
 
-      // Fermer le dialogue et forcer le rechargement complet
-      handleCloseTaskAssignmentDialog();
+  //     // Fermer le dialogue et forcer le rechargement complet
+  //     handleCloseTaskAssignmentDialog();
 
-      // Forcer le rechargement complet des données
-      setTimeout(() => {
-        fetchSchedules();
-        // setForceUpdate((prev) => prev + 1);
-      }, 500);
-    } catch (error) {
-      console.error("Erreur lors de l'assignation:", error);
+  //     // Forcer le rechargement complet des données
+  //     setTimeout(() => {
+  //       fetchSchedules();
+  //       // setForceUpdate((prev) => prev + 1);
+  //     }, 500);
+  //   } catch (error) {
+  //     console.error("Erreur lors de l'assignation:", error);
 
-      // Gérer spécifiquement les erreurs de conflit d'horaires
-      if (
-        error.response &&
-        error.response.status === 400 &&
-        error.response.data.message
-      ) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Erreur lors de l'assignation");
-      }
-    }
-  };
+  //     // Gérer spécifiquement les erreurs de conflit d'horaires
+  //     if (
+  //       error.response &&
+  //       error.response.status === 400 &&
+  //       error.response.data.message
+  //     ) {
+  //       toast.error(error.response.data.message);
+  //     } else {
+  //       toast.error("Erreur lors de l'assignation");
+  //     }
+  //   }
+  // };
 
   // Fonction pour retirer un employé d'une tâche spécifique
-  const handleUnassignEmployeeFromTask = async (employeeId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-      await axios.delete(
-        `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees/${employeeId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+  // const handleUnassignEmployeeFromTask = async (employeeId) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+  //     await axios.delete(
+  //       `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees/${employeeId}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     );
 
-      // Mettre à jour la liste des employés assignés
-      setTaskAssignedEmployees((prev) =>
-        prev.filter((emp) => emp.id !== employeeId),
-      );
+  //     // Mettre à jour la liste des employés assignés
+  //     setTaskAssignedEmployees((prev) =>
+  //       prev.filter((emp) => emp.id !== employeeId),
+  //     );
 
-      toast.success("Employé retiré avec succès");
+  //     toast.success("Employé retiré avec succès");
 
-      // Rafraîchir les données du planning sans recharger la page
-      setTimeout(() => {
-        fetchSchedules();
-      }, 1000);
-    } catch (error) {
-      console.error("Erreur lors du retrait:", error);
-      toast.error("Erreur lors du retrait");
-    }
-  };
+  //     // Rafraîchir les données du planning sans recharger la page
+  //     setTimeout(() => {
+  //       fetchSchedules();
+  //     }, 1000);
+  //   } catch (error) {
+  //     console.error("Erreur lors du retrait:", error);
+  //     toast.error("Erreur lors du retrait");
+  //   }
+  // };
 
   // Fonctions pour gérer le popup de conflit
   const handleConfirmConflict = async () => {
@@ -772,6 +765,7 @@ const Planning = () => {
   };
 
   const getTaskDisplayName = (schedule) => {
+    return schedule.name;
     // Si c'est une tâche de vente (avec notes contenant "Vente -")
     if (schedule.notes?.includes("Vente -")) {
       return "Vente";
@@ -898,6 +892,7 @@ const Planning = () => {
             getTaskDisplayName={getTaskDisplayName}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
+            handleAssignEmployeesToTask={handleAssignEmployeesToTask}
             isOpeningTask={isOpeningTask}
             isPresenceTask={isPresenceTask}
             selectedDate={selectedDate}
@@ -1275,8 +1270,8 @@ const Planning = () => {
         open={openTaskAssignmentDialog}
         onClose={handleCloseTaskAssignmentDialog}
         selectedTask={selectedTaskForAssignment}
-        assignedEmployees={taskAssignedEmployees}
-        availableEmployees={availableEmployeesForTask}
+        // assignedEmployees={taskAssignedEmployees}
+        // availableEmployees={availableEmployeesForTask}
         // onAssignEmployee={handleAssignEmployeeToTask}
         // onUnassignEmployee={handleUnassignEmployeeFromTask}
         onCloseWithChanges={() => {
