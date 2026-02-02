@@ -120,7 +120,7 @@ export const ConfigurationTab = () => {
             "&.Mui-selected": { color: "#d32f2f", backgroundColor: "#ffebee" },
           }}
         />
-        <Tab
+        {/* <Tab
           label="Tâches"
           // value="tasks"
           // to="tasks"
@@ -130,7 +130,7 @@ export const ConfigurationTab = () => {
           sx={{
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
-        />
+        /> */}
          <Tab
           label="Collectes"
           // value="tasks"
@@ -186,9 +186,9 @@ export const ConfigurationTab = () => {
         {tabValue === 2 && <StoresTab />}
         {tabValue === 3 && <EcoOrganismsTab />}
         {tabValue === 4 && <EmployeeManagement />}
-        {tabValue === 5 && <TaskManagement />}
-        {tabValue === 6 && <CollectTab />}
-        {tabValue === 7 && <CollectionPointPresenceTab />}
+        {/* {tabValue === 5 && <TaskManagement />} */}
+        {tabValue === 5 && <CollectTab />}
+        {/* {tabValue === 7 && <CollectionPointPresenceTab />} */}
       </Box>
     </Box>
   );
