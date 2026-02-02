@@ -44,7 +44,6 @@ export const CalendarView = ({
             scheduleDate.getMonth() === currentDate.getMonth() &&
             scheduleDate.getFullYear() === currentDate.getFullYear();
 
-          console.log(schedule);
           return matches;
         })
       : [];

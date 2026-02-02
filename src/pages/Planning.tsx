@@ -58,7 +58,12 @@ import {
   updatePlanning,
 } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
-import { createTask, deleteTask, getTasks, updateTask } from "../services/api/tasks";
+import {
+  createTask,
+  deleteTask,
+  getTasks,
+  updateTask,
+} from "../services/api/tasks";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState<TaskModel[]>([]);
@@ -129,10 +134,10 @@ const Planning = () => {
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
-  useEffect(() => {
-    console.log("e", employeesPresent);
-    console.log("u", schedules);
-  }, [schedules, employeesPresent]);
+  // useEffect(() => {
+  //   console.log("e", employeesPresent);
+  //   console.log("u", schedules);
+  // }, [schedules, employeesPresent]);
 
   const statusOptions = [
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
@@ -167,7 +172,7 @@ const Planning = () => {
 
   useEffect(() => {
     fetchSchedules();
-  }, [selectedStore]);
+  }, [selectedStore, selectedDate]);
 
   // Recharger les employés quand le magasin sélectionné change
   useEffect(() => {
@@ -184,8 +189,12 @@ const Planning = () => {
         // params.store_id = parseInt(selectedStore);
         params.store_id = selectedStore.id;
       }
-
-      const r = await getTasks({ include: "user" });
+      if (viewMode == "week") {
+        const thisWeek = new Date(selectedDate);
+        params.date_from = new Date(thisWeek);
+        params.date_to = new Date(thisWeek.setDate(thisWeek.getDate() + 6));
+      }
+      const r = await getTasks({ include: "user", ...params });
       const tasks: TaskModel[] = r.data.tasks;
       const synchronizedSchedules = tasks.map((task, i, array) => {
         const users = task.Employees || [];
