@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import {
@@ -7,19 +8,17 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
 import {
-  DAYS_OF_WEEK as daysOfWeek,
-  TIME_SLOTS as timeSlotOptions,
+  DAYS_OF_WEEK as daysOfWeek
 } from "../../interfaces/shared";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   store_id: idSchema("choississez un magasin"),
-  day_of_week: z.string(),
+  day_of_week: z.string().nonempty("choisissez un jour"),
   is_open: z.boolean(),
   open_time: z.coerce.date(),
   close_time: z.coerce.date(),
