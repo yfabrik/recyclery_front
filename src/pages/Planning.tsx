@@ -42,7 +42,7 @@ import { PlaningForm } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
 import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
-import { PrecenseEmployees } from "../components/planning/PresenceEmployees";
+import { EmployeePresenceSchedule } from "../components/planning/PresenceEmployees";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
 import type {
@@ -58,7 +58,7 @@ import {
   updatePlanning,
 } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
-import { createTask, getTasks, updateTask } from "../services/api/tasks";
+import { createTask, deleteTask, getTasks, updateTask } from "../services/api/tasks";
 
 const Planning = () => {
   const [schedules, setSchedules] = useState<TaskModel[]>([]);
@@ -423,7 +423,7 @@ const Planning = () => {
       )
     ) {
       try {
-        await deletePlanning(schedule.id);
+        await deleteTask(schedule.id);
         toast.success("Tâche supprimée avec succès");
         fetchSchedules();
       } catch (error) {
@@ -863,12 +863,12 @@ const Planning = () => {
       </Box>
 
       {/* Planning des employés par jour */}
-      <PrecenseEmployees
+      <EmployeePresenceSchedule
         employeesByDay={getEmployeesByDay()}
         loadingEmployeesPresent={loadingEmployeesPresent}
         selectedStore={selectedStore}
         setShowMissingEmployeesDialog={setShowMissingEmployeesDialog}
-      ></PrecenseEmployees>
+      ></EmployeePresenceSchedule>
 
       <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
         <PlanningViewHeader

@@ -57,7 +57,6 @@ const WeekViewSections = ({
         chipSx={{ bgcolor: "#e8f5e8", color: "#4caf50", fontWeight: "bold" }}
         cardColor="#4caf50"
         borderColor="#4caf50"
-        
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -108,7 +107,6 @@ const WeekViewSections = ({
         chipSx={{ bgcolor: "#e8f5e8", color: "#4caf50", fontWeight: "bold" }}
         cardColor="#4caf50"
         borderColor="#4caf50"
-        
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -136,7 +134,6 @@ const WeekViewSections = ({
               emptyText="Aucune tâche"
             >
               {daySchedules.map((schedule, j) => {
-
                 return (
                   <TaskCardContent
                     key={j}
@@ -160,7 +157,6 @@ const WeekViewSections = ({
         chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
         cardColor="#ff9800"
         borderColor="#ff9800"
-        
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -361,7 +357,107 @@ const WeekViewSections = ({
         })}
       </WeekTaskSection>
 
-      <WeekCollectionSection
+      <WeekTaskSection
+        title="🚚 Lieux de collecte - Matin (8h-12h)"
+        chipLabel={`${filteredSchedules("collection", 8, 12).length} lieux de collecte`}
+        chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
+        cardColor="#9c27b0"
+        borderColor="#9c27b0"
+      >
+        {weekDays.map((day, index) => {
+          const daySchedules = Array.isArray(schedules)
+            ? filteredSchedules("collection", 8, 12).filter((schedule) => {
+                const scheduleDate = new Date(schedule.scheduled_date);
+                return (
+                  scheduleDate.getDate() === day.getDate() &&
+                  scheduleDate.getMonth() === day.getMonth() &&
+                  scheduleDate.getFullYear() === day.getFullYear()
+                );
+              })
+            : [];
+          return (
+            <TaskCard
+              key={day.toISOString()}
+              day={day}
+              dayName={dayNames[index]}
+              cardColor="#9c27b0"
+              borderColor="#9c27b0"
+              getEmployeeColor={getEmployeeColor}
+              getEmployeeInitials={getEmployeeInitials}
+              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+              handleOpenDialog={handleOpenDialog}
+              handleDeleteTask={handleDeleteTask}
+              emptyText="Aucun lieu de collecte"
+            >
+              {daySchedules.map((schedule, j) => {
+                return (
+                  <TaskCardContent
+                    key={j}
+                    schedule={schedule}
+                    getEmployeeColor={getEmployeeColor}
+                    getEmployeeInitials={getEmployeeInitials}
+                    handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                    handleOpenDialog={handleOpenDialog}
+                    handleDeleteTask={handleDeleteTask}
+                  ></TaskCardContent>
+                );
+              })}
+            </TaskCard>
+          );
+        })}
+      </WeekTaskSection>
+
+      <WeekTaskSection
+        title="🚚 Lieux de collecte - Après-midi (13h-17h)"
+        chipLabel={`${filteredSchedules("collection", 13, 17).length} lieux de collecte`}
+        chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
+        cardColor="#9c27b0"
+        borderColor="#9c27b0"
+      >
+        {weekDays.map((day, index) => {
+          const daySchedules = Array.isArray(schedules)
+            ? filteredSchedules("collection", 13, 17).filter((schedule) => {
+                const scheduleDate = new Date(schedule.scheduled_date);
+                return (
+                  scheduleDate.getDate() === day.getDate() &&
+                  scheduleDate.getMonth() === day.getMonth() &&
+                  scheduleDate.getFullYear() === day.getFullYear()
+                );
+              })
+            : [];
+          return (
+            <TaskCard
+              key={day.toISOString()}
+              day={day}
+              dayName={dayNames[index]}
+              cardColor="#9c27b0"
+              borderColor="#9c27b0"
+              getEmployeeColor={getEmployeeColor}
+              getEmployeeInitials={getEmployeeInitials}
+              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+              handleOpenDialog={handleOpenDialog}
+              handleDeleteTask={handleDeleteTask}
+              emptyText="Aucun lieu de collecte"
+            >
+              {daySchedules.map((schedule, j) => {
+                return (
+                  <TaskCardContent
+                    key={j}
+                    schedule={schedule}
+                    getEmployeeColor={getEmployeeColor}
+                    getEmployeeInitials={getEmployeeInitials}
+                    handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                    handleOpenDialog={handleOpenDialog}
+                    handleDeleteTask={handleDeleteTask}
+                  ></TaskCardContent>
+                );
+              })}
+            </TaskCard>
+          );
+        })}
+      </WeekTaskSection>
+
+      {/* <WeekCollectionSection
         title="🚚 Lieux de collecte - Matin (8h-12h)"
         chipLabel={`${filteredSchedules("collection", 8, 12).length} lieux de collecte`}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
@@ -379,7 +475,7 @@ const WeekViewSections = ({
         collections={schedules.filter((s) => s.category == "collection")}
         filteredSchedules={filteredSchedules("collection", 13, 17)}
         handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-      />
+      /> */}
     </Box>
   );
 };
