@@ -1,30 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { CalendarToday, Save, WbSunny, WbTwilight } from "@mui/icons-material";
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Grid,
-  FormControlLabel,
   Checkbox,
-  Button,
   Chip,
-  Alert,
   CircularProgress,
+  FormControlLabel,
+  Grid,
   TextField,
-  Divider,
-} from '@mui/material';
-import {
-  CalendarToday,
-  AccessTime,
-  Save,
-  Cancel,
-  WbSunny,
-  WbTwilight,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import axios from 'axios';
-import { addWorkdaysToUser, getUserWorkdays } from '../services/api/users';
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { addWorkdaysToUser, getUserWorkdays } from "../services/api/users";
 
 const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const [workdays, setWorkdays] = useState([]);
@@ -32,18 +22,23 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const [saving, setSaving] = useState(false);
 
   const daysOfWeek = [
-    { key: 'monday', label: 'Lundi', short: 'Lun' },
-    { key: 'tuesday', label: 'Mardi', short: 'Mar' },
-    { key: 'wednesday', label: 'Mercredi', short: 'Mer' },
-    { key: 'thursday', label: 'Jeudi', short: 'Jeu' },
-    { key: 'friday', label: 'Vendredi', short: 'Ven' },
-    { key: 'saturday', label: 'Samedi', short: 'Sam' },
-    { key: 'sunday', label: 'Dimanche', short: 'Dim' }
+    { key: "monday", label: "Lundi", short: "Lun" },
+    { key: "tuesday", label: "Mardi", short: "Mar" },
+    { key: "wednesday", label: "Mercredi", short: "Mer" },
+    { key: "thursday", label: "Jeudi", short: "Jeu" },
+    { key: "friday", label: "Vendredi", short: "Ven" },
+    { key: "saturday", label: "Samedi", short: "Sam" },
+    { key: "sunday", label: "Dimanche", short: "Dim" },
   ];
 
   const timeSlots = [
-    { key: 'morning', label: 'Matin', icon: <WbSunny />, color: '#ff9800' },
-    { key: 'afternoon', label: 'Après-midi', icon: <WbTwilight />, color: '#2196f3' }
+    { key: "morning", label: "Matin", icon: <WbSunny />, color: "#ff9800" },
+    {
+      key: "afternoon",
+      label: "Après-midi",
+      icon: <WbTwilight />,
+      color: "#2196f3",
+    },
   ];
 
   useEffect(() => {
@@ -53,92 +48,92 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   const fetchWorkdays = async () => {
     try {
       setLoading(true);
-      // const token = localStorage.getItem('token');
-      
-      const response = await getUserWorkdays(employeeId)
-      // await axios.get(`/api/employee-workdays/employee/${employeeId}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
+      const response = await getUserWorkdays(employeeId);
       const existingWorkdays = response.data.workdays || [];
-      
+
       // Initialiser la structure complète des jours de travail
       const initializedWorkdays = [];
-      
-      daysOfWeek.forEach(day => {
-        timeSlots.forEach(slot => {
-          const existing = existingWorkdays.find(w => 
-            w.day_of_week === day.key && w.time_slot === slot.key
+
+      daysOfWeek.forEach((day) => {
+        timeSlots.forEach((slot) => {
+          const existing = existingWorkdays.find(
+            (w) => w.day_of_week === day.key && w.time_slot === slot.key,
           );
-          
+
           initializedWorkdays.push({
             day_of_week: day.key,
             time_slot: slot.key,
             is_working: existing ? existing.is_working == 1 : false,
-            start_time: existing?.start_time || (slot.key === 'morning' ? '08:00' : '13:30'),
-            end_time: existing?.end_time || (slot.key === 'morning' ? '12:00' : '17:00'),
-            notes: existing?.notes || ''
+            start_time:
+              existing?.start_time ||
+              (slot.key === "morning" ? "08:00" : "13:30"),
+            end_time:
+              existing?.end_time ||
+              (slot.key === "morning" ? "12:00" : "17:00"),
+            notes: existing?.notes || "",
           });
         });
       });
-      
+
       setWorkdays(initializedWorkdays);
-      
     } catch (error) {
-      console.error('Erreur lors du chargement des jours de travail:', error);
-      toast.error('Erreur lors du chargement des jours de travail');
+      console.error("Erreur lors du chargement des jours de travail:", error);
+      toast.error("Erreur lors du chargement des jours de travail");
     } finally {
       setLoading(false);
     }
   };
 
   const updateWorkday = (dayOfWeek, timeSlot, field, value) => {
-    setWorkdays(prev => 
-      prev.map(workday => 
+    setWorkdays((prev) =>
+      prev.map((workday) =>
         workday.day_of_week === dayOfWeek && workday.time_slot === timeSlot
           ? { ...workday, [field]: value }
-          : workday
-      )
+          : workday,
+      ),
     );
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      // const token = localStorage.getItem('token');
-      
-      // Filtrer seulement les jours de travail activés
-      const activeWorkdays = workdays.filter(w => w.is_working);
-      await addWorkdaysToUser(employeeId,{
-        workdays: activeWorkdays
-      })
-      // await axios.post(`/api/employee-workdays/employee/${employeeId}`, {
-      //   workdays: activeWorkdays
-      // }, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      
-      toast.success('Jours de travail mis à jour avec succès');
+
+      const activeWorkdays = workdays.filter((w) => w.is_working);
+      await addWorkdaysToUser(employeeId, {
+        workdays: activeWorkdays,
+      });
+
+      toast.success("Jours de travail mis à jour avec succès");
       onSave && onSave();
       onClose();
-      
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Erreur lors de la sauvegarde des jours de travail');
+      console.error("Erreur lors de la sauvegarde:", error);
+      toast.error("Erreur lors de la sauvegarde des jours de travail");
     } finally {
       setSaving(false);
     }
   };
 
   const getWorkdayForDayAndSlot = (dayOfWeek, timeSlot) => {
-    return workdays.find(w => w.day_of_week === dayOfWeek && w.time_slot === timeSlot);
+    return workdays.find(
+      (w) => w.day_of_week === dayOfWeek && w.time_slot === timeSlot,
+    );
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          p: 4,
+        }}
+      >
         <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Chargement des jours de travail...</Typography>
+        <Typography sx={{ ml: 2 }}>
+          Chargement des jours de travail...
+        </Typography>
       </Box>
     );
   }
@@ -146,7 +141,11 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        >
           <CalendarToday />
           Jours de travail de {employeeName}
         </Typography>
@@ -159,16 +158,20 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs:3}}>
+            <Grid size={{ xs: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold">
                 Jour
               </Typography>
             </Grid>
-            {timeSlots.map(slot => (
-              <Grid size={{ xs:4.5}} key={slot.key}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {timeSlots.map((slot) => (
+              <Grid size={{ xs: 4.5 }} key={slot.key}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {slot.icon}
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ color: slot.color }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ color: slot.color }}
+                  >
                     {slot.label}
                   </Typography>
                 </Box>
@@ -179,56 +182,87 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
       </Card>
 
       {/* Lignes pour chaque jour de la semaine */}
-      {daysOfWeek.map(day => (
+      {daysOfWeek.map((day) => (
         <Card key={day.key} sx={{ mb: 1 }}>
           <CardContent>
             <Grid container spacing={2} alignItems="center">
               {/* Nom du jour */}
-              <Grid size={{ xs:3}}>
+              <Grid size={{ xs: 3 }}>
                 <Typography variant="body1" fontWeight="medium">
                   {day.label}
                 </Typography>
               </Grid>
-              
+
               {/* Créneaux horaires */}
-              {timeSlots.map(slot => {
+              {timeSlots.map((slot) => {
                 const workday = getWorkdayForDayAndSlot(day.key, slot.key);
-                
+
                 return (
-                  <Grid size={{ xs:4.5}} key={slot.key}>
-                    <Box sx={{ 
-                      p: 2, 
-                      border: '1px solid #e0e0e0', 
-                      borderRadius: 1,
-                      bgcolor: workday?.is_working ? '#f1f8e9' : '#fafafa',
-                      borderColor: workday?.is_working ? '#4caf50' : '#e0e0e0'
-                    }}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={workday?.is_working || false}
-                            onChange={(e) => updateWorkday(day.key, slot.key, 'is_working', e.target.checked)}
-                            color="primary"
-                          />
-                        }
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {slot.icon}
-                            <Typography variant="body2" sx={{ color: slot.color }}>
-                              {slot.label}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                      
+                  <Grid size={{ xs: 4.5 }} key={slot.key}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                        bgcolor: workday?.is_working ? "#f1f8e9" : "#fafafa",
+                        borderColor: workday?.is_working
+                          ? "#4caf50"
+                          : "#e0e0e0",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        {slot.icon}
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={workday?.is_working || false}
+                              onChange={(e) =>
+                                updateWorkday(
+                                  day.key,
+                                  slot.key,
+                                  "is_working",
+                                  e.target.checked,
+                                )
+                              }
+                              color="primary"
+                            />
+                          }
+                          label={slot.label}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                          }}
+                        />
+                      </Box>
+
                       {workday?.is_working && (
-                        <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Box
+                          sx={{
+                            mt: 1,
+                            display: "flex",
+                            gap: 1,
+                            alignItems: "center",
+                          }}
+                        >
                           <TextField
                             size="small"
                             type="time"
                             label="Début"
-                            value={workday.start_time || ''}
-                            onChange={(e) => updateWorkday(day.key, slot.key, 'start_time', e.target.value)}
+                            value={workday.start_time || ""}
+                            onChange={(e) =>
+                              updateWorkday(
+                                day.key,
+                                slot.key,
+                                "start_time",
+                                e.target.value,
+                              )
+                            }
                             slotProps={{ inputLabel: { shrink: true } }}
                             sx={{ width: 100 }}
                           />
@@ -237,8 +271,15 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
                             size="small"
                             type="time"
                             label="Fin"
-                            value={workday.end_time || ''}
-                            onChange={(e) => updateWorkday(day.key, slot.key, 'end_time', e.target.value)}
+                            value={workday.end_time || ""}
+                            onChange={(e) =>
+                              updateWorkday(
+                                day.key,
+                                slot.key,
+                                "end_time",
+                                e.target.value,
+                              )
+                            }
                             slotProps={{ inputLabel: { shrink: true } }}
                             sx={{ width: 100 }}
                           />
@@ -259,12 +300,14 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
           <Typography variant="subtitle1" gutterBottom>
             Résumé des jours de travail :
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             {workdays
-              .filter(w => w.is_working)
-              .map(workday => {
-                const day = daysOfWeek.find(d => d.key === workday.day_of_week);
-                const slot = timeSlots.find(s => s.key === workday.time_slot);
+              .filter((w) => w.is_working)
+              .map((workday) => {
+                const day = daysOfWeek.find(
+                  (d) => d.key === workday.day_of_week,
+                );
+                const slot = timeSlots.find((s) => s.key === workday.time_slot);
                 return (
                   <Chip
                     key={`${workday.day_of_week}-${workday.time_slot}`}
@@ -272,16 +315,16 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
                     label={`${day?.short} ${slot?.label} (${workday.start_time}-${workday.end_time})`}
                     color="primary"
                     variant="outlined"
-                    sx={{ 
+                    sx={{
                       borderColor: slot?.color,
                       color: slot?.color,
-                      '& .MuiChip-icon': { color: slot?.color }
+                      "& .MuiChip-icon": { color: slot?.color },
                     }}
                   />
                 );
               })}
           </Box>
-          {workdays.filter(w => w.is_working).length === 0 && (
+          {workdays.filter((w) => w.is_working).length === 0 && (
             <Typography variant="body2" color="text.secondary">
               Aucun jour de travail configuré
             </Typography>
@@ -289,12 +332,8 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
         </CardContent>
       </Card>
 
-      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          disabled={saving}
-        >
+      <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
+        <Button variant="outlined" onClick={onClose} disabled={saving}>
           Annuler
         </Button>
         <Button
@@ -303,7 +342,7 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
           disabled={saving}
           startIcon={saving ? <CircularProgress size={20} /> : <Save />}
         >
-          {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+          {saving ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
       </Box>
     </Box>

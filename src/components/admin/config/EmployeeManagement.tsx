@@ -10,13 +10,14 @@ import {
   Refresh,
   Schedule,
   Search,
-  Store
+  Store,
 } from "@mui/icons-material";
 import {
   Avatar,
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   Chip,
   Container,
@@ -471,34 +472,32 @@ const EmployeeManagement = () => {
                     </Box>
                   )}
                 </Stack>
-
-                {/* Boutons d'action supplémentaires */}
-                <Divider sx={{ my: 2 }} />
-                <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                  <Tooltip title="Gérer les affectations aux magasins">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Store />}
-                      onClick={() => handleOpenStoreAssignment(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Magasins
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Configurer les jours de travail">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Schedule />}
-                      onClick={() => handleOpenWorkdays(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Horaires
-                    </Button>
-                  </Tooltip>
-                </Box>
               </CardContent>
+              {/* Boutons d'action supplémentaires */}
+              <CardActions>
+                <Tooltip title="Gérer les affectations aux magasins">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Store />}
+                    onClick={() => handleOpenStoreAssignment(employee)}
+                    sx={{ flex: 1 }}
+                  >
+                    Magasins
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Configurer les jours de travail">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Schedule />}
+                    onClick={() => handleOpenWorkdays(employee)}
+                    sx={{ flex: 1 }}
+                  >
+                    Horaires
+                  </Button>
+                </Tooltip>
+              </CardActions>
             </Card>
           </Grid>
         ))}
@@ -532,7 +531,6 @@ const EmployeeManagement = () => {
             stores={stores}
             defaultValues={editingEmployee}
           />
-
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
