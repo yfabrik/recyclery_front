@@ -169,7 +169,7 @@ export const CollectTab = () => {
                 </TableRow>
               ) : (
                 collectes.map((item: TaskModel) => (
-                  <TableRow>
+                  <TableRow key={item.id}>
                     <TableCell>{item.day_of_week}</TableCell>
                     <TableCell>
                       <Chip
