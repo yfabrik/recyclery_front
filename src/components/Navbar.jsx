@@ -57,12 +57,12 @@ const Navbar = ({ onMenuToggle }) => {
   };
 
   const mainMenuItems = [
-    { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, permission: 'dashboard.view' },
-    { label: 'Arrivages', path: '/arrivals', icon: Inventory, permission: 'arrivals.view' },
-    { label: 'Étiquetage', path: '/labels', icon: QrCode, permission: 'inventory.labels' },
-    { label: 'Logiciel de caisse', path: '/pos', icon: PointOfSale, permission: 'pos.access' },
-    { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'admin.users' },
-    { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: 'inventory.view' },
+    { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, permission: 'dashboard.read' },
+    { label: 'Arrivages', path: '/arrivals', icon: Inventory, permission: 'arrivals.read' },
+    { label: 'Étiquetage', path: '/labels', icon: QrCode, permission: 'inventory.read' },
+    { label: 'Logiciel de caisse', path: '/pos', icon: PointOfSale, permission: 'sales.read' },
+    { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'admin.read' },
+    { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: 'inventory.read' },
   ];
 
   const otherMenuItems = [
@@ -81,7 +81,7 @@ const Navbar = ({ onMenuToggle }) => {
   if (!isAuthenticated) {
     return null;
   }
-
+//TODO ADD DRAWER FOR RESPONSIVE 
   return (
     <AppBar 
       position="fixed" 

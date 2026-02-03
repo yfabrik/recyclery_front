@@ -157,7 +157,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Fonction pour vérifier si l'utilisateur a accès à un module
-  const hasModuleAccess = (module, action = "view") => {
+  const hasModuleAccess = (module, action = "read") => {
+    if (permissionsByModule[module])
+      return permissionsByModule[module].includes(action)
     return hasPermission(`${module}.${action}`);
   };
 
