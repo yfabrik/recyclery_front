@@ -1,6 +1,6 @@
 interface BaseModel {
-  id: number;
-  createdAt: Date;
+  id?: number;
+  createdAt?: Date;
   updatedAt?: Date;
 }
 
@@ -10,13 +10,15 @@ export interface CategoryModel extends BaseModel {
   icon: string | null;
   parent_id: number | null;
   subcategories?: CategoryModel[];
+  defaultWeight: number
+  defaultPrice: number
 }
 
 export interface StoreModel extends BaseModel {
   employees?: Array<EmployeeModel>;
-  manager_id: string;
+  manager_id: number;
   manager?: UserModel;
-  caisses: [];
+  caisses?: CaisseModel[];
   name: string;
   address: string;
   phone: string;
@@ -37,30 +39,28 @@ export interface CollectionPointModel extends BaseModel {
   type: string;
   notes: string;
   is_active: boolean;
-  recyclery_id: number | string;
+  recyclery_id?: number;
+  Recycleries: StoreModel[]
 }
 
-export interface PointPresenceModel extends BaseModel {
-  day_of_week: string;
-  time_slot_name: string;
-  is_present: boolean;
-  start_time: string;
-  end_time: string;
-  is_24h: boolean;
-  notes: string;
-  collection_point_id: number;
-  store_id: number;
-}
+// export interface PointPresenceModel extends BaseModel {
+//   day_of_week: string;
+//   time_slot_name: "morning" | "afternoon";
+//   is_present: boolean;
+//   start_time: string;
+//   end_time: string;
+//   is_24h: boolean;
+//   notes: string;
+//   collection_point_id: number;
+//   store_id: number;
+// }
 
 export interface ArrivalModel extends BaseModel {
-  arrival_number: string;
   weight: number;
   arrival_date: Date;
   arrival_time: Date;
-  source_type: string;
+  source_type: "point"|"apport"|"house_clearance";
   source_details: string;
-  volunteer_donation: boolean;
-  house_clearance: boolean;
   notes: string;
   status: string;
 }
@@ -101,21 +101,18 @@ export interface LabeledItemModel extends BaseModel {
   weight: number;
   price: number;
   cost: number;
-  condition_state: string;
+  condition_state: "excellent"| "good"| "fair"| "poor";
   location: string;
   status: string;
-  sold_at: Date;
 }
 
 export interface UserModel extends BaseModel {
   username: string;
   email: string;
   password?: string;
-  first_name: string;
-  last_name: string;
+
   phone: string;
   role: string;
-  recyclery_id?: number;
   isActive: boolean;
   last_login: Date;
 }
@@ -159,11 +156,12 @@ export interface EmployeeModel extends BaseModel {
 
 export interface WorkdaysModel extends BaseModel {
   day_of_week: string;
-  time_slot: string;
+  time_slot: "morning" | "afternoon";
   is_working: boolean;
   start_time: string;
   end_time: string;
   notes: string;
+  employee_id?: number
 }
 
 export interface StoreHoursModel extends BaseModel {
@@ -200,7 +198,7 @@ export interface CashSession extends BaseModel {
   user_id?: number;
 
   CashRegister?: CaisseModel;
-  User?:UserModel
+  User?: UserModel
 }
 
 export interface TransactionModel extends BaseModel {
@@ -215,6 +213,6 @@ export interface TransactionModel extends BaseModel {
   status: "completed";
 
   cash_session_id: number;
-  CashSession?:CashSession
+  CashSession?: CashSession
   sold_by: number;
 }
