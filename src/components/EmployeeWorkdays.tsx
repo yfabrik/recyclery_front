@@ -4,20 +4,29 @@ import {
   Button,
   Card,
   CardContent,
-  Checkbox,
-  Chip,
   CircularProgress,
-  FormControlLabel,
   Grid,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import type { WorkdaysModel } from "../interfaces/Models";
 import { addWorkdaysToUser, getUserWorkdays } from "../services/api/users";
+import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
 
-const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
-  const [workdays, setWorkdays] = useState([]);
+interface EmployeeWorkdaysProps {
+  employeeId: number;
+  employeeName: string;
+  onClose: () => void;
+  onSave: () => void;
+}
+const EmployeeWorkdays = ({
+  employeeId,
+  employeeName,
+  onClose,
+  onSave,
+}: EmployeeWorkdaysProps) => {
+  const [workdays, setWorkdays] = useState<WorkdaysModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -45,37 +54,61 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
     fetchWorkdays();
   }, [employeeId]);
 
+  useEffect(() => {
+    console.log(workdays);
+  }, [workdays]);
   const fetchWorkdays = async () => {
     try {
       setLoading(true);
       const response = await getUserWorkdays(employeeId);
       const existingWorkdays = response.data.workdays || [];
+      const day = new Map([
+        ["monday", "lundi"],
+        ["tuesday", "mardi"],
+        ["wednesday", "mercredi"],
+        ["thurday", "jeudi"],
+        ["friday", "vendredi"],
+        ["saturday", "samedi"],
+        ["sunday", "dimanche"],
+      ]);
 
-      // Initialiser la structure complète des jours de travail
-      const initializedWorkdays = [];
+      const result = existingWorkdays.map((exist: WorkdaysModel) => {
+        exist.day_of_week = day.get(exist.day_of_week) ?? "lundi";
+        let [h, m] = exist.start_time.split(":");
+        exist.start_time = new Date(new Date().setHours(h, m));
+        let [hh, mm] = exist.end_time.split(":");
+        exist.end_time = new Date(new Date().setHours(hh, mm));
 
-      daysOfWeek.forEach((day) => {
-        timeSlots.forEach((slot) => {
-          const existing = existingWorkdays.find(
-            (w) => w.day_of_week === day.key && w.time_slot === slot.key,
-          );
-
-          initializedWorkdays.push({
-            day_of_week: day.key,
-            time_slot: slot.key,
-            is_working: existing ? existing.is_working == 1 : false,
-            start_time:
-              existing?.start_time ||
-              (slot.key === "morning" ? "08:00" : "13:30"),
-            end_time:
-              existing?.end_time ||
-              (slot.key === "morning" ? "12:00" : "17:00"),
-            notes: existing?.notes || "",
-          });
-        });
+        return exist;
       });
 
-      setWorkdays(initializedWorkdays);
+      setWorkdays(result);
+
+      // Initialiser la structure complète des jours de travail
+      // const initializedWorkdays = [];
+
+      // daysOfWeek.forEach((day) => {
+      //   timeSlots.forEach((slot) => {
+      //     const existing = existingWorkdays.find(
+      //       (w) => w.day_of_week === day.key && w.time_slot === slot.key,
+      //     );
+
+      //     initializedWorkdays.push({
+      //       day_of_week: day.key,
+      //       time_slot: slot.key,
+      //       is_working: existing ? existing.is_working == 1 : false,
+      //       start_time:
+      //         existing?.start_time ||
+      //         (slot.key === "morning" ? "08:00" : "13:30"),
+      //       end_time:
+      //         existing?.end_time ||
+      //         (slot.key === "morning" ? "12:00" : "17:00"),
+      //       notes: existing?.notes || "",
+      //     });
+      //   });
+      // });
+
+      // setWorkdays(initializedWorkdays);
     } catch (error) {
       console.error("Erreur lors du chargement des jours de travail:", error);
       toast.error("Erreur lors du chargement des jours de travail");
@@ -84,21 +117,41 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
     }
   };
 
-  const updateWorkday = (dayOfWeek, timeSlot, field, value) => {
-    setWorkdays((prev) =>
-      prev.map((workday) =>
-        workday.day_of_week === dayOfWeek && workday.time_slot === timeSlot
-          ? { ...workday, [field]: value }
-          : workday,
-      ),
-    );
-  };
+  // const updateWorkday = (dayOfWeek, timeSlot, field, value) => {
+  //   setWorkdays((prev) =>
+  //     prev.map((workday) =>
+  //       workday.day_of_week === dayOfWeek && workday.time_slot === timeSlot
+  //         ? { ...workday, [field]: value }
+  //         : workday,
+  //     ),
+  //   );
+  // };
 
-  const handleSave = async () => {
+  const handleSave = async (data) => {
     try {
       setSaving(true);
+      console.log("save", data);
+      const today = new Map([
+        ["lundi", "monday"],
+        ["mardi", "tuesday"],
+        ["mercredi", "wednesday"],
+        ["jeudi", "thurday"],
+        ["vendredi", "friday"],
+        ["samedi", "saturday"],
+        ["dimanche", "sunday"],
+      ]);
 
-      const activeWorkdays = workdays.filter((w) => w.is_working);
+      const activeWorkdays = Object.entries(data)
+        .flatMap(([key, arr]) => {
+          return arr.map((day) => ({
+            ...day,
+            day_of_week: today.get(day.day_of_week),
+            week: key,
+          }));
+        })
+        .filter((day) => day.is_working);
+
+      // const activeWorkdays = workdays.filter((w) => w.is_working);
       await addWorkdaysToUser(employeeId, {
         workdays: activeWorkdays,
       });
@@ -114,11 +167,11 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
     }
   };
 
-  const getWorkdayForDayAndSlot = (dayOfWeek, timeSlot) => {
-    return workdays.find(
-      (w) => w.day_of_week === dayOfWeek && w.time_slot === timeSlot,
-    );
-  };
+  // const getWorkdayForDayAndSlot = (dayOfWeek, timeSlot) => {
+  //   return workdays.find(
+  //     (w) => w.day_of_week === dayOfWeek && w.time_slot === timeSlot,
+  //   );
+  // };
 
   if (loading) {
     return (
@@ -180,21 +233,26 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
           </Grid>
         </CardContent>
       </Card>
+      <EmployeeWorkdaysForm
+        formId="WorkdaysForm"
+        onSubmit={handleSave}
+        defaults={workdays}
+      />
 
       {/* Lignes pour chaque jour de la semaine */}
-      {daysOfWeek.map((day) => (
+      {/* {daysOfWeek.map((day) => (
         <Card key={day.key} sx={{ mb: 1 }}>
           <CardContent>
-            <Grid container spacing={2} alignItems="center">
-              {/* Nom du jour */}
-              <Grid size={{ xs: 3 }}>
+            <Grid container spacing={2} alignItems="center"> */}
+      {/* Nom du jour */}
+      {/* <Grid size={{ xs: 3 }}>
                 <Typography variant="body1" fontWeight="medium">
                   {day.label}
                 </Typography>
-              </Grid>
+              </Grid> */}
 
-              {/* Créneaux horaires */}
-              {timeSlots.map((slot) => {
+      {/* Créneaux horaires */}
+      {/* {timeSlots.map((slot) => {
                 const workday = getWorkdayForDayAndSlot(day.key, slot.key);
 
                 return (
@@ -292,10 +350,10 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
             </Grid>
           </CardContent>
         </Card>
-      ))}
+      ))} */}
 
       {/* Résumé des jours de travail */}
-      <Card sx={{ mt: 3 }}>
+      {/* <Card sx={{ mt: 3 }}>
         <CardContent>
           <Typography variant="subtitle1" gutterBottom>
             Résumé des jours de travail :
@@ -330,15 +388,16 @@ const EmployeeWorkdays = ({ employeeId, employeeName, onClose, onSave }) => {
             </Typography>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
 
       <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
         <Button variant="outlined" onClick={onClose} disabled={saving}>
           Annuler
         </Button>
         <Button
+          type="submit"
+          form="WorkdaysForm"
           variant="contained"
-          onClick={handleSave}
           disabled={saving}
           startIcon={saving ? <CircularProgress size={20} /> : <Save />}
         >
