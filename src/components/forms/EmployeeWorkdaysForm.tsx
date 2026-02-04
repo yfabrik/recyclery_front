@@ -136,7 +136,7 @@ export const EmployeeWorkdaysForm = ({
           fields.map((field, index) => (
             <>
               {!(index % 2) && (
-                <Grid size={{ xs: 3 }}>
+                <Grid size={{ xs: 3  }}>
                   <Typography
                     variant="body1"
                     fontWeight="medium"
@@ -243,7 +243,7 @@ const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
             display: "block",
             p: 2,
             border: "1px solid",
-            borderRadius: theme.shape.borderRadius,
+            borderRadius: 2,
             bgcolor: isWorking
               ? theme.palette.primary.light + "20"
               : theme.palette.background.paper,
