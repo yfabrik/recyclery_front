@@ -122,7 +122,12 @@ export const EmployeeWorkdaysForm = ({
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
-      <Tabs value={tabValue} onChange={(e, val) => setTabValue(val)}>
+      <Tabs
+        value={tabValue}
+        onChange={(e, val) => setTabValue(val)}
+        variant="fullWidth"
+        sx={{ width: "100%", marginBottom: 2 }}
+      >
         <Tab label="semaine 1" value={0} />
         <Tab label="semaine 2" value={1} />
       </Tabs>
@@ -234,15 +239,19 @@ const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
       render={({ field }) => (
         <Box
           onClick={() => field.onChange(!field.value)}
-          sx={{
+          sx={(theme) => ({
             display: "block",
             p: 2,
-            border: "1px solid #e0e0e0",
-            borderRadius: 1,
-            bgcolor: isWorking ? "#f1f8e9" : "#fafafa",
-            borderColor: isWorking ? "#4caf50" : "#e0e0e0",
+            border: "1px solid",
+            borderRadius: theme.shape.borderRadius,
+            bgcolor: isWorking
+              ? theme.palette.primary.light + "20"
+              : theme.palette.background.paper,
+            borderColor: isWorking
+              ? theme.palette.primary.main
+              : theme.palette.divider,
             cursor: "pointer",
-          }}
+          })}
         >
           <Box
             sx={{
