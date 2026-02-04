@@ -9,6 +9,7 @@ import type { CategoryModel } from "../../interfaces/Models";
 import { usePrompt } from "../Prompt";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { useEffect } from "react";
 
 const schema = z.object({
   category_id: idSchema("categorie requis"),
@@ -41,11 +42,7 @@ export const ManualItemForm = ({
     },
   });
 
-  const SubCategories = ({
-    control,
-  }: {
-    control: typeof form.control;
-  }) => {
+  const SubCategories = ({ control }: { control: typeof form.control }) => {
     const category = useWatch({
       control: control,
       name: "category_id",
@@ -68,6 +65,27 @@ export const ManualItemForm = ({
       </FormSelect>
     );
   };
+
+  const defaultPrix = form.watch(["category_id", "subcategory_id"]);
+  useEffect(() => {
+    const [cat, sub] = defaultPrix;
+    let defPrix = 0;
+    let defPoid = 0;
+    let poid = form.getValues("weight");
+    let prix = form.getValues("price");
+    const realcat = categories.find((c) => cat == c.id);
+    const realsub = realcat?.subcategories?.find((c) => sub == c.id);
+    if (sub) {
+      prix == 0 && (defPrix = realsub.defaultPrice || 0);
+      poid == 0 && (defPoid = realsub.defaultWeight || 0);
+    } else if (cat) {
+      prix == 0 && (defPrix = realcat.defaultPrice || 0);
+      poid == 0 && (defPoid = realcat.defaultWeight || 0);
+    }
+    prix == 0 && form.setValue("price", defPrix);
+    poid == 0 && form.setValue("weight", defPoid);
+    console.log(defaultPrix);
+  }, [defaultPrix]);
 
   return (
     <>
