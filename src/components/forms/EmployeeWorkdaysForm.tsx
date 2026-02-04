@@ -5,16 +5,8 @@ import {
   WbTwilight,
   WbTwilightOutlined,
 } from "@mui/icons-material";
-import {
-  Box,
-  Checkbox,
-  FormControlLabel,
-  Grid,
-  Tab,
-  Tabs,
-  Typography,
-} from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Checkbox, Grid, Tab, Tabs, Typography } from "@mui/material";
+import { useState } from "react";
 import {
   Controller,
   useFieldArray,
@@ -128,11 +120,6 @@ export const EmployeeWorkdaysForm = ({
     control: form.control,
   });
 
-  const working1 = form.watch("week1");
-  const working2 = form.watch("week2");
-
-  useEffect(() => console.log(working1), [working1]);
-
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Tabs value={tabValue} onChange={(e, val) => setTabValue(val)}>
@@ -158,7 +145,6 @@ export const EmployeeWorkdaysForm = ({
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
-                  isWorking={working1[index].is_working}
                   name={`week1.${index}`}
                   slot={field.time_slot}
                 />
@@ -185,7 +171,6 @@ export const EmployeeWorkdaysForm = ({
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
-                  isWorking={working2[index].is_working}
                   name={`week2.${index}`}
                   slot={field.time_slot}
                 />
@@ -199,53 +184,49 @@ export const EmployeeWorkdaysForm = ({
 
 const Horaires = ({
   control,
-  index,
+  name,
 }: {
   control: Control<Schema, unknown, Schema>;
-  index: number;
+  name: `week1.${number}` | `week2.${number}`;
 }) => {
-  const working1 = useWatch({
-    name: "week1",
+  const isWorking = useWatch({
     control,
+    name: `${name}.is_working`,
+    defaultValue: false,
   });
-  const working2 = useWatch({
-    name: "week2",
-    control,
-  });
+
+  if (!isWorking) return null;
 
   return (
-    <>
-      {working1[index].is_working && (
-        <Box
-          sx={{
-            mt: 1,
-            display: "flex",
-            gap: 1,
-            alignItems: "center",
-          }}
-        >
-          <FormTime
-            label="Début"
-            control={control}
-            name={`${name}.start_time`}
-          />
-
-          <Typography variant="body2">-</Typography>
-          <FormTime label="fin" control={control} name={`${name}.end_time`} />
-        </Box>
-      )}
-    </>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      sx={{
+        display: "flex",
+        mt: 1,
+        gap: 1,
+        alignItems: "center",
+      }}
+    >
+      <FormTime label="Début" control={control} name={`${name}.start_time`} />
+      <Typography variant="body2">-</Typography>
+      <FormTime label="fin" control={control} name={`${name}.end_time`} />
+    </Box>
   );
 };
 
 interface HalfDayProps {
-  isWorking: boolean;
   control: Control<Schema, unknown, Schema>;
   name: `week1.${number}` | `week2.${number}`;
   slot: Workday["time_slot"];
   day: string;
 }
-const HalfDay = ({ isWorking, slot, day, control, name }: HalfDayProps) => {
+const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
+  const isWorking = useWatch({
+    control,
+    name: `${name}.is_working`,
+    defaultValue: false,
+  });
+
   return (
     <Controller
       control={control}
@@ -289,29 +270,7 @@ const HalfDay = ({ isWorking, slot, day, control, name }: HalfDayProps) => {
               {`${day} - ${slot == "morning" ? "Matin" : "Après-midi"}`}
             </Box>
           </Box>
-          {isWorking && (
-            <Box
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                display: "flex",
-                mt: 1,
-                gap: 1,
-                alignItems: "center",
-              }}
-            >
-              <FormTime
-                label="Début"
-                control={control}
-                name={`${name}.start_time`}
-              />
-              <Typography variant="body2">-</Typography>
-              <FormTime
-                label="fin"
-                control={control}
-                name={`${name}.end_time`}
-              />
-            </Box>
-          )}
+          <Horaires control={control} name={name} />
         </Box>
       )}
     />
