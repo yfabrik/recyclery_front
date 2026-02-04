@@ -55,32 +55,32 @@ export const EmployeeWorkdaysForm = ({
   onSubmit,
   defaultValues,
   defaults,
-}: BaseFormProps<Schema> & { defaults: WorkdaysModel[] }) => {
+}: BaseFormProps<Schema> & { defaults?: WorkdaysModel[] }) => {
   const [tabValue, setTabValue] = useState(0);
 
-  const workdays: z.infer<typeof workdaySchema>[] = [
-    1, 2, 3, 4, 5, 6, 0,
-  ].flatMap((day) => {
-    return (["morning", "afternoon"] as const).map((slot) => {
-      const today = new Intl.DateTimeFormat("fr", {
-        weekday: "long",
-      }).format(new Date(1970, 0, 4 + day));
-      return (
-        defaults.find(
-          (def) => def.day_of_week === today && def.time_slot === slot,
-        ) || {
-          day_of_week: today,
-          end_time: new Date(),
-          start_time: new Date(),
-          is_working: false,
-          time_slot: slot,
-        }
-      );
-    });
-  });
+  // const workdays: z.infer<typeof workdaySchema>[] = [
+  //   1, 2, 3, 4, 5, 6, 0,
+  // ].flatMap((day) => {
+  //   return (["morning", "afternoon"] as const).map((slot) => {
+  //     const today = new Intl.DateTimeFormat("fr", {
+  //       weekday: "long",
+  //     }).format(new Date(1970, 0, 4 + day));
+  //     return (
+  //       defaults.find(
+  //         (def) => def.day_of_week === today && def.time_slot === slot,
+  //       ) || {
+  //         day_of_week: today,
+  //         end_time: new Date(),
+  //         start_time: new Date(),
+  //         is_working: false,
+  //         time_slot: slot,
+  //       }
+  //     );
+  //   });
+  // });
 
   const fillWithDefault = (
-    def: WorkdaysModel[],
+    def?: WorkdaysModel[],
   ): z.infer<typeof workdaySchema>[] => {
     return [1, 2, 3, 4, 5, 6, 0].flatMap((day) => {
       return (["morning", "afternoon"] as const).map((slot) => {
@@ -88,7 +88,7 @@ export const EmployeeWorkdaysForm = ({
           weekday: "long",
         }).format(new Date(1970, 0, 4 + day));
         return (
-          def.find((d) => d.day_of_week === today && d.time_slot === slot) || {
+          def?.find((d) => d.day_of_week === today && d.time_slot === slot) || {
             day_of_week: today,
             start_time: new Date(
               new Date().setHours(slot == "morning" ? 8 : 13, 0),
@@ -108,13 +108,13 @@ export const EmployeeWorkdaysForm = ({
     defaultValues: {
       week1: [
         ...fillWithDefault(
-          defaults.filter(
+          defaults?.filter(
             (d) =>
               !Object.hasOwn(d, "week") || d.week == "week1" || d.week == null,
           ),
         ),
       ],
-      week2: [...fillWithDefault(defaults.filter((d) => d.week == "week2"))],
+      week2: [...fillWithDefault(defaults?.filter((d) => d.week == "week2"))],
     },
     resolver: zodResolver(schema),
   });
@@ -247,71 +247,73 @@ interface HalfDayProps {
 }
 const HalfDay = ({ isWorking, slot, day, control, name }: HalfDayProps) => {
   return (
-    <Box
-      sx={{
-        p: 2,
-        border: "1px solid #e0e0e0",
-        borderRadius: 1,
-        bgcolor: isWorking ? "#f1f8e9" : "#fafafa",
-        borderColor: isWorking ? "#4caf50" : "#e0e0e0",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          width: "100%",
-          height: "100%",
-        }}
-      >
-        <Controller
-          control={control}
-          name={`${name}.is_working`}
-          render={({ field }) => (
-            <FormControlLabel
-              {...field}
-              control={
-                <Checkbox
-                  icon={
-                    slot == "morning" ? (
-                      <WbSunnyOutlined />
-                    ) : (
-                      <WbTwilightOutlined />
-                    )
-                  }
-                  checkedIcon={slot == "morning" ? <WbSunny /> : <WbTwilight />}
-                  checked={field.value}
-                />
-              }
-              label={`${day} - ${slot == "morning" ? "Matin" : "Après-midi"}`}
-              sx={{
-                width: "100%",
-                height: "100%",
-              }}
-            />
-          )}
-        />
-      </Box>
-      {isWorking && (
+    <Controller
+      control={control}
+      name={`${name}.is_working`}
+      render={({ field }) => (
         <Box
+          onClick={() => field.onChange(!field.value)}
           sx={{
-            mt: 1,
-            display: "flex",
-            gap: 1,
-            alignItems: "center",
+            display: "block",
+            p: 2,
+            border: "1px solid #e0e0e0",
+            borderRadius: 1,
+            bgcolor: isWorking ? "#f1f8e9" : "#fafafa",
+            borderColor: isWorking ? "#4caf50" : "#e0e0e0",
+            cursor: "pointer",
           }}
         >
-          <FormTime
-            label="Début"
-            control={control}
-            name={`${name}.start_time`}
-          />
-
-          <Typography variant="body2">-</Typography>
-          <FormTime label="fin" control={control} name={`${name}.end_time`} />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              width: "100%",
+            }}
+          >
+            <Checkbox
+              icon={
+                slot == "morning" ? (
+                  <WbSunnyOutlined />
+                ) : (
+                  <WbTwilightOutlined />
+                )
+              }
+              checkedIcon={slot == "morning" ? <WbSunny /> : <WbTwilight />}
+              checked={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <Box component="span" sx={{ flex: 1 }}>
+              {`${day} - ${slot == "morning" ? "Matin" : "Après-midi"}`}
+            </Box>
+          </Box>
+          {isWorking && (
+            <Box
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                display: "flex",
+                mt: 1,
+                gap: 1,
+                alignItems: "center",
+              }}
+            >
+              <FormTime
+                label="Début"
+                control={control}
+                name={`${name}.start_time`}
+              />
+              <Typography variant="body2">-</Typography>
+              <FormTime
+                label="fin"
+                control={control}
+                name={`${name}.end_time`}
+              />
+            </Box>
+          )}
         </Box>
       )}
-    </Box>
+    />
   );
 };
