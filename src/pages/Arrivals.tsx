@@ -30,11 +30,18 @@ import { ArrivalForm } from "../components/forms/ArrivalForm";
 import { createArrival, getArrivals } from "../services/api/arrival";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { fetchCollectionPoints as fCollP } from "../services/api/collectionPoint";
+import type {
+  CategoryModel,
+  CollectionPointModel,
+  ArrivalModel,
+} from "../interfaces/Models";
 
 const Arrivals = () => {
-  const [categories, setCategories] = useState([]);
-  const [collectionPoints, setCollectionPoints] = useState([]);
-  const [arrivals, setArrivals] = useState([]);
+  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  const [collectionPoints, setCollectionPoints] = useState<
+    CollectionPointModel[]
+  >([]);
+  const [arrivals, setArrivals] = useState<ArrivalModel[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);

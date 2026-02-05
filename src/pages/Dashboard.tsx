@@ -263,9 +263,6 @@ const Dashboard = () => {
   const [storesLoading, setStoresLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    console.log(storesStats);
-  }, [storesStats]);
   // Données simulées réalistes pour la démonstration
   const mockStats = {
     totalItems: 1247,
@@ -371,7 +368,6 @@ const Dashboard = () => {
         // Récupération des vraies données depuis l'API
         const result = await getAllDashboardData();
         //  await dashboardService.getAllDashboardData();
-        console.log(result)
         if (result.success) {
           setStats(result.data.stats);
           // setStats(mockStats);
@@ -767,7 +763,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications />
+            <DashboardNotifications  />
           </Stack>
         </Grid>
       </Grid>

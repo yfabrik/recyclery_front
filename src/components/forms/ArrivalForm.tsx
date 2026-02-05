@@ -67,7 +67,6 @@ export type ArrivalFormSchema = z.infer<typeof schema>;
 type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
-  onWeightFieldClick: () => void;
   loading: boolean;
 };
 
@@ -77,7 +76,6 @@ export const ArrivalForm = ({
   defaultValues,
   categories,
   collectionPoints,
-  onWeightFieldClick,
   loading = false,
 }: ArrivalFormProps) => {
   const form = useForm({
@@ -273,7 +271,6 @@ export const ArrivalForm = ({
                   <Grid container spacing={2}>
                     {sourceTypeOptions.map((source) => (
                       <Grid size={{ xs: 12, md: 4 }} key={source.value}>
-
                         <FormRadioCard
                           label={source.label}
                           icon={source.icon}
