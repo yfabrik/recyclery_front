@@ -1,9 +1,20 @@
 import { Box } from "@mui/material";
+import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import WeekTaskSection, {
   TaskCard,
   TaskCardContent,
 } from "./weekView/WeekTaskSection";
-import WeekCollectionSection from "./weekView/WeekCollectionSection";
+import { getDay } from "../../services/dateService";
+
+interface WeekViewSectionsProps {
+  schedules: TaskModel[];
+  getEmployeeColor: (s: string) => string;
+  getEmployeeInitials: (s: string) => string;
+  handleAssignEmployeesToTask: (e: EmployeeModel) => void;
+  handleOpenDialog: () => void;
+  handleDeleteTask: (t: TaskModel) => void;
+  selectedDate: Date;
+}
 
 const WeekViewSections = ({
   schedules,
@@ -13,7 +24,7 @@ const WeekViewSections = ({
   handleOpenDialog,
   handleDeleteTask,
   selectedDate,
-}) => {
+}: WeekViewSectionsProps) => {
   const wd = () => {
     const startOfWeek = new Date(selectedDate);
     const day = startOfWeek.getDay();
@@ -29,16 +40,12 @@ const WeekViewSections = ({
     return wd;
   };
   const weekDays = wd();
-  const dayNames = [
-    "Lundi",
-    "Mardi",
-    "Mercredi",
-    "Jeudi",
-    "Vendredi",
-    "Samedi",
-    "Dimanche",
-  ];
-  const filteredSchedules = (category = "vente", start = null, end = null) => {
+
+  const filteredSchedules = (
+    category: TaskModel["category"] = "vente",
+    start: number | null = null,
+    end: number | null = null,
+  ) => {
     return (
       schedules?.filter(
         (s) =>
@@ -73,7 +80,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#4caf50"
               borderColor="#4caf50"
               getEmployeeColor={getEmployeeColor}
@@ -123,7 +130,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#4caf50"
               borderColor="#4caf50"
               getEmployeeColor={getEmployeeColor}
@@ -173,7 +180,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#ff9800"
               borderColor="#ff9800"
               getEmployeeColor={getEmployeeColor}
@@ -223,7 +230,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#ff9800"
               borderColor="#ff9800"
               getEmployeeColor={getEmployeeColor}
@@ -275,7 +282,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#2196f3"
               borderColor="#2196f3"
               getEmployeeColor={getEmployeeColor}
@@ -327,7 +334,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#2196f3"
               borderColor="#2196f3"
               getEmployeeColor={getEmployeeColor}
@@ -379,7 +386,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#9c27b0"
               borderColor="#9c27b0"
               getEmployeeColor={getEmployeeColor}
@@ -429,7 +436,7 @@ const WeekViewSections = ({
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={dayNames[index]}
+              dayName={getDay(day.getDay())}
               cardColor="#9c27b0"
               borderColor="#9c27b0"
               getEmployeeColor={getEmployeeColor}

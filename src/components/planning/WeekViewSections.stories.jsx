@@ -22,7 +22,7 @@ const start = () => {
 };
 export const Default = {
   args: {
-
+    selectedDate:new Date(),
     collections: [],
     weekDays: DAYS_OF_WEEK,
     day: new Date(),

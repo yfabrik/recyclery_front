@@ -164,6 +164,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <Typography
                 variant="h6"
                 sx={{ fontWeight: "bold", color: cardColor }}
+                textTransform={"capitalize"}
               >
                 {dayName}
               </Typography>
