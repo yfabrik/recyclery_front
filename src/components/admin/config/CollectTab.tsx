@@ -21,7 +21,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import type { TaskModel } from "../../../interfaces/Models";
+import type { ScheduleModel, TaskModel } from "../../../interfaces/Models";
 import {
   createPlanning,
   deletePlanning,
@@ -41,7 +41,7 @@ export const CollectTab = () => {
     isPending,
     error,
     data: collectes,
-  } = useQuery({
+  } = useQuery<ScheduleModel[]>({
     queryKey: ["collectes"],
     queryFn: () =>
       getPlanning({ category: "collection" }).then((res) => res.data.schedules),
@@ -90,7 +90,7 @@ export const CollectTab = () => {
   };
 
   const handleSave = async (data) => {
-    data.name="collecte"
+    data.name = "collecte";
     data.category = "collection";
     //TODO FIXME BEUUUUUUURK
     data.scheduled_date = (() => {
@@ -106,7 +106,7 @@ export const CollectTab = () => {
         i++;
       }
     })();
-    data.recurrence_pattern="weekly"
+    data.recurrence_pattern = "weekly";
     if (editingCollecte?.id) {
       updateMutation.mutate({ id: editingCollecte.id, data });
     } else {
