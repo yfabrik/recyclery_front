@@ -51,8 +51,8 @@ import {
 import { PresencePointForm } from "../../forms/PresencePointForm";
 import {
   type CollectionPointModel,
+  type ScheduleModel,
   type StoreModel,
-  type PointPresenceModel,
 } from "../../../interfaces/Models";
 
 const CollectionPointsTab = () => {
@@ -68,11 +68,12 @@ const CollectionPointsTab = () => {
 
   // États pour les onglets et présence
   const [tabValue, setTabValue] = useState(0);
-  const [presenceData, setPresenceData] = useState<PointPresenceModel[]>([]);
+  const [presenceData, setPresenceData] = useState<ScheduleModel[]>([]);
   const [presenceLoading, setPresenceLoading] = useState(false);
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
-  const [editingPresence, setEditingPresence] =
-    useState<PointPresenceModel | null>(null);
+  const [editingPresence, setEditingPresence] = useState<ScheduleModel | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchCollectionPoints();
@@ -191,7 +192,7 @@ const CollectionPointsTab = () => {
   };
 
   const handleOpenPresenceDialog = (
-    presence: PointPresenceModel | null = null,
+    presence: ScheduleModel | null = null,
   ) => {
     setEditingPresence(presence);
     setPresenceDialogOpen(true);

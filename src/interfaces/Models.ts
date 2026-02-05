@@ -10,8 +10,8 @@ export interface CategoryModel extends BaseModel {
   icon: string | null;
   parent_id: number | null;
   subcategories?: CategoryModel[];
-  defaultWeight: number
-  defaultPrice: number
+  defaultWeight: number;
+  defaultPrice: number;
 }
 
 export interface StoreModel extends BaseModel {
@@ -40,7 +40,7 @@ export interface CollectionPointModel extends BaseModel {
   notes: string;
   is_active: boolean;
   recyclery_id?: number;
-  Recycleries: StoreModel[]
+  Recycleries: StoreModel[];
 }
 
 // export interface PointPresenceModel extends BaseModel {
@@ -59,7 +59,7 @@ export interface ArrivalModel extends BaseModel {
   weight: number;
   arrival_date: Date;
   arrival_time: Date;
-  source_type: "point"|"apport"|"house_clearance";
+  source_type: "point" | "apport" | "house_clearance";
   source_details: string;
   notes: string;
   status: string;
@@ -101,7 +101,7 @@ export interface LabeledItemModel extends BaseModel {
   weight: number;
   price: number;
   cost: number;
-  condition_state: "excellent"| "good"| "fair"| "poor";
+  condition_state: "excellent" | "good" | "fair" | "poor";
   location: string;
   status: string;
 }
@@ -134,6 +134,8 @@ export interface TaskModel extends BaseModel {
   CollectionPointId: number | null;
   RecycleryId: number | null;
   schedule_id: number;
+
+  day_of_week:string
   // Legacy/computed fields (may be populated by frontend)
   task_employees?: UserModel[];
   assigned_employees?: UserModel[];
@@ -161,7 +163,7 @@ export interface WorkdaysModel extends BaseModel {
   start_time: string;
   end_time: string;
   notes: string;
-  employee_id?: number
+  employee_id?: number;
 }
 
 export interface StoreHoursModel extends BaseModel {
@@ -198,7 +200,7 @@ export interface CashSession extends BaseModel {
   user_id?: number;
 
   CashRegister?: CaisseModel;
-  User?: UserModel
+  User?: UserModel;
 }
 
 export interface TransactionModel extends BaseModel {
@@ -213,6 +215,11 @@ export interface TransactionModel extends BaseModel {
   status: "completed";
 
   cash_session_id: number;
-  CashSession?: CashSession
+  CashSession?: CashSession;
   sold_by: number;
+}
+
+export interface ScheduleModel extends TaskModel {
+  is_recurring: boolean;
+  recurrence_pattern: "daily" | "weekly" | "monthly";
 }
