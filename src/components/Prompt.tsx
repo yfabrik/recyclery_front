@@ -169,8 +169,8 @@ const NumericKeypad = ({
   }, [setValue, maxValue, decimalPlaces]);
 
   const reset = useCallback(() => {
-    setValue(defaultValue.toString() || "0");
-  }, [setValue, defaultValue]);
+    setValue("0");
+  }, [setValue]);
 
   const removeChar = useCallback(() => {
     setValue((prev) => {
