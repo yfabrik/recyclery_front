@@ -71,6 +71,10 @@ const messages = {
   showMore: total => `+ ${total} collecte(s) supplémentaire(s)`
 };
 
+/**
+ * @deprecated
+ * @returns 
+ */
 const CollectionCalendar = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);

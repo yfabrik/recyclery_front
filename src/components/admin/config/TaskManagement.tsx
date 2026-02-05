@@ -49,6 +49,10 @@ import { fetchUsers } from "../../../services/api/users";
 import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import { TaskForm } from "../../forms/TaskForm";
 
+/**
+ * @deprecated
+ * @returns 
+ */
 const TaskManagement = () => {
   const [tasks, setTasks] = useState<TaskModel[]>([]);
   const [employees, setEmployees] = useState<EmployeeModel[]>([]);

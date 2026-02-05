@@ -16,6 +16,10 @@ import {
  * Collection row (one row of 7 days) combining collection_schedules and
  * collection tasks from the general planning.
  */
+/**
+ * @deprecated
+ * @returns 
+ */
 const WeekCollectionSection = ({
   title,
   chipLabel,
