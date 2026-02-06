@@ -1,16 +1,25 @@
+import type { AxiosResponse } from "axios";
 import type { CollectionPointModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
+import type { Schema } from "../../components/forms/CollectionPointForm";
 
 interface CollectionPointFilters {
-    active_only?: string;
+  active_only?: string;
+  include?: "presences"
 }
-export const fetchCollectionPoints = (filters: CollectionPointFilters|null=null) =>
+
+interface axiosReturn {
+  message: string,
+  collection_points: CollectionPointModel[]
+}
+
+export const fetchCollectionPoints = (filters?: CollectionPointFilters): Promise<AxiosResponse<axiosReturn>> =>
   axiosInstance.get("/api/collection-points", { params: filters });
 
-export const createCollectionPoint = (data: CollectionPointModel) =>
+export const createCollectionPoint = (data: Schema) =>
   axiosInstance.post("/api/collection-points", data);
 
-export const updateCollectionPoint = (id: number, data: CollectionPointModel) =>
+export const updateCollectionPoint = (id: number, data: Schema) =>
   axiosInstance.put(`/api/collection-points/${id}`, data);
 
 export const deleteCollectionPoint = (id: number) =>

@@ -8,22 +8,22 @@ import {
 } from "./FormBase";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { idSchema, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import type { StoreModel } from "../../interfaces/Models";
 
 interface CollectionPointFormProps extends BaseFormProps<Schema> {
-  recycleries: Array<{ id: number; name: string }>;
+  recycleries: StoreModel[]
 }
 
 const schema = z.object({
-  name: z.string().trim().nonempty(),
-  address: z.string().trim().nonempty(),
-  city: z.string().trim().nonempty(),
-  postal_code: postalSchema(),
+  name: noEmptyStr("nom requis"),
+  address: noEmptyStr("address requis"),
+  city: noEmptyStr("ville requis"),
+  postal_code: postalSchema("code postal requis"),
   contact_person: z.string().transform((val) => (val == "" ? null : val)),
   contact_phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   contact_email: z.union([z.email(), z.literal("").transform(() => null)]),
-  // type: z.string(),
   notes: z.string().transform((val) => (val == "" ? null : val)),
   is_active: z.boolean(),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
@@ -47,12 +47,10 @@ export const CollectionPointForm = ({
       contact_person: "",
       contact_phone: "",
       contact_email: "",
-      // type: "standard",
       notes: "",
       is_active: true,
       recyclery_id: "",
       ...data,
-      // ...(defaultValues ?? {}),
     },
     resolver: zodResolver(schema),
   });
@@ -65,14 +63,6 @@ export const CollectionPointForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          {/* <FormSelect control={form.control} label="Type" name="type">
-            <MenuItem value="standard">Standard</MenuItem>
-            <MenuItem value="enterprise">Entreprise</MenuItem>
-            <MenuItem value="association">Association</MenuItem>
-            <MenuItem value="school">École</MenuItem>
-            <MenuItem value="hospital">Hôpital</MenuItem>
-            <MenuItem value="other">Autre</MenuItem>
-          </FormSelect> */}
         </Grid>
         <Grid size={{ xs: 12 }}>
           <FormInput

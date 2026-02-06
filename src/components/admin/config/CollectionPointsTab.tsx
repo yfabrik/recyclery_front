@@ -29,8 +29,14 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  type CollectionPointModel,
+  type ScheduleModel,
+  type StoreModel,
+} from "../../../interfaces/Models";
 import {
   createCollectionPoint,
   deleteCollectionPoint,
@@ -48,23 +54,15 @@ import {
   CollectionPointForm,
   type Schema,
 } from "../../forms/CollectionPointForm";
+import type { Schema as PresenceSchema } from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
-import {
-  type CollectionPointModel,
-  type ScheduleModel,
-  type StoreModel,
-} from "../../../interfaces/Models";
 
 const CollectionPointsTab = () => {
-  const [collectionPoints, setCollectionPoints] = useState<
-    CollectionPointModel[]
-  >([]);
   const [recycleries, setRecycleries] = useState<StoreModel[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPoint, setEditingPoint] = useState<CollectionPointModel | null>(
     null,
   );
-  const [loading, setLoading] = useState(true);
 
   // États pour les onglets et présence
   const [tabValue, setTabValue] = useState(0);
@@ -75,24 +73,53 @@ const CollectionPointsTab = () => {
     null,
   );
 
+  const queryClient = useQueryClient()
+
+  const collectionPoints = useQuery({
+    queryKey: ["points"],
+    queryFn: () => fCol().then(response => response.data.collection_points || [])
+  })
+
+  if (collectionPoints.error)
+    toast.error("Erreur lors du chargement des points de collecte");
+
+
+  const updatePoint = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateCollectionPoint(id, data),
+    onError: () => toast.error(
+      "Erreur lors de la sauvegarde"
+    ),
+    onSuccess: () => {
+      toast.success("Point de collecte mis à jour avec succès");
+      handleCloseDialog()
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+    }
+  })
+  const createPoint = useMutation({
+    mutationFn: (data: Schema) => createCollectionPoint(data),
+    onError: () => toast.error(
+      "Erreur lors de la sauvegarde"
+    ),
+    onSuccess: () => {
+      toast.success("Point de collecte créé avec succès");
+      handleCloseDialog()
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+    }
+  })
+  const deletePoint = useMutation({
+    mutationFn: (id: number) => deleteCollectionPoint(id),
+    onSuccess: () => {
+      toast.success("Point de collecte supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+    },
+    onError: () => toast.error("Erreur lors de la suppression")
+  })
+
   useEffect(() => {
-    fetchCollectionPoints();
     fetchRecycleries();
     fetchPresenceData();
   }, []);
 
-  const fetchCollectionPoints = async () => {
-    try {
-      const response = await fCol();
-
-      setCollectionPoints(response.data.collection_points || []);
-    } catch (error) {
-      toast.error("Erreur lors du chargement des points de collecte");
-      console.error("Erreur:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchRecycleries = async () => {
     try {
@@ -115,41 +142,19 @@ const CollectionPointsTab = () => {
   };
 
   const handleSave = async (data: Schema) => {
-    try {
-      //FIXME
-      //faudrait pas faire data = {...editing,...data} ?
-      if (editingPoint?.id) {
-        await updateCollectionPoint(editingPoint.id, data);
-        toast.success("Point de collecte mis à jour avec succès");
-      } else {
-        await createCollectionPoint(data);
-        toast.success("Point de collecte créé avec succès");
-      }
+    if (editingPoint?.id) updatePoint.mutate({ id: editingPoint.id, data })
+    else createPoint.mutate(data)
+    //   //FIXME
+    //   //faudrait pas faire data = {...editing,...data} ?
 
-      handleCloseDialog();
-      fetchCollectionPoints();
-    } catch (error) {
-      console.log(error);
-      toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde",
-      );
-    }
   };
 
   const handleDelete = async (point: CollectionPointModel) => {
+    if (!point.id) return
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${point.name}" ?`)
     ) {
-      try {
-        await deleteCollectionPoint(point.id);
-
-        toast.success("Point de collecte supprimé avec succès");
-        fetchCollectionPoints();
-      } catch (error) {
-        toast.error(
-          error.response?.data?.error || "Erreur lors de la suppression",
-        );
-      }
+      deletePoint.mutate(point.id)
     }
   };
 
@@ -182,7 +187,7 @@ const CollectionPointsTab = () => {
     try {
       setPresenceLoading(true);
       const response = await fetchCollectionPointPresence();
-      setPresenceData(response.data.presence_hours || []);
+      setPresenceData(response.data.schedules || []);
     } catch (error) {
       console.error("Erreur lors du chargement de la présence:", error);
       toast.error("Erreur lors du chargement de la présence");
@@ -203,40 +208,47 @@ const CollectionPointsTab = () => {
     setEditingPresence(null);
   };
 
-  const handleSavePresence = async (data) => {
-    try {
-      if (editingPresence?.id) {
-        await updatePointPresence(editingPresence.id, data);
+  const updatePresence = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: PresenceSchema }) => updatePointPresence(id, data),
+    onError: () => toast.error("Erreur lors de la sauvegarde de la présence"),
+    onSuccess: () => {
+      toast.success("Présence mise à jour avec succès");
+      handleClosePresenceDialog()
+      fetchPresenceData()
 
-        toast.success("Présence mise à jour avec succès");
-      } else {
-        await createPointPresence(data);
-
-        toast.success("Présence créée avec succès");
-      }
-
-      handleClosePresenceDialog();
-      fetchPresenceData();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde de la présence:", error);
-      toast.error("Erreur lors de la sauvegarde de la présence");
     }
+  })
+  const createPresence = useMutation({
+    mutationFn: (data: PresenceSchema) => createPointPresence(data),
+    onError: () => toast.error("Erreur lors de la sauvegarde de la présence"),
+    onSuccess: () => {
+      toast.success("Présence créée avec succès");
+      handleClosePresenceDialog()
+      fetchPresenceData()
+
+    }
+  })
+  const deletePresence = useMutation({
+    mutationFn: (id: number) => deletePointPresence(id),
+    onError: () => toast.error("Erreur lors de la suppression de la présence"),
+    onSuccess: () => {
+      toast.success("Présence supprimée avec succès");
+      fetchPresenceData()
+    }
+  })
+
+  const handleSavePresence = async (data: PresenceSchema) => {
+    if (editingPresence?.id) updatePresence.mutate({ id: editingPresence.id, data });
+    else createPresence.mutate(data)
   };
 
   const handleDeletePresence = async (id: number) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette présence ?")) {
-      try {
-        await deletePointPresence(id);
-        toast.success("Présence supprimée avec succès");
-        fetchPresenceData();
-      } catch (error) {
-        console.error("Erreur lors de la suppression de la présence:", error);
-        toast.error("Erreur lors de la suppression de la présence");
-      }
+      deletePresence.mutate(id)
     }
   };
 
-  if (loading) {
+  if (collectionPoints.isLoading) {
     return <Typography>Chargement...</Typography>;
   }
 
@@ -251,7 +263,7 @@ const CollectionPointsTab = () => {
         }}
       >
         <Typography variant="h6">
-          Gestion des Points de Collecte ({collectionPoints.length})
+          Gestion des Points de Collecte ({collectionPoints.data?.length})
         </Typography>
         <Button
           variant="contained"
@@ -291,7 +303,7 @@ const CollectionPointsTab = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {collectionPoints.map((point) => (
+                {collectionPoints.data?.map((point) => (
                   <TableRow key={point.id}>
                     <TableCell>
                       <Box
@@ -406,13 +418,13 @@ const CollectionPointsTab = () => {
                 type="submit"
                 form="collectionPointForm"
                 variant="contained"
-                //TODO
-                // disabled={
-                //   !formData.name ||
-                //   !formData.address ||
-                //   !formData.city ||
-                //   !formData.postal_code
-                // }
+              //TODO
+              // disabled={
+              //   !formData.name ||
+              //   !formData.address ||
+              //   !formData.city ||
+              //   !formData.postal_code
+              // }
               >
                 {editingPoint ? "Mettre à jour" : "Créer"}
               </Button>
@@ -475,7 +487,7 @@ const CollectionPointsTab = () => {
                         >
                           <LocationOn color="primary" fontSize="small" />
                           <Typography variant="body2">
-                            {collectionPoints.find(
+                            {collectionPoints.data?.find(
                               (cp) => cp.id === presence.collection_point_id,
                             )?.name || "Point inconnu"}
                           </Typography>
@@ -555,7 +567,7 @@ const CollectionPointsTab = () => {
         <DialogContent>
           <PresencePointForm
             formId="presencePointForm"
-            collectionPoints={collectionPoints}
+            collectionPoints={collectionPoints.data || []}
             onSubmit={handleSavePresence}
             defaultValues={editingPresence}
           />

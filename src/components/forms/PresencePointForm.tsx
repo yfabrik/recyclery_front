@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import type { CollectionPointModel } from "../../interfaces/Models";
 
 const schema = z.object({
   collection_point_id: idSchema("un point de collecte est requis"),
@@ -20,11 +21,11 @@ const schema = z.object({
   is_present: z.boolean(),
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
-  is_24h: z.boolean(),
+  // is_24h: z.boolean(),
   notes: z.string(),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const PresencePointForm = ({
   formId,
@@ -32,7 +33,7 @@ export const PresencePointForm = ({
   collectionPoints,
   defaultValues,
 }: BaseFormProps<Schema> & {
-  collectionPoints: Array<{ id: number; name: string }>;
+  collectionPoints: CollectionPointModel[];
 }) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {}
 
@@ -44,13 +45,11 @@ export const PresencePointForm = ({
       is_present: true,
       start_time: new Date().setHours(9, 0),//TODO j'aime pas la date null
       end_time: new Date().setHours(17, 0),
-      is_24h: false,
+      // is_24h: false,
       notes: "",
       ...data
-      // ...(defaultValues ?? {}),
     },
   });
-  //   const is_24 = form.watch("is_24h");
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -82,13 +81,7 @@ export const PresencePointForm = ({
           </FormSelect>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <FormSwitch
-            control={form.control}
-            label="Présent ce jour"
-            name="is_present"
-          />
-        </Grid>
+
         <Grid size={{ xs: 12, sm: 6 }}>
           {/* //TODO FIXME  j'aime pas le type time*/}
           <FormTime
@@ -96,8 +89,7 @@ export const PresencePointForm = ({
             label="Heure de début"
             name="start_time"
           />
-          {/* <FormInput control={form.control} label="Heure de début" name="start_time" extra={{ type: 'time', slotProps: { inputLabel: { shrink: true } }, disabled: is_24 }}
-                    /> */}
+
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormTime
@@ -105,17 +97,22 @@ export const PresencePointForm = ({
             label="Heure de fin"
             name="end_time"
           />
-
-          {/* <FormInput control={form.control} label="Heure de fin" name="end_time" extra={{ type: 'time', slotProps: { inputLabel: { shrink: true } }, disabled: is_24 }}
-                    /> */}
         </Grid>
-        <Grid size={{ xs: 12 }}>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormSwitch
+            control={form.control}
+            label="Présent ce jour"
+            name="is_present"
+          />
+        </Grid>
+        {/* <Grid size={{ xs: 12 }}>
           <FormSwitch
             control={form.control}
             name="is_24h"
             label="Présent 24h/24"
           />
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12 }}>
           <FormInput
             control={form.control}
