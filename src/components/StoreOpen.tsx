@@ -16,18 +16,15 @@ import {
   Typography,
 } from "@mui/material";
 
-import { DAYS_OF_WEEK as daysOfWeek } from "../interfaces/shared";
-import type { StoreHoursModel, StoreModel } from "../interfaces/Models";
+import type { ScheduleModel, StoreModel } from "../interfaces/Models";
 
 interface StoreOpenProps {
   store: StoreModel;
-  handleOpenHoursDialog: (hours?: StoreHoursModel | null, storeId?: number) => void;
+  handleOpenHoursDialog: (hours?: ScheduleModel | null, storeId?: number) => void;
   handleDeleteHours: (hourId: number) => void;
-  hours: StoreHoursModel[];
 }
 export const StoreOpen = ({
   store,
-  hours,
   handleOpenHoursDialog,
   handleDeleteHours,
 }: StoreOpenProps) => {
@@ -72,48 +69,48 @@ export const StoreOpen = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {hours
-                .sort(
-                  (a, b) =>
-                    daysOfWeek.findIndex((d) => d.key === a.day_of_week) -
-                    daysOfWeek.findIndex((d) => d.key === b.day_of_week),
+              {store.horaires
+                ?.sort(
+                  (a, b) => new Date(a.scheduled_date).getDay() -
+                    new Date(b.scheduled_date).getDay()
                 )
                 .map((hour) => (
                   <TableRow key={hour.id}>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                        {daysOfWeek.find((d) => d.key === hour.day_of_week)
-                          ?.label || hour.day_of_week}
+                      <Typography variant="body2" sx={{ fontWeight: "bold", textTransform: "capitalize" }}>
+                        {new Date(hour.scheduled_date).toLocaleString(undefined, { weekday: "long" })}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {!hour.is_open ? (
+                      {!hour.is_recurring ? (
                         <Chip label="Fermé" color="error" size="small" />
-                      ) : hour.is_24h ? (
-                        <Chip label="24h/24" color="success" size="small" />
-                      ) : (
-                        <Chip label="Ouvert" color="success" size="small" />
-                      )}
+                      )
+                        //  : hour.is_24h ? (
+                        //   <Chip label="24h/24" color="success" size="small" />
+                        // ) 
+                        : (
+                          <Chip label="Ouvert" color="success" size="small" />
+                        )}
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {!hour.is_open
+                        {!hour.is_recurring
                           ? "Fermé"
-                          : hour.is_24h
-                            ? "24h/24"
-                            : `${new Date(hour.open_time).toLocaleString(
-                                "fr-FR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )} - ${new Date(hour.close_time).toLocaleString(
-                                "fr-FR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}`}
+                          // : hour.is_24h
+                          //   ? "24h/24"
+                          : `${new Date(hour.start_time).toLocaleString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )} - ${new Date(hour.end_time).toLocaleString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}`}
                       </Typography>
                       {hour.notes && (
                         <Typography

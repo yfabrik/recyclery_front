@@ -38,27 +38,24 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import type {
-  StoreHoursModel,
+  ScheduleModel,
   StoreModel
 } from "../../../interfaces/Models";
 import {
-  createCaisse,
   createStore,
   deleteStore,
-  fetchCaisses,
   fetchStores as fStore,
-  updateStore,
+  updateStore
 } from "../../../services/api/store";
 import {
   createStoreHours,
   deleteStoreHours,
-  fetchStoreHours as fStoreHours,
-  updateStoreHours,
+  updateStoreHours
 } from "../../../services/api/storeHours";
 import { fetchUsers as fUsers } from "../../../services/api/users";
+import { CreateCaisseDialog } from "../../CreateCaisseDialog";
 import { StatCardNoIcon } from "../../StatCard";
 import { StoreOpen } from "../../StoreOpen";
-import { CreateCaisseForm, type Schema as CaisseSchema } from "../../forms/CreateCaisseForm";
 import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
@@ -71,7 +68,7 @@ const StoresTab = () => {
   // États pour les onglets et horaires
   const [tabValue, setTabValue] = useState(0);
   const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
-  const [editingHours, setEditingHours] = useState<StoreHoursModel | null>(
+  const [editingHours, setEditingHours] = useState<ScheduleModel | null>(
     null,
   );
 
@@ -130,38 +127,23 @@ const StoresTab = () => {
   //   }
   // };
 
-  const caisses = useQuery({
-    queryKey: ["caisses", editingStore?.id],//FIXME je crois que c'est pas bon
-    enabled: !!editingStore?.id && cashRegistersDialog,
-
-    queryFn: () => fetchCaisses(editingStore?.id).then(response => response.data.cash_registers),
-    placeholderData: []
-  })
-  if (caisses.isError) toast.error("Erreur lors du chargement des caisses");
 
 
-  const addCaisse = useMutation({
-    mutationFn: ({ id, name }: { id: number, name: CaisseSchema }) => createCaisse(id, name),
-    onSuccess: () => {
-      toast.success("Caisse créée avec succès")
-      queryClient.invalidateQueries({ queryKey: ["caisses"] })
-    },
-    onError: () => toast.error("Erreur lors de la création de la caisse"),
-  })
 
 
-  const storeHours = useQuery({
-    queryKey: ["storeHour"],
-    queryFn: () => fStoreHours().then(response => response.data.storeHours)
-  })
-  if (storeHours.isError) toast.error("Erreur lors du chargement des horaires");
+
+  // const storeHours = useQuery({
+  //   queryKey: ["storeHour"],
+  //   queryFn: () => fStoreHours().then(response => response.data.storeHours)
+  // })
+  // if (storeHours.isError) toast.error("Erreur lors du chargement des horaires");
 
 
   const saveHoraire = useMutation({
     mutationFn: (data: HoraireSchema) => createStoreHours(data),
     onSuccess: () => {
       toast.success("Horaires créés avec succès");
-      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
       handleCloseHoursDialog();
     },
     onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
@@ -171,7 +153,7 @@ const StoresTab = () => {
     mutationFn: ({ id, data }: { id: number, data: HoraireSchema }) => updateStoreHours(id, data),
     onSuccess: () => {
       toast.success("Horaires mis à jour avec succès");
-      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
       handleCloseHoursDialog();
     },
     onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
@@ -181,7 +163,7 @@ const StoresTab = () => {
     mutationFn: (id: number) => deleteStoreHours(id),
     onSuccess: () => {
       toast.success("Horaires supprimés avec succès");
-      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+      queryClient.invalidateQueries({ queryKey:["stores", "horaires"] })
 
     },
     onError: () => toast.error("Erreur lors de la suppression des horaires"),
@@ -223,15 +205,10 @@ const StoresTab = () => {
   };
 
 
-  const handleAddCashRegister = async (data: CaisseSchema) => {
-    if (!editingStore?.id) return // throw new Error("no id provided")
-    addCaisse.mutate({ id: editingStore.id, name: data })
-
-  };
 
   // Fonctions pour gérer les horaires d'ouverture
   const handleOpenHoursDialog = (
-    hours: StoreHoursModel | null = null,
+    hours: ScheduleModel | null = null,
     store_id: number | null = null,
   ) => {
     if (hours) {
@@ -489,18 +466,29 @@ const StoresTab = () => {
             </Button>
           </Box>
 
-          {storeHours.isLoading ? (
+          {stores.isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
               <CircularProgress />
             </Box>
-          ) : storeHours.data?.length === 0 ? (
+          ) : stores.data?.length === 0 ? (
             <Alert severity="info">
               Aucun horaire d'ouverture configuré. Cliquez sur "Ajouter des
               horaires" pour commencer.
             </Alert>
           ) : (
             <Grid container spacing={3}>
-              {Object.entries(
+              {
+                stores.data?.map((store) => (
+                  <Grid size={{ xs: 12, md: 6 }} key={store.id}>
+                    <StoreOpen
+                      store={store}
+                      handleOpenHoursDialog={handleOpenHoursDialog}
+                      handleDeleteHours={handleDeleteHours}
+                    />
+                  </Grid>
+                ))
+              }
+              {/* {Object.entries(
                 storeHours.data?.reduce(
                   (acc: Record<number, StoreHoursModel[]>, hours) => {
                     if (!acc[hours.store_id]) {
@@ -523,88 +511,17 @@ const StoresTab = () => {
                         handleDeleteHours={handleDeleteHours}
                       />
                     </Grid>)
-              })}
+              })} */}
             </Grid>
           )}
         </Box>
       )}
 
       {/* Dialog de gestion des caisses */}
-      <Dialog
-        open={cashRegistersDialog}
-        onClose={handleCloseCashRegisters}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Caisses - {editingStore?.name}</DialogTitle>
-        <DialogContent>
-          <CreateCaisseForm formId="createCaisse" onSubmit={handleAddCashRegister} />
-          {/* <Box sx={{ mb: 2, mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Nom de la nouvelle caisse"
-              value={newCashRegisterName}
-              onChange={(e) => setNewCashRegisterName(e.target.value)}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleAddCashRegister}
-                      disabled={!newCashRegisterName.trim()}
-                    >
-                      Ajouter
-                    </Button>
-                  ),
-                },
-              }}
-            />
-          </Box> */}
+      {editingStore &&
+        <CreateCaisseDialog store={editingStore} onClose={handleCloseCashRegisters} open={cashRegistersDialog} />
+      }
 
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nom</TableCell>
-                  <TableCell>Sessions</TableCell>
-                  <TableCell>Dernière utilisation</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {caisses.isLoading ?
-                  (<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                    <CircularProgress />
-                  </Box>) :
-
-
-                  caisses.data?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={3} align="center">
-                        Aucune caisse
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    caisses.data?.map((register) => (
-                      <TableRow key={register.id}>
-                        <TableCell>{register.name}</TableCell>
-                        <TableCell>{register.total_sessions || 0}</TableCell>
-                        <TableCell>
-                          {register.last_session
-                            ? new Date(register.last_session).toLocaleString()
-                            : "Jamais"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCashRegisters}>Fermer</Button>
-        </DialogActions>
-      </Dialog>
       {/* Dialog de création/édition de magasin */}
       <Dialog
         open={dialogOpen}
@@ -630,6 +547,7 @@ const StoresTab = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
       {/* Dialog de création/édition des horaires */}
       <Dialog
         open={hoursDialogOpen}

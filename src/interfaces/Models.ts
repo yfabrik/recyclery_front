@@ -26,6 +26,7 @@ export interface StoreModel extends BaseModel {
   city: string;
   postal_code: string;
   is_active: boolean;
+  horaires?: ScheduleModel[]
 }
 
 export interface CollectionPointModel extends BaseModel {
@@ -41,6 +42,7 @@ export interface CollectionPointModel extends BaseModel {
   is_active: boolean;
   recyclery_id?: number;
   Recycleries: StoreModel[];
+  TaskSchedules?: ScheduleModel[]
 }
 
 // export interface PointPresenceModel extends BaseModel {

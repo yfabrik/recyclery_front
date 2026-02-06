@@ -15,6 +15,7 @@ import {
 } from "../../interfaces/shared";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
   store_id: idSchema("choississez un magasin"),
@@ -33,7 +34,7 @@ export const StoreOpeningForm = ({
   onSubmit,
   defaultValues,
   stores,
-}: BaseFormProps<Schema> & { stores: Array<{ id: number; name: string }> }) => {
+}: BaseFormProps<Schema> & { stores: StoreModel[] }) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
 
   const form = useForm({
