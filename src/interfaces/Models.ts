@@ -1,6 +1,6 @@
 interface BaseModel {
-  id?: number;
-  createdAt?: Date;
+  id: number;
+  createdAt: Date;
   updatedAt?: Date;
 }
 
@@ -134,8 +134,10 @@ export interface TaskModel extends BaseModel {
   CollectionPointId: number | null;
   RecycleryId: number | null;
   schedule_id: number;
+  store_id?: number
+  collection_point_id?: number
 
-  day_of_week:string
+  day_of_week: string
   // Legacy/computed fields (may be populated by frontend)
   task_employees?: UserModel[];
   assigned_employees?: UserModel[];
