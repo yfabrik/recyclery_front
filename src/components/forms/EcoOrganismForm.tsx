@@ -5,26 +5,26 @@ import { FormInput, FormSwitch, type BaseFormProps } from "./FormBase";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { phoneSchema } from "../../interfaces/ZodTypes";
+import { noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
-  name: z.string().trim().nonempty(),
+  name: noEmptyStr("nom requis"),
   description: z.string().transform(v => v == '' ? null : v),
-  contact_email: z.union([z.email(), z.literal("").transform(v => null)]),
+  contact_email: z.union([z.email(), nullString()]),
   contact_phone: z.union([
     phoneSchema(),
-    z.literal("").transform(v => null),
+    nullString(),
   ]),
   address: z.string().transform(v => v == '' ? null : v),
   website: z.union([
     z.url(),
-    z.literal("").transform(v => null),
+    nullString()
   ]),
   is_active: z.boolean(),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const EcoOrganismForm = ({
   formId,
@@ -43,7 +43,6 @@ export const EcoOrganismForm = ({
       website: "",
       is_active: true,
       ...data
-      // ...(defaultValues ?? {}),
     },
   });
   return (

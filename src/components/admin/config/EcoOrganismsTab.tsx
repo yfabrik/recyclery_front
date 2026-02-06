@@ -28,7 +28,8 @@ import {
   Typography
 } from "@mui/material";
 
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import type { EcoOrgModel } from "../../../interfaces/Models";
 import {
@@ -36,50 +37,87 @@ import {
   deleteEcoOrganism,
   fetchEcoOrganismsStats,
   getEcoOrganisms,
-  updateEcoOrganism,
+  updateEcoOrganism
 } from "../../../services/api/ecoOrganism";
-import { EcoOrganismForm } from "../../forms/EcoOrganismForm";
+import { EcoOrganismForm, type Schema } from "../../forms/EcoOrganismForm";
 import { StatCard } from "../../StatCard";
 
 export const EcoOrganismsTab = () => {
-  const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
-  const [loading, setLoading] = useState(true);
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
   const [editingEcoOrganism, setEditingEcoOrganism] =
     useState<EcoOrgModel | null>(null);
 
-  const [ecoOrganismStats, setEcoOrganismStats] = useState(null);
+  const queryClient = useQueryClient()
+  const ecoOrganisms = useQuery({
+    queryKey: ["ecoOrganism"],
+    queryFn: () => getEcoOrganisms().then(response => response.data.eco_organisms)
+  })
+  if (ecoOrganisms.isError) toast.error("Erreur lors du chargement des éco-organismes");
 
-  useEffect(() => {
-    fetchEcoOrganisms();
-    fetchEcoOrganismStats();
-  }, []);
+  const ecoOrganismStats = useQuery({
+    queryKey: ["ecoStats"],
+    queryFn: () => fetchEcoOrganismsStats().then(response => response.data.stats)
+  })
+  if (ecoOrganismStats.isError) toast.error("Erreur lors du chargement des statistiques");
 
-  const fetchEcoOrganisms = async () => {
-    try {
-      const response = await getEcoOrganisms();
-      setEcoOrganisms(response.data.eco_organisms || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des éco-organismes:", error);
-      toast.error("Erreur lors du chargement des éco-organismes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const editEcoOrganism = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEcoOrganism(id, data),
+    onSuccess: () => {
+      toast.success("Éco-organisme mis à jour avec succès");
+      handleCloseEcoOrganismDialog();
+      queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
+      queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
 
-  const fetchEcoOrganismStats = async () => {
-    try {
-      const response = await fetchEcoOrganismsStats();
-      setEcoOrganismStats(response.data.stats);
-    } catch (error) {
-      console.error("Erreur lors du chargement des statistiques:", error);
-    }
-  };
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde")
+  })
+  const addEcoOrganism = useMutation({
+    mutationFn: (data: Schema) => createEcoOrganism(data),
+    onSuccess: () => {
+      toast.success("Éco-organisme créé avec succès");
+      handleCloseEcoOrganismDialog();
+      queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
+      queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
+
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde")
+  })
+  const removeEcoOrganism = useMutation({
+    mutationFn: (id: number) => deleteEcoOrganism(id),
+    onSuccess: () => {
+      toast.success("Éco-organisme supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
+      queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
+
+    },
+    onError: () => toast.error("Erreur lors de la suppression")
+  })
+
+  // const fetchEcoOrganisms = async () => {
+  //   try {
+  //     const response = await getEcoOrganisms();
+  //     setEcoOrganisms(response.data.eco_organisms || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des éco-organismes:", error);
+  //     toast.error("Erreur lors du chargement des éco-organismes");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const fetchEcoOrganismStats = async () => {
+  //   try {
+  //     const response = await fetchEcoOrganismsStats();
+  //     setEcoOrganismStats(response.data.stats);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des statistiques:", error);
+  //   }
+  // };
 
   const handleOpenEcoOrganismDialog = (
     ecoOrganism: EcoOrgModel | null = null
   ) => {
-      setEditingEcoOrganism(ecoOrganism);
+    setEditingEcoOrganism(ecoOrganism);
     setEcoOrganismDialog(true);
   };
 
@@ -88,46 +126,48 @@ export const EcoOrganismsTab = () => {
     setEditingEcoOrganism(null);
   };
 
-  const handleSaveEcoOrganism = async (data) => {
-    try {
-      const response = editingEcoOrganism?.id
-        ? await updateEcoOrganism(editingEcoOrganism.id, data)
-        : await createEcoOrganism(data);
+  const handleSaveEcoOrganism = async (data: Schema) => {
+    editingEcoOrganism?.id ? editEcoOrganism.mutate({ id: editingEcoOrganism.id, data }) : addEcoOrganism.mutate(data)
+    // try {
+    //   const response = editingEcoOrganism?.id
+    //     ? await updateEcoOrganism(editingEcoOrganism.id, data)
+    //     : await createEcoOrganism(data);
 
-      toast.success(
-        editingEcoOrganism
-          ? "Éco-organisme mis à jour avec succès"
-          : "Éco-organisme créé avec succès"
-      );
+    //   toast.success(
+    //     editingEcoOrganism
+    //       ? "Éco-organisme mis à jour avec succès"
+    //       : "Éco-organisme créé avec succès"
+    //   );
 
-      handleCloseEcoOrganismDialog();
-      fetchEcoOrganisms();
-      fetchEcoOrganismStats();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde");
-    }
+    //   handleCloseEcoOrganismDialog();
+    //   fetchEcoOrganisms();
+    //   fetchEcoOrganismStats();
+    // } catch (error) {
+    //   console.error("Erreur lors de la sauvegarde:", error);
+    //   toast.error("Erreur lors de la sauvegarde");
+    // }
   };
 
-  const handleDeleteEcoOrganism = async (id) => {
+  const handleDeleteEcoOrganism = async (id: number) => {
     if (
       !window.confirm("Êtes-vous sûr de vouloir supprimer cet éco-organisme ?")
     ) {
       return;
     }
+    removeEcoOrganism.mutate(id)
 
-    try {
-      await deleteEcoOrganism(id);
-      toast.success("Éco-organisme supprimé avec succès");
-      fetchEcoOrganisms();
-      fetchEcoOrganismStats();
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression");
-    }
+    // try {
+    //   await deleteEcoOrganism(id);
+    //   toast.success("Éco-organisme supprimé avec succès");
+    //   fetchEcoOrganisms();
+    //   fetchEcoOrganismStats();
+    // } catch (error) {
+    //   console.error("Erreur lors de la suppression:", error);
+    //   toast.error("Erreur lors de la suppression");
+    // }
   };
 
-  if (loading) {
+  if (ecoOrganisms.isLoading) {
     return (
       <Box
         display="flex"
@@ -164,7 +204,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title=" Total Éco-organismes"
-              value={ecoOrganismStats.total_eco_organisms}
+              value={ecoOrganismStats.data?.total_eco_organisms || 0}
             >
               <Nature color="primary" sx={{ fontSize: 40 }} />
             </StatCard>
@@ -173,7 +213,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title=" Actifs"
-              value={ecoOrganismStats.active_eco_organisms}
+              value={ecoOrganismStats.data?.active_eco_organisms || 0}
             >
               <CheckCircle color="success" sx={{ fontSize: 40 }} />
             </StatCard>
@@ -182,7 +222,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title="Inactifs"
-              value={ecoOrganismStats.inactive_eco_organisms}
+              value={ecoOrganismStats.data?.inactive_eco_organisms || 0}
             >
               <Block color="error" sx={{ fontSize: 40 }} />
             </StatCard>
@@ -204,7 +244,7 @@ export const EcoOrganismsTab = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {ecoOrganisms.map((org) => (
+            {ecoOrganisms.data?.map((org) => (
               <TableRow key={org.id}>
                 <TableCell>
                   <Typography variant="body1" fontWeight="bold">
@@ -294,7 +334,7 @@ export const EcoOrganismsTab = () => {
             onSubmit={handleSaveEcoOrganism}
             defaultValues={editingEcoOrganism}
           />
-          
+
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEcoOrganismDialog}>Annuler</Button>
