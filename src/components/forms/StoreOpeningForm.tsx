@@ -26,7 +26,7 @@ const schema = z.object({
   notes: z.string().transform((val) => (val == "" ? null : val)),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const StoreOpeningForm = ({
   formId,
@@ -103,10 +103,7 @@ export const StoreOpeningForm = ({
                     name="open_time"
                     label="Heure d'ouverture"
                   />
-                  {/* <FormInput control={form.control} name="open_time" label="Heure d'ouverture" extra={{
-                                        type: "time",
-                                        slotProps: { inputLabel: { shrink: true } }
-                                    }} /> */}
+
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormTime
@@ -114,10 +111,7 @@ export const StoreOpeningForm = ({
                     name="close_time"
                     label="Heure de fermeture"
                   />
-                  {/* <FormInput control={form.control} name="close_time" label="Heure de fermeture" extra={{
-                                        type: "time",
-                                        slotProps: { inputLabel: { shrink: true } }
-                                    }} /> */}
+
                 </Grid>
               </>
             )}

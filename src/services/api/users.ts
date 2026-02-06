@@ -1,3 +1,4 @@
+import type { AxiosResponse } from "axios";
 import type { UserModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
@@ -8,7 +9,7 @@ interface UserFilters {
   include?: string;
 }
 
-export const fetchUsers = (filters: UserFilters | null = null) =>
+export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ message: string, users: UserModel[] }>> =>
   axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
 // export const getEmployees = () => axiosInstance.get("/api/users/employees")
 

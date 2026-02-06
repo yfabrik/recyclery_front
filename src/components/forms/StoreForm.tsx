@@ -9,12 +9,12 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { idSchema, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import type { UserModel } from "../../interfaces/Models";
 
 const schema = z.object({
-  name: z.string().nonempty(),
+  name: noEmptyStr("nom requis"),
   manager_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   address: z.string(),
   city: z.string(),
@@ -24,7 +24,7 @@ const schema = z.object({
   is_active: z.boolean(),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const StoreForm = ({
   formId,

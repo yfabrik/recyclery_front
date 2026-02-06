@@ -31,12 +31,16 @@ import {
   TableHead,
   TableRow,
   Tabs,
-  TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import type {
+  StoreHoursModel,
+  StoreModel
+} from "../../../interfaces/Models";
 import {
   createCaisse,
   createStore,
@@ -54,88 +58,136 @@ import {
 import { fetchUsers as fUsers } from "../../../services/api/users";
 import { StatCardNoIcon } from "../../StatCard";
 import { StoreOpen } from "../../StoreOpen";
-import { StoreForm } from "../../forms/StoreForm";
+import { CreateCaisseForm, type Schema as CaisseSchema } from "../../forms/CreateCaisseForm";
+import { StoreForm, type Schema } from "../../forms/StoreForm";
+import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
-import type {
-  CaisseModel,
-  StoreHoursModel,
-  StoreModel,
-  UserModel,
-} from "../../../interfaces/Models";
 
 const StoresTab = () => {
-  const [stores, setStores] = useState<StoreModel[]>([]);
-  const [users, setUsers] = useState<UserModel[]>([]);
-  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreModel | null>(null);
   const [cashRegistersDialog, setCashRegistersDialog] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<StoreModel | null>(null); //TODO le meme que editing store ?
-  const [cashRegisters, setCashRegisters] = useState<CaisseModel[]>([]);
-  const [newCashRegisterName, setNewCashRegisterName] = useState("");
 
   // États pour les onglets et horaires
   const [tabValue, setTabValue] = useState(0);
-  const [storeHours, setStoreHours] = useState<StoreHoursModel[]>([]);
   const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
   const [editingHours, setEditingHours] = useState<StoreHoursModel | null>(
     null,
   );
-  const [hoursLoading, setHoursLoading] = useState(false);
 
-  useEffect(() => {
-    fetchStores();
-    fetchUsers();
-    fetchStoreHours();
-  }, []);
+  const queryClient = useQueryClient()
 
-  const fetchStores = async () => {
-    try {
-      setLoading(true);
-      const response = await fStore();
-      setStores(response.data.stores || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des magasins:", error);
-      toast.error("Erreur lors du chargement des magasins");
-    } finally {
-      setLoading(false);
+  //TODO y'a peu etre plus besoin des hours vu que je peux les recup avec les store ?
+  const stores = useQuery({
+    queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores),
+    queryKey: ["stores", "horaires"]
+  })
+  if (stores.error) toast.error("Erreur lors du chargement des magasins");
+
+  const editStore = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateStore(id, data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      toast.success("Magasin mis à jour avec succès");
+      handleCloseDialog();
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fUsers();
-      const managers = (response.data.users || []).filter(
-        (user) => user.role === "manager" || user.role === "admin",
-      );
-      setUsers(managers);
-    } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs:", error);
+  })
+  const addStore = useMutation({
+    mutationFn: (data: Schema) => createStore(data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      toast.success("Magasin créé avec succès");
+      handleCloseDialog();
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
-  };
-
-  const fetchStoreHours = async () => {
-    try {
-      setHoursLoading(true);
-      const response = await fStoreHours();
-      setStoreHours(response.data.storeHours || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des horaires:", error);
-      toast.error("Erreur lors du chargement des horaires");
-    } finally {
-      setHoursLoading(false);
+  })
+  const removeStore = useMutation({
+    mutationFn: (id: number) => deleteStore(id),
+    onError: () => toast.error("Erreur lors de la suppression"),
+    onSuccess: () => {
+      toast.success("Magasin supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
-  };
+  })
 
-  const fetchCashRegisters = async (storeId: number) => {
-    try {
-      const response = await fetchCaisses(storeId);
-      setCashRegisters(response.data.cash_registers || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des caisses:", error);
-      toast.error("Erreur lors du chargement des caisses");
-    }
-  };
+
+  const users = useQuery({
+    queryKey: ["users"],
+    queryFn: () => fUsers({ role: "admin" }).then(response => response.data.users)
+  })
+  if (users.error) toast.error("Erreur lors du chargement des utilisateurs")
+
+  // const fetchUsers = async () => {
+  //   try {
+  //     const response = await fUsers();
+  //     const managers = (response.data.users || []).filter(
+  //       (user) => user.role === "manager" || user.role === "admin",
+  //     );
+  //     setUsers(managers);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des utilisateurs:", error);
+  //   }
+  // };
+
+  const caisses = useQuery({
+    queryKey: ["caisses", editingStore?.id],//FIXME je crois que c'est pas bon
+    enabled: !!editingStore?.id && cashRegistersDialog,
+
+    queryFn: () => fetchCaisses(editingStore?.id).then(response => response.data.cash_registers),
+    placeholderData: []
+  })
+  if (caisses.isError) toast.error("Erreur lors du chargement des caisses");
+
+
+  const addCaisse = useMutation({
+    mutationFn: ({ id, name }: { id: number, name: CaisseSchema }) => createCaisse(id, name),
+    onSuccess: () => {
+      toast.success("Caisse créée avec succès")
+      queryClient.invalidateQueries({ queryKey: ["caisses"] })
+    },
+    onError: () => toast.error("Erreur lors de la création de la caisse"),
+  })
+
+
+  const storeHours = useQuery({
+    queryKey: ["storeHour"],
+    queryFn: () => fStoreHours().then(response => response.data.storeHours)
+  })
+  if (storeHours.isError) toast.error("Erreur lors du chargement des horaires");
+
+
+  const saveHoraire = useMutation({
+    mutationFn: (data: HoraireSchema) => createStoreHours(data),
+    onSuccess: () => {
+      toast.success("Horaires créés avec succès");
+      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+      handleCloseHoursDialog();
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
+  })
+
+  const editHoraire = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: HoraireSchema }) => updateStoreHours(id, data),
+    onSuccess: () => {
+      toast.success("Horaires mis à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+      handleCloseHoursDialog();
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
+  })
+
+  const removeHoraire = useMutation({
+    mutationFn: (id: number) => deleteStoreHours(id),
+    onSuccess: () => {
+      toast.success("Horaires supprimés avec succès");
+      queryClient.invalidateQueries({ queryKey: ['storeHour'] })
+
+    },
+    onError: () => toast.error("Erreur lors de la suppression des horaires"),
+  })
+
+
 
   const handleOpenDialog = (store: StoreModel | null = null) => {
     setEditingStore(store);
@@ -147,71 +199,34 @@ const StoresTab = () => {
     setEditingStore(null);
   };
 
-  const handleSave = async (data) => {
-    try {
-      if (editingStore?.id) {
-        // Mise à jour
-        await updateStore(editingStore.id, data);
-        toast.success("Magasin mis à jour avec succès");
-      } else {
-        // Création
-        await createStore(data);
-        toast.success("Magasin créé avec succès");
-      }
+  const handleSave = async (data: Schema) => {
+    if (editingStore?.id) editStore.mutate({ id: editingStore.id, data })
+    else addStore.mutate(data)
 
-      handleCloseDialog();
-      fetchStores();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde");
-    }
   };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce magasin ?")) {
       return;
     }
-
-    try {
-      await deleteStore(id);
-      toast.success("Magasin supprimé avec succès");
-      fetchStores();
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error(
-        error.response?.data?.error || "Erreur lors de la suppression",
-      );
-    }
+    removeStore.mutate(id)
   };
 
   const handleOpenCashRegisters = (store: StoreModel) => {
-    setSelectedStore(store);
-    fetchCashRegisters(store.id);
+    setEditingStore(store);
     setCashRegistersDialog(true);
   };
 
   const handleCloseCashRegisters = () => {
     setCashRegistersDialog(false);
-    setSelectedStore(null);
-    setCashRegisters([]);
-    setNewCashRegisterName("");
+    setEditingStore(null);
   };
 
-  const handleAddCashRegister = async () => {
-    if (!newCashRegisterName.trim()) {
-      toast.error("Le nom de la caisse est obligatoire");
-      return;
-    }
 
-    try {
-      await createCaisse(selectedStore.id, { name: newCashRegisterName });
-      toast.success("Caisse créée avec succès");
-      setNewCashRegisterName("");
-      fetchCashRegisters(selectedStore.id);
-    } catch (error) {
-      console.error("Erreur lors de la création de la caisse:", error);
-      toast.error("Erreur lors de la création de la caisse");
-    }
+  const handleAddCashRegister = async (data: CaisseSchema) => {
+    if (!editingStore?.id) return // throw new Error("no id provided")
+    addCaisse.mutate({ id: editingStore.id, name: data })
+
   };
 
   // Fonctions pour gérer les horaires d'ouverture
@@ -232,35 +247,16 @@ const StoresTab = () => {
     setEditingHours(null);
   };
 
-  const handleSaveHours = async (data) => {
-    try {
-      if (editingHours?.id) {
-        await updateStoreHours(editingHours.id, data);
-        toast.success("Horaires mis à jour avec succès");
-      } else {
-        await createStoreHours(data);
-        toast.success("Horaires créés avec succès");
-      }
 
-      handleCloseHoursDialog();
-      fetchStoreHours();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des horaires:", error);
-      toast.error("Erreur lors de la sauvegarde des horaires");
-    }
+  const handleSaveHours = async (data: HoraireSchema) => {
+    if (!editingHours?.id) saveHoraire.mutate(data)
+    else editHoraire.mutate({ id: editingHours.id, data })
+
   };
 
-  const handleDeleteHours = async (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ces horaires ?")) {
-      try {
-        await deleteStoreHours(id);
-        toast.success("Horaires supprimés avec succès");
-        fetchStoreHours();
-      } catch (error) {
-        console.error("Erreur lors de la suppression des horaires:", error);
-        toast.error("Erreur lors de la suppression des horaires");
-      }
-    }
+  const handleDeleteHours = async (id: number) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ces horaires ?"))
+      removeHoraire.mutate(id)
   };
 
   return (
@@ -293,7 +289,6 @@ const StoresTab = () => {
           icon={<AccessTime />}
           iconPosition="start"
         />
-        {/* <Tab label="Lieux" icon={<LocationOn />} iconPosition="start" /> */}
       </Tabs>
       {/* Contenu des onglets */}
       {tabValue === 0 && (
@@ -303,24 +298,24 @@ const StoresTab = () => {
             <Grid size={{ xs: 12, sm: 4 }}>
               <StatCardNoIcon
                 title="Magasins total"
-                value={stores.length}
+                value={stores.data?.length || 0}
                 color="primary"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <StatCardNoIcon
                 title="Magasins actifs"
-                value={stores.filter((store) => store.is_active).length}
+                value={stores.data?.filter((store) => store.is_active).length || 0}
                 color="success.main"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <StatCardNoIcon
                 title="Caisses total"
-                value={stores.reduce(
-                  (sum, store) => sum + (store.cash_registers_count || 0),
+                value={stores.data?.reduce(
+                  (sum, store) => sum + (store.caisses?.length || 0),
                   0,
-                )}
+                ) || 0}
                 color="info.main"
               />
             </Grid>
@@ -340,20 +335,20 @@ const StoresTab = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {loading ? (
+                {stores.isLoading ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
                       Chargement...
                     </TableCell>
                   </TableRow>
-                ) : stores.length === 0 ? (
+                ) : stores.data?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
                       Aucun magasin trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
-                  stores.map((store) => (
+                  stores.data?.map((store) => (
                     <TableRow key={store.id} hover>
                       <TableCell>
                         <Box
@@ -375,7 +370,7 @@ const StoresTab = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {store?.manager?.username ? (
+                        {store.manager?.username ? (
                           <Box
                             sx={{
                               display: "flex",
@@ -432,7 +427,7 @@ const StoresTab = () => {
                           startIcon={<AccountBalance />}
                           onClick={() => handleOpenCashRegisters(store)}
                         >
-                          {store.cash_registers_count || 0} caisse(s)
+                          {store.caisses?.length || 0} caisse(s)
                         </Button>
                       </TableCell>
                       <TableCell>
@@ -494,11 +489,11 @@ const StoresTab = () => {
             </Button>
           </Box>
 
-          {hoursLoading ? (
+          {storeHours.isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
               <CircularProgress />
             </Box>
-          ) : storeHours.length === 0 ? (
+          ) : storeHours.data?.length === 0 ? (
             <Alert severity="info">
               Aucun horaire d'ouverture configuré. Cliquez sur "Ajouter des
               horaires" pour commencer.
@@ -506,7 +501,7 @@ const StoresTab = () => {
           ) : (
             <Grid container spacing={3}>
               {Object.entries(
-                storeHours.reduce(
+                storeHours.data?.reduce(
                   (acc: Record<number, StoreHoursModel[]>, hours) => {
                     if (!acc[hours.store_id]) {
                       acc[hours.store_id] = [];
@@ -514,18 +509,21 @@ const StoresTab = () => {
                     acc[hours.store_id].push(hours);
                     return acc;
                   },
-                  {},
-                ),
-              ).map(([storeId, hours]) => (
-                <Grid size={{ xs: 12, md: 6 }} key={storeId}>
-                  <StoreOpen
-                    store={stores.find((s) => s.id === parseInt(storeId)) || []}
-                    hours={hours}
-                    handleOpenHoursDialog={handleOpenHoursDialog}
-                    handleDeleteHours={handleDeleteHours}
-                  />
-                </Grid>
-              ))}
+                  {}
+                )
+              ).map(([storeId, hours]) => {
+                const currentStore = stores.data?.find((s) => s.id === parseInt(storeId))
+                if (currentStore)
+                  return (
+                    <Grid size={{ xs: 12, md: 6 }} key={storeId}>
+                      <StoreOpen
+                        store={currentStore}
+                        hours={hours}
+                        handleOpenHoursDialog={handleOpenHoursDialog}
+                        handleDeleteHours={handleDeleteHours}
+                      />
+                    </Grid>)
+              })}
             </Grid>
           )}
         </Box>
@@ -538,9 +536,10 @@ const StoresTab = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Caisses - {selectedStore?.name}</DialogTitle>
+        <DialogTitle>Caisses - {editingStore?.name}</DialogTitle>
         <DialogContent>
-          <Box sx={{ mb: 2 }}>
+          <CreateCaisseForm formId="createCaisse" onSubmit={handleAddCashRegister} />
+          {/* <Box sx={{ mb: 2, mt: 2 }}>
             <TextField
               fullWidth
               label="Nom de la nouvelle caisse"
@@ -561,7 +560,7 @@ const StoresTab = () => {
                 },
               }}
             />
-          </Box>
+          </Box> */}
 
           <TableContainer>
             <Table size="small">
@@ -573,25 +572,31 @@ const StoresTab = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {cashRegisters.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} align="center">
-                      Aucune caisse
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  cashRegisters.map((register) => (
-                    <TableRow key={register.id}>
-                      <TableCell>{register.name}</TableCell>
-                      <TableCell>{register.total_sessions || 0}</TableCell>
-                      <TableCell>
-                        {register.last_session
-                          ? new Date(register.last_session).toLocaleString()
-                          : "Jamais"}
+                {caisses.isLoading ?
+                  (<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                    <CircularProgress />
+                  </Box>) :
+
+
+                  caisses.data?.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        Aucune caisse
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  ) : (
+                    caisses.data?.map((register) => (
+                      <TableRow key={register.id}>
+                        <TableCell>{register.name}</TableCell>
+                        <TableCell>{register.total_sessions || 0}</TableCell>
+                        <TableCell>
+                          {register.last_session
+                            ? new Date(register.last_session).toLocaleString()
+                            : "Jamais"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -614,7 +619,7 @@ const StoresTab = () => {
           <StoreForm
             formId="createStore"
             onSubmit={handleSave}
-            managers={users}
+            managers={users.data || []}
             defaultValues={editingStore}
           />
         </DialogContent>
@@ -642,7 +647,7 @@ const StoresTab = () => {
           <StoreOpeningForm
             formId="openHours"
             onSubmit={handleSaveHours}
-            stores={stores}
+            stores={stores.data || []}
             defaultValues={editingHours}
           />
         </DialogContent>
