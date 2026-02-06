@@ -114,7 +114,6 @@ export const CategoriesTab = () => {
   };
 
   const handleDelete = async (category: CategoryModel) => {
-    if (!category.id) return
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
@@ -291,7 +290,7 @@ export const CategoriesTab = () => {
             )}
             <CategorieForm
               formId="CategorieForm"
-              icons={availableIcons.data}
+              icons={availableIcons.data || []}
               onSubmit={handleSave}
               defaultValues={editingCategory}
             />
