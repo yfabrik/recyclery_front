@@ -25,7 +25,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   Grid,
   IconButton,
@@ -36,7 +35,7 @@ import {
   Stack,
   TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -50,11 +49,12 @@ import {
 import { fetchStores } from "../../../services/api/store";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
-import { EmployeeForm } from "../../forms/EmployeeForm";
+import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const EmployeeManagement = () => {
-  const [employees, setEmployees] = useState<EmployeeModel[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [employees, setEmployees] = useState<EmployeeModel[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeModel | null>(
     null,
@@ -98,22 +98,65 @@ const EmployeeManagement = () => {
   ];
 
   useEffect(() => {
-    fetchEmployees();
+    // fetchEmployees();
     getStores();
   }, []);
 
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      const response = await getEmployees(); // await fetchUsers({ role: "employee" });
-      setEmployees(response.data.data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des employés:", error);
-      toast.error("Erreur lors du chargement des employés");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryClient = useQueryClient()
+
+  const employees = useQuery({
+    queryKey: ["employees"],
+    queryFn: () => getEmployees().then(response => response.data.data)
+  })
+  if (employees.isError) toast.error("Erreur lors du chargement des employés");
+
+  const editEmployee = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: any }) => updateEmployee(id, data),
+    onSuccess: () => {
+      toast.success("Employé mis à jour avec succès");
+      handleCloseDialog();
+      queryClient.invalidateQueries({ queryKey: ["employees"] })
+
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde",
+    ),
+  })
+  const addEmployee = useMutation({
+    mutationFn: (data) => createEmployees(data),
+    onSuccess: () => {
+      toast.success("Employé créé avec succès");
+      handleCloseDialog();
+      queryClient.invalidateQueries({ queryKey: ["employees"] })
+
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde",
+    ),
+  })
+  const removeEmployee = useMutation({
+    mutationFn: (id: number) => deleteEmployee(id),
+    onSuccess: () => {
+      toast.success("Employé supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ["employees"] })
+
+    },
+    onError: () => toast.error("Erreur lors de la suppression"),
+
+  })
+
+  // const fetchEmployees = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await getEmployees(); // await fetchUsers({ role: "employee" });
+  //     setEmployees(response.data.data);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des employés:", error);
+  //     toast.error("Erreur lors du chargement des employés");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const getStores = async () => {
     try {
       const response = await fetchStores({ active: true });
@@ -153,41 +196,44 @@ const EmployeeManagement = () => {
     setEditingEmployee(null);
   };
 
-  const handleSave = async (data) => {
-    try {
-      if (editingEmployee?.id) {
-        // Mise à jour
-        await updateEmployee(editingEmployee.id, data);
-        toast.success("Employé mis à jour avec succès");
-      } else {
-        // Création
-        await createEmployees({ ...data });
-        toast.success("Employé créé avec succès");
-      }
+  const handleSave = async (data:Schema) => {
+    if (editingEmployee?.id) editEmployee.mutate({ id: editingEmployee.id, data })
+    else addEmployee.mutate(data)
+    // try {
+    //   if (editingEmployee?.id) {
+    //     // Mise à jour
+    //     await updateEmployee(editingEmployee.id, data);
+    //     toast.success("Employé mis à jour avec succès");
+    //   } else {
+    //     // Création
+    //     await createEmployees({ ...data });
+    //     toast.success("Employé créé avec succès");
+    //   }
 
-      handleCloseDialog();
-      fetchEmployees();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-      toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde",
-      );
-    }
+    //   handleCloseDialog();
+    //   fetchEmployees();
+    // } catch (error) {
+    //   console.error("Erreur lors de la sauvegarde:", error);
+    //   toast.error(
+    //     error.response?.data?.error || "Erreur lors de la sauvegarde",
+    //   );
+    // }
   };
 
   const handleDelete = async (employeeId: number) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet employé ?")) {
       return;
     }
+    removeEmployee.mutate(employeeId)
 
-    try {
-      await deleteEmployee(employeeId);
-      toast.success("Employé supprimé avec succès");
-      fetchEmployees();
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression");
-    }
+    // try {
+    //   await deleteEmployee(employeeId);
+    //   toast.success("Employé supprimé avec succès");
+    //   fetchEmployees();
+    // } catch (error) {
+    //   console.error("Erreur lors de la suppression:", error);
+    //   toast.error("Erreur lors de la suppression");
+    // }
   };
 
   const getRoleColor = (role) => {
@@ -213,7 +259,7 @@ const EmployeeManagement = () => {
   };
 
   const filteredEmployees =
-    employees?.filter((employee) => {
+    employees.data?.filter((employee) => {
       const matchesSearch =
         employee.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -226,7 +272,7 @@ const EmployeeManagement = () => {
       return matchesSearch && matchesStatus;
     }) || [];
 
-  if (loading) {
+  if (employees.isLoading) {
     return (
       <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
         <Box
@@ -324,7 +370,7 @@ const EmployeeManagement = () => {
             <Button
               variant="outlined"
               startIcon={<Refresh />}
-              onClick={fetchEmployees}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["employees"] })}
               fullWidth
             >
               Actualiser
@@ -554,8 +600,8 @@ const EmployeeManagement = () => {
               employeeName={editingEmployee.nom}
               onClose={handleCloseStoreAssignment}
               onSave={() => {
+                queryClient.invalidateQueries({ queryKey: ["employees"] })
                 // Optionnel: actualiser la liste des employés
-                fetchEmployees();
               }}
             />
           )}
@@ -577,7 +623,8 @@ const EmployeeManagement = () => {
               onClose={handleCloseWorkdays}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés
-                fetchEmployees();
+                queryClient.invalidateQueries({ queryKey: ["employees"] })
+
               }}
             />
           )}

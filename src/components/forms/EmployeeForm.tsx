@@ -3,7 +3,7 @@ import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
-import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import {
   FormInput,
@@ -13,16 +13,14 @@ import {
 } from "./FormBase";
 
 const schema = z.object({
-  // username: z.string("username requis").trim().nonempty("username requis"),
-  prenom: z.string("prenom requis").trim().nonempty("prenom requis"),
-  nom: z.string("nom requis").trim().nonempty("nom requis"),
-  // email: z.union([z.email(), z.literal("").transform((v) => null)]),
-  phone: z.union([phoneSchema(), z.literal("").transform((v) => null)]),
-  recyclery_id: z.union([idSchema(), z.literal("").transform((v) => null)]),
+  prenom: noEmptyStr("prenom requis"),
+  nom: noEmptyStr("nom requis"),
+  phone: z.union([phoneSchema(), nullString()]),
+  recyclery_id: z.union([idSchema(), nullString()]),
   isActive: z.boolean().default(true),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const EmployeeForm = ({
   formId,
@@ -35,11 +33,9 @@ export const EmployeeForm = ({
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     defaultValues: {
-      // username: "",
-      nom: "",
-      // email: "",
-      phone: "",
       prenom: "",
+      nom: "",
+      phone: "",
       isActive: true,
       recyclery_id: "",
       ...data,
@@ -50,17 +46,7 @@ export const EmployeeForm = ({
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2} sx={{ mt: 1 }}>
-        {/* <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput
-            name="email"
-            control={form.control}
-            label="Email*"
-            extra={{ type: "email" }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput name="username" control={form.control} label="username" />
-        </Grid> */}
+
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput name="prenom" control={form.control} label="Prénom" />
         </Grid>
