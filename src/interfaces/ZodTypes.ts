@@ -11,6 +11,9 @@ export const postalSchema = (message?: string) => z.string({ message }).regex(/^
 
 export const idSchema = (message?: string) => z.coerce.number({ message }).positive({ message })
 
+export const noEmptyStr = (message?: string) => z.string({ message }).trim().nonempty({ message })
+
+export const nullString = () => z.literal("").transform(() => null)
 
 function transformNullsToEmptyStrings<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
   return schema.transform((obj) => {

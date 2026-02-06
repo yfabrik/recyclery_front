@@ -12,7 +12,7 @@ import "./main.css"
 import App from "./App";
 import theme from "./theme";
 import { AuthProvider } from "./contexts/AuthContext";
-
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,6 +44,7 @@ createRoot(document.getElementById("root")!).render(
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>
 );

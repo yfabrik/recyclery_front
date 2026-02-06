@@ -27,7 +27,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
 import type { CategoryModel } from "../../../interfaces/Models";
 import {
@@ -40,48 +41,55 @@ import {
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
 
 export const CategoriesTab = () => {
-  const [categories, setCategories] = useState<CategoryModel[]>([]);
-  const [availableIcons, setAvailableIcons] = useState<
-    { name: string; label: string }[]
-  >([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<
-    CategoryModel | Pick<CategoryModel, "parent_id"> | null
+    Partial<CategoryModel> | null
   >(null);
 
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetchCategories();
-    fetchAvailableIcons();
-  }, []);
+  const availableIcons = useQuery<{ name: string; label: string }[]>({
+    queryFn: () => fetchCategoryIcons().then(result => result.data.icons).then(result => result.map((icon: string) => ({
+      name: icon,
+      label: icon,
+    }))),
+    placeholderData: [],
+    queryKey: ["icons",]
+  })
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fCat({ only_category: true, include: "Category" });
-      setCategories(response.data.categories);
-    } catch (error) {
-      toast.error("Erreur lors du chargement des catégories");
-      console.error("Erreur:", error);
-    } finally {
-      setLoading(false);
+  const categories = useQuery({
+    queryFn: () => fCat({ only_category: true, include: "category" }).then(result => result.data.categories || []),
+    queryKey: ["categorie", { only_category: true, include: "Category" }]
+  })
+  if (categories.error) toast.error("Erreur lors du chargement des catégories");
+
+  const updateCategorie = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateCategory(id, data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      toast.success("Catégorie mise à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
+      handleCloseDialog()
     }
-  };
-
-  const fetchAvailableIcons = async () => {
-    try {
-      const response = await fetchCategoryIcons();
-      const icons = response.data.icons || [];
-      setAvailableIcons(
-        icons.map((icon: { name: string; label: string }) => ({
-          name: icon,
-          label: icon,
-        })),
-      );
-    } catch (error) {
-      console.error("Erreur lors du chargement des icônes:", error);
+  })
+  const createCategorie = useMutation({
+    mutationFn: (data: Schema) => createCategory(data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      toast.success("Catégorie créée avec succès");
+      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
+      handleCloseDialog()
     }
-  };
+  })
+
+  const deleteCategorie = useMutation({
+    mutationFn: (id: number) => deleteCategory(id),
+    onError: () => toast.error("Erreur lors de la suppression"),
+    onSuccess: () => {
+      toast.success("Catégorie supprimée avec succès")
+      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
+    }
+  })
 
   const handleOpenDialog = (
     category: CategoryModel | null = null,
@@ -101,37 +109,16 @@ export const CategoriesTab = () => {
   };
 
   const handleSave = async (formData: Schema) => {
-    try {
-      if (editingCategory?.id) {
-        await updateCategory(editingCategory.id, formData);
-        toast.success("Catégorie mise à jour avec succès");
-      } else {
-        await createCategory(formData);
-        toast.success("Catégorie créée avec succès");
-      }
-
-      handleCloseDialog();
-      fetchCategories();
-    } catch (error) {
-      toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde",
-      );
-    }
+    if (editingCategory?.id) updateCategorie.mutate({ id: editingCategory.id, data: formData })
+    else createCategorie.mutate(formData)
   };
 
   const handleDelete = async (category: CategoryModel) => {
+    if (!category.id) return
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
-      try {
-        await deleteCategory(category.id);
-        toast.success("Catégorie supprimée avec succès");
-        fetchCategories();
-      } catch (error) {
-        toast.error(
-          error.response?.data?.error || "Erreur lors de la suppression",
-        );
-      }
+      deleteCategorie.mutate(category.id)
     }
   };
 
@@ -227,7 +214,7 @@ export const CategoriesTab = () => {
     </Card>
   );
 
-  if (loading) {
+  if (categories.isLoading || availableIcons.isLoading) {
     return <Typography>Chargement...</Typography>;
   }
 
@@ -252,15 +239,14 @@ export const CategoriesTab = () => {
           Nouvelle Catégorie
         </Button>
       </Box>
-
-      {categories.length === 0 ? (
+      {categories.data?.length === 0 ? (
         <Alert severity="info" sx={{ mt: 2 }}>
           Aucune catégorie trouvée. Créez votre première catégorie pour
           commencer.
         </Alert>
       ) : (
         <Box>
-          {categories.map((category) => (
+          {categories.data?.map((category) => (
             <Box key={category.id} sx={{ mb: 2 }}>
               {renderCategoryCard(category)}
               {category.subcategories && category.subcategories.length > 0 && (
@@ -297,7 +283,7 @@ export const CategoriesTab = () => {
               <Alert severity="info" sx={{ mb: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie de :{" "}
                 <strong>
-                  {categories.find(
+                  {categories.data?.find(
                     (cat) => cat.id === editingCategory.parent_id,
                   )?.name || "Catégorie parente"}
                 </strong>
@@ -305,7 +291,7 @@ export const CategoriesTab = () => {
             )}
             <CategorieForm
               formId="CategorieForm"
-              icons={availableIcons}
+              icons={availableIcons.data}
               onSubmit={handleSave}
               defaultValues={editingCategory}
             />
