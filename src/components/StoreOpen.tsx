@@ -69,7 +69,7 @@ export const StoreOpen = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {store.horaires
+              {store.TaskSchedules
                 ?.sort(
                   (a, b) => new Date(a.scheduled_date).getDay() -
                     new Date(b.scheduled_date).getDay()
