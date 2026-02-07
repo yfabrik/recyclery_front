@@ -21,7 +21,7 @@ const schema = z.object({
   notes: z.string(),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const CollecteForm = ({
   formId,

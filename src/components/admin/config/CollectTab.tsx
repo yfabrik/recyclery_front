@@ -21,7 +21,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import type { ScheduleModel, TaskModel } from "../../../interfaces/Models";
+import type { ScheduleModel } from "../../../interfaces/Models";
 import {
   createPlanning,
   deletePlanning,
@@ -32,7 +32,8 @@ import { CollecteForm } from "../../forms/CollecteForm";
 
 export const CollectTab = () => {
   const queryClient = useQueryClient();
-  const [editingCollecte, setEditingCollecte] = useState<TaskModel | null>(
+
+  const [editingCollecte, setEditingCollecte] = useState<ScheduleModel | null>(
     null,
   );
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -46,9 +47,10 @@ export const CollectTab = () => {
     queryFn: () =>
       getPlanning({ category: "collection" }).then((res) => res.data.schedules),
   });
+  if (error) toast.error("Erreur lors de la recupération des collectes")
 
   const mutation = useMutation({
-    mutationFn: (formData) => {
+    mutationFn: (formData: ScheduleModel) => {
       return createPlanning(formData);
     },
     onSuccess: (newItem) => {
@@ -61,7 +63,7 @@ export const CollectTab = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => {
+    mutationFn: ({ id, data }: { id: number, data: ScheduleModel }) => {
       return updatePlanning(id, data);
     },
     onSuccess: (updatedItem) => {
@@ -80,7 +82,7 @@ export const CollectTab = () => {
     onError: () => toast.error("Erreur lors de la suppression"),
   });
 
-  const handleOpenDialog = (collecte: TaskModel | null = null) => {
+  const handleOpenDialog = (collecte: ScheduleModel | null = null) => {
     setEditingCollecte(collecte);
     setDialogOpen(true);
   };
@@ -89,7 +91,7 @@ export const CollectTab = () => {
     setDialogOpen(false);
   };
 
-  const handleSave = async (data) => {
+  const handleSave = async (data: ScheduleModel) => {
     data.name = "collecte";
     data.category = "collection";
     //TODO FIXME BEUUUUUUURK
@@ -114,7 +116,7 @@ export const CollectTab = () => {
     }
   };
 
-  const handleDelete = async (collecte: TaskModel) => {
+  const handleDelete = async (collecte: ScheduleModel) => {
     if (
       !window.confirm("Êtes-vous sûr de vouloir supprimer cette collecte ?")
     ) {
@@ -161,14 +163,14 @@ export const CollectTab = () => {
                     Chargement...
                   </TableCell>
                 </TableRow>
-              ) : collectes.length === 0 ? (
+              ) : collectes?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     Aucune Collecte
                   </TableCell>
                 </TableRow>
               ) : (
-                collectes.map((item: TaskModel) => (
+                collectes?.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.day_of_week}</TableCell>
                     <TableCell>
