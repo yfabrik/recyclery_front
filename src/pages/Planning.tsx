@@ -188,8 +188,8 @@ const Planning = () => {
       }
       if (viewMode == "week") {
         const thisWeek = new Date(selectedDate);
-        params.date_from = new Date(thisWeek);
-        params.date_to = new Date(thisWeek.setDate(thisWeek.getDate() + 6));
+        params.date_from = new Date(new Date(selectedDate).setDate(thisWeek.getDate() - thisWeek.getDay() + 1));
+        params.date_to = new Date(new Date(params.date_from).setDate(params.date_from.getDate() + 6));
       }
       const r = await getTasks({ include: "user", ...params });
       const tasks: TaskModel[] = r.data.tasks;
@@ -666,8 +666,8 @@ const Planning = () => {
 
   const filteredSchedules = Array.isArray(schedules)
     ? schedules.filter((schedule) => {
-        return true;
-      })
+      return true;
+    })
     : [];
 
   const getStatusInfo = (status) => {
@@ -853,10 +853,9 @@ const Planning = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="body2" color="text.secondary">
               {selectedStore
-                ? `Affichage des tâches pour ${
-                    stores.find((s) => s.id === selectedStore.id)?.name ||
-                    "magasin sélectionné"
-                  }`
+                ? `Affichage des tâches pour ${stores.find((s) => s.id === selectedStore.id)?.name ||
+                "magasin sélectionné"
+                }`
                 : "Affichage de toutes les tâches"}
               {/* {selectedLocation &&
                 ` - Lieu: ${locations.find((l) => l.id === parseInt(selectedLocation))?.name || "lieu sélectionné"}`} */}
