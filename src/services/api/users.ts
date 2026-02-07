@@ -1,6 +1,7 @@
 import type { AxiosResponse } from "axios";
-import type { UserModel } from "../../interfaces/Models";
+import type { StoreModel, UserModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
+import type { Schema } from "../../components/forms/UserForm";
 
 interface UserFilters {
   role?: "employee" | "admin";
@@ -13,14 +14,14 @@ export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ messa
   axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
 // export const getEmployees = () => axiosInstance.get("/api/users/employees")
 
-export const createUser = (data: UserModel) =>
+export const createUser = (data: Schema) =>
   axiosInstance.post("/api/users", data);
-export const updateUser = (id: number, data: UserModel) =>
+export const updateUser = (id: number, data: Schema) =>
   axiosInstance.put(`/api/users/${id}`, data);
 export const deleteUser = (id: number) =>
   axiosInstance.delete(`/api/users/${id}`);
 
-export const updateUserPassword = (id: number, data: UserModel) =>
+export const updateUserPassword = (id: number, data) =>
   axiosInstance.put(`/api/users/${id}/password`, data);
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");
@@ -33,8 +34,9 @@ interface EmployeeStoreModel {
 }
 
 
-export const getAssignedStores = (employee_id: number) =>
+export const getAssignedStores = (employee_id: number): Promise<AxiosResponse<{ message: string, assignments: (StoreModel & { is_primary: boolean, EmployeeStore: { is_primary: boolean } })[] }>> =>
   axiosInstance.get(`/api/employee-stores/employee/${employee_id}`);
+
 export const removeAssignedStores = (employee_id: number) =>
   axiosInstance.delete(`/api/employee-stores/employee/${employee_id}`);
 export const addAssignedStore = (data: EmployeeStoreModel) =>

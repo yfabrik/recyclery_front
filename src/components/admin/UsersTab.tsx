@@ -25,13 +25,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import { type StoreModel, type UserModel } from "../../interfaces/Models";
+import { type UserModel } from "../../interfaces/Models";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
@@ -41,78 +41,70 @@ import {
   updateUser,
   updateUserPassword,
 } from "../../services/api/users";
-import { UserForm } from "../forms/UserForm";
+import { PasswordChangeForm, type Schema as PasswordSchema } from "../forms/PasswordChangeForm";
+import { UserForm, type Schema } from "../forms/UserForm";
 import { StatCardNoIcon } from "../StatCard";
 
 export const UsersTab = () => {
-  const [users, setUsers] = useState<UserModel[]>([]);
-  const [roles, setRoles] = useState([]);
-  const [stores, setStores] = useState<StoreModel[]>([]);
-  const [loading, setLoading] = useState(true);
   const [userDialog, setUserDialog] = useState(false);
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<UserModel | null>(null);
-  const [userStats, setUserStats] = useState({
-    totalUsers: 0,
-    usersByRole: [],
-    activeEmployees: 0,
-    recentLogins: 0,
-  });
 
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-    fetchStores();
-    fetchUserStats();
-  }, []);
+  const users = useQuery({
+    queryKey: ["users"],
+    queryFn: () => fUsers().then(response => response.data.users)
+  })
+  if (users.isError) toast.error("Erreur lors du chargement des utilisateurs");
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fUsers();
-      setUsers(response.data.users || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs:", error);
-      toast.error("Erreur lors du chargement des utilisateurs");
-    } finally {
-      setLoading(false);
+  const roles = useQuery({
+    queryKey: ["roles"],
+    queryFn: () => getRoles().then(response => response.data.roles)
+  })
+
+  const userStats = useQuery({
+    queryKey: ["userStats"],
+    queryFn: () => getUsersStats().then(response => response.data.stats),
+    placeholderData: {
+      totalUsers: 0,
+      usersByRole: [],
+      activeEmployees: 0,
+      recentLogins: 0,
     }
-  };
+  })
 
-  const fetchRoles = async () => {
-    try {
-      const response = await getRoles();
-
-      setRoles(response.data.roles || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des rôles:", error);
+  const editUser = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateUser(id, data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      handleCloseUserDialog();
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["userStats"] })
+      toast.success("Utilisateur mis à jour avec succès")
     }
-  };
-
-  const fetchStores = async () => {
-    try {
-      const response = await fStores({ active: true });
-
-      setStores(response.data.stores);
-    } catch (error) {
-      console.error("Erreur lors du chargement des magasins:", error);
+  })
+  const addUser = useMutation({
+    mutationFn: (data: Schema) => createUser(data),
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onSuccess: () => {
+      handleCloseUserDialog();
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["userStats"] })
+      toast.success("Utilisateur créé avec succès");
     }
-  };
+  })
+  const stores = useQuery({
+    queryKey: ["stores", "active"],
+    queryFn: () => fStores({ active: true }).then(response => response.data.stores)
+  })
 
-  const fetchUserStats = async () => {
-    try {
-      const response = await getUsersStats();
-      setUserStats(response.data.stats || {});
-    } catch (error) {
-      console.error("Erreur lors du chargement des statistiques:", error);
-    }
-  };
+  // const [passwordForm, setPasswordForm] = useState({
+  //   currentPassword: "",
+  //   newPassword: "",
+  //   confirmPassword: "",
+  // });
+
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
     setEditingUser(user);
@@ -124,74 +116,46 @@ export const UsersTab = () => {
     setEditingUser(null);
   };
 
-  const handleSaveUser = async (data) => {
-    try {
-      if (editingUser?.id) {
-        // Mise à jour
-        const updateData = { ...data };
-        delete updateData.password; // Ne pas envoyer le mot de passe lors de la mise à jour
-
-        await updateUser(editingUser.id, updateData);
-
-        toast.success("Utilisateur mis à jour avec succès");
-      } else {
-        // Création
-        if (!data.password) {
-          toast.error("Le mot de passe est requis pour un nouvel utilisateur");
-          return;
-        }
-
-        await createUser(data);
-
-        toast.success("Utilisateur créé avec succès");
-      }
-
-      handleCloseUserDialog();
-      fetchUsers();
-      fetchUserStats();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-      toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde",
-      );
-    }
+  const handleSaveUser = async (data: Schema) => {
+    if (editingUser?.id) editUser.mutate({ id: editingUser.id, data })
+    else addUser.mutate(data)
   };
 
-  const handleOpenPasswordDialog = (user) => {
+  const handleOpenPasswordDialog = (user: UserModel) => {
     setEditingUser(user);
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    // setPasswordForm({
+    //   currentPassword: "",
+    //   newPassword: "",
+    //   confirmPassword: "",
+    // });
     setPasswordDialog(true);
   };
 
   const handleClosePasswordDialog = () => {
     setPasswordDialog(false);
     setEditingUser(null);
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    // setPasswordForm({
+    //   currentPassword: "",
+    //   newPassword: "",
+    //   confirmPassword: "",
+    // });
   };
 
-  const handleChangePassword = async () => {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return;
-    }
+  const handleChangePassword = async (data: PasswordSchema) => {
+    // if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    //   toast.error("Les mots de passe ne correspondent pas");
+    //   return;
+    // }
 
-    if (passwordForm.newPassword.length < 6) {
-      toast.error("Le mot de passe doit contenir au moins 6 caractères");
-      return;
-    }
+    // if (passwordForm.newPassword.length < 6) {
+    //   toast.error("Le mot de passe doit contenir au moins 6 caractères");
+    //   return;
+    // }
 
     try {
       await updateUserPassword(editingUser.id, {
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       });
 
       toast.success("Mot de passe mis à jour avec succès");
@@ -200,34 +164,34 @@ export const UsersTab = () => {
       console.error("Erreur lors du changement de mot de passe:", error);
       toast.error(
         error.response?.data?.error ||
-          "Erreur lors du changement de mot de passe",
+        "Erreur lors du changement de mot de passe",
       );
     }
   };
 
   const handleToggleUserStatus = async (user: UserModel) => {
-    try {
-      const newStatus = !user.isActive;
+    // try {
+    const updatedUser: UserModel = { ...user, isActive: !user.isActive }
+    editUser.mutate({ id: user.id, data: updatedUser })
+    //   if (newStatus) {
+    //     await updateUser(user.id, { isActive: newStatus });
+    //     // Réactiver l'utilisateur
+    //     toast.success("Utilisateur réactivé");
+    //   } else {
+    //     // Désactiver l'utilisateur
+    //     await updateUser(user.id, { isActive: false });
 
-      if (newStatus) {
-        await updateUser(user.id, { isActive: newStatus });
-        // Réactiver l'utilisateur
-        toast.success("Utilisateur réactivé");
-      } else {
-        // Désactiver l'utilisateur
-        await updateUser(user.id, { isActive: false });
+    //     toast.success("Utilisateur désactivé");
+    //   }
 
-        toast.success("Utilisateur désactivé");
-      }
-
-      fetchUsers();
-      fetchUserStats();
-    } catch (error) {
-      console.error("Erreur lors du changement de statut:", error);
-      toast.error(
-        error.response?.data?.error || "Erreur lors du changement de statut",
-      );
-    }
+    //   // fetchUsers();
+    //   // fetchUserStats();
+    // } catch (error) {
+    //   console.error("Erreur lors du changement de statut:", error);
+    //   toast.error(
+    //     error.response?.data?.error || "Erreur lors du changement de statut",
+    //   );
+    // }
   };
 
   const getRoleBadgeColor = (role) => {
@@ -241,7 +205,7 @@ export const UsersTab = () => {
     return colors[role] || "default";
   };
 
-  const formatLastLogin = (lastLogin) => {
+  const formatLastLogin = (lastLogin: string) => {
     if (!lastLogin) return "Jamais connecté";
     return new Date(lastLogin).toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -252,7 +216,7 @@ export const UsersTab = () => {
     });
   };
 
-  if (loading) {
+  if (users.isLoading) {
     return (
       <Box
         sx={{
@@ -294,7 +258,7 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title="Utilisateurs actifs"
-            value={userStats.totalUsers}
+            value={userStats.data.totalUsers}
             color="primary"
           />
         </Grid>
@@ -302,7 +266,7 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title=" Connectés (30j)"
-            value={userStats.activeEmployees}
+            value={userStats.data.activeEmployees}
             color="success.main"
           />
         </Grid>
@@ -310,21 +274,21 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title=" Rôles différents"
-            value={userStats.usersByRole?.length}
+            value={userStats.data.usersByRole?.length}
             color="info.main"
           />
         </Grid>
       </Grid>
 
       {/* Répartition par rôles */}
-      {userStats.usersByRole && userStats.usersByRole.length > 0 && (
+      {userStats.data.usersByRole && userStats.data.usersByRole.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               📊 Répartition par Rôles
             </Typography>
             <Grid container spacing={2}>
-              {userStats.usersByRole.map((rolestat) => (
+              {userStats.data.usersByRole.map((rolestat) => (
                 <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
                   <Box sx={{ textAlign: "center" }}>
                     <Chip
@@ -345,10 +309,10 @@ export const UsersTab = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            📋 Liste des Utilisateurs ({users.length})
+            📋 Liste des Utilisateurs ({users.data?.length || 0})
           </Typography>
 
-          {users.length === 0 ? (
+          {users.data?.length === 0 ? (
             <Alert severity="info">Aucun utilisateur trouvé.</Alert>
           ) : (
             <TableContainer>
@@ -365,7 +329,7 @@ export const UsersTab = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {users.map((user) => (
+                  {users.data?.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <Box>
@@ -469,8 +433,8 @@ export const UsersTab = () => {
         <DialogContent>
           <UserForm
             formId="UserForm"
-            roles={roles}
-            stores={stores}
+            roles={roles.data}
+            stores={stores.data || []}
             defaultValues={editingUser}
             onSubmit={handleSaveUser}
           />
@@ -481,12 +445,12 @@ export const UsersTab = () => {
             type="submit"
             form="UserForm"
             variant="contained"
-            // disabled={
-            //   !userForm.username ||
-            //   !userForm.email ||
-            //   !userForm.role ||
-            //   (!editingUser && !userForm.password)
-            // }
+          // disabled={
+          //   !userForm.username ||
+          //   !userForm.email ||
+          //   !userForm.role ||
+          //   (!editingUser && !userForm.password)
+          // }
           >
             {editingUser ? "Mettre à jour" : "Créer"}
           </Button>
@@ -502,13 +466,17 @@ export const UsersTab = () => {
       >
         <DialogTitle>🔐 Changer le mot de passe</DialogTitle>
         <DialogContent>
+
           {editingUser && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Changement de mot de passe pour :{" "}
               <strong>{editingUser.username}</strong>
             </Alert>
           )}
-          <TextField
+
+          <PasswordChangeForm formId="passwordChange" onSubmit={handleChangePassword} />
+
+          {/* <TextField
             fullWidth
             margin="normal"
             label="Mot de passe actuel"
@@ -546,19 +514,21 @@ export const UsersTab = () => {
                 confirmPassword: e.target.value,
               }))
             }
-          />
+          /> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog}>Annuler</Button>
           <Button
-            onClick={handleChangePassword}
+            // onClick={handleChangePassword}
             variant="contained"
             color="warning"
-            disabled={
-              !passwordForm.currentPassword ||
-              !passwordForm.newPassword ||
-              !passwordForm.confirmPassword
-            }
+            type="submit"
+            form="passwordChange"
+          // disabled={
+          //   !passwordForm.currentPassword ||
+          //   !passwordForm.newPassword ||
+          //   !passwordForm.confirmPassword
+          // }
           >
             Changer le mot de passe
           </Button>
