@@ -32,5 +32,5 @@ export const formatDate = (d: Date) => {
 }
 
 export const formatTime = (d: Date) => {
-    return d.toLocaleTimeString("fr-FR", { minute: "2-digit", hour: "2-digit" })
+    return d.toLocaleTimeString("fr-FR", { minute: "2-digit", hour: "2-digit", hour12: false })
 }

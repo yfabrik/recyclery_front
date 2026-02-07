@@ -124,25 +124,11 @@ export const PlanningViewHeader = ({
 
     switch (navigationType) {
       case "month": {
-        const monthNames = [
-          "janvier",
-          "février",
-          "mars",
-          "avril",
-          "mai",
-          "juin",
-          "juillet",
-          "août",
-          "septembre",
-          "octobre",
-          "novembre",
-          "décembre",
-        ];
         return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mx: 2 }}>
             <CalendarToday sx={{ color: "#666", fontSize: 20 }} />
             <Typography variant="h5" sx={{ color: "#333", fontWeight: "bold" }}>
-              {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+              {selectedDate.toLocaleString(undefined, { month: "long" })} {selectedDate.getFullYear()}
             </Typography>
           </Box>
         );
@@ -163,18 +149,19 @@ export const PlanningViewHeader = ({
         const day = startOfWeek.getDay();
         const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
         startOfWeek.setDate(diff);
+        const endOfWeek = new Date(new Date(startOfWeek).setDate(startOfWeek.getDate() + 6))
 
-        const weekDays = [];
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(startOfWeek);
-          date.setDate(startOfWeek.getDate() + i);
-          weekDays.push(date);
-        }
+        // const weekDays = [];
+        // for (let i = 0; i < 7; i++) {
+        //   const date = new Date(startOfWeek);
+        //   date.setDate(startOfWeek.getDate() + i);
+        //   weekDays.push(date);
+        // }
 
         return (
           <Typography variant="h5" sx={{ color: "#333", fontWeight: "bold" }}>
             Semaine du {startOfWeek.toLocaleDateString("fr-FR")} au{" "}
-            {weekDays[6].toLocaleDateString("fr-FR")}
+            {endOfWeek.toLocaleDateString("fr-FR")}
           </Typography>
         );
       }

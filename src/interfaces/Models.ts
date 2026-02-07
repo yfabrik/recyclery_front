@@ -138,6 +138,7 @@ export interface TaskModel extends BaseModel {
   schedule_id: number;
   store_id?: number
   collection_point_id?: number
+  Recyclery?: StoreModel
 
   day_of_week: string
   // Legacy/computed fields (may be populated by frontend)

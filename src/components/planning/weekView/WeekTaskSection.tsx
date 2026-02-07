@@ -14,21 +14,21 @@ import {
   type Theme,
 
 } from "@mui/material";
-import React, { type ReactNode } from "react";
+import React, { createContext, type ReactNode } from "react";
 import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 
 // Extended schedule interface with additional fields used in the component
-interface Schedule {
-  id: number;
-  category: string;
-  start_time: string;
-  end_time: string;
-  scheduled_date: Date | string;
-  store_name?: string;
-  assigned_employees?: (EmployeeModel & { initials?: string })[];
-  location_name?: string;
-  [key: string]: unknown;
-}
+// interface Schedule {
+//   id: number;
+//   category: string;
+//   start_time: string;
+//   end_time: string;
+//   scheduled_date: Date | string;
+//   store_name?: string;
+//   assigned_employees?: (EmployeeModel & { initials?: string })[];
+//   location_name?: string;
+//   [key: string]: unknown;
+// }
 
 interface WeekTaskSectionProps {
   title: string;
@@ -54,13 +54,13 @@ interface TaskCardContentProps {
   getEmployeeColor: (username: string) => string;
   getEmployeeInitials: (username: string) => string;
   handleAssignEmployeesToTask: (schedule: TaskModel) => void;
-  handleOpenDialog: (schedule: TaskModel) => void;
+  handleOpenDialog: (schedule: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (schedule: TaskModel) => void;
 }
 
 interface TaskCardControlsProps {
   handleAssignEmployeesToTask: (schedule: TaskModel) => void;
-  handleOpenDialog: (schedule: TaskModel) => void;
+  handleOpenDialog: (schedule: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (schedule: TaskModel) => void;
   schedule: TaskModel;
 }
@@ -73,6 +73,9 @@ interface TaskCss {
   bgColor: string;
 }
 
+
+// const color = useContext()
+// const ColorContext = createContext(null)
 /**
  * Generic weekly task section (one row of 7 days) used by the week view.
  * Everything is driven by the filterDaySchedules function so the same
@@ -87,6 +90,7 @@ const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
   children,
 }) => {
   return (
+    // <ColorContext value={{ mainColor: cardColor, secondColor: chipSx.bgColor || cardColor }}>
     <Box>
       <Box
         sx={{
@@ -121,6 +125,7 @@ const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
         {children}
       </Box>
     </Box>
+    // </ColorContext>
   );
 };
 
@@ -345,12 +350,12 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
           sx={{ fontWeight: "bold", color: "#2196f3" }}
         >
           🏪 {schedule.name || "Magasin non assigné"}
-        
+
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           {periode}
         </Typography>
-          {/* //TODO assigned doesnt exist */}
+        {/* //TODO assigned doesnt exist */}
         {schedule.Employees &&
           schedule.Employees.length > 0 && (
             <Box
@@ -374,7 +379,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                   textAlign: "center",
                 }}
               >
-                👥 Employés ({schedule?.Employees?.length ||"0"})
+                👥 Employés ({schedule?.Employees?.length || "0"})
               </Typography>
               <Box
                 sx={{
@@ -410,7 +415,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       }}
                       title={emp.fullName}
                     >
-                      {emp.initials || getEmployeeInitials(emp.fullName)}
+                      {getEmployeeInitials(emp.fullName)}
                     </Avatar>
                     <Typography
                       variant="caption"

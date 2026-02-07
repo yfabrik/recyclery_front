@@ -35,6 +35,7 @@ import {
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAvailableUserForTask } from "../../services/api/planning";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface TaskAssignmentDialogTitleProps {
   taskName: string;
@@ -72,8 +73,8 @@ const TaskAssignmentDialogInfo = ({
 }: TaskAssignmentDialogInfoProps) => {
   const dayName = scheduledDate
     ? new Date(scheduledDate).toLocaleDateString("fr-FR", {
-        weekday: "long",
-      })
+      weekday: "long",
+    })
     : "jour sélectionné";
 
   return (
@@ -110,8 +111,8 @@ interface TaskAssignmentEmployeeCardProps {
 const TaskAssignmentEmployeeCard = ({
   employee,
   type = "available", // "assigned" or "available"
-  onAssign = () => {},
-  onUnassign = () => {},
+  onAssign = () => { },
+  onUnassign = () => { },
   isAssignedToOtherTask = false,
 }: TaskAssignmentEmployeeCardProps) => {
   const isAssigned = type === "assigned";
@@ -361,116 +362,122 @@ const TaskAssignmentDialog = ({
   onUnassignEmployee,
   onCloseWithChanges,
 }: TaskAssignmentDialogProps) => {
-  const [taskAssignedEmployees, setTaskAssignedEmployees] =
-    useState<EmployeeModel[]>([]);
-  const [availableEmployeesForTask, setAvailableEmployeesForTask] =
-    useState<EmployeeModel[]>([]);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for useEffect
   const [hasChanges, setHasChanges] = useState(false); // Track if any changes were made
 
-  // Refetch data when dialog opens, selectedTask changes, or refreshTrigger changes
-  useEffect(() => {
-    if (!open || !selectedTask?.id) return;
+  const queryclient = useQueryClient()
 
-    const fetchData = async () => {
-      try {
-        // Fetch assigned employees
-        const assignedResponse = await getEmployeesForTask(selectedTask.id);
-        setTaskAssignedEmployees(
-          assignedResponse.data.employees || [],
-        );
+  const availableEmployees = useQuery({
+    queryKey: ["availableEmployee", selectedTask.id],
+    queryFn: () => getAvailableUserForTask(selectedTask.id)
+      .then(response => response.data.employees)
+      .then(employees => employees.filter((e) => e.is_available)),
+    enabled: !!selectedTask?.id
+  })
+  const assignedEmployees = useQuery({
+    queryKey: ["assignedEmployees", selectedTask.id],
+    queryFn: () => getEmployeesForTask(selectedTask.id)
+      .then(response => response.data.employees)
+    ,
 
-        // Fetch available employees
-        const availableResponse = await getAvailableUserForTask(
-          selectedTask.id,
-        );
-        // const availableResponse = await getEmployees({}); // TODO add in backend filter for day
-        setAvailableEmployeesForTask(availableResponse.data.employees.filter((e) => e.is_available) || []);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      }
-    };
+    enabled: !!selectedTask?.id
+  })
 
-    fetchData();
-  }, [open, selectedTask?.id, refreshTrigger]);
+  const assignEmployee = useMutation({
+    mutationFn: (employeeId: number) => addEmployeeToTask(selectedTask.id, employeeId),
+    onSuccess: (data) => {
+      console.log(data) //TODO comment j'ai acces au context pour avoir employeeID dans le success ?
+      toast.success("Employé assigné avec succès");
+      setHasChanges(true);
+      queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
+      queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
+      // onAssignEmployee?.(employeeId);
+    },
+    onError: () => toast.error("Erreur lors de l'assignation"),
+  })
+  const unassignEmployee = useMutation({
+    mutationFn: (employeeId: number) => removeEmployeeFromTask(selectedTask.id, employeeId),
+    onSuccess: (data) => {
+      console.log(data)
+      toast.success("Employé retiré avec succès");
+      setHasChanges(true);
+      queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
+      queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
+      // onUnassignEmployee?.(employeeId);
+    },
+    onError: () => toast.error("Erreur lors du retrait"),
+  })
 
   // Filter available employees (exclude already assigned)
-  const filteredAvailableEmployees = availableEmployeesForTask.filter(
-    (emp) => !taskAssignedEmployees.some((assigned) => assigned.id === emp.id),
-  );
+  const filteredAvailableEmployees = availableEmployees.data?.filter(
+    (emp) => !assignedEmployees.data?.some((assigned) => assigned.id === emp.id),
+  ) || [];
   // Fonction pour assigner un employé à une tâche spécifique
   const handleAssignEmployee = async (employeeId: number) => {
-    if (!selectedTask?.id) {
-      toast.error("Erreur: Tâche non sélectionnée");
-      return;
-    }
+    assignEmployee.mutate(employeeId)
 
-    try {
-      await addEmployeeToTask(selectedTask.id, employeeId);
+    // try {
+    //   await addEmployeeToTask(selectedTask.id, employeeId);
 
-      // Mettre à jour la liste des employés assignés
-      const employee = availableEmployeesForTask.find(
-        (emp) => emp.id === employeeId,
-      );
-      if (employee) {
-        setTaskAssignedEmployees((prev) => [...prev, employee]);
-      }
+    //   // Mettre à jour la liste des employés assignés
+    //   const employee = availableEmployeesForTask.find(
+    //     (emp) => emp.id === employeeId,
+    //   );
+    //   if (employee) {
+    //     setTaskAssignedEmployees((prev) => [...prev, employee]);
+    //   }
 
-      toast.success("Employé assigné avec succès");
+    //   toast.success("Employé assigné avec succès");
 
-      // Mark that changes were made
-      setHasChanges(true);
+    //   // Mark that changes were made
+    //   setHasChanges(true);
 
-      // Trigger refresh
-      setRefreshTrigger((prev) => prev + 1);
+    //   // Trigger refresh
+    //   setRefreshTrigger((prev) => prev + 1);
 
-      // Also call parent handler if provided
-      onAssignEmployee?.(employeeId);
-    } catch (error: any) {
-      console.error("Erreur lors de l'assignation:", error);
+    //   // Also call parent handler if provided
+    //   onAssignEmployee?.(employeeId);
+    // } catch (error: any) {
+    //   console.error("Erreur lors de l'assignation:", error);
 
-      // Gérer spécifiquement les erreurs de conflit d'horaires
-      if (
-        error.response &&
-        error.response.status === 400 &&
-        error.response.data.message
-      ) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Erreur lors de l'assignation");
-      }
-    }
+    //   // Gérer spécifiquement les erreurs de conflit d'horaires
+    //   if (
+    //     error.response &&
+    //     error.response.status === 400 &&
+    //     error.response.data.message
+    //   ) {
+    //     toast.error(error.response.data.message);
+    //   } else {
+    //     toast.error("Erreur lors de l'assignation");
+    //   }
+    // }
   };
 
   // Fonction pour retirer un employé d'une tâche spécifique
   const handleUnassignEmployee = async (employeeId: number) => {
-    if (!selectedTask?.id) {
-      toast.error("Erreur: Tâche non sélectionnée");
-      return;
-    }
+    unassignEmployee.mutate(employeeId)
 
-    try {
-      await removeEmployeeFromTask(selectedTask.id, employeeId);
+    // try {
+    //   await removeEmployeeFromTask(selectedTask.id, employeeId);
 
-      // Mettre à jour la liste des employés assignés
-      setTaskAssignedEmployees((prev) =>
-        prev.filter((emp) => emp.id !== employeeId),
-      );
+    //   // Mettre à jour la liste des employés assignés
+    //   setTaskAssignedEmployees((prev) =>
+    //     prev.filter((emp) => emp.id !== employeeId),
+    //   );
 
-      toast.success("Employé retiré avec succès");
+    //   toast.success("Employé retiré avec succès");
 
-      // Mark that changes were made
-      setHasChanges(true);
+    //   // Mark that changes were made
+    //   setHasChanges(true);
 
-      // Trigger refresh
-      setRefreshTrigger((prev) => prev + 1);
+    //   // Trigger refresh
+    //   setRefreshTrigger((prev) => prev + 1);
 
-      // Also call parent handler if provided
-      onUnassignEmployee?.(employeeId);
-    } catch (error: unknown) {
-      console.error("Erreur lors du retrait:", error);
-      toast.error("Erreur lors du retrait");
-    }
+    //   // Also call parent handler if provided
+    //   onUnassignEmployee?.(employeeId);
+    // } catch (error: unknown) {
+    //   console.error("Erreur lors du retrait:", error);
+    //   toast.error("Erreur lors du retrait");
+    // }
   };
 
   // Handle dialog close - trigger callback if changes were made
@@ -485,11 +492,11 @@ const TaskAssignmentDialog = ({
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <TaskAssignmentDialogTitle
         taskName={selectedTask?.name}
-        storeName={selectedTask?.store_name}
+        storeName={selectedTask?.Recyclery?.name ?? ""}
       />
       <DialogContent>
         <TaskAssignmentDialogInfo
-          storeName={(selectedTask as any)?.store_name || ""}
+          storeName={selectedTask?.Recyclery?.name ?? ""}
           scheduledDate={
             selectedTask?.scheduled_date
               ? String(selectedTask.scheduled_date)
@@ -506,12 +513,12 @@ const TaskAssignmentDialog = ({
               sx={{ display: "flex", alignItems: "center", gap: 1 }}
             >
               <Person color="primary" />
-              Employés assignés ({taskAssignedEmployees.length})
+              Employés assignés ({assignedEmployees.data?.length})
             </Typography>
             <Box sx={{ maxHeight: 300, overflow: "auto" }}>
-              {taskAssignedEmployees.length > 0 ? (
+              {assignedEmployees.data && assignedEmployees.data?.length > 0 ? (
                 <Stack spacing={1}>
-                  {taskAssignedEmployees.map((employee) => (
+                  {assignedEmployees.data?.map((employee) => (
                     <TaskAssignmentEmployeeCard
                       key={employee.id}
                       employee={employee}

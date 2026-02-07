@@ -5,16 +5,19 @@ import WeekTaskSection, {
   TaskCardContent,
 } from "./weekView/WeekTaskSection";
 import { getDay } from "../../services/dateService";
+import { useContext } from "react";
 
 interface WeekViewSectionsProps {
   schedules: TaskModel[];
   getEmployeeColor: (s: string) => string;
   getEmployeeInitials: (s: string) => string;
-  handleAssignEmployeesToTask: (e: EmployeeModel) => void;
-  handleOpenDialog: () => void;
+  handleAssignEmployeesToTask: (e: TaskModel) => void;
+  handleOpenDialog: (t:TaskModel|null,day?:Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
 }
+
+
 
 const WeekViewSections = ({
   schedules,
@@ -65,29 +68,22 @@ const WeekViewSections = ({
         cardColor="#4caf50"
         borderColor="#4caf50"
       >
-        {weekDays.map((day, index) => {
-          const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("vente", 8, 12).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
-            : [];
+        {weekDays.map((day) => {
+          const daySchedules = filteredSchedules("vente", 8, 12).filter((schedule) => {
+            const scheduleDate = new Date(schedule.scheduled_date);
+            return (
+              scheduleDate.getDate() === day.getDate() &&
+              scheduleDate.getMonth() === day.getMonth() &&
+              scheduleDate.getFullYear() === day.getFullYear()
+            );
+          });
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#4caf50"
-              borderColor="#4caf50"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
+              // borderColor="#4caf50"
               emptyText="Aucune tâche"
             >
               {daySchedules.map((schedule, j) => {
@@ -100,7 +96,7 @@ const WeekViewSections = ({
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
-                  ></TaskCardContent>
+                  />
                 );
               })}
             </TaskCard>
@@ -116,28 +112,21 @@ const WeekViewSections = ({
         borderColor="#4caf50"
       >
         {weekDays.map((day, index) => {
-          const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("vente", 13, 17).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
-            : [];
+          const daySchedules = filteredSchedules("vente", 13, 17).filter((schedule) => {
+            const scheduleDate = new Date(schedule.scheduled_date);
+            return (
+              scheduleDate.getDate() === day.getDate() &&
+              scheduleDate.getMonth() === day.getMonth() &&
+              scheduleDate.getFullYear() === day.getFullYear()
+            );
+          })
+            ;
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#4caf50"
-              borderColor="#4caf50"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucune tâche"
             >
               {daySchedules.map((schedule, j) => {
@@ -168,26 +157,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("point", 8, 12).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#ff9800"
-              borderColor="#ff9800"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucune présence"
             >
               {daySchedules.map((schedule, j) => {
@@ -218,26 +201,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("point", 13, 17).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#ff9800"
-              borderColor="#ff9800"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucune présence après-midi"
             >
               {daySchedules.map((schedule, j) => {
@@ -270,26 +247,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("custom", 8, 12).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#2196f3"
-              borderColor="#2196f3"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucune tâche matin"
               showAddButton
               onAddClick={(day) => handleOpenDialog(null, day)}
@@ -322,26 +293,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("custom", 13, 17).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#2196f3"
-              borderColor="#2196f3"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucune tâche après-midi"
               showAddButton
               onAddClick={(day) => handleOpenDialog(null, day)}
@@ -374,26 +339,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("collection", 8, 12).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#9c27b0"
-              borderColor="#9c27b0"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucun lieu de collecte"
             >
               {daySchedules.map((schedule, j) => {
@@ -424,26 +383,20 @@ const WeekViewSections = ({
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("collection", 13, 17).filter((schedule) => {
-                const scheduleDate = new Date(schedule.scheduled_date);
-                return (
-                  scheduleDate.getDate() === day.getDate() &&
-                  scheduleDate.getMonth() === day.getMonth() &&
-                  scheduleDate.getFullYear() === day.getFullYear()
-                );
-              })
+              const scheduleDate = new Date(schedule.scheduled_date);
+              return (
+                scheduleDate.getDate() === day.getDate() &&
+                scheduleDate.getMonth() === day.getMonth() &&
+                scheduleDate.getFullYear() === day.getFullYear()
+              );
+            })
             : [];
           return (
             <TaskCard
               key={day.toISOString()}
               day={day}
-              dayName={getDay(day.getDay())}
+              dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#9c27b0"
-              borderColor="#9c27b0"
-              getEmployeeColor={getEmployeeColor}
-              getEmployeeInitials={getEmployeeInitials}
-              handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteTask={handleDeleteTask}
               emptyText="Aucun lieu de collecte"
             >
               {daySchedules.map((schedule, j) => {
@@ -463,26 +416,6 @@ const WeekViewSections = ({
           );
         })}
       </WeekTaskSection>
-
-      {/* <WeekCollectionSection
-        title="🚚 Lieux de collecte - Matin (8h-12h)"
-        chipLabel={`${filteredSchedules("collection", 8, 12).length} lieux de collecte`}
-        chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
-        weekDays={weekDays}
-        collections={schedules.filter((s) => s.category == "collection")}
-        filteredSchedules={filteredSchedules("collection", 8, 12)}
-        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-      />
-
-      <WeekCollectionSection
-        title="🚚 Lieux de collecte - Après-midi (13h-17h)"
-        chipLabel={`${filteredSchedules("collection", 13, 17).length} lieux de collecte`}
-        chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
-        weekDays={weekDays}
-        collections={schedules.filter((s) => s.category == "collection")}
-        filteredSchedules={filteredSchedules("collection", 13, 17)}
-        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-      /> */}
     </Box>
   );
 };

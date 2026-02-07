@@ -10,6 +10,7 @@ import {
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
 import { useEmployee } from "../../services/useEmployee";
 import type { TaskModel } from "../../interfaces/Models";
+import { weekDays } from "../../services/dateService";
 
 interface CalendarViewProps {
   filteredSchedules: TaskModel[];
@@ -40,14 +41,14 @@ export const CalendarView = ({
   const getScheduleDays = (currentDate: Date) => {
     const daySchedules = Array.isArray(filteredSchedules)
       ? filteredSchedules.filter((schedule) => {
-          const scheduleDate = new Date(schedule.scheduled_date);
-          const matches =
-            scheduleDate.getDate() === currentDate.getDate() &&
-            scheduleDate.getMonth() === currentDate.getMonth() &&
-            scheduleDate.getFullYear() === currentDate.getFullYear();
+        const scheduleDate = new Date(schedule.scheduled_date);
+        const matches =
+          scheduleDate.getDate() === currentDate.getDate() &&
+          scheduleDate.getMonth() === currentDate.getMonth() &&
+          scheduleDate.getFullYear() === currentDate.getFullYear();
 
-          return matches;
-        })
+        return matches;
+      })
       : [];
     return daySchedules;
   };
@@ -61,7 +62,7 @@ export const CalendarView = ({
     const startDate = new Date(firstDay);
     startDate.setDate(
       firstDay.getDate() -
-        (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1),
+      (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1),
     );
 
     const days = [];
@@ -82,15 +83,6 @@ export const CalendarView = ({
     return days;
   };
   const calendarDays = generateCalendarDays(selectedDate);
-  const dayNames = [
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-    "samedi",
-    "dimanche",
-  ];
 
   const { getEmployeeColor, getEmployeeInitials } = useEmployee();
 
@@ -120,7 +112,7 @@ export const CalendarView = ({
             borderBottom: "2px solid #e0e0e0",
           }}
         >
-          {dayNames.map((day) => (
+          {weekDays().map((day) => (
             <Box
               key={day}
               sx={{
@@ -172,7 +164,7 @@ export const CalendarView = ({
                     fontSize: "0.875rem",
                   }}
                 >
-                  {day.date.getDate().toString().padStart(2, "0")}
+                  {day.date.toLocaleDateString(undefined, { day: "2-digit" })}
                 </Typography>
 
                 {/* Événements du jour */}
@@ -453,10 +445,6 @@ export const CalendarView = ({
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log(
-                                "Modification de la tâche:",
-                                schedule,
-                              );
                               handleOpenDialog(schedule);
                             }}
                             sx={{
@@ -480,7 +468,6 @@ export const CalendarView = ({
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("Suppression de la tâche:", schedule);
                               handleDeleteTask(schedule);
                             }}
                             sx={{

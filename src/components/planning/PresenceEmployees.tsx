@@ -259,6 +259,7 @@ const DayScheduleHeader = ({
         variant="subtitle1"
         fontWeight="bold"
         sx={{ color: "#333" }}
+        textTransform={"capitalize"}
       >
         {dayLabel}
       </Typography>
