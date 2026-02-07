@@ -58,7 +58,7 @@ import type { Schema as PresenceSchema } from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
 
 const CollectionPointsTab = () => {
-  const [recycleries, setRecycleries] = useState<StoreModel[]>([]);
+  // const [recycleries, setRecycleries] = useState<StoreModel[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPoint, setEditingPoint] = useState<CollectionPointModel | null>(
     null,
@@ -66,8 +66,8 @@ const CollectionPointsTab = () => {
 
   // États pour les onglets et présence
   const [tabValue, setTabValue] = useState(0);
-  const [presenceData, setPresenceData] = useState<ScheduleModel[]>([]);
-  const [presenceLoading, setPresenceLoading] = useState(false);
+  // const [presenceData, setPresenceData] = useState<ScheduleModel[]>([]);
+  // const [presenceLoading, setPresenceLoading] = useState(false);
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
   const [editingPresence, setEditingPresence] = useState<ScheduleModel | null>(
     null,
@@ -116,20 +116,25 @@ const CollectionPointsTab = () => {
   })
 
   useEffect(() => {
-    fetchRecycleries();
-    fetchPresenceData();
+    // fetchRecycleries();
+    // fetchPresenceData();
   }, []);
 
+  const recycleries = useQuery({
+    queryKey: ["stores"],
+    queryFn: () => fetchStores().then(response => response.data.stores)
+  })
+  if (recycleries.isError) toast.error("Erreur lors du chargement des recycleries");
 
-  const fetchRecycleries = async () => {
-    try {
-      const response = await fetchStores();
+  // const fetchRecycleries = async () => {
+  //   try {
+  //     const response = await fetchStores();
 
-      setRecycleries(response.data.recycleries || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des recycleries:", error);
-    }
-  };
+  //     setRecycleries(response.data.recycleries || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des recycleries :", error);
+  //   }
+  // };
 
   const handleOpenDialog = (point: CollectionPointModel | null = null) => {
     setEditingPoint(point);
@@ -150,7 +155,6 @@ const CollectionPointsTab = () => {
   };
 
   const handleDelete = async (point: CollectionPointModel) => {
-    if (!point.id) return
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${point.name}" ?`)
     ) {
@@ -183,18 +187,18 @@ const CollectionPointsTab = () => {
   };
 
   // Fonctions pour gérer la présence
-  const fetchPresenceData = async () => {
-    try {
-      setPresenceLoading(true);
-      const response = await fetchCollectionPointPresence();
-      setPresenceData(response.data.schedules || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement de la présence:", error);
-      toast.error("Erreur lors du chargement de la présence");
-    } finally {
-      setPresenceLoading(false);
-    }
-  };
+  // const fetchPresenceData = async () => {
+  //   try {
+  //     setPresenceLoading(true);
+  //     const response = await fetchCollectionPointPresence();
+  //     setPresenceData(response.data.schedules || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement de la présence:", error);
+  //     toast.error("Erreur lors du chargement de la présence");
+  //   } finally {
+  //     setPresenceLoading(false);
+  //   }
+  // };
 
   const handleOpenPresenceDialog = (
     presence: ScheduleModel | null = null,
@@ -214,7 +218,8 @@ const CollectionPointsTab = () => {
     onSuccess: () => {
       toast.success("Présence mise à jour avec succès");
       handleClosePresenceDialog()
-      fetchPresenceData()
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+      // fetchPresenceData()
 
     }
   })
@@ -224,7 +229,8 @@ const CollectionPointsTab = () => {
     onSuccess: () => {
       toast.success("Présence créée avec succès");
       handleClosePresenceDialog()
-      fetchPresenceData()
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+      // fetchPresenceData()
 
     }
   })
@@ -233,7 +239,8 @@ const CollectionPointsTab = () => {
     onError: () => toast.error("Erreur lors de la suppression de la présence"),
     onSuccess: () => {
       toast.success("Présence supprimée avec succès");
-      fetchPresenceData()
+      queryClient.invalidateQueries({ queryKey: ["points"] })
+      // fetchPresenceData()
     }
   })
 
@@ -407,7 +414,7 @@ const CollectionPointsTab = () => {
             <DialogContent>
               <CollectionPointForm
                 formId="collectionPointForm"
-                recycleries={recycleries}
+                recycleries={recycleries.data || []}
                 onSubmit={handleSave}
                 defaultValues={editingPoint}
               />
@@ -456,11 +463,11 @@ const CollectionPointsTab = () => {
             </Button>
           </Box>
 
-          {presenceLoading ? (
+          {collectionPoints.isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
               <CircularProgress />
             </Box>
-          ) : presenceData.length === 0 ? (
+          ) : collectionPoints.data?.length === 0 ? (
             <Alert severity="info">
               Aucune présence enregistrée. Cliquez sur "Ajouter une présence"
               pour commencer.
@@ -479,7 +486,7 @@ const CollectionPointsTab = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {presenceData.map((presence) => (
+                  {collectionPoints.data?.map(point => point.TaskSchedules?.map(presence =>
                     <TableRow key={presence.id}>
                       <TableCell>
                         <Box
