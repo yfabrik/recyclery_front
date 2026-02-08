@@ -37,9 +37,10 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import type { EmployeeModel, StoreModel } from "../../../interfaces/Models";
+import type { EmployeeModel } from "../../../interfaces/Models";
 import {
   createEmployees,
   deleteEmployee,
@@ -50,11 +51,8 @@ import { fetchStores } from "../../../services/api/store";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const EmployeeManagement = () => {
-  // const [employees, setEmployees] = useState<EmployeeModel[]>([]);
-  // const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeModel | null>(
     null,
@@ -67,7 +65,6 @@ const EmployeeManagement = () => {
   const [openStoreAssignmentDialog, setOpenStoreAssignmentDialog] =
     useState(false);
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
-  const [stores, setStores] = useState<StoreModel[]>([]);
 
   const skillsOptions = [
     "Collecte",
@@ -97,12 +94,14 @@ const EmployeeManagement = () => {
     { value: "collector", label: "Collecteur" },
   ];
 
-  useEffect(() => {
-    // fetchEmployees();
-    getStores();
-  }, []);
 
   const queryClient = useQueryClient()
+
+  const stores = useQuery({
+    queryKey: ["stores", { active: true }],
+    queryFn: () => fetchStores({ active: true }).then(response => response.data.stores)
+  })
+  if (stores.isError) toast.error("Erreur lors du chargement des stores");
 
   const employees = useQuery({
     queryKey: ["employees"],
@@ -122,7 +121,7 @@ const EmployeeManagement = () => {
     ),
   })
   const addEmployee = useMutation({
-    mutationFn: (data) => createEmployees(data),
+    mutationFn: (data:Schema) => createEmployees(data),
     onSuccess: () => {
       toast.success("Employé créé avec succès");
       handleCloseDialog();
@@ -142,29 +141,6 @@ const EmployeeManagement = () => {
     onError: () => toast.error("Erreur lors de la suppression"),
 
   })
-
-  // const fetchEmployees = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await getEmployees(); // await fetchUsers({ role: "employee" });
-  //     setEmployees(response.data.data);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des employés:", error);
-  //     toast.error("Erreur lors du chargement des employés");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-
-  const getStores = async () => {
-    try {
-      const response = await fetchStores({ active: true });
-      setStores(response.data.stores);
-    } catch (e) {
-      toast.error("Erreur lors du chargement des stores");
-    }
-  };
 
   const handleOpenDialog = (employee: EmployeeModel | null = null) => {
     setEditingEmployee(employee);
@@ -196,28 +172,9 @@ const EmployeeManagement = () => {
     setEditingEmployee(null);
   };
 
-  const handleSave = async (data:Schema) => {
+  const handleSave = async (data: Schema) => {
     if (editingEmployee?.id) editEmployee.mutate({ id: editingEmployee.id, data })
     else addEmployee.mutate(data)
-    // try {
-    //   if (editingEmployee?.id) {
-    //     // Mise à jour
-    //     await updateEmployee(editingEmployee.id, data);
-    //     toast.success("Employé mis à jour avec succès");
-    //   } else {
-    //     // Création
-    //     await createEmployees({ ...data });
-    //     toast.success("Employé créé avec succès");
-    //   }
-
-    //   handleCloseDialog();
-    //   fetchEmployees();
-    // } catch (error) {
-    //   console.error("Erreur lors de la sauvegarde:", error);
-    //   toast.error(
-    //     error.response?.data?.error || "Erreur lors de la sauvegarde",
-    //   );
-    // }
   };
 
   const handleDelete = async (employeeId: number) => {
@@ -225,18 +182,9 @@ const EmployeeManagement = () => {
       return;
     }
     removeEmployee.mutate(employeeId)
-
-    // try {
-    //   await deleteEmployee(employeeId);
-    //   toast.success("Employé supprimé avec succès");
-    //   fetchEmployees();
-    // } catch (error) {
-    //   console.error("Erreur lors de la suppression:", error);
-    //   toast.error("Erreur lors de la suppression");
-    // }
   };
 
-  const getRoleColor = (role) => {
+  const getRoleColor = (role:string) => {
     const colors = {
       employee: "default",
       manager: "primary",
@@ -247,7 +195,7 @@ const EmployeeManagement = () => {
     return colors[role] || "default";
   };
 
-  const getAvailabilityColor = (availability) => {
+  const getAvailabilityColor = (availability:string) => {
     const colors = {
       full_time: "success",
       part_time: "warning",
@@ -574,7 +522,7 @@ const EmployeeManagement = () => {
           <EmployeeForm
             formId="employeeForm"
             onSubmit={handleSave}
-            stores={stores}
+            stores={stores.data || []}
             defaultValues={editingEmployee}
           />
         </DialogContent>
@@ -585,6 +533,7 @@ const EmployeeManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
       {/* Dialog d'affectation aux magasins */}
       <Dialog
         open={openStoreAssignmentDialog}
@@ -607,6 +556,7 @@ const EmployeeManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+
       {/* Dialog de gestion des jours de travail */}
       <Dialog
         open={openWorkdaysDialog}

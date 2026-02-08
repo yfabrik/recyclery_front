@@ -1,25 +1,21 @@
-import { Person, Save, Star, Store } from "@mui/icons-material";
+import { Person, Save } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Chip,
   CircularProgress,
-  FormControlLabel,
   Grid,
-  Typography,
+  Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { type StoreModel } from "../interfaces/Models";
 import { fetchStores } from "../services/api/store";
 import {
   addAssignedStore,
   getAssignedStores,
   removeAssignedStores,
 } from "../services/api/users";
-import { type StoreModel } from "../interfaces/Models";
+import { EmployeeStoresForm, type Schema } from "./forms/EmployeeStoresForm";
 interface EmployeeStoreAssignmentProps {
   employeeId: number;
   employeeName: string;
@@ -37,83 +33,115 @@ const EmployeeStoreAssignment = ({
   onClose,
   onSave,
 }: EmployeeStoreAssignmentProps) => {
-  const [stores, setStores] = useState<StoreModel[]>([]);
-  const [assignments, setAssignments] = useState<Assignments[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // const [stores, setStores] = useState<StoreModel[]>([]);
+  // const [assignments, setAssignments] = useState<Assignments[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [employeeId]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [employeeId]);
+  const queryClient = useQueryClient()
+  const stores = useQuery({
+    queryKey: ["stores"],
+    queryFn: () => fetchStores().then(response => response.data.stores)
+  })
 
-  const fetchData = async () => {
+  const assignments = useQuery({
+    queryKey: ["assignments", employeeId],
+    queryFn: () => getAssignedStores(employeeId).then(response => response.data.assignments)
+  })
+
+  if (stores.isError || assignments.isError) toast.error("Erreur lors du chargement des données");
+
+
+  const removeAssignements = useMutation({
+    mutationFn: (employeeId: number) => removeAssignedStores(employeeId),
+    onSuccess: () => {
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde des affectations"),
+  })
+
+
+  const addAssignment = useMutation({
+    mutationFn: (data: { employee_id: number, store_id: number, is_primary: boolean }) => addAssignedStore(data),
+    onSuccess: () => {
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde des affectations"),
+  })
+
+  // const fetchData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // Récupérer tous les magasins
+  //     const storesResponse = await fetchStores();
+  //     setStores(storesResponse.data.stores || []);
+  //     // Récupérer les affectations actuelles de l'employé
+  //     const assignmentsResponse = await getAssignedStores(employeeId);
+  //     setAssignments(assignmentsResponse.data.assignments || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des données:", error);
+  //     toast.error("Erreur lors du chargement des données");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   console.log(assignments)
+  // }, [assignments])
+
+  // const handleStoreToggle = (storeId: number) => {
+  //   setAssignments((prev) => {
+  //     const existingAssignment = prev?.find((a) => a.id === storeId);
+
+  //     if (existingAssignment) {
+  //       // Supprimer l'affectation
+  //       return prev.filter((a) => a.id !== storeId);
+  //     } else {
+  //       // Ajouter une nouvelle affectation
+  //       const store = stores.data?.find((s) => s.id === storeId);
+  //       return [
+  //         ...prev,
+  //         {
+  //           id: storeId,
+  //           name: store?.name || "",
+  //           is_primary: prev.length === 0, // Premier magasin = principal par défaut
+  //         },
+  //       ];
+  //     }
+  //   });
+  // };
+
+  // const handlePrimaryChange = (storeId: number) => {
+  //   setAssignments((prev) =>
+  //     prev.map((assignment) => ({
+  //       ...assignment,
+  //       is_primary: assignment.id === storeId,
+  //     })),
+  //   );
+  // };
+
+  const handleSave = async (data: Schema) => {
+
     try {
-      setLoading(true);
-      // Récupérer tous les magasins
-      const storesResponse = await fetchStores();
-      setStores(storesResponse.data.stores || []);
-      // Récupérer les affectations actuelles de l'employé
-      const assignmentsResponse = await getAssignedStores(employeeId);
-      setAssignments(assignmentsResponse.data.assignments || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des données:", error);
-      toast.error("Erreur lors du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  };
+      await removeAssignements.mutateAsync(employeeId)
+      if (!removeAssignements.isError)
 
-  useEffect(()=>{
-    console.log(assignments)
-  },[assignments])
+        //   // Supprimer toutes les affectations existantes
+        //   await removeAssignedStores(employeeId);
 
-  const handleStoreToggle = (storeId: number) => {
-    setAssignments((prev) => {
-      const existingAssignment = prev?.find((a) => a.id === storeId);
-
-      if (existingAssignment) {
-        // Supprimer l'affectation
-        return prev.filter((a) => a.id !== storeId);
-      } else {
-        // Ajouter une nouvelle affectation
-        const store = stores.find((s) => s.id === storeId);
-        return [
-          ...prev,
-          {
-            id: storeId,
-            name: store?.name || "",
-            is_primary: prev.length === 0, // Premier magasin = principal par défaut
-          },
-        ];
-      }
-    });
-  };
-
-  const handlePrimaryChange = (storeId: number) => {
-    setAssignments((prev) =>
-      prev.map((assignment) => ({
-        ...assignment,
-        is_primary: assignment.id === storeId,
-      })),
-    );
-  };
-
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-
-      // Supprimer toutes les affectations existantes
-      await removeAssignedStores(employeeId);
-
-      // Créer les nouvelles affectations
-      for (const assignment of assignments) {
-        //TOOD c'est moche, l'url devrait avoir le employee id non ?
-        await addAssignedStore({
-          employee_id: employeeId,
-          store_id: assignment.id,
-          is_primary: assignment.is_primary,
-        });
-      }
+        //   // Créer les nouvelles affectations
+        for (const assignment of data.stores) {
+          if (assignment.isAssigned)
+            //TOOD c'est moche, l'url devrait avoir le employee id non ?
+            await addAssignment.mutateAsync({
+              employee_id: employeeId,
+              store_id: assignment.store_id,
+              is_primary: data.isPrimary == assignment.name,
+            });
+        }
+      queryClient.invalidateQueries({ queryKey: ["assignments"] })
 
       toast.success("Affectations mises à jour avec succès");
       onSave && onSave();
@@ -121,12 +149,11 @@ const EmployeeStoreAssignment = ({
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
       toast.error("Erreur lors de la sauvegarde des affectations");
-    } finally {
-      setSaving(false);
+
     }
   };
 
-  if (loading) {
+  if (assignments.isLoading || stores.isLoading) {
     return (
       <Box
         sx={{
@@ -159,8 +186,9 @@ const EmployeeStoreAssignment = ({
       </Box>
 
       <Grid container spacing={2}>
-        {stores.map((store) => {
-          const assignment = assignments.find((a) => a.id === store.id);
+        <EmployeeStoresForm formId="employeeStores" onSubmit={handleSave} stores={stores.data || []} assignments={assignments.data || []}></EmployeeStoresForm>
+        {/* {stores.data?.map((store) => {
+          const assignment = assignments.data?.find((a) => a.id === store.id);
           const isAssigned = !!assignment;
           const isPrimary = assignment?.is_primary || false;
 
@@ -234,16 +262,16 @@ const EmployeeStoreAssignment = ({
               </Card>
             </Grid>
           );
-        })}
+        })} */}
       </Grid>
 
-      {assignments.length > 0 && (
+      {/* {assignments.data && assignments.data?.length > 0 && (
         <Box sx={{ mt: 3, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
           <Typography variant="subtitle1" gutterBottom>
             Résumé des affectations :
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {assignments.map((assignment) => (
+            {assignments.data?.map((assignment) => (
               <Chip
                 key={assignment.id}
                 icon={assignment.is_primary ? <Star /> : <Store />}
@@ -254,19 +282,21 @@ const EmployeeStoreAssignment = ({
             ))}
           </Box>
         </Box>
-      )}
+      )} */}
 
       <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
-        <Button variant="outlined" onClick={onClose} disabled={saving}>
+        <Button variant="outlined" onClick={onClose} disabled={addAssignment.isPending || removeAssignements.isPending}>
           Annuler
         </Button>
         <Button
+          type="submit"
+          form="employeeStores"
           variant="contained"
-          onClick={handleSave}
-          disabled={saving}
-          startIcon={saving ? <CircularProgress size={20} /> : <Save />}
+          // onClick={handleSave}
+          disabled={addAssignment.isPending || removeAssignements.isPending}
+          startIcon={addAssignment.isPending || removeAssignements.isPending ? <CircularProgress size={20} /> : <Save />}
         >
-          {saving ? "Sauvegarde..." : "Sauvegarder"}
+          {addAssignment.isPending || removeAssignements.isPending ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
       </Box>
     </Box>
