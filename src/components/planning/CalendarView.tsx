@@ -86,6 +86,74 @@ export const CalendarView = ({
 
   const { getEmployeeColor, getEmployeeInitials } = useEmployee();
 
+  type TaskVariant = "opening" | "presence" | "default";
+  const getTaskVariant = (schedule: TaskModel): TaskVariant =>
+    isOpeningTask(schedule) ? "opening" : isPresenceTask(schedule) ? "presence" : "default";
+
+  const taskCardStyles: Record<
+    TaskVariant,
+    { box: object; typography: object; iconColor: string }
+  > = {
+    opening: {
+      box: {
+        p: 1,
+        bgcolor: "#f1f8e9",
+        borderRadius: 1,
+        cursor: "pointer",
+        border: "1px solid #c8e6c9",
+        transition: "all 0.2s",
+        "&:hover": {
+          bgcolor: "#e8f5e8",
+          transform: "translateY(-1px)",
+          boxShadow: "0 2px 4px rgba(76, 175, 80, 0.2)",
+        },
+      },
+      typography: { color: "#4caf50", fontSize: "0.75rem" },
+      iconColor: "#4caf50",
+    },
+    presence: {
+      box: {
+        p: 1,
+        bgcolor: "#fff8e1",
+        borderRadius: 1,
+        cursor: "pointer",
+        border: "1px solid #ffcc02",
+        transition: "all 0.2s",
+        "&:hover": {
+          bgcolor: "#fff3e0",
+          transform: "translateY(-1px)",
+          boxShadow: "0 2px 4px rgba(255, 152, 0, 0.2)",
+        },
+      },
+      typography: { color: "#ff9800", fontSize: "0.75rem" },
+      iconColor: "#ff9800",
+    },
+    default: {
+      box: {
+        p: 1,
+        bgcolor: "#e3f2fd",
+        borderRadius: 1,
+        cursor: "pointer",
+        border: "1px solid #bbdefb",
+        transition: "all 0.2s",
+        "&:hover": {
+          bgcolor: "#bbdefb",
+          transform: "translateY(-1px)",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        },
+      },
+      typography: { color: "#1976d2", fontSize: "0.75rem" },
+      iconColor: "#1976d2",
+    },
+  };
+
+  const TaskIcon = ({ variant }: { variant: TaskVariant }) => {
+    const color = taskCardStyles[variant].iconColor;
+    if (variant === "opening") return <Store sx={{ fontSize: 12, color }} />;
+    if (variant === "presence") return <LocationOn sx={{ fontSize: 12, color }} />;
+    return <Assignment sx={{ fontSize: 12, color }} />;
+  };
+
   return (
     <Box>
       {/* Grille du calendrier */}
@@ -172,6 +240,8 @@ export const CalendarView = ({
                   sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
                 >
                   {day.schedules.slice(0, 2).map((schedule, scheduleIndex) => {
+                    const variant = getTaskVariant(schedule);
+                    const styles = taskCardStyles[variant];
                     return (
                       <Box
                         key={scheduleIndex}
@@ -179,35 +249,7 @@ export const CalendarView = ({
                           e.stopPropagation(); // Empêcher la propagation du clic vers le jour
                           handleOpenDialog(schedule);
                         }}
-                        sx={{
-                          p: 1,
-                          bgcolor: isOpeningTask(schedule)
-                            ? "#f1f8e9"
-                            : isPresenceTask(schedule)
-                              ? "#fff8e1"
-                              : "#e3f2fd",
-                          borderRadius: 1,
-                          cursor: "pointer",
-                          border: isOpeningTask(schedule)
-                            ? "1px solid #c8e6c9"
-                            : isPresenceTask(schedule)
-                              ? "1px solid #ffcc02"
-                              : "1px solid #bbdefb",
-                          transition: "all 0.2s",
-                          "&:hover": {
-                            bgcolor: isOpeningTask(schedule)
-                              ? "#e8f5e8"
-                              : isPresenceTask(schedule)
-                                ? "#fff3e0"
-                                : "#bbdefb",
-                            transform: "translateY(-1px)",
-                            boxShadow: isOpeningTask(schedule)
-                              ? "0 2px 4px rgba(76, 175, 80, 0.2)"
-                              : isPresenceTask(schedule)
-                                ? "0 2px 4px rgba(255, 152, 0, 0.2)"
-                                : "0 2px 4px rgba(0,0,0,0.1)",
-                          },
-                        }}
+                        sx={styles.box}
                       >
                         <Box sx={{ mb: 0.5 }}>
                           <Box
@@ -228,30 +270,11 @@ export const CalendarView = ({
                               <Typography
                                 variant="caption"
                                 fontWeight="bold"
-                                sx={{
-                                  color: isOpeningTask(schedule)
-                                    ? "#4caf50"
-                                    : isPresenceTask(schedule)
-                                      ? "#ff9800"
-                                      : "#1976d2",
-                                  fontSize: "0.75rem",
-                                }}
+                                sx={styles.typography}
                               >
                                 {getTaskDisplayName(schedule)}
                               </Typography>
-                              {isOpeningTask(schedule) ? (
-                                <Store
-                                  sx={{ fontSize: 12, color: "#4caf50" }}
-                                />
-                              ) : isPresenceTask(schedule) ? (
-                                <LocationOn
-                                  sx={{ fontSize: 12, color: "#ff9800" }}
-                                />
-                              ) : (
-                                <Assignment
-                                  sx={{ fontSize: 12, color: "#1976d2" }}
-                                />
-                              )}
+                              <TaskIcon variant={variant} />
                             </Box>
                           </Box>
 
