@@ -11,7 +11,12 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import type { WorkdaysModel } from "../interfaces/Models";
-import { addWorkdaysToUser, getUserWorkdays } from "../services/api/users";
+import {
+  addWorkdaysToUser,
+  getUserWorkdays,
+  type WorkdaysFormPayload,
+  type WorkdaysModelTransformed,
+} from "../services/api/users";
 import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
 
 interface EmployeeWorkdaysProps {
@@ -26,7 +31,7 @@ const EmployeeWorkdays = ({
   onClose,
   onSave,
 }: EmployeeWorkdaysProps) => {
-  const [workdays, setWorkdays] = useState<WorkdaysModel[]>([]);
+  const [workdays, setWorkdays] = useState<WorkdaysModelTransformed[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -61,28 +66,7 @@ const EmployeeWorkdays = ({
     try {
       setLoading(true);
       const response = await getUserWorkdays(employeeId);
-      const existingWorkdays = response.data.workdays || [];
-      const day = new Map([
-        ["monday", "lundi"],
-        ["tuesday", "mardi"],
-        ["wednesday", "mercredi"],
-        ["thursday", "jeudi"],
-        ["friday", "vendredi"],
-        ["saturday", "samedi"],
-        ["sunday", "dimanche"],
-      ]);
-
-      const result = existingWorkdays.map((exist: WorkdaysModel) => {
-        exist.day_of_week = day.get(exist.day_of_week) ?? "lundi";
-        let [h, m] = exist.start_time.split(":");
-        exist.start_time = new Date(new Date().setHours(h, m));
-        let [hh, mm] = exist.end_time.split(":");
-        exist.end_time = new Date(new Date().setHours(hh, mm));
-
-        return exist;
-      });
-
-      setWorkdays(result);
+      setWorkdays(response.data.workdays ?? []);
 
       // Initialiser la structure complète des jours de travail
       // const initializedWorkdays = [];
@@ -127,37 +111,12 @@ const EmployeeWorkdays = ({
   //   );
   // };
 
-  const handleSave = async (data) => {
+  const handleSave = async (data: WorkdaysFormPayload) => {
     try {
       setSaving(true);
-      console.log("save", data);
-      const today = new Map([
-        ["lundi", "monday"],
-        ["mardi", "tuesday"],
-        ["mercredi", "wednesday"],
-        ["jeudi", "thursday"],
-        ["vendredi", "friday"],
-        ["samedi", "saturday"],
-        ["dimanche", "sunday"],
-      ]);
-
-      const activeWorkdays = Object.entries(data)
-        .flatMap(([key, arr]) => {
-          return arr.map((day) => ({
-            ...day,
-            day_of_week: today.get(day.day_of_week),
-            week: key,
-          }));
-        })
-        .filter((day) => day.is_working);
-
-      // const activeWorkdays = workdays.filter((w) => w.is_working);
-      await addWorkdaysToUser(employeeId, {
-        workdays: activeWorkdays,
-      });
-
+      await addWorkdaysToUser(employeeId, data);
       toast.success("Jours de travail mis à jour avec succès");
-      onSave && onSave();
+      onSave?.();
       onClose();
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
@@ -236,7 +195,7 @@ const EmployeeWorkdays = ({
       <EmployeeWorkdaysForm
         formId="WorkdaysForm"
         onSubmit={handleSave}
-        defaults={workdays}
+        defaults={workdays as unknown as WorkdaysModel[]}
       />
 
       {/* Lignes pour chaque jour de la semaine */}
@@ -393,6 +352,7 @@ const EmployeeWorkdays = ({
       <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
         <Button variant="outlined" onClick={onClose} disabled={saving}>
           Annuler
+          
         </Button>
         <Button
           type="submit"
