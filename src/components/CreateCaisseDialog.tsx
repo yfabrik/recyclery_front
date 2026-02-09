@@ -8,7 +8,7 @@ import { CreateCaisseForm, type Schema as CaisseSchema } from "./forms/CreateCai
 interface CreateCaisseDialogProps {
     store: StoreModel
     open: boolean
-    onClose: ((event: {}, reason: "backdropClick" | "escapeKeyDown") => void) | undefined
+    onClose: ((event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement> | React.MouseEvent<HTMLAnchorElement> | React.KeyboardEvent<HTMLAnchorElement>, reason: "backdropClick" | "escapeKeyDown") => void) | undefined
 }
 export const CreateCaisseDialog = ({ store, open, onClose }: CreateCaisseDialogProps) => {
 
@@ -38,7 +38,7 @@ export const CreateCaisseDialog = ({ store, open, onClose }: CreateCaisseDialogP
     return (
         <Dialog
             open={open}
-            onClose={onclose}
+            onClose={onClose}
             maxWidth="sm"
             fullWidth
         >
