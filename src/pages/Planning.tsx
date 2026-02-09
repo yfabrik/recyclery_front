@@ -34,7 +34,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { PlaningForm, type Schema as TaskFormSchema } from "../components/forms/planningForm";
@@ -62,10 +62,10 @@ import {
   updateTask,
 } from "../services/api/tasks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getDay } from "../services/dateService";
 
 const Planning = () => {
-  // const [schedules, setSchedules] = useState<TaskModel[]>([]);
-  // const [stores, setStores] = useState<StoreModel[]>([]);
+
   const navigate = useNavigate();
   // Fonction pour générer une couleur basée sur le nom de l'employé
   const getEmployeeColor = (employeeName: string) => {
@@ -109,12 +109,7 @@ const Planning = () => {
     useState(false);
   const [selectedTaskForAssignment, setSelectedTaskForAssignment] =
     useState<TaskModel | null>(null);
-  // const [taskAssignedEmployees, setTaskAssignedEmployees] = useState<
-  //   EmployeeModel[]
-  // >([]);
-  // const [availableEmployeesForTask, setAvailableEmployeesForTask] = useState<
-  //   EmployeeModel[]
-  // >([]);
+
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -127,10 +122,9 @@ const Planning = () => {
 
   // État pour les employés présents
   // const [employeesPresent, setEmployeesPresent] = useState<StoreModel[]>([]);
-  const [loadingEmployeesPresent, setLoadingEmployeesPresent] = useState(false);
-  const [showMissingEmployeesDialog, setShowMissingEmployeesDialog] =
+  // const [loadingEmployeesPresent, setLoadingEmployeesPresent] = useState(false);
+  const [missingEmployeesDialogDismissed, setMissingEmployeesDialogDismissed] =
     useState(false);
-  const [missingEmployees, setMissingEmployees] = useState<EmployeeModel[]>([]);
   const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
@@ -237,28 +231,24 @@ const Planning = () => {
     onError: () => toast.error("Erreur lors de la suppression")
   })
 
-  // useEffect(() => {
-  //   // fetchSchedules();
-  //   fetchStores();
-  //   // fetchCollections();
-  // }, []);
 
-  useEffect(() => {
-    if (stores.data && stores.data?.length > 0) {
-      fetchEmployeesPresent();
-    }
-  }, [stores.data]);
+
+  // useEffect(() => {
+  //   if (stores.data && stores.data?.length > 0) {
+  //     fetchEmployeesPresent();
+  //   }
+  // }, [stores.data]);
 
   // useEffect(() => {
   //   fetchSchedules();
   // }, [selectedStore, selectedDate]);
 
   // Recharger les employés quand le magasin sélectionné change
-  useEffect(() => {
-    if (stores.data && stores.data?.length > 0) {
-      fetchEmployeesPresent();
-    }
-  }, [selectedStore]);
+  // useEffect(() => {
+  //   if (stores.data && stores.data?.length > 0) {
+  //     fetchEmployeesPresent();
+  //   }
+  // }, [selectedStore]);
 
   // const fetchSchedules = async () => {
   //   try {
@@ -317,41 +307,61 @@ const Planning = () => {
   //   }
   // };
 
+  const employees = useQuery({
+    queryKey: ["employees"],
+    queryFn: () => getEmployees().then(response => response.data.data)
+  })
+  if (employees.isError) {
+    toast.error("Erreur lors du chargement des employés");
+  }
+
+  const missingEmployees = useMemo(() => {
+    const data = employees.data
+    if (!data?.length) return []
+    return data.filter(
+      (emp) =>
+        emp.stores?.length === 0 || emp.EmployeeWorkdays?.length === 0,
+    )
+  }, [employees.data])
+
+  const showMissingEmployeesDialog =
+    missingEmployees.length > 0 && !missingEmployeesDialogDismissed
+
   //TODO fixme
-  const fetchEmployeesPresent = async () => {
-    try {
-      setLoadingEmployeesPresent(true);
-      const [
-        // infoStoreResponse, 
-        employeesResponse] = await Promise.all([
-          // fstore({ include: "employees" }),
-          getEmployees(),
-        ]);
+  // const fetchEmployeesPresent = async () => {
+  //   try {
+  //     setLoadingEmployeesPresent(true);
+  //     const [
+  //       // infoStoreResponse, 
+  //       employeesResponse] = await Promise.all([
+  //         // fstore({ include: "employees" }),
+  //         getEmployees(),
+  //       ]);
 
-      const filteredEmployees = employeesResponse.data.data;
+  //     const filteredEmployees = employeesResponse.data.data;
 
-      // setEmployeesPresent(infoStoreResponse.data.stores);
+  //     // setEmployeesPresent(infoStoreResponse.data.stores);
 
-      const missingEmployeesList = filteredEmployees.filter(
-        (emp) =>
-          emp.stores?.length == 0 || emp.EmployeeWorkdays?.length == 0,
-      );
-      setMissingEmployees(missingEmployeesList);
+  //     const missingEmployeesList = filteredEmployees.filter(
+  //       (emp) =>
+  //         emp.stores?.length == 0 || emp.EmployeeWorkdays?.length == 0,
+  //     );
+  //     setMissingEmployees(missingEmployeesList);
 
-      // Afficher le popup s'il y a des employés manquants
-      if (missingEmployeesList.length > 0) {
-        setShowMissingEmployeesDialog(true);
-      }
-    } catch (error) {
-      console.error(
-        "❌ ERREUR lors du chargement des employés présents:",
-        error,
-      );
-      // setEmployeesPresent([]);
-    } finally {
-      setLoadingEmployeesPresent(false);
-    }
-  };
+  //     // Afficher le popup s'il y a des employés manquants
+  //     if (missingEmployeesList.length > 0) {
+  //       setShowMissingEmployeesDialog(true);
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "❌ ERREUR lors du chargement des employés présents:",
+  //       error,
+  //     );
+  //     // setEmployeesPresent([]);
+  //   } finally {
+  //     setLoadingEmployeesPresent(false);
+  //   }
+  // };
 
   // Fonction pour organiser les employés par jour de la semaine
   const getEmployeesByDay = (): {
@@ -423,8 +433,8 @@ const Planning = () => {
         );
       });
       const afternoon = employeesToProcess.filter((employee) => {
-        const workday = employee.EmployeeWorkdays || [];
-        return workday.some(
+        const workdays = employee.EmployeeWorkdays || [];
+        return workdays.some(
           (wd) =>
             wd.day_of_week === day &&
             wd.time_slot === "afternoon" &&
@@ -963,9 +973,9 @@ const Planning = () => {
       {/* Planning des employés par jour */}
       <EmployeePresenceSchedule
         employeesByDay={getEmployeesByDay()}
-        isLoading={loadingEmployeesPresent}
+        isLoading={employees.isLoading}
         selectedStore={selectedStore || null}
-        onShowMissingEmployees={() => setShowMissingEmployeesDialog(true)}
+        onShowMissingEmployees={() => setMissingEmployeesDialogDismissed(false)}
       ></EmployeePresenceSchedule>
 
       <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
@@ -1224,7 +1234,7 @@ const Planning = () => {
       {/* Dialog pour les employés manquants */}
       <Dialog
         open={showMissingEmployeesDialog}
-        onClose={() => setShowMissingEmployeesDialog(false)}
+        onClose={() => setMissingEmployeesDialogDismissed(true)}
         maxWidth="md"
         fullWidth
       >
@@ -1341,14 +1351,14 @@ const Planning = () => {
 
         <DialogActions sx={{ p: 2 }}>
           <Button
-            onClick={() => setShowMissingEmployeesDialog(false)}
+            onClick={() => setMissingEmployeesDialogDismissed(true)}
             variant="outlined"
           >
             Fermer
           </Button>
           <Button
             onClick={() => {
-              setShowMissingEmployeesDialog(false);
+              setMissingEmployeesDialogDismissed(true);
               navigate("/admin/config");
               // Rediriger vers la page d'administration
               window.location.href = "/admin";
