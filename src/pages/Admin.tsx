@@ -24,11 +24,24 @@ import { LogisticsTab } from "../components/admin/LogisticsTab";
 import { SalesAnalyticsTab } from "../components/admin/SalesAnalyticsTab";
 import { UsersTab } from "../components/admin/UsersTab";
 
+const ADMIN_TAB_VALUES = [
+  "/admin/config",
+  "/admin/sales",
+  "/admin/don",
+  "/admin/planning",
+  "/admin/users",
+] as const;
+
 const Admin = () => {
   const location = useLocation();
+  const pathname = location.pathname;
 
   const tabValue =
-    location.pathname === "/admin" ? "/admin/config" : location.pathname;
+    pathname === "/admin"
+      ? "/admin/config"
+      : ADMIN_TAB_VALUES.find(
+          (v) => pathname === v || pathname.startsWith(v + "/")
+        ) ?? "/admin/config";
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>

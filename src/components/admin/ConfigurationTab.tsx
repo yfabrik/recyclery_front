@@ -5,23 +5,22 @@ import {
   Nature,
   People,
   Store,
-  Work
 } from "@mui/icons-material";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
-import { useState } from "react";
-import { useLocation } from "react-router";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 import { CategoriesTab } from "./config/CategorieTab";
-import CollectionPointPresenceTab from "./config/CollectionPointPresenceTab";
 import CollectionPointsTab from "./config/CollectionPointsTab";
 import { CollectTab } from "./config/CollectTab";
 import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
 import EmployeeManagement from "./config/EmployeeManagement";
 import StoresTab from "./config/StoresTab";
-import TaskManagement from "./config/TaskManagement";
+
+const CONFIG_BASE = "/admin/config";
 
 export const ConfigurationTab = () => {
   const location = useLocation();
-  const [tabValue, setTabValue] = useState(0);
+  const pathname = location.pathname;
+  const tabValue = pathname === CONFIG_BASE ? `${CONFIG_BASE}/categories` : pathname;
 
   return (
     <Box>
@@ -39,9 +38,7 @@ export const ConfigurationTab = () => {
       </Box>
 
       <Tabs
-        // value={location.pathname}
         value={tabValue}
-        onChange={(e, newValue) => setTabValue(newValue)}
         sx={{
           mb: 3,
           backgroundColor: "#f8f9fa",
@@ -66,10 +63,10 @@ export const ConfigurationTab = () => {
         }}
       >
         <Tab
+          component={Link}
           label="Catégories"
-          // value="categories"
-          // to="categories"
-          // component={Link}
+          to={`${CONFIG_BASE}/categories`}
+          value={`${CONFIG_BASE}/categories`}
           icon={<Category />}
           iconPosition="start"
           sx={{
@@ -77,10 +74,10 @@ export const ConfigurationTab = () => {
           }}
         />
         <Tab
+          component={Link}
           label="Déchetteries"
-          // value="collect-point"
-          // to="collect-point"
-          // component={Link}
+          to={`${CONFIG_BASE}/collect-point`}
+          value={`${CONFIG_BASE}/collect-point`}
           icon={<LocationOn />}
           iconPosition="start"
           sx={{
@@ -88,10 +85,10 @@ export const ConfigurationTab = () => {
           }}
         />
         <Tab
+          component={Link}
           label="Magasins"
-          // value="store"
-          // to="store"
-          // component={Link}
+          to={`${CONFIG_BASE}/store`}
+          value={`${CONFIG_BASE}/store`}
           icon={<Store />}
           iconPosition="start"
           sx={{
@@ -99,10 +96,10 @@ export const ConfigurationTab = () => {
           }}
         />
         <Tab
+          component={Link}
           label="Éco-organismes"
-          // value="eco-orga"
-          // to="eco-orga"
-          // component={Link}
+          to={`${CONFIG_BASE}/eco-orga`}
+          value={`${CONFIG_BASE}/eco-orga`}
           icon={<Nature />}
           iconPosition="start"
           sx={{
@@ -110,85 +107,39 @@ export const ConfigurationTab = () => {
           }}
         />
         <Tab
+          component={Link}
           label="Employés"
-          // value="employees"
-          // to="employees"
-          // component={Link}
+          to={`${CONFIG_BASE}/employees`}
+          value={`${CONFIG_BASE}/employees`}
           icon={<People />}
           iconPosition="start"
           sx={{
             "&.Mui-selected": { color: "#d32f2f", backgroundColor: "#ffebee" },
           }}
         />
-        {/* <Tab
-          label="Tâches"
-          // value="tasks"
-          // to="tasks"
-          // component={Link}
-          icon={<Work />}
-          iconPosition="start"
-          sx={{
-            "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
-          }}
-        /> */}
-         <Tab
-          label="Collectes"
-          // value="tasks"
-          // to="tasks"
-          // component={Link}
+        <Tab
+          component={Link}
+          label="Logistique"
+          to={`${CONFIG_BASE}/logistic`}
+          value={`${CONFIG_BASE}/logistic`}
           icon={<FireTruck />}
           iconPosition="start"
           sx={{
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
         />
-        {/* <Tab
-          label="Horaires des magasins"
-          // value="store-hour"
-          // to="store-hour"
-          // component={Link}
-          icon={<AccessTime />}
-          iconPosition="start"
-          sx={{
-            "&.Mui-selected": { color: "#9c27b0", backgroundColor: "#f3e5f5" },
-          }}
-        />
-        <Tab
-          label="Horaires de présence"
-          // value="collect-presence"
-          // to="collect-presence"
-          // component={Link}
-          icon={<Schedule />}
-          iconPosition="start"
-          sx={{
-            "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
-          }}
-        /> */}
       </Tabs>
 
       <Box sx={{ p: 3 }}>
-        {/* <Routes>
-          <Route index element={<CategoriesTab />}></Route>
+        <Routes>
+          <Route index element={<Navigate to={`${CONFIG_BASE}/categories`} replace />} />
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="collect-point" element={<CollectionPointsTab />} />
           <Route path="store" element={<StoresTab />} />
           <Route path="eco-orga" element={<EcoOrganismsTab />} />
           <Route path="employees" element={<EmployeeManagement />} />
-          <Route path="tasks" element={<TaskManagement />} />
-          <Route path="store-hour" element={<StoreHoursTab />} />
-          <Route
-            path="collect-presence"
-            element={<CollectionPointPresenceTab />}
-          />
-        </Routes> */}
-        {tabValue === 0 && <CategoriesTab />}
-        {tabValue === 1 && <CollectionPointsTab />}
-        {tabValue === 2 && <StoresTab />}
-        {tabValue === 3 && <EcoOrganismsTab />}
-        {tabValue === 4 && <EmployeeManagement />}
-        {/* {tabValue === 5 && <TaskManagement />} */}
-        {tabValue === 5 && <CollectTab />}
-        {/* {tabValue === 7 && <CollectionPointPresenceTab />} */}
+          <Route path="logistic" element={<CollectTab />} />
+        </Routes>
       </Box>
     </Box>
   );
