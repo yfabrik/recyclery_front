@@ -3,12 +3,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  Grid,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { type StoreModel } from "../interfaces/Models";
 import { fetchStores } from "../services/api/store";
 import {
   addAssignedStore,
@@ -23,10 +21,6 @@ interface EmployeeStoreAssignmentProps {
   onSave: () => void;
 }
 
-interface Assignments extends StoreModel {
-  is_primary: boolean;
-  EmployeeStore: { is_primary: boolean };
-}
 const EmployeeStoreAssignment = ({
   employeeId,
   employeeName,
@@ -123,28 +117,19 @@ const EmployeeStoreAssignment = ({
   // };
 
   const handleSave = async (data: Schema) => {
-
     try {
-      await removeAssignements.mutateAsync(employeeId)
-      if (!removeAssignements.isError)
-
-        //   // Supprimer toutes les affectations existantes
-        //   await removeAssignedStores(employeeId);
-
-        //   // Créer les nouvelles affectations
-        for (const assignment of data.stores) {
-          if (assignment.isAssigned)
-            //TOOD c'est moche, l'url devrait avoir le employee id non ?
-            await addAssignment.mutateAsync({
-              employee_id: employeeId,
-              store_id: assignment.store_id,
-              is_primary: data.isPrimary == assignment.name,
-            });
-        }
-      queryClient.invalidateQueries({ queryKey: ["assignments"] })
+      await removeAssignements.mutateAsync(employeeId);
+      for (const storeId of data.assignedStoreIds) {
+        await addAssignment.mutateAsync({
+          employee_id: employeeId,
+          store_id: storeId,
+          is_primary: storeId === data.primaryStoreId,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
 
       toast.success("Affectations mises à jour avec succès");
-      onSave && onSave();
+      onSave?.();
       onClose();
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
@@ -170,7 +155,7 @@ const EmployeeStoreAssignment = ({
   }
 
   return (
-    <Box>
+    <Box sx={{ width: "100%", minWidth: 0 }}>
       <Box sx={{ mb: 3 }}>
         <Typography
           variant="h6"
@@ -185,8 +170,8 @@ const EmployeeStoreAssignment = ({
         </Typography>
       </Box>
 
-      <Grid container spacing={2}>
-        <EmployeeStoresForm formId="employeeStores" onSubmit={handleSave} stores={stores.data || []} assignments={assignments.data || []}></EmployeeStoresForm>
+      <Box sx={{ width: "100%", minWidth: 280 }}>
+        <EmployeeStoresForm formId="employeeStores" onSubmit={handleSave} stores={stores.data || []} assignments={assignments.data || []} />
         {/* {stores.data?.map((store) => {
           const assignment = assignments.data?.find((a) => a.id === store.id);
           const isAssigned = !!assignment;
@@ -263,7 +248,7 @@ const EmployeeStoreAssignment = ({
             </Grid>
           );
         })} */}
-      </Grid>
+      </Box>
 
       {/* {assignments.data && assignments.data?.length > 0 && (
         <Box sx={{ mt: 3, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
