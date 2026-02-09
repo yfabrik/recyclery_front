@@ -414,6 +414,10 @@ const Planning = () => {
       ];
     }
 
+    const newYear = new Date(selectedDate.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil((selectedDate-newYear)/(7*24*60*60*1000));
+    const weekToProcess = viewMode!="calendar"? (weekNumber%2 ?"week2":"week1"):null
+
     const employeesByDay: {
       [key: string]: {
         label: string;
@@ -429,7 +433,8 @@ const Planning = () => {
           (wd) =>
             wd.day_of_week === day &&
             wd.time_slot === "morning" &&
-            wd.is_working === true,
+            wd.is_working === true &&
+            (weekToProcess && wd?.week===weekToProcess)
         );
       });
       const afternoon = employeesToProcess.filter((employee) => {
@@ -438,7 +443,8 @@ const Planning = () => {
           (wd) =>
             wd.day_of_week === day &&
             wd.time_slot === "afternoon" &&
-            wd.is_working === true,
+            wd.is_working === true &&
+            (weekToProcess && wd?.week===weekToProcess)
         );
       });
 

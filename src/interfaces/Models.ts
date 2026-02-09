@@ -169,6 +169,7 @@ export interface WorkdaysModel extends BaseModel {
   end_time: string;
   notes: string;
   employee_id?: number;
+  week?: "week1" | "week2";
 }
 
 export interface StoreHoursModel extends BaseModel {
