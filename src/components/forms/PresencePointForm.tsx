@@ -11,13 +11,14 @@ import {
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { idSchema, weekDays } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import type { CollectionPointModel } from "../../interfaces/Models";
+import {  weekDaysArray } from "../../services/dateService";
 
 const schema = z.object({
   collection_point_id: idSchema("un point de collecte est requis"),
-  day_of_week: z.string().nonempty("choissisez un jour"),
+  day_of_week: weekDays("choissisez un jour"),
   is_present: z.boolean(),
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
@@ -36,18 +37,18 @@ export const PresencePointForm = ({
   collectionPoints: CollectionPointModel[];
 }) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {}
-
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       collection_point_id: "",
-      day_of_week: "",
       is_present: true,
       start_time: new Date().setHours(9, 0),//TODO j'aime pas la date null
       end_time: new Date().setHours(17, 0),
       // is_24h: false,
       notes: "",
-      ...data
+      ...data,
+      day_of_week: data.scheduled_date ? new Date(data.scheduled_date).getDay() : "",
+
     },
   });
   return (
@@ -73,9 +74,15 @@ export const PresencePointForm = ({
             control={form.control}
             name="day_of_week"
           >
-            {daysOfWeek.map((day) => (
-              <MenuItem key={day.key} value={day.label}>
-                {day.label}
+            {weekDaysArray().map((day) => (
+              <MenuItem
+                key={day.key}
+                value={day.key}
+                sx={{ textTransform: "capitalize" }}
+              >
+                {typeof day.label === "string"
+                  ? day.label.charAt(0).toUpperCase() + day.label.slice(1).toLowerCase()
+                  : day.label}
               </MenuItem>
             ))}
           </FormSelect>

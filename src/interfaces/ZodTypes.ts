@@ -15,6 +15,8 @@ export const noEmptyStr = (message?: string) => z.string({ message }).trim().non
 
 export const nullString = () => z.literal("").transform(() => null)
 
+export const weekDays = (message?: string)=> z.int({ message }).min(0,{ message }).max(6, { message } )
+
 function transformNullsToEmptyStrings<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
   return schema.transform((obj) => {
     const result: Record<string, any> = {};
