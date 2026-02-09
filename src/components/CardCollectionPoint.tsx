@@ -1,5 +1,5 @@
-import { Add, Delete, Edit, Email, LocationOn, Phone, Store } from "@mui/icons-material"
-import { Avatar, Box, Button, Card, CardContent, CardHeader, Chip, IconButton, List, ListItem, ListItemAvatar, ListItemText, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
+import { Add, Delete, Edit, Email, LocationOn, Phone, Schedule } from "@mui/icons-material"
+import { Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, IconButton, List, ListItem, ListItemAvatar, ListItemText, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
 import type { CollectionPointModel, ScheduleModel } from "../interfaces/Models"
 
 
@@ -7,73 +7,84 @@ interface CardCollectionPointProps {
     point: CollectionPointModel
     handleOpenHoursDialog: (n: null | ScheduleModel, id?: number) => void
     handleDeleteHours: (id: number) => void
+    handleOpenDialog: (point: null | CollectionPointModel) => void
+    handleDeletePoint: (point: CollectionPointModel) => void
 
 }
 export const CardCollectionPoint = ({
     point,
     handleOpenHoursDialog,
-    handleDeleteHours
+    handleDeleteHours,
+    handleOpenDialog,
+    handleDeletePoint
 
 }: CardCollectionPointProps) => {
     return (
         <Card>
             <CardHeader
                 title={
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 2,
-                        }}
-                    >
-                        <Store color="primary" />
-                        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                            {point.name || "point inconnu"}
-                        </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                        <Avatar sx={{ bgcolor: point.is_active ? "primary.main" : "default.main", mr: 2 }}>
+                            <LocationOn />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" component="h2">
+                                {point.name}
+                            </Typography>
+                            {point.is_active ? (
+                                <Chip
+                                    label="Active"
+                                    color="success"
+                                    size="small"
+                                    variant="outlined"
+                                />) : (
+                                <Chip
+                                    label="Inactive"
+                                    color="default"
+                                    size="small"
+                                    variant="filled"
+                                />
+                            )}
+                        </Box>
                     </Box>
+
                 }
-                action={
-                    <Button
+                action={<>
+                    <IconButton
                         size="small"
-                        variant="outlined"
-                        startIcon={<Add />}
-                        onClick={() => handleOpenHoursDialog(null, point.id)}
+                        onClick={() => handleOpenDialog(point)}
+                        color="primary"
                     >
-                        Ajouter
-                    </Button>
+                        <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                        size="small"
+                        onClick={() => handleDeletePoint(point)}
+                        color="error"
+                    >
+                        <Delete fontSize="small" />
+                    </IconButton>
+                </>
                 }
             />
             <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-                        <Store />
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h6" component="h2">
-                            {point.name}
-                        </Typography>
-                        <Chip
-                            label="Active"
-                            color="success"
-                            size="small"
-                            variant="outlined"
-                        />
-                    </Box>
-                </Box>
 
                 <List dense>
                     <ListItem disablePadding>
                         <ListItemAvatar>
                             <LocationOn color="action" />
                         </ListItemAvatar>
-                        <Typography variant="body2">{point.address}</Typography>
-                        <Typography variant="caption" color="textSecondary">
-                            {point.city} {point.postal_code}
-                        </Typography>
+                        <ListItemText
+                            primary={point.address}
+                            secondary={`${point.city} ${point.postal_code}`}
+                            slotProps={{
+                                primary: { variant: "body2" },
+                                secondary: { variant: "caption" }
+                            }} />
+
                     </ListItem>
 
-                    <ListItem disablePadding>
+                    {point.contact_phone && <ListItem disablePadding>
                         <ListItemAvatar>
                             <Phone color="action" />
                         </ListItemAvatar>
@@ -83,9 +94,9 @@ export const CardCollectionPoint = ({
                                 primary: { variant: "body2" }
                             }}
                         />
-                    </ListItem>
+                    </ListItem>}
 
-                    <ListItem disablePadding>
+                    {point.contact_email && <ListItem disablePadding>
                         <ListItemAvatar>
                             <Email color="action" />
                         </ListItemAvatar>
@@ -95,95 +106,108 @@ export const CardCollectionPoint = ({
                                 primary: { variant: "body2" }
                             }}
                         />
-                    </ListItem>
+                    </ListItem>}
 
 
                 </List>
 
-
-                <TableContainer>
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Jour</TableCell>
-                                <TableCell>Statut</TableCell>
-                                <TableCell>Horaires</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-
-                            {point.TaskSchedules
-                                ?.sort(
-                                    (a, b) => new Date(a.scheduled_date).getDay() -
-                                        new Date(b.scheduled_date).getDay()
-
-                                )
-                                .map((hour) => (
-                                    <TableRow key={hour.id}>
-                                        <TableCell>
-                                            <Typography variant="body2" sx={{ fontWeight: "bold", textTransform: "capitalize" }}>
-                                                {new Date(hour.scheduled_date).toLocaleString(undefined, { weekday: "long" })}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            {!hour.is_recurring ? (
-                                                <Chip label="Inactif" color="error" size="small" />
-                                            ) : (
-                                                <Chip label="Présent" color="success" size="small" />
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2">
-                                                {!hour.is_recurring
-                                                    ? "Inactif"
-
-                                                    : `${new Date(hour.start_time).toLocaleString(
-                                                        "fr-FR",
-                                                        {
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        },
-                                                    )} - ${new Date(hour.end_time).toLocaleString(
-                                                        "fr-FR",
-                                                        {
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        },
-                                                    )}`}
-                                            </Typography>
-                                            {hour.notes && (
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                    display="block"
-                                                >
-                                                    {hour.notes}
-                                                </Typography>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => handleOpenHoursDialog(hour)}
-                                                color="primary"
-                                            >
-                                                <Edit fontSize="small" />
-                                            </IconButton>
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => handleDeleteHours(hour.id)}
-                                                color="error"
-                                            >
-                                                <Delete fontSize="small" />
-                                            </IconButton>
-                                        </TableCell>
+                {point.TaskSchedules?.length === 0 ? (
+                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={1} py={2}>
+                        <Schedule fontSize="large" color="primary" sx={{ mx: "auto" }} />
+                        <Typography variant="body2" color="text.secondary" align="center">
+                            Aucun horaire de présence pour ce point de collecte
+                        </Typography>
+                    </Box>
+                ) :
+                    (
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Jour</TableCell>
+                                        <TableCell>Statut</TableCell>
+                                        <TableCell>Horaires</TableCell>
+                                        <TableCell>Actions</TableCell>
                                     </TableRow>
-                                ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                </TableHead>
+                                <TableBody>
+
+                                    {point.TaskSchedules
+                                        ?.sort(
+                                            (a, b) => new Date(a.scheduled_date).getDay() -
+                                                new Date(b.scheduled_date).getDay()
+
+                                        )
+                                        .map((hour) => (
+                                            <TableRow key={hour.id}>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ fontWeight: "bold", textTransform: "capitalize" }}>
+                                                        {new Date(hour.scheduled_date).toLocaleString(undefined, { weekday: "long" })}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {!hour.is_recurring ? (
+                                                        <Chip label="Inactif" color="error" size="small" />
+                                                    ) : (
+                                                        <Chip label="Présent" color="success" size="small" />
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {!hour.is_recurring
+                                                            ? "Inactif"
+
+                                                            : `${new Date(hour.start_time).toLocaleString(
+                                                                "fr-FR",
+                                                                {
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                },
+                                                            )} - ${new Date(hour.end_time).toLocaleString(
+                                                                "fr-FR",
+                                                                {
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                },
+                                                            )}`}
+                                                    </Typography>
+                                                    {/* {hour.notes && (
+                                                        <Typography
+                                                            variant="caption"
+                                                            color="text.secondary"
+                                                            display="block"
+                                                        >
+                                                            {hour.notes}
+                                                        </Typography>
+                                                    )} */}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleOpenHoursDialog(hour)}
+                                                        color="primary"
+                                                    >
+                                                        <Edit fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleDeleteHours(hour.id)}
+                                                        color="error"
+                                                    >
+                                                        <Delete fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>)}
             </CardContent>
+            <CardActions sx={{ justifyContent: 'flex-end' }}>
+                <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => handleOpenHoursDialog(null, point.id)}>
+                    Ajouter
+                </Button>
+            </CardActions>
         </Card>
     )
 }
