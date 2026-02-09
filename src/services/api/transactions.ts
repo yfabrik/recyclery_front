@@ -1,3 +1,5 @@
+import type { AxiosResponse } from "axios";
+import type { TransactionModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
 interface transactionsFilters {
@@ -26,4 +28,4 @@ export const getRefundForTransaction=(id:number)=> axiosInstance.get(`/api/sales
 
 export const createCreditNote = (data)=>axiosInstance.post(`/api/sales-transactions/credit-note`,data)
 
-export const createSell = (data)=>axiosInstance.post('/api/sales-transactions',data)
+export const createSell = (data:TransactionModel):Promise<AxiosResponse<{data:{id:number,message:string,sale:TransactionModel}}>>=>axiosInstance.post('/api/sales-transactions',data)

@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AccountBalance,
   Add,
@@ -31,28 +32,29 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { CloseCaisseForm } from "../components/forms/CloseCaisseForm";
-import { EncaissementForm } from "../components/forms/EncaissementForm";
+import { schema, type Schema as CartSchema } from "../components/forms/cartSchema";
+import { CloseCaisseForm, type Schema as CloseCaisseSchema } from "../components/forms/CloseCaisseForm";
+import { EncaissementForm, type Schema as EncaissementSchema } from "../components/forms/EncaissementForm";
 import { ManualItemForm } from "../components/forms/ManualItemForm";
-import { OpenCaisseForm } from "../components/forms/OpenCaisseForm";
+import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../components/forms/OpenCaisseForm";
 import { useAuth } from "../contexts/AuthContext";
+import type { TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import {
   OpenCaisse,
   closeCaisse,
-  fetchStores as fStores,
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 const PointOfSale = () => {
   const { user } = useAuth();
-  const [activeSession, setActiveSession] = useState(null);
-  const [stores, setStores] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [cart, setCart] = useState([]);
+
+  // const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Dialogs
@@ -69,59 +71,37 @@ const PointOfSale = () => {
     customer_email: "",
   });
 
-  useEffect(() => {
-    checkActiveSession();
-    fetchStores();
-    fetchCategories();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const checkActiveSession = async () => {
-    try {
-      const response = await getActiveCaisses();
-      if (response.data.session) {
-        setActiveSession(response.data.session);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la vérification de session:", error);
-    }
-  };
+  const activeSession = useQuery({
+    queryKey: ["activeSession"],
+    queryFn: () => getActiveCaisses().then(response => response.data?.session ?? null),
+  })
 
-  const fetchStores = async () => {
-    try {
-      const response = await fStores({ active: 1 });
-      setStores(response.data.stores);
-    } catch (error) {
-      console.error("Erreur lors du chargement des magasins:", error);
-    }
-  };
+  const categories = useQuery({
+    queryKey: ["categories", { include: "Category", only_category: true }],
+    queryFn: () => fcat({ include: "Category", only_category: true }).then(response => response.data.categories),
+  })
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fcat({ include: "Category", only_category: true });
-      setCategories(response.data.categories || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error);
-    }
-  };
-
-  const handleOpenSession = async (data) => {
-    try {
-      const response = await OpenCaisse(data);
-
+  const openSession = useMutation({
+    mutationFn: (data: {
+      store_id: number;
+      opening_amount: number;
+      cash_register_id: number;
+    }) => OpenCaisse(data),
+    onSuccess: (data) => {
       toast.success("Session ouverte avec succès");
       setOpenSessionDialog(false);
-      checkActiveSession();
-    } catch (error) {
-      console.error("Erreur lors de l'ouverture:", error);
-      toast.error(error.response?.data?.error || "Erreur lors de l'ouverture");
-    }
-  };
-
-  const handleCloseSession = async (data) => {
-    try {
-      const response = await closeCaisse(activeSession.id, data);
-
-      const { expected_amount, difference_amount } = response.data;
+      queryClient.invalidateQueries({ queryKey: ["activeSession"] });
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de l'ouverture");
+    },
+  })
+  const closeSession = useMutation({
+    mutationFn: (data: { id: number; data: { closing_amount: number } }) => closeCaisse(data.id, data.data),
+    onSuccess: (data) => {
+      const { expected_amount, difference_amount } = data.data;
 
       let message = "Session fermée avec succès";
       if (Math.abs(difference_amount) > 0.01) {
@@ -130,13 +110,55 @@ const PointOfSale = () => {
 
       toast.success(message);
       setCloseSessionDialog(false);
-      setActiveSession(null);
-      setCart([]);
-    } catch (error) {
-      console.error("Erreur lors de la fermeture:", error);
-      toast.error(error.response?.data?.error || "Erreur lors de la fermeture");
-    }
-  };
+      form.reset({ cart: [] });
+      queryClient.invalidateQueries({ queryKey: ["activeSession"] });
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de l'ouverture");
+    },
+  })
+
+  const handleOpenSession = (data: OpenCaisseSchema) => {
+    openSession.mutate(data);
+  }
+  const handleCloseSession = (data:CloseCaisseSchema) => {
+    closeSession.mutate({ id: activeSession.data.id, data: data });
+  }
+  const handleSell = useMutation({
+    mutationFn: (data:TransactionModel) => createSell(data),
+    onSuccess: (data) => {
+      toast.success("Vente enregistrée avec succès");
+      form.reset({ cart: [] });
+       setPaymentDialog(false);
+      setPaymentData({
+        payment_method: "cash",
+        payment_amount: "0",
+        customer_name: "",
+        customer_email: "",
+      });
+      if (window.confirm("Imprimer le ticket de caisse ?")) {
+        printReceipt(data.data.data, cart, paymentAmount - total);
+      }
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de l'enregistrement de la vente");
+    },
+  })
+
+  const form = useForm({
+    defaultValues: {
+      cart: []
+    },
+    resolver: zodResolver(schema)
+  })
+
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "cart"
+  })
+
+  const cart = form.watch("cart")
+
 
   const handleScanProduct = async () => {
     if (!scanInput.trim()) {
@@ -153,28 +175,31 @@ const PointOfSale = () => {
         return;
       }
 
+
       // Ajouter au panier
-      const existingItem = cart.find(
+      const existingItem = cart.findIndex(
         (cartItem) => cartItem.barcode === item.barcode,
       );
 
       if (existingItem) {
-        setCart((prev) =>
-          prev.map((cartItem) =>
-            cartItem.barcode === item.barcode
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
-              : cartItem,
-          ),
-        );
+        update(existingItem, { ...item, quantity: item[existingItem].quantity + 1 })
+        // setCart((prev) =>
+        //   prev.map((cartItem) =>
+        //     cartItem.barcode === item.barcode
+        //       ? { ...cartItem, quantity: cartItem.quantity + 1 }
+        //       : cartItem,
+        //   ),
+        // );
       } else {
-        setCart((prev) => [
-          ...prev,
-          {
-            ...item,
-            quantity: 1,
-            total_price: parseFloat(item.price),
-          },
-        ]);
+        append({ ...item, quantity: 1 })
+        // setCart((prev) => [
+        //   ...prev,
+        //   {
+        //     ...item,
+        //     quantity: 1,
+        //     total_price: parseFloat(item.price),
+        //   },
+        // ]);
       }
 
       setScanInput("");
@@ -189,36 +214,36 @@ const PointOfSale = () => {
     }
   };
 
-  const updateCartItemQuantity = (barcode, newQuantity) => {
-    if (newQuantity <= 0) {
-      setCart((prev) => prev.filter((item) => item.barcode !== barcode));
-    } else {
-      setCart((prev) =>
-        prev.map((item) =>
-          item.barcode === barcode
-            ? {
-                ...item,
-                quantity: newQuantity,
-                total_price: parseFloat(item.price) * newQuantity,
-              }
-            : item,
-        ),
-      );
-    }
-  };
+  // const updateCartItemQuantity = (barcode, newQuantity) => {
+  //   if (newQuantity <= 0) {
+  //     setCart((prev) => prev.filter((item) => item.barcode !== barcode));
+  //   } else {
+  //     setCart((prev) =>
+  //       prev.map((item) =>
+  //         item.barcode === barcode
+  //           ? {
+  //             ...item,
+  //             quantity: newQuantity,
+  //             total_price: parseFloat(item.price) * newQuantity,
+  //           }
+  //           : item,
+  //       ),
+  //     );
+  //   }
+  // };
 
-  const removeFromCart = (barcode) => {
-    setCart((prev) => prev.filter((item) => item.barcode !== barcode));
-  };
+  // const removeFromCart = (barcode) => {
+  //   setCart((prev) => prev.filter((item) => item.barcode !== barcode));
+  // };
 
-  const handleAddManualItem = (data) => {
+  const handleAddManualItem = (data:CartSchema) => {
     // Générer un code-barres temporaire pour l'article manuel
     const tempBarcode = `MANUAL${Date.now()}`;
 
-    const selectedCategory = categories.find(
+    const selectedCategory = categories.data?.find(
       (cat) => cat.id == data.category_id,
     );
-    const selectedSubcategory = selectedCategory.subcategories.find(
+    const selectedSubcategory = selectedCategory?.subcategories?.find(
       (cat) => cat.id == data.subcategory_id,
     );
 
@@ -237,44 +262,54 @@ const PointOfSale = () => {
       description: data.description || "",
       category_name: selectedCategory?.name || "",
       subcategory_name: selectedSubcategory?.name || "",
-      price: parseFloat(data.price),
-      weight: data.weight ? parseFloat(data.weight) : null,
+      price: data.price,
+      weight: data.weight ? data.weight : null,
       quantity: 1,
-      total_price: parseFloat(data.price),
+      // total_price: parseFloat(data.price),
       is_manual: true, // Flag pour identifier les articles manuels
     };
 
-    setCart((prev) => [...prev, manualItem]);
+    append(manualItem)
+    // setCart((prev) => [...prev, manualItem]);
 
     setManualItemDialog(false);
     toast.success(`${itemName} ajouté au panier`);
   };
 
   const getCartTotal = () => {
-    return cart.reduce((sum, item) => sum + item.total_price, 0);
+    return  cart.reduce((prev, current) => prev += (current.quantity * current.price), 0)
   };
 
-  const handleProcessPayment = async (data) => {
+  const quantity = cart.reduce((prev, current) => prev += current.quantity, 0)
+
+  const handleValidateCart = async (data:CartSchema) => {
+    setPaymentData((prev) => ({
+      ...prev,
+      payment_amount: getCartTotal().toString(),
+    }));
+    setPaymentDialog(true);
+  }
+  const handleProcessPayment = async (data:EncaissementSchema) => {
     if (cart.length === 0) {
       toast.error("Le panier est vide");
       return;
     }
 
     const total = getCartTotal();
-    const paymentAmount = parseFloat(data.payment_amount);
+    const paymentAmount = data.payment_amount;
 
     if (paymentAmount < total) {
       toast.error("Le montant payé est insuffisant");
       return;
     }
 
-    try {
-      setLoading(true);
+    // try {
+    //   setLoading(true);
 
       // Créer la transaction
       const transactionData = {
-        cash_session_id: activeSession.id,
-        store_id: activeSession.store_id,
+        cash_session_id: activeSession.data?.id,
+        store_id: activeSession.data?.CashRegister?.Recyclery?.id,
         total_amount: total,
         payment_method: data.payment_method,
         payment_amount: paymentAmount,
@@ -285,42 +320,43 @@ const PointOfSale = () => {
           labeled_item_id: item.is_manual ? null : item.id,
           barcode: item.barcode,
           name: item.name,
-          price: parseFloat(item.price),
+          price: item.price,
           quantity: item.quantity,
-          total_price: item.total_price,
+          total_price: item.quantity * item.price,
           is_manual: item.is_manual || false,
           category_id: item.category_id,
           subcategory_id: item.subcategory_id,
         })),
       };
+      handleSell.mutate(transactionData);
 
-      const response = await createSell(transactionData);
+      // const response = await createSell(transactionData);
 
-      toast.success("Vente enregistrée avec succès");
+      // toast.success("Vente enregistrée avec succès");
 
-      // Reset
-      setCart([]);
-      setPaymentDialog(false);
-      setPaymentData({
-        payment_method: "cash",
-        payment_amount: "0",
-        customer_name: "",
-        customer_email: "",
-      });
+      // // Reset cart form
+      // form.reset({ cart: [] });
+      // setPaymentDialog(false);
+      // setPaymentData({
+      //   payment_method: "cash",
+      //   payment_amount: "0",
+      //   customer_name: "",
+      //   customer_email: "",
+      // });
 
-      // Optionnel: imprimer le ticket
-      if (window.confirm("Imprimer le ticket de caisse ?")) {
-        printReceipt(response.data.transaction, cart, paymentAmount - total);
-      }
-    } catch (error) {
-      console.error("Erreur lors du paiement:", error);
-      toast.error("Erreur lors du paiement");
-    } finally {
-      setLoading(false);
-    }
+      // // Optionnel: imprimer le ticket
+      // if (window.confirm("Imprimer le ticket de caisse ?")) {
+      //   printReceipt(response.data.data, cart, paymentAmount - total);
+      // }
+    // } catch (error) {
+    //   console.error("Erreur lors du paiement:", error);
+    //   toast.error("Erreur lors du paiement");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
-  const printReceipt = (transaction, items, change) => {
+  const printReceipt = (transaction:TransactionModel, items:CartSchema[], change:number) => {
     const printWindow = window.open("", "", "width=400,height=600");
     printWindow.document.write(`
       <html>
@@ -336,8 +372,8 @@ const PointOfSale = () => {
         </head>
         <body>
           <div class="header">
-            <h2>${activeSession.store_name}</h2>
-            <p>Ticket N°: ${transaction.transaction_number}</p>
+            <h2>${activeSession.data?.Recyclery.name}</h2>
+            <p>Ticket N°: ${transaction.id}</p>
             <p>Date: ${new Date().toLocaleString()}</p>
             <p>Caissier: ${user.username}</p>
           </div>
@@ -345,16 +381,16 @@ const PointOfSale = () => {
           <div class="line"></div>
           
           ${items
-            .map(
-              (item) => `
+        .map(
+          (item) => `
             <div style="display: flex; justify-content: space-between; margin: 5px 0;">
               <span>${item.name}</span>
               <span>${item.quantity} x ${parseFloat(item.price).toFixed(2)}€</span>
               <span class="right">${item.total_price.toFixed(2)}€</span>
             </div>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
           
           <div class="line"></div>
           
@@ -385,7 +421,7 @@ const PointOfSale = () => {
     printWindow.print();
   };
 
-  if (!activeSession) {
+  if (!activeSession.data) {
     return (
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Paper sx={{ p: 4, textAlign: "center" }}>
@@ -418,8 +454,8 @@ const PointOfSale = () => {
             <OpenCaisseForm
               formId="OpenCaisseForm"
               onSubmit={handleOpenSession}
-              stores={stores}
-              // cashRegisters={cashRegisters}
+            // stores={stores}
+            // cashRegisters={cashRegisters}
             />
           </DialogContent>
           <DialogActions>
@@ -443,12 +479,12 @@ const PointOfSale = () => {
               <PosIcon color="primary" />
               <Box>
                 <Typography variant="h6">
-                  {activeSession?.Recyclery.name} -{" "}
-                  {activeSession?.CashRegister.name}
+                  {activeSession.data?.Recyclery.name} -{" "}
+                  {activeSession.data?.CashRegister?.name}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Session: {activeSession.session_number} | Ouvert:{" "}
-                  {new Date(activeSession.createdAt).toLocaleString()}
+                  Session: {activeSession.data?.id} | Ouvert:{" "}
+                  {new Date(activeSession.data?.createdAt).toLocaleString()}
                 </Typography>
               </Box>
             </Box>
@@ -509,7 +545,128 @@ const PointOfSale = () => {
           </Paper>
 
           {/* Panier */}
-          <Paper sx={{ p: 2 }}>
+          <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}>
+            <Paper sx={{ p: 2 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <ShoppingCart />
+                Panier ({fields.length} article{fields.length > 1 ? "s" : ""})
+              </Typography>
+
+              {fields.length === 0 ? (
+                <Alert severity="info">
+                  Le panier est vide. Scannez des articles pour commencer.
+                </Alert>
+              ) : (
+
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Article</TableCell>
+                        <TableCell>Prix unitaire</TableCell>
+                        <TableCell>Quantité</TableCell>
+                        <TableCell>Total</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {fields.map((item, index) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <Box>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <Typography variant="body1" fontWeight="medium">
+                                  {item.name}
+                                </Typography>
+                                {item.is_manual && (
+                                  <Chip
+                                    size="small"
+                                    label="Manuel"
+                                    color="info"
+                                    variant="outlined"
+                                  />
+                                )}
+                              </Box>
+                              <Typography variant="body2" color="textSecondary">
+                                {item.barcode}
+                              </Typography>
+                              {(item.category_name || item.subcategory_name) && (
+                                <Typography variant="body2" color="textSecondary">
+                                  {item.category_name}
+                                  {item.subcategory_name &&
+                                    ` > ${item.subcategory_name}`}
+                                </Typography>
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            {item.price.toFixed(2)}€
+                          </TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  return (item.quantity - 1) <= 0 ? remove(index) :
+                                    update(index, { ...item, quantity: item.quantity - 1 })
+                                }}
+                              >
+                                <Remove />
+                              </IconButton>
+                              <Typography
+                                sx={{ minWidth: 30, textAlign: "center" }}
+                              >
+                                {item.quantity}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => update(index, { ...item, quantity: item.quantity + 1 })
+                                }
+                              >
+                                <Add />
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography fontWeight="bold">
+                              {(item.price * item.quantity).toFixed(2)}€
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => remove(index)}
+                            >
+                              <Close />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Paper>
+
+          </form >
+          {/* <Paper sx={{ p: 2 }}>
             <Typography
               variant="h6"
               gutterBottom
@@ -631,7 +788,7 @@ const PointOfSale = () => {
                 </Table>
               </TableContainer>
             )}
-          </Paper>
+          </Paper> */}
         </Grid>
 
         {/* Résumé et paiement */}
@@ -664,6 +821,8 @@ const PointOfSale = () => {
               variant="contained"
               size="large"
               startIcon={<Payment />}
+              // type="submit"
+              // form="cartForm"
               onClick={() => {
                 setPaymentData((prev) => ({
                   ...prev,
@@ -684,7 +843,7 @@ const PointOfSale = () => {
             </Typography>
             <Typography variant="body2">
               Fonds de caisse:{" "}
-              {parseFloat(activeSession.opening_amount).toFixed(2)}€
+              {activeSession.data?.opening_amount?.toFixed(2)}€
             </Typography>
           </Paper>
         </Grid>
@@ -700,7 +859,7 @@ const PointOfSale = () => {
         <DialogContent>
           <ManualItemForm
             formId="manualItemForm"
-            categories={categories}
+            categories={categories.data ||[]}
             onSubmit={handleAddManualItem}
           />
         </DialogContent>
@@ -710,7 +869,7 @@ const PointOfSale = () => {
             type="submit"
             form="manualItemForm"
             variant="contained"
-            // disabled={!manualItemData.category_id || !manualItemData.price}
+          // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>
@@ -770,10 +929,10 @@ const PointOfSale = () => {
             form="encaissementForm"
             variant="contained"
             disabled={
-              loading || parseFloat(paymentData.payment_amount) < getCartTotal()
+              handleSell.isPending|| parseFloat(paymentData.payment_amount) < getCartTotal()
             }
           >
-            {loading ? "Traitement..." : "Valider le Paiement"}
+            {handleSell.isPending ? "Traitement..." : "Valider le Paiement"}
           </Button>
         </DialogActions>
       </Dialog>

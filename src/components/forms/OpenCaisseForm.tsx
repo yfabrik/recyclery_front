@@ -6,13 +6,14 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
 import { idSchema } from "../../interfaces/ZodTypes";
-import { fetchCaisses } from "../../services/api/store";
+import { fetchCaisses, fetchStores } from "../../services/api/store";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import { useQuery } from "@tanstack/react-query";
 
 interface OpenCaisseFormProps extends BaseFormProps<Schema> {
-  stores: StoreModel[];
+  // stores: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
 }
 
@@ -23,14 +24,22 @@ const schema = z.object({
   notes: z.string().transform((val) => (val == "" ? null : val)),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const OpenCaisseForm = ({
   formId,
   onSubmit,
   defaultValues,
-  stores,
+  // stores,
 }: OpenCaisseFormProps) => {
+
+  const stores = useQuery({
+    queryKey: ["stores", { active: true }],
+    queryFn: () => fetchStores({ active: true }).then(response => response.data.stores),
+  })
+
+
+
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const { prompt, PromptDialog } = usePrompt();
   const form = useForm({
@@ -44,18 +53,24 @@ export const OpenCaisseForm = ({
     },
   });
 
-  const store = form.watch("store_id");
-  const [cashRegisters, setCashRegisters] = useState([]);
-  const getCaisses = async () => {
-    const caisses = await fetchCaisses(store);
-    setCashRegisters(caisses.data.data);
-  };
+  const store = form.watch("store_id") as number;
+  // const [cashRegisters, setCashRegisters] = useState([]);
+  // const getCaisses = async () => {
+  //   const caisses = await fetchCaisses(store);
+  //   setCashRegisters(caisses.data.data);
+  // };
 
-  useEffect(() => {
-    if (store) getCaisses();
-    else setCashRegisters([]);
-    console.log(cashRegisters);
-  }, [store]);
+  const cashRegisters = useQuery({
+    queryKey: ["cashRegisters", { store_id: store }],
+    queryFn: () => fetchCaisses(store).then(response => response.data.cash_registers),
+    enabled: !!store,
+  })
+
+  // useEffect(() => {
+  //   if (store) getCaisses();
+  //   else setCashRegisters([]);
+  //   console.log(cashRegisters);
+  // }, [store]);
 
   return (
     <>
@@ -63,7 +78,7 @@ export const OpenCaisseForm = ({
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
             <FormSelect name="store_id" control={form.control} label="Magasin">
-              {stores.map((store) => (
+              {stores.data?.map((store) => (
                 <MenuItem key={store.id} value={store.id}>
                   {store.name}
                 </MenuItem>
@@ -77,7 +92,7 @@ export const OpenCaisseForm = ({
               control={form.control}
               label="Caisse"
             >
-              {cashRegisters.map((register) => (
+              {cashRegisters.data?.map((register) => (
                 <MenuItem key={register.id} value={register.id}>
                   {register.name}
                 </MenuItem>
@@ -124,7 +139,7 @@ export const OpenCaisseForm = ({
                               await prompt(
                                 "",
                                 form.getValues("opening_amount")?.toString() ||
-                                  "",
+                                "",
                                 { mode: "money", unit: "€" },
                               ),
                             );

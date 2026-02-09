@@ -19,7 +19,7 @@ const schema = z.object({
   description: z.string(),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 export const ManualItemForm = ({
   formId,
   onSubmit,

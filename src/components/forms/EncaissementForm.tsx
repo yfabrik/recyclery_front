@@ -7,7 +7,7 @@ import { Euro } from "@mui/icons-material";
 import * as z from "zod";
 import { emptyStringToNull } from "../../services/zodTransform";
 
-type Schema = z.infer<ReturnType<typeof createSchema>>;
+export type Schema = z.infer<ReturnType<typeof createSchema>>;
 
 const createSchema = (totalCart: number) =>
   z.object({

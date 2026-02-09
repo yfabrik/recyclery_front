@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axiosInstance from "./axios";
-import type { CaisseModel, StoreModel } from "../../interfaces/Models";
+import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import type { Schema } from "../../components/forms/StoreForm";
 
 interface StoreFilters {
@@ -37,13 +37,13 @@ export const updateCaisse = (id: number, data) =>
   axiosInstance.put(`/api/cash-registers/${id}`, data);
 export const createCaisse2 = (data) =>
   axiosInstance.post("/api/cash-registers", data);
-export const getActiveCaisses = () =>
+export const getActiveCaisses = (): Promise<AxiosResponse<{ message: string, session?: CashSession }>> =>
   axiosInstance.get("/api/cash-sessions/active"); //TODO params
 export const deleteCaisse = (id: number) =>
   axiosInstance.delete(`/api/cash-registers/${id}`);
 
-export const OpenCaisse = (data) =>
+export const OpenCaisse = (data: { store_id: number, opening_amount: number, cash_register_id: number }): Promise<AxiosResponse<{ message: string, session: CashSession }>> =>
   axiosInstance.post("/api/cash-sessions/open", data);
-export const closeCaisse = (id: number, data) =>
+export const closeCaisse = (id: number, data: { closing_amount: number }): Promise<AxiosResponse<{ message: string, expected_amount: number, difference_amount: number }>> =>
   axiosInstance.put(`/api/cash-sessions/${id}/close`, data);
 
