@@ -22,7 +22,7 @@ export const deleteUser = (id: number) =>
   axiosInstance.delete(`/api/users/${id}`);
 
 export const updateUserPassword = (id: number, data: { password?: string }) =>
-  axiosInstance.put(`/api/users/${id}/password`, data);
+  axiosInstance.patch(`/api/users/${id}/password`, data);
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");
 export const getUsersStats = () => axiosInstance.get("/api/users/stats");
