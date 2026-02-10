@@ -28,7 +28,9 @@ import {
   getPlanning,
   updatePlanning,
 } from "../../../services/api/planning";
-import { CollecteForm } from "../../forms/CollecteForm";
+import { CollecteForm, type Schema } from "../../forms/CollecteForm";
+import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
+import { fetchStores } from "../../../services/api/store";
 
 export const CollectTab = () => {
   const queryClient = useQueryClient();
@@ -42,12 +44,22 @@ export const CollectTab = () => {
     isPending,
     error,
     data: collectes,
-  } = useQuery<ScheduleModel[]>({
+  } = useQuery({
     queryKey: ["collectes"],
     queryFn: () =>
       getPlanning({ category: "collection" }).then((res) => res.data.schedules),
   });
   if (error) toast.error("Erreur lors de la recupération des collectes")
+
+
+  const collectionPoints = useQuery({
+    queryKey: ["collectionPoints"],
+    queryFn: () => fetchCollectionPoints().then(res => res.data.collection_points),
+  });
+  const stores = useQuery({
+    queryKey: ["stores"],
+    queryFn: () => fetchStores({ active: true }).then(res => res.data.stores),
+  });
 
   const mutation = useMutation({
     mutationFn: (formData: ScheduleModel) => {
@@ -72,17 +84,31 @@ export const CollectTab = () => {
       //     old.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
       //   );
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
+      handleCloseDialog();
+
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deletePlanning(id),
-    onSuccess: (deleted) => console.log(deleted),
+    onSuccess: (deleted) => {
+      queryClient.invalidateQueries({ queryKey: ["collectes"] });
+    },
     onError: () => toast.error("Erreur lors de la suppression"),
   });
 
   const handleOpenDialog = (collecte: ScheduleModel | null = null) => {
+    if (collecte?.collection_point_id) {
+      collecte.location2 = `point.${collecte.collection_point_id}`;
+    } else if (collecte?.store_id) {
+      collecte.location2 = `store.${collecte.store_id}`;
+    }
+    if (collecte)
+      collecte.location = collecte.location
+        ? collecte.location === "" ? [] : collecte.location.split(",")
+        : [];
+
     setEditingCollecte(collecte);
     setDialogOpen(true);
   };
@@ -91,11 +117,27 @@ export const CollectTab = () => {
     setDialogOpen(false);
   };
 
-  const handleSave = async (data: ScheduleModel) => {
-    data.name = "collecte";
-    data.category = "collection";
+  const handleSave = async (data: Schema) => {
+    const result: Partial<ScheduleModel> = {
+      ...data,
+      location: data.location.join(",") ?? "",
+      name: "collecte",
+      category: "collection",
+      recurrence_pattern: "weekly",
+      collection_point_id: undefined,
+      store_id: undefined,
+    };
+
+    const [type, id] = data.location2?.split(".") ?? [];
+    if (type === "point") {
+      result.collection_point_id = +id;
+      result.name += ` - déchet ${collectionPoints.data?.find(point => point.id === +id)?.name}`;
+    } else if (type === "store") {
+      result.store_id = +id;
+      result.name += ` - magasin ${stores.data?.find(store => store.id === +id)?.name}`;
+    }
     //TODO FIXME BEUUUUUUURK
-    data.scheduled_date = (() => {
+    result.scheduled_date = (() => {
       const today = new Date();
       let i = 0;
       while (i < 7) {
@@ -108,11 +150,10 @@ export const CollectTab = () => {
         i++;
       }
     })();
-    data.recurrence_pattern = "weekly";
     if (editingCollecte?.id) {
-      updateMutation.mutate({ id: editingCollecte.id, data });
+      updateMutation.mutate({ id: editingCollecte.id, data: result });
     } else {
-      mutation.mutate(data);
+      mutation.mutate(result);
     }
   };
 
@@ -136,13 +177,13 @@ export const CollectTab = () => {
             mb: 3,
           }}
         >
-          <Typography variant="h6">Gestion des collectes</Typography>
+          <Typography variant="h6">Gestion des logistiques</Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
             onClick={() => handleOpenDialog()}
           >
-            Nouvelle Collecte
+            Nouvelle Logistique
           </Button>
         </Box>
 
@@ -151,8 +192,10 @@ export const CollectTab = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Jour</TableCell>
+                <TableCell>Nom</TableCell>
                 <TableCell>Statut</TableCell>
                 <TableCell>Horaires</TableCell>
+                <TableCell>Emplacement</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -172,7 +215,12 @@ export const CollectTab = () => {
               ) : (
                 collectes?.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.day_of_week}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ textTransform: "capitalize", fontWeight: "bold" }}>
+                        {item.day_of_week}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{item.name}</TableCell>
                     <TableCell>
                       <Chip
                         size="small"
@@ -188,6 +236,11 @@ export const CollectTab = () => {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}`}
+                    </TableCell>
+                    <TableCell>
+                      {item.collection_point_id && collectionPoints.data?.find(point => point.id === item.collection_point_id)?.name}
+                      {item.store_id && stores.data?.find(store => store.id === item.store_id)?.name}
+                      {!item.collection_point_id && !item.store_id && "Aucun"}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: "flex", gap: 1 }}>
@@ -228,14 +281,16 @@ export const CollectTab = () => {
         </DialogTitle>
         <DialogContent>
           <CollecteForm
-            formId="createStore"
+            formId="createLogistic"
+            stores={stores.data ?? []}
+            collectionPoints={collectionPoints.data ?? []}
             onSubmit={handleSave}
             defaultValues={editingCollecte}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button type="submit" form="createStore" variant="contained">
+          <Button type="submit" form="createLogistic" variant="contained">
             {editingCollecte ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
