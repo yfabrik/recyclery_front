@@ -414,10 +414,13 @@ const Planning = () => {
       ];
     }
 
-    const newYear = new Date(selectedDate.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil((selectedDate-newYear)/(7*24*60*60*1000));
-    const weekToProcess = viewMode!="calendar"? (weekNumber%2 ?"week2":"week1"):null
 
+
+    const newYear = new Date(selectedDate.getFullYear(), 0, 1);
+    const dayNumber = Math.floor((selectedDate-newYear)/(24*60*60*1000));
+    const weekNumber = Math.ceil((selectedDate.getDay()+dayNumber+1) / 7);
+    const weekToProcess = viewMode!="calendar"? (weekNumber%2 ?"week2":"week1"):null
+    console.log("weekToProcess", weekToProcess,weekNumber)
     const employeesByDay: {
       [key: string]: {
         label: string;
