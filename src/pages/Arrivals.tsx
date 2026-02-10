@@ -54,7 +54,7 @@ const Arrivals = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat({ include: "category", only_category: true });
+      const response = await fcat({ include: "category", only_category: true ,in:true});
       setCategories(response.data.categories || []);
     } catch (error) {
       toast.error("Erreur lors du chargement des catégories");

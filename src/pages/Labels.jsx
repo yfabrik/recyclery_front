@@ -97,7 +97,7 @@ const Labels = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat({ only_category: true, include: "category" })
+      const response = await fcat({ only_category: true, include: "category",in:true })
       setCategories(response.data.categories);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);

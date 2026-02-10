@@ -125,7 +125,11 @@ const WasteManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fcat({ only_category: true, include: "category" });
+      const response = await fcat({
+        only_category: true,
+        include: "category",
+        out: true,
+      });
       //  await axios.get('/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
