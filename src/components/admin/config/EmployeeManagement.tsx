@@ -7,6 +7,7 @@ import {
   LocationOn,
   Person,
   Phone,
+  Quiz,
   Refresh,
   Schedule,
   Search,
@@ -469,6 +470,17 @@ const EmployeeManagement = () => {
               </CardContent>
               {/* Boutons d'action supplémentaires */}
               <CardActions>
+              <Tooltip title="Définir les compétences des employés">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Quiz />}
+                    onClick={() => handleOpenStoreAssignment(employee)}
+                    sx={{ flex: 1 }}
+                  >
+                    Magasins
+                  </Button>
+                </Tooltip>
                 <Tooltip title="Gérer les affectations aux magasins">
                   <Button
                     size="small"
