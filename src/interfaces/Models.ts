@@ -12,6 +12,7 @@ export interface CategoryModel extends BaseModel {
   subcategories?: CategoryModel[];
   defaultWeight: number;
   defaultPrice: number;
+  IO: number;
 }
 
 export interface StoreModel extends BaseModel {

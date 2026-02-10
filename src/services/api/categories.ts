@@ -31,3 +31,6 @@ export const updateCategory = (id: number, data: CategoryModel) =>
 
 export const deleteCategory = (id: number) =>
   axiosInstance.delete(`/api/categories/${id}`);
+
+export const patchCategory = (id: number, data: { in?: boolean, out?: boolean }) =>
+  axiosInstance.patch(`/api/categories/${id}`, data);

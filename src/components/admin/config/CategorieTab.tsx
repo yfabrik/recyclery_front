@@ -17,7 +17,9 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
+  FormControlLabel,
   IconButton,
   Tooltip,
   Typography,
@@ -37,6 +39,7 @@ import {
   fetchCategories as fCat,
   fetchCategoryIcons,
   updateCategory,
+  patchCategory as patchCategoryApi,
 } from "../../../services/api/categories";
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
 
@@ -87,6 +90,15 @@ export const CategoriesTab = () => {
     onError: () => toast.error("Erreur lors de la suppression"),
     onSuccess: () => {
       toast.success("Catégorie supprimée avec succès")
+      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
+    }
+  })
+
+  const patchCategory = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: { in?: boolean, out?: boolean } }) => patchCategoryApi(id, data),
+    onError: () => toast.error("Erreur lors de la mise à jour"),
+    onSuccess: () => {
+      toast.success("Catégorie mise à jour avec succès")
       queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
     }
   })
@@ -151,12 +163,13 @@ export const CategoriesTab = () => {
       <CardContent>
         <Box
           sx={{
-            display: "flex",
+            display: "grid",
+            gridTemplateColumns: "1fr 180px auto",
             alignItems: "center",
-            justifyContent: "space-between",
+            gap: 3,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
             <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
               {category.icon ? getIconComponent(category.icon) : <Category />}
             </Avatar>
@@ -183,7 +196,31 @@ export const CategoriesTab = () => {
               />
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={!!(category.IO & 0b10)}
+                  name="in"
+                  onChange={(e) => patchCategory.mutate({ id: category.id, data: { in: e.target.checked } })}
+                />
+              }
+              labelPlacement="top"
+              label="Entrée"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={!!(category.IO & 0b01)}
+                  name="out"
+                  onChange={(e) => patchCategory.mutate({ id: category.id, data: { out: e.target.checked } })}
+                />
+              }
+              labelPlacement="top"
+              label="Sortie"
+            />
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             <Tooltip title="Modifier">
               <IconButton
                 onClick={() => handleOpenDialog(category)}
