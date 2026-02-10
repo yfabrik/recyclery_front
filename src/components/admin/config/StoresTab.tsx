@@ -59,6 +59,7 @@ import { StoreOpen } from "../../StoreOpen";
 import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
+import { CardStore } from "../../CardStore";
 
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -163,7 +164,7 @@ const StoresTab = () => {
     mutationFn: (id: number) => deleteStoreHours(id),
     onSuccess: () => {
       toast.success("Horaires supprimés avec succès");
-      queryClient.invalidateQueries({ queryKey:["stores", "horaires"] })
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
 
     },
     onError: () => toast.error("Erreur lors de la suppression des horaires"),
@@ -187,11 +188,11 @@ const StoresTab = () => {
 
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (store: StoreModel) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce magasin ?")) {
       return;
     }
-    removeStore.mutate(id)
+    removeStore.mutate(store.id)
   };
 
   const handleOpenCashRegisters = (store: StoreModel) => {
@@ -255,7 +256,7 @@ const StoresTab = () => {
           Nouveau Magasin
         </Button>
       </Box>
-      <Tabs
+      {/* <Tabs
         value={tabValue}
         onChange={(e, newValue) => setTabValue(newValue)}
         sx={{ mb: 3 }}
@@ -266,10 +267,10 @@ const StoresTab = () => {
           icon={<AccessTime />}
           iconPosition="start"
         />
-      </Tabs>
+      </Tabs> */}
       {/* Contenu des onglets */}
-      {tabValue === 0 && (
-        <>
+      {/* {tabValue === 0 && (
+        <> */}
           {/* Statistiques rapides */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -299,7 +300,21 @@ const StoresTab = () => {
           </Grid>
 
           {/* Table des magasins */}
-          <TableContainer component={Paper}>
+          <Grid container spacing={3}>
+          {stores.data?.map((store) => (
+            <Grid size={{ xs: 12, md: 6 }} key={store.id}>
+            <CardStore
+              store={store}
+              handleOpenCashRegisters={handleOpenCashRegisters}
+              handleOpenHoursDialog={handleOpenHoursDialog}
+              handleDeleteHours={handleDeleteHours}
+              handleOpenDialog={handleOpenDialog}
+              handleDeleteStore={handleDelete}
+            />
+            </Grid>
+          ))}
+          </Grid>
+          {/* <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -440,11 +455,11 @@ const StoresTab = () => {
                 )}
               </TableBody>
             </Table>
-          </TableContainer>
-        </>
-      )}
+          </TableContainer> */}
+        {/* </>
+      )} */}
       {/* Onglet Horaires d'ouverture */}
-      {tabValue === 1 && (
+      {/* {tabValue === 1 && (
         <Box>
           <Box
             sx={{
@@ -487,7 +502,7 @@ const StoresTab = () => {
                     />
                   </Grid>
                 ))
-              }
+              } */}
               {/* {Object.entries(
                 storeHours.data?.reduce(
                   (acc: Record<number, StoreHoursModel[]>, hours) => {
@@ -512,10 +527,10 @@ const StoresTab = () => {
                       />
                     </Grid>)
               })} */}
-            </Grid>
+            {/* </Grid>
           )}
         </Box>
-      )}
+      )} */}
 
       {/* Dialog de gestion des caisses */}
       {editingStore &&
