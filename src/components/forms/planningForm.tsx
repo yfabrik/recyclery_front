@@ -11,6 +11,7 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
+import { getIcon } from "../MuiIconSelect";
 
 type StoreOption = {
   id: number;
@@ -173,7 +174,7 @@ export const PlaningForm = ({
             {priorities.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {priority.icon}
+                  {getIcon({ iconName: priority.icon || "flag" })}
                   {priority.label}
                 </Box>
               </MenuItem>

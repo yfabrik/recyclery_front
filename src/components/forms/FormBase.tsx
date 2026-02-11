@@ -7,6 +7,7 @@ import {
   FormHelperText,
   FormLabel,
   InputLabel,
+  MenuItem,
   Radio,
   RadioGroup,
   Select,
@@ -34,6 +35,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
+import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
+import { weekDaysArray } from "../../services/dateService";
 export interface BaseFormProps<T> {
   formId: string;
   defaultValues?: T;
@@ -101,7 +104,7 @@ export const FormSwitch = <
             <Switch
               {...field}
               checked={field.value}
-              // onChange={field.onChange}
+            // onChange={field.onChange}
             />
           }
           label={label}
@@ -251,6 +254,40 @@ export const FormRadio = <
             <FormHelperText>{fieldState.error?.message}</FormHelperText>
           )}
         </FormControl>
+      )}
+    />
+  );
+};
+
+export const FormIconSelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  name,
+  control,
+  label,
+  extra,
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  extra?: Omit<MuiIconSelectProps, "value" | "onChange">;
+}) => {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <MuiIconSelect
+          {...extra}
+          label={label}
+          value={field.value ?? null}
+          onChange={field.onChange}
+          TextFieldProps={{
+            ...extra?.TextFieldProps,
+            fullWidth: true,
+            error: fieldState.invalid,
+            helperText: fieldState.invalid ? fieldState.error?.message : undefined,
+          }}
+        />
       )}
     />
   );

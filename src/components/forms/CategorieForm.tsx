@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import { FormIconSelect, FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import {
   AdminPanelSettings,
   Category,
@@ -15,9 +15,9 @@ import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 
 interface CategorieFormProps extends BaseFormProps<Schema> {
-  icons: Array<{ name: string; label: string }>;
+  icons: string[];
 }
-const schema = z.object({
+export const schema = z.object({
   name: z.string().trim().nonempty("name required"),
   description: z.string().transform((v) => (v == "" ? null : v)),
   icon: z.string().transform((v) => (v == "" ? null : v)),
@@ -49,19 +49,20 @@ export const CategorieForm = ({
     resolver: zodResolver(schema),
   });
 
-  const getIconComponent = (iconName: string): ReactNode => {
-    // Import dynamique des icônes Material-UI
-    const iconMap = {
-      Category: Category,
-      Inventory: Inventory,
-      Settings: Settings,
-      Palette: Palette,
-      AdminPanelSettings: AdminPanelSettings,
-    };
+  // const getIconComponent = (iconName: string): ReactNode => {
+  //   // Import dynamique des icônes Material-UI
+  //   const iconMap = {
+      
+  //     Category: Category,
+  //     Inventory: Inventory,
+  //     Settings: Settings,
+  //     Palette: Palette,
+  //     AdminPanelSettings: AdminPanelSettings,
+  //   };
 
-    const IconComponent = iconMap[iconName] || Category;
-    return <IconComponent />;
-  };
+  //   const IconComponent = iconMap[iconName] || Category;
+  //   return <IconComponent />;
+  // };
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <FormInput
@@ -92,7 +93,14 @@ export const CategorieForm = ({
           margin: "normal",
         }}
       />
-      <FormSelect
+
+      <FormIconSelect
+        control={form.control}
+        label="Icône"
+        name="icon"
+        extra={{ iconNames: icons }}
+      />
+      {/* <FormSelect
         control={form.control}
         label="Icône"
         name="icon"
@@ -106,7 +114,7 @@ export const CategorieForm = ({
             </Box>
           </MenuItem>
         ))}
-      </FormSelect>
+      </FormSelect> */}
     </form>
   );
 };

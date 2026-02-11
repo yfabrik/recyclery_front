@@ -18,9 +18,9 @@ export const TIME_SLOTS = [
 ];
 
 export const PRIORITIES = [
-  { value: "low", label: "Faible", color: "success", icon: "<FlagOutlined />" },
-  { value: "medium", label: "Moyenne", color: "warning", icon: "<Flag />" },
-  { value: "high", label: "Élevée", color: "error", icon: "<PriorityHigh />" },
+  { value: "low", label: "Faible", color: "success", icon: "FlagOutlined" },
+  { value: "medium", label: "Moyenne", color: "warning", icon: "Flag" },
+  { value: "high", label: "Élevée", color: "error", icon: "PriorityHigh" },
   { value: "urgent", label: "Urgente", color: "error", icon: "" },
 ];
 
