@@ -100,6 +100,12 @@ export const ArrivalForm = ({
 
   const collectionPointId = form.watch("collection_point_id");
 
+  useEffect(() => {
+    if (form.formState.isSubmitSuccessful) {
+      form.reset();
+    }
+  }, [form.formState.isSubmitSuccessful]);
+
   // Reset subcategory when category changes
   useEffect(() => {
     form.setValue("subcategory_id", "");
@@ -317,23 +323,23 @@ export const ArrivalForm = ({
 
               {(sourceType === "apport" ||
                 sourceType === "house_clearance") && (
-                <Grid size={{ xs: 12 }}>
-                  <FormInput
-                    control={form.control}
-                    name="source_details"
-                    label="Détails supplémentaires"
-                    extra={{
-                      multiline: true,
-                      rows: 2,
-                      placeholder:
-                        "Informations complémentaires sur la provenance...",
-                      sx: {
-                        "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                      },
-                    }}
-                  />
-                </Grid>
-              )}
+                  <Grid size={{ xs: 12 }}>
+                    <FormInput
+                      control={form.control}
+                      name="source_details"
+                      label="Détails supplémentaires"
+                      extra={{
+                        multiline: true,
+                        rows: 2,
+                        placeholder:
+                          "Informations complémentaires sur la provenance...",
+                        sx: {
+                          "& .MuiInputBase-input": { fontSize: "1.1rem" },
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
 
               {/* Notes */}
               <Grid size={{ xs: 12 }}>

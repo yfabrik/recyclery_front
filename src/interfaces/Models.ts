@@ -66,6 +66,14 @@ export interface ArrivalModel extends BaseModel {
   source_details: string;
   notes: string;
   status: string;
+  category_id: number;
+  subcategory_id: number;
+  collection_point_id: number;
+  processed_by: number;
+  categorie?: CategoryModel;
+  subcategorie?:CategoryModel;
+  User?: UserModel;
+  CollectionPoint?: CollectionPointModel;
 }
 
 export interface DonModel extends BaseModel {
