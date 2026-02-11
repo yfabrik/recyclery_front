@@ -4,6 +4,7 @@ import {
   LocationOn,
   Nature,
   People,
+  Psychology,
   Store,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
@@ -12,6 +13,7 @@ import { CategoriesTab } from "./config/CategorieTab";
 import CollectionPointsTab from "./config/CollectionPointsTab";
 import { CollectTab } from "./config/CollectTab";
 import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
+import { SkillsTab } from "./config/SkillsTab";
 import EmployeeManagement from "./config/EmployeeManagement";
 import StoresTab from "./config/StoresTab";
 
@@ -128,6 +130,17 @@ export const ConfigurationTab = () => {
             "&.Mui-selected": { color: "#f57c00", backgroundColor: "#fff3e0" },
           }}
         />
+        <Tab
+          component={Link}
+          label="Compétences"
+          to={`${CONFIG_BASE}/skills`}
+          value={`${CONFIG_BASE}/skills`}
+          icon={<Psychology />}
+          iconPosition="start"
+          sx={{
+            "&.Mui-selected": { color: "#0288d1", backgroundColor: "#e1f5fe" },
+          }}
+        />
       </Tabs>
 
       <Box sx={{ p: 3 }}>
@@ -139,6 +152,7 @@ export const ConfigurationTab = () => {
           <Route path="eco-orga" element={<EcoOrganismsTab />} />
           <Route path="employees" element={<EmployeeManagement />} />
           <Route path="logistic" element={<CollectTab />} />
+          <Route path="skills" element={<SkillsTab />} />
         </Routes>
       </Box>
     </Box>

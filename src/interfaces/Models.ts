@@ -15,6 +15,10 @@ export interface CategoryModel extends BaseModel {
   IO: number;
 }
 
+export interface SkillModel extends BaseModel {
+  name: string;
+}
+
 export interface StoreModel extends BaseModel {
   employees?: Array<EmployeeModel>;
   manager_id: number;
