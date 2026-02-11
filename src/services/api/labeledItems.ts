@@ -1,3 +1,4 @@
+import type { AxiosResponse } from "axios";
 import type { LabeledItemModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
@@ -17,4 +18,4 @@ export const deleteLabeledItem = (id:number)=>axiosInstance.delete(`/api/labeled
 
 export const sellItem = (id:number)=>axiosInstance.post(`/api/labeled-items/${id}/sell`)
 
-export const getItemFromBarcode = (barcode:string)=>axiosInstance.get(`/api/labeled-items/barcode/${barcode}`)
+export const getItemFromBarcode = (barcode:string):Promise<AxiosResponse<{success: boolean, item: LabeledItemModel }>>=>axiosInstance.get(`/api/labeled-items/barcode/${barcode}`)

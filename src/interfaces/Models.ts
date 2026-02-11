@@ -99,21 +99,21 @@ export interface EcoOrgModel extends BaseModel {
 }
 
 export interface LabeledItemModel extends BaseModel {
-  recyclery: number;
-  category: number;
-  subcategory: number;
+  recyclery_id: number;
+  category_id: number;
+  subcategory_id: number;
   soldBy: number;
-  createdBy: number;
+  created_by: number;
   transaction_id: string;
 
   barcode: string;
-  name: string;
+  // name: string;
   description: string;
   weight: number;
   price: number;
   cost: number;
   condition_state: "excellent" | "good" | "fair" | "poor";
-  location: string;
+  // location: string;
   status: string;
 }
 

@@ -199,10 +199,10 @@ const PointOfSale = () => {
         (cartItem) => cartItem.barcode === item.barcode,
       );
 
-      if (existingItem) {
+      if (existingItem !== -1) {
         update(existingItem, {
           ...item,
-          quantity: item[existingItem].quantity + 1,
+          quantity: cart[existingItem].quantity + 1,
         });
         // setCart((prev) =>
         //   prev.map((cartItem) =>
@@ -224,7 +224,7 @@ const PointOfSale = () => {
       }
 
       setScanInput("");
-      toast.success(`${item.name} ajouté au panier`);
+      toast.success(`${item.barcode} ajouté au panier`);
     } catch (error) {
       console.error("Erreur lors du scan:", error);
       if (error.response?.status === 404) {
