@@ -2,6 +2,8 @@ import type { AxiosResponse } from "axios";
 import type { StoreModel, UserModel, WorkdaysModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/UserForm";
+import type { Schema as PasswordSchema } from "../../components/forms/PasswordChangeForm";
+
 
 interface UserFilters {
   role?: "employee" | "admin";
@@ -21,7 +23,7 @@ export const updateUser = (id: number, data: Schema) =>
 export const deleteUser = (id: number) =>
   axiosInstance.delete(`/api/users/${id}`);
 
-export const updateUserPassword = (id: number, data: { password?: string }) =>
+export const updateUserPassword = (id: number, data: PasswordSchema) =>
   axiosInstance.patch(`/api/users/${id}/password`, data);
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");

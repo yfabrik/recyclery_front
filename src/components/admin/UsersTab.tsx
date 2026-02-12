@@ -78,9 +78,7 @@ export const UsersTab = () => {
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateUser(id, data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
-      handleCloseUserDialog();
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["userStats"] })
+      save()
       toast.success("Utilisateur mis à jour avec succès")
     }
   })
@@ -88,11 +86,25 @@ export const UsersTab = () => {
     mutationFn: (data: Schema) => createUser(data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
-      handleCloseUserDialog();
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["userStats"] })
+      save()
       toast.success("Utilisateur créé avec succès");
     }
+  })
+  const save = () => {
+    handleCloseUserDialog();
+    queryClient.invalidateQueries({ queryKey: ["users"] })
+    queryClient.invalidateQueries({ queryKey: ["userStats"] })
+  }
+
+  const changePassword = useMutation({
+    mutationFn: (data: { id: number, data: PasswordSchema }) => updateUserPassword(data.id, data.data),
+    onSuccess: () => {
+      toast.success("Mot de passe mis à jour avec succès");
+      handleClosePasswordDialog();
+    },
+    onError: () => toast.error(
+      "Erreur lors du changement de mot de passe",
+    )
   })
   const stores = useQuery({
     queryKey: ["stores", "active"],
@@ -151,22 +163,23 @@ export const UsersTab = () => {
     //   toast.error("Le mot de passe doit contenir au moins 6 caractères");
     //   return;
     // }
+    if (!editingUser?.id) return
+    changePassword.mutate({ id: editingUser?.id, data })
+    // try {
+    //   await updateUserPassword(editingUser.id, {
+    //     currentPassword: data.currentPassword,
+    //     newPassword: data.newPassword,
+    //   });
 
-    try {
-      await updateUserPassword(editingUser.id, {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      });
-
-      toast.success("Mot de passe mis à jour avec succès");
-      handleClosePasswordDialog();
-    } catch (error) {
-      console.error("Erreur lors du changement de mot de passe:", error);
-      toast.error(
-        error.response?.data?.error ||
-        "Erreur lors du changement de mot de passe",
-      );
-    }
+    //   toast.success("Mot de passe mis à jour avec succès");
+    //   handleClosePasswordDialog();
+    // } catch (error) {
+    //   console.error("Erreur lors du changement de mot de passe:", error);
+    //   toast.error(
+    //     error.response?.data?.error ||
+    //     "Erreur lors du changement de mot de passe",
+    //   );
+    // }
   };
 
   const handleToggleUserStatus = async (user: UserModel) => {
