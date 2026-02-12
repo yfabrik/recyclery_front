@@ -75,7 +75,7 @@ export interface ArrivalModel extends BaseModel {
   collection_point_id: number;
   processed_by: number;
   categorie?: CategoryModel;
-  subcategorie?:CategoryModel;
+  subcategorie?: CategoryModel;
   User?: UserModel;
   CollectionPoint?: CollectionPointModel;
 }
@@ -103,22 +103,26 @@ export interface EcoOrgModel extends BaseModel {
 }
 
 export interface LabeledItemModel extends BaseModel {
-  recyclery_id: number;
+  recyclery_id: number | null;
   category_id: number;
-  subcategory_id: number;
-  soldBy: number;
+  subcategory_id: number | null;
+  soldBy: number | null;
   created_by: number;
-  transaction_id: string;
+  transaction_id: string | null;
 
   barcode: string;
   // name: string;
   description: string;
   weight: number;
   price: number;
-  cost: number;
+  cost: number | null;
   condition_state: "excellent" | "good" | "fair" | "poor";
   // location: string;
-  status: string;
+  status: `available` | `reserved` | `sold`;
+  category: Pick<CategoryModel, "name">
+  subcategory: Pick<CategoryModel, "name"> | null
+  createdBy: Pick<UserModel, "username">
+
 }
 
 export interface UserModel extends BaseModel {

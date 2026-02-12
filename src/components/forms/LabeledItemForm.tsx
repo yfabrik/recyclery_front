@@ -19,7 +19,7 @@ interface LabeledFormProps extends BaseFormProps<Schema> {
 }
 const schema = z.object({
   category_id: idSchema("category requis"),
-  subcategory_id: z.union([idSchema(), z.literal("").transform((v) => null)]),
+  subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   weight: z.coerce.number().positive(),
   price: z.coerce.number().positive("prix requis"),
   condition_state: z.enum(["excellent", "good", "fair", "poor"]),
@@ -28,7 +28,7 @@ const schema = z.object({
   autoPrint: z.boolean().default(true),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const LabeledItemForm = ({
   formId,
@@ -44,7 +44,8 @@ export const LabeledItemForm = ({
     { value: "good", label: "Bon état", color: "primary" },
     { value: "fair", label: "État correct", color: "warning" },
     { value: "poor", label: "Mauvais état", color: "error" },
-  ];
+  ]as const ;
+
   const form = useForm({
     defaultValues: {
       category_id: "",

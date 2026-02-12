@@ -32,266 +32,162 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  type TypographyPropsColorOverrides
 } from '@mui/material';
-import JsBarcode from 'jsbarcode';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AxiosResponse } from 'axios';
 import { StatCardNoIcon } from '../components/StatCard';
-import { LabeledItemForm } from '../components/forms/LabeledItemForm';
+import { LabeledItemForm, type Schema } from '../components/forms/LabeledItemForm';
+import type { LabeledItemModel } from '../interfaces/Models';
 import { fetchCategories as fcat } from '../services/api/categories';
-import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem } from '../services/api/labeledItems';
+import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem, type itemsFilters } from '../services/api/labeledItems';
+import { printLabel } from '../services/printService';
 
 const Labels = () => {
-  const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
 
-  const [filters, setFilters] = useState({
-    status: '',
-    category_id: '',
-    search: ''
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<LabeledItemModel | null>(null);
+
+  const [filters, setFilters] = useState<itemsFilters>({
+    status: "",
+    category_id: "",
+    search: ""
   });
 
-  const conditionOptions = [
+
+  //TODO  faut limiter pour que y'ai que 1 foix la value et ensure que la value soit presente +type color
+  const conditionOptions: { value: LabeledItemModel["condition_state"], label: string, color: "success" | "primary" | "warning" | "error" | "default" | "secondary" | "info" | undefined }[] = [
     { value: 'excellent', label: 'Excellent', color: 'success' },
     { value: 'good', label: 'Bon état', color: 'primary' },
     { value: 'fair', label: 'État correct', color: 'warning' },
     { value: 'poor', label: 'Mauvais état', color: 'error' },
-  ];
+  ] as const;
 
-  const statusOptions = [
+  const statusOptions: { value: LabeledItemModel["status"], label: string, color: TypographyPropsColorOverrides }[] = [
     { value: 'available', label: 'Disponible', color: 'success' },
     { value: 'reserved', label: 'Réservé', color: 'warning' },
     { value: 'sold', label: 'Vendu', color: 'error' },
-  ];
+  ] as const;
 
-  // Charger les données initiales
-  useEffect(() => {
-    fetchItems();
-    fetchCategories();
-  }, [filters]);
-
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
+  const queryClient = useQueryClient()
+  const items = useQuery({
+    queryKey: ["items", { filters }],
+    queryFn: () => {
       const params = new URLSearchParams();
 
+      console.log(!!filters.category_id)
       if (filters.status) params.append('status', filters.status);
       if (filters.category_id) params.append('category_id', filters.category_id);
       if (filters.search) params.append('search', filters.search);
-
-      const response = await getLabeledItems(params)
-
-      setItems(response.data.items || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des articles:', error);
-      toast.error('Erreur lors du chargement des articles');
-    } finally {
-      setLoading(false);
+      return getLabeledItems(params).then(response => response.data.items)
     }
-  };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fcat({ only_category: true, include: "category",in:true })
-      setCategories(response.data.categories);
-    } catch (error) {
-      console.error('Erreur lors du chargement des catégories:', error);
-    }
-  };
-  const handleFilterChange = (field, value) => {
+  })
+  if (items.isError) toast.error('Erreur lors du chargement des articles');
+
+  const categories = useQuery({
+    queryKey: ["categories", { only_category: true, include: "category", in: true }],
+    queryFn: () => fcat({ only_category: true, include: "category", in: true }).then(response => response.data.categories)
+  })
+
+  const addItem = useMutation({
+    mutationFn: (data: Schema) => createLabeledItem(data),
+    onSuccess: (data, variables) => {
+      saved(data, variables)
+    },
+    onError: () => toast.error('Erreur lors de la sauvegarde')
+
+  })
+  const editItem = useMutation({
+    mutationFn: (data: { id: number, data: Schema }) => updateLabeledItem(data.id, data.data),
+    onSuccess: (data, variables, context) => {
+      console.log(context)
+      return saved(data, variables.data)
+    },
+    onError: () => toast.error('Erreur lors de la sauvegarde')
+
+  })
+  const removeItem = useMutation({
+    mutationFn: (id: number) => deleteLabeledItem(id),
+    onSuccess: () => {
+      toast.success('Article supprimé avec succès')
+      queryClient.invalidateQueries({ queryKey: ["items"] })
+
+    },
+    onError: () => toast.error('Erreur lors de la suppression')
+
+  })
+
+  const sell = useMutation({
+    mutationFn: (id: number) => sellItem(id),
+    onSuccess: () => {
+      toast.success('Article marqué comme vendu');
+      queryClient.invalidateQueries({ queryKey: ["items"] })
+
+    },
+    onError: () => toast.error('Erreur lors de la vente')
+
+  })
+
+  const saved = (data: AxiosResponse<{
+    success: true;
+    message: string;
+    item?: LabeledItemModel
+  }, any, {}>, variables: Schema) => {
+    if (variables.autoPrint && data.data.item) printLabel(data.data.item)
+
+    toast.success(data.config.method == "post" ? 'Article créé avec succès' : 'Article mis à jour avec succès');
+    handleCloseDialog();
+    queryClient.invalidateQueries({ queryKey: ["items"] })
+  }
+
+
+  //TODO can do better
+  const handleFilterChange = (field: keyof itemsFilters, value: itemsFilters[keyof itemsFilters]) => {
+
     setFilters(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-
-  const handleOpenDialog = (item = null) => {
+  const handleOpenDialog = (item: LabeledItemModel | null = null) => {
     setEditingItem(item);
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
+    setEditingItem(null);
 
   };
 
-  const handleSave = async (data) => {
-    try {
+  const handleSave = async (data: Schema) => {
+    if (editingItem?.id) editItem.mutate({ id: editingItem.id, data })
+    else addItem.mutate(data)
 
-      let savedItem = null;
-
-      if (editingItem?.id) {
-        // Mise à jour
-        const response = await updateLabeledItem(editingItem.id, data)
-        savedItem = response.data.item;
-        toast.success('Article mis à jour avec succès');
-      } else {
-        // Création
-        const response = await createLabeledItem(data)
-        savedItem = response.data.item;
-        toast.success('Article créé avec succès');
-      }
-
-      // Impression automatique si activée
-      if (data.autoPrint && savedItem) {
-        setTimeout(() => {
-          printLabel(savedItem);
-        }, 500); // Petit délai pour s'assurer que l'article est bien créé
-      }
-
-      handleCloseDialog();
-      fetchItems();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Erreur lors de la sauvegarde');
-    }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
       return;
     }
+    removeItem.mutate(id)
 
-    try {
-      await deleteLabeledItem(id)
-      toast.success('Article supprimé avec succès');
-      fetchItems();
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      toast.error('Erreur lors de la suppression');
-    }
+
   };
 
-  const handleSell = async (id) => {
+  const handleSell = async (id: number) => {
     if (!window.confirm('Marquer cet article comme vendu ?')) {
       return;
     }
+    sell.mutate(id)
 
-    try {
-
-      await sellItem(id)
-
-      toast.success('Article marqué comme vendu');
-      fetchItems();
-    } catch (error) {
-      console.error('Erreur lors de la vente:', error);
-      toast.error('Erreur lors de la vente');
-    }
   };
-
-  const generateBarcode = (barcode) => {
-    const canvas = document.createElement('canvas');
-    JsBarcode(canvas, barcode, {
-      format: "CODE128",
-      width: 2,
-      height: 80,
-      displayValue: true,
-      fontSize: 14
-    });
-    return canvas.toDataURL();
-  };
-
-  const printLabel = (item) => {
-    const barcodeImage = generateBarcode(item.barcode);
-
-    const printWindow = window.open('', '', 'width=400,height=200');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Étiquette - ${item.barcode}</title>
-          <style>
-            @page {
-              size: 60mm 40mm;
-              margin: 0;
-              padding: 0;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0;
-              padding: 2mm;
-              width: 60mm;
-              height: 40mm;
-              overflow: hidden;
-            }
-            .label {
-              width: 100%;
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: flex-start;
-            }
-            .barcode { 
-              width: 100%;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              margin-bottom: 1mm;
-              padding: 0 1mm;
-            }
-            .barcode img {
-              height: auto;
-              object-fit: contain;
-            }
-            .info-row {
-              width: 100%;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              font-size: 8px;
-              margin-top: 0.5mm;
-            }
-            .price { 
-              font-size: 10px; 
-              font-weight: bold; 
-              color: #d32f2f;
-            }
-            .weight { 
-              font-size: 8px;
-            }
-            .category { 
-              width: 100%;
-              text-align: center;
-              font-size: 7px; 
-              color: #666;
-              margin-top: 0.3mm;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="label">
-            <div class="barcode">
-              <img src="${barcodeImage}" alt="Code-barres" />
-            </div>
-            <div class="info-row">
-              <div class="price">${parseFloat(item.price).toFixed(2)} €</div>
-              ${item.weight ? `<div class="weight">${item.weight} kg</div>` : '<div></div>'}
-            </div>
-            <div class="category">${item.category_name || item?.category?.name || ''}${item.subcategory_name || item?.subcategory?.name ? ' > ' + (item.subcategory_name || item?.subcategory?.name) : ''}</div>
-          </div>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    // Wait a bit for the image to load before printing
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
-  };
-
-  // const selectedCategory = categories.find(cat => cat.id == formData.category_id);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -312,16 +208,16 @@ const Labels = () => {
       {/* Statistiques rapides */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }} >
-          <StatCardNoIcon title='Articles disponibles' value={items.filter(item => item.status === 'available').length} color="primary" />
+          <StatCardNoIcon title='Articles disponibles' value={items.data?.filter(item => item.status === 'available').length || 0} color="primary" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon title='Articles vendus' value={items.filter(item => item.status === 'sold').length} color="success.main" />
+          <StatCardNoIcon title='Articles vendus' value={items.data?.filter(item => item.status === 'sold').length || 0} color="success.main" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon title='Articles réservés' value={items.filter(item => item.status === 'reserved').length} color="warning" />
+          <StatCardNoIcon title='Articles réservés' value={items.data?.filter(item => item.status === 'reserved').length || 0} color="warning" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon title='Valeur totale stock' value={` ${items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)} €`} color="info" />
+          <StatCardNoIcon title='Valeur totale stock' value={` ${items.data?.reduce((sum, item) => sum + item.price || 0, 0).toFixed(2)} €`} color="info" />
         </Grid>
       </Grid>
       {/* Filtres */}
@@ -348,7 +244,7 @@ const Labels = () => {
                 label="Statut"
                 onChange={(e) => handleFilterChange('status', e.target.value)}
               >
-                <MenuItem value="">Tous</MenuItem>
+                <MenuItem value={""}>Tous</MenuItem>
                 {statusOptions.map(status => (
                   <MenuItem key={status.value} value={status.value}>
                     {status.label}
@@ -365,8 +261,8 @@ const Labels = () => {
                 label="Catégorie"
                 onChange={(e) => handleFilterChange('category_id', e.target.value)}
               >
-                <MenuItem value="">Toutes</MenuItem>
-                {categories.filter(cat => !cat.parent_id).map(category => (
+                <MenuItem value={""}>Toutes</MenuItem>
+                {categories.data?.filter(cat => !cat.parent_id).map(category => (
                   <MenuItem key={category.id} value={category.id}>
                     {category.name}
                   </MenuItem>
@@ -379,7 +275,7 @@ const Labels = () => {
               fullWidth
               variant="outlined"
               startIcon={<FilterList />}
-              onClick={() => setFilters({ status: '', category_id: '', search: '' })}
+              onClick={() => setFilters({ status: undefined, category_id: undefined, search: undefined })}
             >
               Réinitialiser
             </Button>
@@ -402,20 +298,20 @@ const Labels = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? (
+            {items.isLoading ? (
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   Chargement...
                 </TableCell>
               </TableRow>
-            ) : items.length === 0 ? (
+            ) : items.data?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   Aucun article trouvé
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => (
+              items.data?.map((item) => (
                 <TableRow key={item.id} hover>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
@@ -437,7 +333,7 @@ const Labels = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body1" fontWeight="bold" color="primary">
-                      {parseFloat(item.price).toFixed(2)} €
+                      {item.price.toFixed(2)} €
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -492,9 +388,9 @@ const Labels = () => {
           {editingItem ? 'Modifier l\'article' : 'Nouvel article'}
         </DialogTitle>
         <DialogContent>
-          <LabeledItemForm formId='labelItemForm' categories={categories} onSubmit={handleSave} defaultValues={editingItem} />
+          <LabeledItemForm formId='labelItemForm' categories={categories.data || []} onSubmit={handleSave} defaultValues={editingItem} />
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type='submit' form='labelItemForm' variant="contained">
