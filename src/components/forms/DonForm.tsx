@@ -19,7 +19,7 @@ const schema = z.object({
   status: z.enum(["pending", "accepted", "rejected"]),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 export const DonForm = ({
   formId,

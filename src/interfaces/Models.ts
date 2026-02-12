@@ -81,15 +81,17 @@ export interface ArrivalModel extends BaseModel {
 }
 
 export interface DonModel extends BaseModel {
-  recyclery_id: number;
+  recyclery_id: number|null;
   received_by: number;
   donor_name: string;
-  donor_phone: string;
-  donor_email: string;
+  donor_phone: string|null;
+  donor_email: string|null;
   item_description: string;
   estimated_value: number;
   status: string;
-  received_at: Date;
+  received_at: Date|null;
+  donor_contact?:string|null
+  User?:UserModel
 }
 
 export interface EcoOrgModel extends BaseModel {
