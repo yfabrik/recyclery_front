@@ -30,7 +30,7 @@ const schema = z.object({
   notes: z.string().transform(v => v == "" ? null : v),
 });
 
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 type WasteFormProps = BaseFormProps<Schema> & {
   categories: CategoryModel[];

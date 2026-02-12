@@ -81,17 +81,17 @@ export interface ArrivalModel extends BaseModel {
 }
 
 export interface DonModel extends BaseModel {
-  recyclery_id: number|null;
+  recyclery_id: number | null;
   received_by: number;
   donor_name: string;
-  donor_phone: string|null;
-  donor_email: string|null;
+  donor_phone: string | null;
+  donor_email: string | null;
   item_description: string;
   estimated_value: number;
   status: string;
-  received_at: Date|null;
-  donor_contact?:string|null
-  User?:UserModel
+  received_at: Date | null;
+  donor_contact?: string | null
+  User?: UserModel
 }
 
 export interface EcoOrgModel extends BaseModel {
@@ -247,4 +247,24 @@ export interface TransactionModel extends BaseModel {
 export interface ScheduleModel extends TaskModel {
   is_recurring: boolean;
   recurrence_pattern: "daily" | "weekly" | "monthly";
+}
+
+
+export interface WasteModel extends BaseModel {
+  disposal_date: Date
+  disposal_type: "landfill" | "eco_organism" | "recycling" | "other"
+  weight_kg: number | null
+  volume_m3: number | null
+  transport_method: string | null
+  transport_company: string | null
+  transport_cost: string | null
+  notes: string | null
+  category_id: number
+  category?: CategoryModel
+  subcategory?: CategoryModel | null
+  subcategory_id: number | null
+  eco_organism?: EcoOrgModel | null
+  eco_organism_id: number | null
+  created_by: number
+  User?: UserModel
 }

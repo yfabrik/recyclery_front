@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Add,
   Assessment,
@@ -20,26 +21,28 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
   MenuItem,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosResponse } from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { WasteForm } from "../components/forms/WasteForm";
+import z from "zod";
+import { FormDate, FormSelect } from "../components/forms/FormBase";
+import { WasteForm, type Schema } from "../components/forms/WasteForm";
+import type { WasteModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getEcoOrganisms } from "../services/api/ecoOrganism";
 import {
@@ -48,21 +51,21 @@ import {
   getWastes,
   getWasteStats,
   updateWaste,
+  type wasteFilter,
 } from "../services/api/wasteDisposal";
-import type { CategoryModel, EcoOrgModel } from "../interfaces/Models";
 
 const WasteManagement = () => {
   // États principaux
-  const [disposals, setDisposals] = useState([]);
-  const [categories, setCategories] = useState<CategoryModel[]>([]);
+  // const [disposals, setDisposals] = useState([]);
+  // const [categories, setCategories] = useState<CategoryModel[]>([]);
   // const [subcategories, setSubcategories] = useState([]);
-  const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
+  // const [ecoOrganisms, setEcoOrganisms] = useState<EcoOrgModel[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [stats, setStats] = useState(null);
 
   // États pour les dialogues
   const [disposalDialog, setDisposalDialog] = useState(false);
-  const [editingDisposal, setEditingDisposal] = useState(null);
+  const [editingDisposal, setEditingDisposal] = useState<WasteModel | null>(null);
   // const [showWeightKeypad, setShowWeightKeypad] = useState(false);
   // const [disposalForm, setDisposalForm] = useState({
   //   disposal_date: new Date().toISOString().split("T")[0],
@@ -79,14 +82,14 @@ const WasteManagement = () => {
   // });
 
   // États pour les filtres
-  const [filters, setFilters] = useState({
-    category_id: "",
-    subcategory_id: "",
-    eco_organism_id: "",
-    disposal_type: "",
-    date_from: "",
-    date_to: "",
-  });
+  // const [filters, setFilters] = useState({
+  //   category_id: "",
+  //   subcategory_id: "",
+  //   eco_organism_id: "",
+  //   disposal_type: "",
+  //   date_from: "",
+  //   date_to: "",
+  // });
 
   // États pour la pagination
   const [pagination, setPagination] = useState({
@@ -96,46 +99,138 @@ const WasteManagement = () => {
     totalPages: 0,
   });
 
-  // Charger les données initiales
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const fitlterSchema = z.object({
+    category_id: z.coerce.number(),
+    disposal_type: z.string(),
+    date_from: z.coerce.date(),
+    date_to: z.coerce.date()
+  })
+  type FitlerSchema = z.infer<typeof fitlterSchema>
 
-  // Charger les données avec filtres
-  useEffect(() => {
-    fetchDisposals();
-  }, [filters, pagination.page]);
+  const form = useForm({
+    defaultValues: {
+      category_id: "",
+      disposal_type: "",
+      date_from: new Date(),
+      date_to: new Date()
+    },
+    resolver: zodResolver(fitlterSchema)
+  })
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        fetchCategories(),
-        // fetchSubcategories(),
-        fetchEcoOrganisms(),
-        fetchStats(),
-      ]);
-    } catch (error) {
-      console.error("Erreur lors du chargement des données:", error);
-      toast.error("Erreur lors du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filters = form.watch()
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fcat({
-        only_category: true,
-        include: "category",
-        out: true,
-      });
-      //  await axios.get('/api/categories');
-      setCategories(response.data.categories || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error);
-    }
-  };
+
+  const queryClient = useQueryClient()
+  const categories = useQuery({
+    queryKey: ["categories", {
+      only_category: true,
+      include: "category",
+      out: true,
+    }],
+    queryFn: () => fcat({
+      only_category: true,
+      include: "category",
+      out: true,
+    }).then(response => response.data.categories)
+  })
+
+  const ecoOrganisms = useQuery({
+    queryKey: ["ecoOrganisms", { active: true }],
+    queryFn: () => getEcoOrganisms({ active: true }).then(response => response.data.eco_organisms)
+  })
+
+  const disposals = useQuery({
+    queryKey: ["disposals", { filters }],
+    queryFn: () => {
+      let o: wasteFilter = Object.fromEntries(Object.entries(filters).filter(([_, v]) => !!v));
+      return getWastes(o).then(response => response.data.disposals)
+    },
+    placeholderData: keepPreviousData
+  })
+
+  const stats = useQuery({
+    queryKey: ["wasteStats"],
+    queryFn: () => getWasteStats().then(response => response.data.stats)
+  })
+
+
+  const addWaste = useMutation({
+    mutationFn: (data: Schema) => createWaste(data),
+    onSuccess: (data, variables) => {
+      save(data, variables)
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+  })
+  const editWaste = useMutation({
+    mutationFn: (data: { id: number, data: Schema }) => updateWaste(data.id, data.data),
+    onSuccess: (data, variables) => {
+      save(data, variables.data)
+    },
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+  })
+  const save = (data: AxiosResponse<{
+    message: string;
+  }, any, {}>, variables: Schema) => {
+    toast.success(
+      editingDisposal?.id
+        ? "Sortie de déchets mise à jour avec succès"
+        : "Sortie de déchets créée avec succès",
+    );
+
+    handleCloseDisposalDialog();
+    queryClient.invalidateQueries({ queryKey: ["wasteStats"] })
+    queryClient.invalidateQueries({ queryKey: ["disposals"] })
+
+  }
+  const removeWaste = useMutation({
+    mutationFn: (id: number) => deleteWaste(id),
+    onSuccess: () => {
+      toast.success("Sortie de déchets supprimée avec succès");
+      queryClient.invalidateQueries({ queryKey: ["wasteStats"] })
+      queryClient.invalidateQueries({ queryKey: ["disposals"] })
+    },
+    onError: () => toast.error("Erreur lors de la suppression"),
+  })
+  // // Charger les données initiales
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
+  // // Charger les données avec filtres
+  // useEffect(() => {
+  //   fetchDisposals();
+  // }, [filters, pagination.page]);
+
+  // const fetchData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await Promise.all([
+  //       fetchCategories(),
+  //       // fetchSubcategories(),
+  //       fetchEcoOrganisms(),
+  //       fetchStats(),
+  //     ]);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des données:", error);
+  //     toast.error("Erreur lors du chargement des données");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const fetchCategories = async () => {
+  //   try {
+  //     const response = await fcat({
+  //       only_category: true,
+  //       include: "category",
+  //       out: true,
+  //     });
+  //     //  await axios.get('/api/categories');
+  //     setCategories(response.data.categories || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des catégories:", error);
+  //   }
+  // };
 
   // const fetchSubcategories = async () => {
   //   try {
@@ -147,46 +242,46 @@ const WasteManagement = () => {
   //   }
   // };
 
-  const fetchEcoOrganisms = async () => {
-    try {
-      const response = await getEcoOrganisms({ active: 1 });
-      setEcoOrganisms(response.data.eco_organisms || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des éco-organismes:", error);
-    }
-  };
+  // const fetchEcoOrganisms = async () => {
+  //   try {
+  //     const response = await getEcoOrganisms({ active: 1 });
+  //     setEcoOrganisms(response.data.eco_organisms || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des éco-organismes:", error);
+  //   }
+  // };
 
-  const fetchDisposals = async () => {
-    try {
-      const params = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== ""),
-        ),
-      });
+  // const fetchDisposals = async () => {
+  //   try {
+  //     const params = new URLSearchParams({
+  //       page: pagination.page,
+  //       limit: pagination.limit,
+  //       ...Object.fromEntries(
+  //         Object.entries(filters).filter(([_, value]) => value !== ""),
+  //       ),
+  //     });
 
-      const response = await getWastes(params);
-      // await axios.get(`/api/waste-disposals?${params}`);
-      setDisposals(response.data.disposals || []);
-      setPagination(response.data.pagination || pagination);
-    } catch (error) {
-      console.error("Erreur lors du chargement des sorties de déchets:", error);
-      toast.error("Erreur lors du chargement des sorties de déchets");
-    }
-  };
+  //     const response = await getWastes(params);
+  //     // await axios.get(`/api/waste-disposals?${params}`);
+  //     setDisposals(response.data.disposals || []);
+  //     setPagination(response.data.pagination || pagination);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des sorties de déchets:", error);
+  //     toast.error("Erreur lors du chargement des sorties de déchets");
+  //   }
+  // };
 
-  const fetchStats = async () => {
-    try {
-      const response = await getWasteStats();
-      // await axios.get('/api/waste-disposals/stats/summary');
-      setStats(response.data.stats);
-    } catch (error) {
-      console.error("Erreur lors du chargement des statistiques:", error);
-    }
-  };
+  // const fetchStats = async () => {
+  //   try {
+  //     const response = await getWasteStats();
+  //     // await axios.get('/api/waste-disposals/stats/summary');
+  //     setStats(response.data.stats);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des statistiques:", error);
+  //   }
+  // };
 
-  const handleOpenDisposalDialog = (disposal = null) => {
+  const handleOpenDisposalDialog = (disposal: WasteModel | null = null) => {
     setEditingDisposal(disposal);
 
     // if (disposal) {
@@ -228,36 +323,39 @@ const WasteManagement = () => {
     setEditingDisposal(null);
   };
 
-  const handleSaveDisposal = async (data) => {
-    try {
-      const url = editingDisposal?.id
-        ? await updateWaste(editingDisposal.id, data)
-        : await createWaste(data);
-      //
-      // ? `/api/waste-disposals/${editingDisposal.id}`
-      // : '/api/waste-disposals';
+  const handleSaveDisposal = async (data: Schema) => {
+    editingDisposal?.id ?
+      editWaste.mutate({ id: editingDisposal.id, data }) :
+      addWaste.mutate(data)
+    // try {
+    //   const url = editingDisposal?.id
+    //     ? await updateWaste(editingDisposal.id, data)
+    //     : await createWaste(data);
+    //   //
+    //   // ? `/api/waste-disposals/${editingDisposal.id}`
+    //   // : '/api/waste-disposals';
 
-      // const method = editingDisposal ? 'put' : 'post';
+    //   // const method = editingDisposal ? 'put' : 'post';
 
-      // console.log('Données envoyées:', disposalForm);
-      // await axios[method](url, disposalForm);
+    //   // console.log('Données envoyées:', disposalForm);
+    //   // await axios[method](url, disposalForm);
 
-      toast.success(
-        editingDisposal?.id
-          ? "Sortie de déchets mise à jour avec succès"
-          : "Sortie de déchets créée avec succès",
-      );
+    //   toast.success(
+    //     editingDisposal?.id
+    //       ? "Sortie de déchets mise à jour avec succès"
+    //       : "Sortie de déchets créée avec succès",
+    //   );
 
-      handleCloseDisposalDialog();
-      fetchDisposals();
-      fetchStats();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde");
-    }
+    //   handleCloseDisposalDialog();
+    //   fetchDisposals();
+    //   fetchStats();
+    // } catch (error) {
+    //   console.error("Erreur lors de la sauvegarde:", error);
+    //   toast.error("Erreur lors de la sauvegarde");
+    // }
   };
 
-  const handleDeleteDisposal = async (id) => {
+  const handleDeleteDisposal = async (id: number) => {
     if (
       !window.confirm(
         "Êtes-vous sûr de vouloir supprimer cette sortie de déchets ?",
@@ -265,23 +363,24 @@ const WasteManagement = () => {
     ) {
       return;
     }
+    removeWaste.mutate(id)
 
-    try {
-      await deleteWaste(id);
-      // await axios.delete(`/api/waste-disposals/${id}`);
-      toast.success("Sortie de déchets supprimée avec succès");
-      fetchDisposals();
-      fetchStats();
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression");
-    }
+    // try {
+    //   await deleteWaste(id);
+    //   // await axios.delete(`/api/waste-disposals/${id}`);
+    //   toast.success("Sortie de déchets supprimée avec succès");
+    //   fetchDisposals();
+    //   fetchStats();
+    // } catch (error) {
+    //   console.error("Erreur lors de la suppression:", error);
+    //   toast.error("Erreur lors de la suppression");
+    // }
   };
 
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
+  // const handleFilterChange = (field, value) => {
+  //   setFilters((prev) => ({ ...prev, [field]: value }));
+  //   setPagination((prev) => ({ ...prev, page: 1 }));
+  // };
 
   const getDisposalTypeLabel = (type) => {
     const types = {
@@ -301,14 +400,16 @@ const WasteManagement = () => {
     return colors[type] || "default";
   };
 
-  const formatWeight = (weight) => {
+  const formatWeight = (weight: NonNullable<WasteModel["weight_kg"]>) => {
     if (weight >= 1000) {
       return `${(weight / 1000).toFixed(2)} t`;
     }
     return `${weight} kg`;
   };
 
-  if (loading) {
+
+
+  if (categories.isLoading || disposals.isLoading || stats.isLoading) {
     return (
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Box
@@ -354,7 +455,7 @@ const WasteManagement = () => {
                       Total Sorties
                     </Typography>
                     <Typography variant="h4">
-                      {stats.total_disposals || 0}
+                      {stats.data?.total_disposals || 0}
                     </Typography>
                   </Box>
                   <Assessment color="primary" sx={{ fontSize: 40 }} />
@@ -376,7 +477,7 @@ const WasteManagement = () => {
                       Poids Total
                     </Typography>
                     <Typography variant="h4">
-                      {formatWeight(stats.total_weight_kg || 0)}
+                      {formatWeight(stats.data?.total_weight_kg || 0)}
                     </Typography>
                   </Box>
                   <TrendingUp color="success" sx={{ fontSize: 40 }} />
@@ -398,7 +499,7 @@ const WasteManagement = () => {
                       Éco-organismes
                     </Typography>
                     <Typography variant="h4">
-                      {stats.eco_organism_disposals || 0}
+                      {stats.data?.eco_organism_disposals || 0}
                     </Typography>
                   </Box>
                   <Nature color="success" sx={{ fontSize: 40 }} />
@@ -420,7 +521,7 @@ const WasteManagement = () => {
                       Déchetterie
                     </Typography>
                     <Typography variant="h4">
-                      {stats.landfill_disposals || 0}
+                      {stats.data?.landfill_disposals || 0}
                     </Typography>
                   </Box>
                   <DeleteSweep color="warning" sx={{ fontSize: 40 }} />
@@ -450,26 +551,41 @@ const WasteManagement = () => {
 
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Catégorie</InputLabel>
-              <Select
+
+            <FormSelect control={form.control} name="category_id" label="Catégorie" extra={{ size: "small" }}>
+              <MenuItem key="default" value="">Toutes</MenuItem>
+              {categories.data?.map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </FormSelect>
+            {/* <FormControl fullWidth size="small">
+              <InputLabel id="category_label" shrink>Catégorie</InputLabel>
+              <Select displayEmpty labelId="category_id" label="Catégorie"
                 value={filters.category_id}
                 onChange={(e) =>
                   handleFilterChange("category_id", e.target.value)
                 }
               >
                 <MenuItem value="">Toutes</MenuItem>
-                {categories.map((category) => (
+                {categories.data?.map((category) => (
                   <MenuItem key={category.id} value={category.id}>
                     {category.name}
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormControl fullWidth size="small">
+            <FormSelect control={form.control} name="disposal_type" label="Type" extra={{ size: "small" }}>
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="eco_organism">Éco-organisme</MenuItem>
+              <MenuItem value="landfill">Déchetterie</MenuItem>
+              <MenuItem value="other">Autre</MenuItem>
+            </FormSelect>
+            {/* <FormControl fullWidth size="small">
               <InputLabel>Type</InputLabel>
               <Select
                 value={filters.disposal_type}
@@ -482,11 +598,12 @@ const WasteManagement = () => {
                 <MenuItem value="landfill">Déchetterie</MenuItem>
                 <MenuItem value="other">Autre</MenuItem>
               </Select>
-            </FormControl>
+            </FormControl> */}
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <TextField
+            <FormDate control={form.control} name="date_from" label="Date début" extra={{ size: "small" }} />
+            {/* <TextField
               fullWidth
               size="small"
               label="Date début"
@@ -494,11 +611,13 @@ const WasteManagement = () => {
               value={filters.date_from}
               onChange={(e) => handleFilterChange("date_from", e.target.value)}
               slotProps={{ inputLabel: { shrink: true } }}
-            />
+            />*/}
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <TextField
+            <FormDate control={form.control} name="date_to" label="Date fin" extra={{ size: "small" }} />
+
+            {/* <TextField
               fullWidth
               size="small"
               label="Date fin"
@@ -506,23 +625,25 @@ const WasteManagement = () => {
               value={filters.date_to}
               onChange={(e) => handleFilterChange("date_to", e.target.value)}
               slotProps={{ inputLabel: { shrink: true } }}
-            />
+            /> */}
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <Button
               variant="outlined"
+              type="reset"
               startIcon={<FilterList />}
-              onClick={() =>
-                setFilters({
-                  category_id: "",
-                  subcategory_id: "",
-                  eco_organism_id: "",
-                  disposal_type: "",
-                  date_from: "",
-                  date_to: "",
-                })
-              }
+              onClick={() => form.reset()}
+            // onClick={() =>
+            //   setFilters({
+            //     category_id: "",
+            //     subcategory_id: "",
+            //     eco_organism_id: "",
+            //     disposal_type: "",
+            //     date_from: "",
+            //     date_to: "",
+            //   })
+            // }
             >
               Effacer
             </Button>
@@ -546,7 +667,7 @@ const WasteManagement = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {disposals.map((disposal) => (
+              {disposals.data?.map((disposal) => (
                 <TableRow key={disposal.id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">
@@ -559,7 +680,7 @@ const WasteManagement = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {disposal.category_name || "Non spécifié"}
+                    {disposal.category?.name || "Non spécifié"}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -569,11 +690,11 @@ const WasteManagement = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {disposal.eco_organism_name || "Non spécifié"}
+                    {disposal.eco_organism?.name || "Non spécifié"}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatWeight(disposal.weight_kg)}
+                      {formatWeight(disposal.weight_kg || 0)}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -627,9 +748,9 @@ const WasteManagement = () => {
             formId="wasteForm"
             defaultValues={editingDisposal}
             onSubmit={handleSaveDisposal}
-            categories={categories}
-            ecoOrganisms={ecoOrganisms}
-            onWeightFieldClick={() => {}}
+            categories={categories.data || []}
+            ecoOrganisms={ecoOrganisms.data || []}
+            onWeightFieldClick={() => { }}
           />
           {/* <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>

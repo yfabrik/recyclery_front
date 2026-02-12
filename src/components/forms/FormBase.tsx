@@ -29,7 +29,7 @@ import {
 } from "react-hook-form";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DatePicker, type DatePickerSlotProps } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
@@ -101,7 +101,7 @@ export const FormSwitch = <
             <Switch
               {...field}
               checked={field.value}
-              // onChange={field.onChange}
+            // onChange={field.onChange}
             />
           }
           label={label}
@@ -159,7 +159,8 @@ export const FormDate = <
   name,
   control,
   label,
-}: FormControlProps<TFieldValues, TName, TTransformedValues>) => {
+  extra
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & { extra: DatePickerSlotProps<true>["textField"] }) => {
   return (
     <Controller
       name={name}
@@ -170,6 +171,7 @@ export const FormDate = <
             label={label}
             slotProps={{
               textField: {
+                ...extra,
                 fullWidth: true,
                 error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,
