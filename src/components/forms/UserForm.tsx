@@ -27,7 +27,7 @@ const schema = z.object({
   password: z.string(),
   role: z.string().nonempty("role requis"),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  is_active: z.boolean().default(true),
+  isActive: z.boolean().default(true),
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -55,7 +55,7 @@ export const UserForm = ({
       phone: "",
       role: "",
       recyclery_id: "",
-      is_active: true,
+      isActive: true,
       ...(defaultValues ?? {}),
     },
   });
@@ -121,7 +121,7 @@ export const UserForm = ({
           <FormSwitch
             control={form.control}
             label="Utilisateur actif"
-            name="is_active"
+            name="isActive"
           />
         </Grid>
       </Grid>
