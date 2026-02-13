@@ -18,9 +18,10 @@ import {
   Info,
 } from "@mui/icons-material";
 import React from "react";
+import type { Activity } from "../../services/api/dashboard";
 
 // Fonction pour obtenir l'icône par nom
-const getIconByName = (iconName:string) => {
+const getIconByName = (iconName: string) => {
   const icons = {
     ShoppingCart,
     VolunteerActivism,
@@ -30,19 +31,12 @@ const getIconByName = (iconName:string) => {
   };
   return icons[iconName] || Info;
 };
-interface Activity{
-    icon:string
-    color?:string
-    description:string
-    status:string
-    statusColor:string
-    time:string
-    amount:number
+
+
+interface ActivityItemProps {
+  activity: Activity
 }
-interface ActivityItemProps{
-    activity:Activity
-}
-export const ActivityItem = ({ activity }:ActivityItemProps) => {
+export const ActivityItem = ({ activity }: ActivityItemProps) => {
   const IconComponent = getIconByName(activity.icon);
 
   return (

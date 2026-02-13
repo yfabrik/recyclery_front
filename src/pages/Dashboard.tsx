@@ -29,7 +29,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 // Fonction pour obtenir l'icône par nom
 // const getIconByName = (iconName) => {
@@ -42,227 +42,19 @@ import React, { useEffect, useState } from "react";
 //   };
 //   return icons[iconName] || Info;
 // };
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
-import { SimpleChart } from "../components/dashboard/SimpleChart";
+import SimpleBarChart from "../components/dashboard/SimpleBarChart";
 import { StatCard } from "../components/dashboard/StatCard";
 import DashboardNotifications from "../components/DashboardNotifications";
 import QuickStats from "../components/QuickStats";
 import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
-import dashboardService from "../services/dashboardService";
-import { getAllDashboardData, getStoreStats } from "../services/api/dashboard";
-import SimpleBarChart from "../components/dashboard/SimpleBarChart";
-
-// Composant de carte statistique amélioré
-// const StatCard = ({
-//   title,
-//   value,
-//   icon,
-//   color,
-//   subtitle,
-//   trend,
-//   trendValue,
-//   onClick,
-// }) => (
-//   <Card
-//     sx={{
-//       height: "100%",
-//       cursor: onClick ? "pointer" : "default",
-//       transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-//       "&:hover": onClick
-//         ? {
-//             transform: "translateY(-4px)",
-//             boxShadow: 4,
-//           }
-//         : {},
-//     }}
-//     onClick={onClick}
-//   >
-//     <CardContent>
-//       <Box
-//         sx={{
-//           display: "flex",
-//           alignItems: "center",
-//           justifyContent: "space-between",
-//           mb: 2,
-//         }}
-//       >
-//         <Box sx={{ flexGrow: 1 }}>
-//           <Typography
-//             color="textSecondary"
-//             gutterBottom
-//             variant="overline"
-//             sx={{ fontSize: "0.75rem" }}
-//           >
-//             {title}
-//           </Typography>
-//           <Typography
-//             variant="h4"
-//             component="div"
-//             color={color}
-//             sx={{ fontWeight: "bold" }}
-//           >
-//             {value}
-//           </Typography>
-//           {subtitle && (
-//             <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-//               {subtitle}
-//             </Typography>
-//           )}
-//         </Box>
-//         <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>
-//           {icon}
-//         </Avatar>
-//       </Box>
-//       {trend && (
-//         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-//           {trend === "up" ? (
-//             <TrendingUp color="success" fontSize="small" />
-//           ) : (
-//             <TrendingDown color="error" fontSize="small" />
-//           )}
-//           <Typography
-//             variant="body2"
-//             color={trend === "up" ? "success.main" : "error.main"}
-//           >
-//             {trendValue}
-//           </Typography>
-//           <Typography variant="body2" color="textSecondary">
-//             vs mois dernier
-//           </Typography>
-//         </Box>
-//       )}
-//     </CardContent>
-//   </Card>
-// );
-
-// Composant de graphique simple
-// const SimpleChart = ({ data, title, color = "primary", labels }) => (
-//   <Paper sx={{ p: 2, height: "100%" }}>
-//     <Typography variant="h6" gutterBottom>
-//       {title}
-//     </Typography>
-//     <Box
-//       sx={{ display: "flex", alignItems: "end", gap: 1, height: 120, mt: 2 }}
-//     >
-//       {data.map((value, index) => (
-//         <Box
-//           key={index}
-//           sx={{
-//             flexGrow: 1,
-//             height: `${(value / Math.max(...data)) * 100}%`,
-//             bgcolor: `${color}.main`,
-//             borderRadius: 1,
-//             minHeight: 20,
-//             display: "flex",
-//             alignItems: "end",
-//             justifyContent: "center",
-//             color: "white",
-//             fontSize: "0.75rem",
-//             fontWeight: "bold",
-//           }}
-//         >
-//           {value}
-//         </Box>
-//       ))}
-//     </Box>
-//     <Box
-//       sx={{
-//         display: "flex",
-//         justifyContent: "space-between",
-//         mt: 1,
-//         fontSize: "0.75rem",
-//       }}
-//     >
-//       {labels ? (
-//         labels.map((label, index) => (
-//           <Typography key={index} variant="caption">
-//             {label}
-//           </Typography>
-//         ))
-//       ) : (
-//         <>
-//           <Typography variant="caption">Lun</Typography>
-//           <Typography variant="caption">Mar</Typography>
-//           <Typography variant="caption">Mer</Typography>
-//           <Typography variant="caption">Jeu</Typography>
-//           <Typography variant="caption">Ven</Typography>
-//           <Typography variant="caption">Sam</Typography>
-//           <Typography variant="caption">Dim</Typography>
-//         </>
-//       )}
-//     </Box>
-//   </Paper>
-// );
-
-// Composant d'activité récente amélioré
-// const ActivityItem = ({ activity }) => {
-//   const IconComponent = getIconByName(activity.icon);
-
-//   return (
-//     <ListItem sx={{ px: 0 }}>
-//       <ListItemAvatar>
-//         <Avatar
-//           sx={{ bgcolor: `${activity.color}.main`, width: 40, height: 40 }}
-//         >
-//           <IconComponent />
-//         </Avatar>
-//       </ListItemAvatar>
-//       <ListItemText
-//         primary={
-//           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-//             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-//               {activity.description}
-//             </Typography>
-//             <Chip
-//               label={activity.status}
-//               size="small"
-//               color={activity.statusColor}
-//               variant="outlined"
-//             />
-//           </Box>
-//         }
-//         secondary={
-//           <React.Fragment>
-//             <Typography
-//               variant="body2"
-//               color="textSecondary"
-//               component="span"
-//               sx={{ display: "block" }}
-//             >
-//               {activity.time}
-//             </Typography>
-//             {activity.amount && (
-//               <Typography
-//                 variant="body2"
-//                 color="primary"
-//                 sx={{ fontWeight: 500, display: "block" }}
-//                 component="span"
-//               >
-//                 {activity.amount}
-//               </Typography>
-//             )}
-//           </React.Fragment>
-//         }
-//       />
-//       <IconButton size="small">
-//         <MoreVert />
-//       </IconButton>
-//     </ListItem>
-//   );
-// };
+import { getActivities, getChartsData, getStats, getStoreStats, type Activity, type Stats } from "../services/api/dashboard";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState();
-  const [activities, setActivities] = useState([]);
-  const [charts, setCharts] = useState({ sales: [], revenue: [], labels: [] });
-  const [storesStats, setStoresStats] = useState([]);
-  const [storesLoading, setStoresLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   // Données simulées réalistes pour la démonstration
   const mockStats = {
     totalItems: 1247,
@@ -277,7 +69,7 @@ const Dashboard = () => {
     lastMonthRevenue: 3890.25,
     thisMonthSales: 156,
     lastMonthSales: 142,
-  };
+  } satisfies Stats;
 
   const mockActivities = [
     {
@@ -335,109 +127,49 @@ const Dashboard = () => {
       status: "Actif",
       statusColor: "success",
     },
-  ];
+  ] satisfies Activity[];
 
   // Données simulées pour les graphiques (fallback)
   const mockSalesData = [45, 52, 38, 67, 89, 72, 56];
   const mockRevenueData = [850, 920, 780, 1150, 1320, 980, 890];
 
-  // Fonction pour charger les statistiques des magasins
-  const loadStoresStats = async () => {
-    setStoresLoading(true);
-    try {
-      // const token = localStorage.getItem("token");
-      // const response = await fetch("/api/dashboard/stores-stats", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      const data = await getStoreStats();
-      //await response.json();
-      setStoresStats(data.data.stores);
-    } catch (error) {
-      console.error("Erreur chargement stats magasins:", error);
-    } finally {
-      setStoresLoading(false);
+  const queryClient = useQueryClient()
+
+  const activities = useQuery({
+    queryKey: ["activities"],
+    queryFn: () => getActivities().then(response => response.data.data),
+    placeholderData: mockActivities
+  })
+  const charts = useQuery({
+    queryKey: ["charts"],
+    queryFn: () => getChartsData().then(response => response.data.data),
+    placeholderData: {
+      sales: mockSalesData,
+      revenue: mockRevenueData,
+      labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
     }
-  };
+  })
+  const stats = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => getStats().then(response => response.data.data),
+    placeholderData: mockStats
+  })
+  const storesStats = useQuery({
+    queryKey: ["storesStats"],
+    queryFn: () => getStoreStats().then(response => response.data.stores),
+  })
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
 
-      try {
-        // Récupération des vraies données depuis l'API
-        const result = await getAllDashboardData();
-        //  await dashboardService.getAllDashboardData();
-        if (result.success) {
-          setStats(result.data.stats);
-          // setStats(mockStats);
-
-          setActivities(result.data.activities);
-
-          // Mettre à jour les données des graphiques
-          if (result.data.charts) {
-            setCharts(result.data.charts);
-            // console.log("Données des graphiques:", result.data.charts);
-          }
-        } else {
-          setError(result.error || "Erreur lors du chargement des données");
-          // En cas d'erreur, utiliser les données simulées comme fallback
-          setStats(mockStats);
-          setActivities(mockActivities);
-          setCharts({
-            sales: mockSalesData,
-            revenue: mockRevenueData,
-            labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-          });
-        }
-      } catch (err) {
-        setError("Erreur de connexion au serveur");
-        console.error("Dashboard error:", err);
-        // En cas d'erreur, utiliser les données simulées comme fallback
-        setStats(mockStats);
-        setActivities(mockActivities);
-        setCharts({
-          sales: mockSalesData,
-          revenue: mockRevenueData,
-          labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-    loadStoresStats();
-  }, []);
 
   const handleRefresh = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await getAllDashboardData();
-      // await dashboardService.getAllDashboardData();
-
-      if (result.success) {
-        setStats(result.data.stats);
-        setActivities(result.data.activities);
-      } else {
-        setError(result.error || "Erreur lors de l'actualisation");
-      }
-
-      // Actualiser aussi les statistiques des magasins
-      await loadStoresStats();
-    } catch (err) {
-      setError("Erreur de connexion lors de l'actualisation");
-      console.error("Refresh error:", err);
-    } finally {
-      setLoading(false);
-    }
+    queryClient.invalidateQueries({
+      predicate: (query) => ["charts", "storesStats", "activities", "stats"].includes(query.queryKey[0] as string)
+    })
   };
 
-  const calculateTrend = (current, previous) => {
+  const calculateTrend = (current: number = 0, previous: number = 0) => {
     if (!previous) return null;
-    const percentage = (((current - previous) / previous) * 100).toFixed(1);
+    const percentage = (((current - previous) / previous) * 100);
     return {
       direction: current > previous ? "up" : "down",
       value: `${Math.abs(percentage)}%`,
@@ -445,15 +177,15 @@ const Dashboard = () => {
   };
 
   const revenueTrend = calculateTrend(
-    stats?.thisMonthRevenue,
-    stats?.lastMonthRevenue
+    stats.data?.thisMonthRevenue,
+    stats.data?.lastMonthRevenue
   );
   const salesTrend = calculateTrend(
-    stats?.thisMonthSales,
-    stats?.lastMonthSales
+    stats.data?.thisMonthSales,
+    stats.data?.lastMonthSales
   );
 
-  if (loading) {
+  if (activities.isLoading || storesStats.isLoading || stats.isLoading || charts.isLoading) {
     return (
       <Box
         sx={{
@@ -504,9 +236,12 @@ const Dashboard = () => {
           </Box>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
+        {activities.isError || storesStats.isError || stats.isError || charts.isError && (
+          <Alert severity="error" sx={{ mb: 2 }} >
+            {activities.error}
+            {storesStats.isError}
+            {stats.isError}
+            {charts.isError}
           </Alert>
         )}
       </Box>
@@ -516,8 +251,8 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Articles en stock"
-            value={stats.availableItems?.toLocaleString() || "0"}
-            subtitle={`sur ${stats.totalItems?.toLocaleString() || "0"} total`}
+            value={stats.data?.availableItems?.toLocaleString() || "0"}
+            subtitle={`sur ${stats.data?.totalItems?.toLocaleString() || "0"} total`}
             icon={<Inventory />}
             color="primary"
             trend={salesTrend?.direction}
@@ -527,7 +262,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Ventes ce mois"
-            value={stats.soldThisMonth?.toLocaleString() || "0"}
+            value={stats.data?.soldThisMonth?.toLocaleString() || "0"}
             subtitle="articles vendus"
             icon={<ShoppingCart />}
             color="success"
@@ -538,7 +273,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Chiffre d'affaires"
-            value={`${stats.totalRevenue?.toLocaleString() || "0"}€`}
+            value={`${stats.data?.totalRevenue?.toLocaleString() || "0"}€`}
             subtitle="ce mois"
             icon={<TrendingUp />}
             color="info"
@@ -549,7 +284,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Dons en attente"
-            value={stats.pendingDonations?.toLocaleString() || "0"}
+            value={stats.data?.pendingDonations?.toLocaleString() || "0"}
             subtitle="à traiter"
             icon={<VolunteerActivism />}
             color="warning"
@@ -562,7 +297,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Collections programmées"
-            value={stats.scheduledCollections || "0"}
+            value={stats.data?.scheduledCollections.toString() || "0"}
             subtitle="ce mois"
             icon={<LocalShipping />}
             color="secondary"
@@ -571,7 +306,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Catégories actives"
-            value={stats.categoriesCount || "0"}
+            value={stats.data?.categoriesCount.toString() || "0"}
             subtitle="types d'articles"
             icon={<Category />}
             color="primary"
@@ -580,7 +315,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Utilisateurs actifs"
-            value={stats.usersCount || "0"}
+            value={stats.data?.usersCount.toString() || "0"}
             subtitle="employés"
             icon={<People />}
             color="info"
@@ -590,7 +325,7 @@ const Dashboard = () => {
           <StatCard
             title="Taux de vente"
             value={`${(
-              (stats.soldThisMonth / stats.availableItems) *
+              (stats.data?.soldThisMonth || 0 / (stats.data?.availableItems || 0)) *
               100
             ).toFixed(1)}%`}
             subtitle="ce mois"
@@ -601,19 +336,19 @@ const Dashboard = () => {
       </Grid>
 
       {/* Statistiques par magasin */}
-      <StoreStats stores={storesStats} loading={storesLoading} />
+      <StoreStats stores={storesStats.data} loading={storesStats.isLoading} />
 
       <Grid container spacing={3}>
         {/* Graphiques de performance */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <SimpleBarChart 
-          pData={ mockSalesData}
-          uData={ mockRevenueData}
-          label1="Ventes cette semaine"
-          label2="Revenus cette semaine (€)"
-          xLabels={
-            
-                 ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+          <SimpleBarChart
+            pData={charts.data?.sales || mockSalesData}
+            uData={charts.data?.revenue || mockRevenueData}
+            label1="Ventes cette semaine"
+            label2="Revenus cette semaine (€)"
+            xLabels={
+              charts.data?.labels ||
+              ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
             }
           />
 
@@ -656,7 +391,7 @@ const Dashboard = () => {
                 Activités récentes
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Badge badgeContent={activities.length} color="primary">
+                <Badge badgeContent={activities.data?.length} color="primary">
                   <Button size="small" variant="outlined">
                     Voir tout
                   </Button>
@@ -665,10 +400,10 @@ const Dashboard = () => {
             </Box>
 
             <List sx={{ "& .MuiListItem-root": { px: 0 } }}>
-              {activities.map((activity, index) => (
+              {activities.data?.map((activity, index) => (
                 <React.Fragment key={activity.id}>
                   <ActivityItem activity={activity} />
-                  {index < activities.length - 1 && <Divider />}
+                  {index < activities.data?.length - 1 && <Divider />}
                 </React.Fragment>
               ))}
             </List>
@@ -763,7 +498,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications  />
+            <DashboardNotifications onDismiss={() => { }} />
           </Stack>
         </Grid>
       </Grid>
@@ -777,7 +512,7 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
               <Typography variant="h4" color="primary">
-                {((stats.soldThisMonth / 200) * 100).toFixed(0)}%
+                {((stats.data?.soldThisMonth || 0 / 200) * 100).toFixed(0)}%
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 de l'objectif (200 ventes)
@@ -785,7 +520,7 @@ const Dashboard = () => {
             </Box>
             <LinearProgress
               variant="determinate"
-              value={(stats.soldThisMonth / 200) * 100}
+              value={(stats.data?.soldThisMonth || 0 / 200) * 100}
               sx={{ height: 8, borderRadius: 4 }}
             />
           </Paper>
@@ -798,7 +533,7 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Typography variant="h4" color="warning.main">
-                {Math.max(0, 50 - Math.floor(stats.availableItems / 100))}
+                {Math.max(0, 50 - Math.floor(stats.data?.availableItems || 0 / 100))}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 catégories en rupture
@@ -814,7 +549,7 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Typography variant="h4" color="success.main">
-                {((stats.soldThisMonth / stats.availableItems) * 100).toFixed(
+                {(((stats.data?.soldThisMonth || 0) / (stats.data?.availableItems || 0)) * 100).toFixed(
                   1
                 )}
                 %

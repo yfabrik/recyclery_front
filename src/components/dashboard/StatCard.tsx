@@ -1,14 +1,15 @@
 import { Card, CardContent, Typography, Box, Avatar } from "@mui/material";
 import { TrendingUp, TrendingDown } from "@mui/icons-material";
+import type { ReactNode } from "react";
 
 interface StatCardProps {
   title: string;
   value: string;
-  icon: string;
+  icon: ReactNode;
   color: string;
   subtitle: string;
-  trend: string;
-  trendValue: number;
+  trend?: string;
+  trendValue?: string;
   // onClick: React.MouseEventHandler<HTMLDivElement>
 }
 export const StatCard = ({
