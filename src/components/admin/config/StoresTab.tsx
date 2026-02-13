@@ -1,37 +1,15 @@
 import {
-  AccessTime,
-  AccountBalance,
   Add,
-  Delete,
-  Edit,
-  Email,
-  Person,
-  Phone,
-  Schedule,
-  Store,
+  Schedule
 } from "@mui/icons-material";
 import {
-  Alert,
   Box,
   Button,
-  Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
-  IconButton,
-  Paper,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tabs,
-  Tooltip,
   Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -53,13 +31,12 @@ import {
   updateStoreHours
 } from "../../../services/api/storeHours";
 import { fetchUsers as fUsers } from "../../../services/api/users";
+import { CardStore } from "../../CardStore";
 import { CreateCaisseDialog } from "../../CreateCaisseDialog";
 import { StatCardNoIcon } from "../../StatCard";
-import { StoreOpen } from "../../StoreOpen";
 import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
-import { CardStore } from "../../CardStore";
 
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -67,9 +44,9 @@ const StoresTab = () => {
   const [cashRegistersDialog, setCashRegistersDialog] = useState(false);
 
   // États pour les onglets et horaires
-  const [tabValue, setTabValue] = useState(0);
+  // const [tabValue, setTabValue] = useState(0);
   const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
-  const [editingHours, setEditingHours] = useState<ScheduleModel | null>(
+  const [editingHours, setEditingHours] = useState<Partial<ScheduleModel> | null>(
     null,
   );
 

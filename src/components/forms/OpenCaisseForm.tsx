@@ -1,16 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AttachMoney, Euro } from "@mui/icons-material";
 import { Button, Grid, InputAdornment, MenuItem } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import type { StoreModel } from "../../interfaces/Models";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
-import { useQuery } from "@tanstack/react-query";
 
 interface OpenCaisseFormProps extends BaseFormProps<Schema> {
   // stores: StoreModel[];

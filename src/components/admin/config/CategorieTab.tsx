@@ -71,7 +71,7 @@ export const CategoriesTab = () => {
     }
   }, [categories.error]);
 
-  const updateCategorie = useMutation({
+  const editCategory = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateCategory(id, data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
@@ -80,7 +80,7 @@ export const CategoriesTab = () => {
       handleCloseDialog()
     }
   })
-  const createCategorie = useMutation({
+  const addCategory = useMutation({
     mutationFn: (data: Schema) => createCategory(data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
@@ -90,7 +90,7 @@ export const CategoriesTab = () => {
     }
   })
 
-  const deleteCategorie = useMutation({
+  const removeCategory = useMutation({
     mutationFn: (id: number) => deleteCategory(id),
     onError: () => toast.error("Erreur lors de la suppression"),
     onSuccess: () => {
@@ -126,15 +126,15 @@ export const CategoriesTab = () => {
   };
 
   const handleSave = async (formData: Schema) => {
-    if (editingCategory?.id) updateCategorie.mutate({ id: editingCategory.id, data: formData })
-    else createCategorie.mutate(formData)
+    if (editingCategory?.id) editCategory.mutate({ id: editingCategory.id, data: formData })
+    else addCategory.mutate(formData)
   };
 
   const handleDelete = async (category: CategoryModel) => {
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
-      deleteCategorie.mutate(category.id)
+      removeCategory.mutate(category.id)
     }
   };
 
@@ -347,7 +347,8 @@ export const CategoriesTab = () => {
             startIcon={<Save />}
             type="submit"
             form="CategorieForm"
-          >
+            loading={addCategory.isPending||editCategory.isPending}
+          > 
             Sauvegarder
           </Button>
         </DialogActions>

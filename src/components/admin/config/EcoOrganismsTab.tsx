@@ -338,7 +338,7 @@ export const EcoOrganismsTab = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEcoOrganismDialog}>Annuler</Button>
-          <Button form="ecoOrgForm" variant="contained" type="submit">
+          <Button form="ecoOrgForm" variant="contained" type="submit" loading={addEcoOrganism.isPending || editEcoOrganism.isPending}>
             {editingEcoOrganism ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>

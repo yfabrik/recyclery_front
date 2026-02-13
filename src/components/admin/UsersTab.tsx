@@ -207,7 +207,7 @@ export const UsersTab = () => {
     // }
   };
 
-  const getRoleBadgeColor = (role) => {
+  const getRoleBadgeColor = (role:string) => {
     const colors = {
       admin: "error",
       direction: "warning",
@@ -458,6 +458,7 @@ export const UsersTab = () => {
             type="submit"
             form="UserForm"
             variant="contained"
+            loading={editUser.isPending ||addUser.isPending}
           // disabled={
           //   !userForm.username ||
           //   !userForm.email ||
@@ -537,6 +538,7 @@ export const UsersTab = () => {
             color="warning"
             type="submit"
             form="passwordChange"
+            loading={changePassword.isPending}
           // disabled={
           //   !passwordForm.currentPassword ||
           //   !passwordForm.newPassword ||

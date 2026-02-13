@@ -8,10 +8,10 @@ interface filters {
 export const getPlanning = (filters?: filters): Promise<AxiosResponse<{ message: string, schedules: ScheduleModel[] }>> =>
   axiosInstance.get("/api/planning", { params: filters });
 
-export const updatePlanning = (id: number, data) =>
+export const updatePlanning = (id: number, data: Partial<ScheduleModel>): Promise<AxiosResponse<{ message: string }>> =>
   axiosInstance.put(`/api/planning/${id}`, data);
 
-export const createPlanning = (data): Promise<AxiosResponse<{ message: string, schedules: ScheduleModel }>> =>
+export const createPlanning = (data: Partial<ScheduleModel>): Promise<AxiosResponse<{ message: string, schedules: ScheduleModel }>> =>
   axiosInstance.post("/api/planning", data);
 
 export const deletePlanning = (id: number) =>

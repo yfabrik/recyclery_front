@@ -11,6 +11,7 @@ import {
 } from "./FormBase";
 import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   username: z.string().trim().nonempty("username requis"),
@@ -44,6 +45,8 @@ export const UserForm = ({
   stores,
   roles,
 }: UserFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -56,7 +59,7 @@ export const UserForm = ({
       role: "",
       recyclery_id: "",
       isActive: true,
-      ...(defaultValues ?? {}),
+      ...data
     },
   });
 

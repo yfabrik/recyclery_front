@@ -39,13 +39,13 @@ import {
 import { DonForm, type Schema } from "../forms/DonForm";
 import { StatCard } from "../StatCard";
 
-interface donStats {
-  total_donations: number;
-  pending_donations: number;
-  accepted_donations: number;
-  rejected_donations: number;
-  total_estimated_value: number;
-}
+// interface donStats {
+//   total_donations: number;
+//   pending_donations: number;
+//   accepted_donations: number;
+//   rejected_donations: number;
+//   total_estimated_value: number;
+// }
 
 export const DonationsTab = () => {
   // const [donations, setDonations] = useState<DonModel[]>([]);
@@ -324,7 +324,7 @@ export const DonationsTab = () => {
           <DonForm
             formId="donForm"
             onSubmit={handleSaveDonation}
-            defaultValues={editingDonation}
+            defaultValues={editingDonation||undefined}
           />
         </DialogContent>
         <DialogActions>

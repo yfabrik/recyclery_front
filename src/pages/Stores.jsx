@@ -54,7 +54,10 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { createCaisse2, createStore, deleteCaisse, deleteStore, fetchCaisses, fetchCaisses2, fetchStores as fStore, updateCaisse, updateStore } from '../services/api/store';
-
+/**
+ * @deprecated
+ * @returns 
+ */
 const Stores = () => {
   const { user, isAdmin } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);

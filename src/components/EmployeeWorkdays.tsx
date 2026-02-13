@@ -53,7 +53,7 @@ const EmployeeWorkdays = ({
       icon: <WbTwilight />,
       color: "#2196f3",
     },
-  ];
+  ]as const;
 
   useEffect(() => {
     fetchWorkdays();

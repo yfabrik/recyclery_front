@@ -13,7 +13,7 @@ import {
   Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import {
   type CollectionPointModel,
@@ -46,7 +46,7 @@ const CollectionPointsTab = () => {
   );
 
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
-  const [editingPresence, setEditingPresence] = useState<ScheduleModel | null>(
+  const [editingPresence, setEditingPresence] = useState<Partial<ScheduleModel> | null>(
     null,
   );
 
@@ -125,29 +125,29 @@ const CollectionPointsTab = () => {
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    const types = {
-      standard: "Standard",
-      enterprise: "Entreprise",
-      association: "Association",
-      school: "École",
-      hospital: "Hôpital",
-      other: "Autre",
-    };
-    return types[type] || type;
-  };
+  // const getTypeLabel = (type: string) => {
+  //   const types = {
+  //     standard: "Standard",
+  //     enterprise: "Entreprise",
+  //     association: "Association",
+  //     school: "École",
+  //     hospital: "Hôpital",
+  //     other: "Autre",
+  //   };
+  //   return types[type] || type;
+  // };
 
-  const getTypeColor = (type: string) => {
-    const colors = {
-      standard: "default",
-      enterprise: "primary",
-      association: "secondary",
-      school: "success",
-      hospital: "warning",
-      other: "info",
-    };
-    return colors[type] || "default";
-  };
+  // const getTypeColor = (type: string) => {
+  //   const colors = {
+  //     standard: "default",
+  //     enterprise: "primary",
+  //     association: "secondary",
+  //     school: "success",
+  //     hospital: "warning",
+  //     other: "info",
+  //   };
+  //   return colors[type] || "default";
+  // };
 
 
   const handleOpenPresenceDialog = (
@@ -157,7 +157,7 @@ const CollectionPointsTab = () => {
     if (pointId) {
       setEditingPresence({
         ...presence,
-        collection_point_id: pointId,
+        ...(pointId && { collection_point_id: pointId })
       });
     } else
       setEditingPresence(presence);
@@ -247,7 +247,7 @@ const CollectionPointsTab = () => {
           </Grid>
         ))}
       </Grid>
-      
+
 
       {/* Dialog de création/édition */}
       <Dialog
@@ -275,6 +275,7 @@ const CollectionPointsTab = () => {
             type="submit"
             form="collectionPointForm"
             variant="contained"
+            loading={updatePoint.isPending || createPoint.isPending}
           //TODO
           // disabled={
           //   !formData.name ||
@@ -288,7 +289,7 @@ const CollectionPointsTab = () => {
         </DialogActions>
       </Dialog>
 
-      
+
 
       {/* Dialog de création/édition de présence */}
       <Dialog
@@ -313,7 +314,7 @@ const CollectionPointsTab = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePresenceDialog}>Annuler</Button>
-          <Button type="submit" form="presencePointForm" variant="contained">
+          <Button type="submit" form="presencePointForm" variant="contained" loading={updatePresence.isPending || createPresence.isPending}>
             {editingPresence?.id ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>

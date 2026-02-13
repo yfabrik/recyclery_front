@@ -12,13 +12,20 @@ interface UserFilters {
   include?: string;
 }
 
-export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ message: string, users: UserModel[] }>> =>
+interface UserStats {
+  totalUsers: number
+  usersByRole: { role: UserModel["role"], count: number }[]
+  recentLogins: number
+  activeEmployees: number
+}
+
+export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ users: UserModel[] }>> =>
   axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
 // export const getEmployees = () => axiosInstance.get("/api/users/employees")
 
-export const createUser = (data: Schema) =>
+export const createUser = (data: Schema): Promise<AxiosResponse<{ message: string, user: UserModel[] }>> =>
   axiosInstance.post("/api/users", data);
-export const updateUser = (id: number, data: Schema) =>
+export const updateUser = (id: number, data: Schema): Promise<AxiosResponse<{ message: string, user: UserModel[] }>> =>
   axiosInstance.put(`/api/users/${id}`, data);
 export const deleteUser = (id: number) =>
   axiosInstance.delete(`/api/users/${id}`);
@@ -27,7 +34,7 @@ export const updateUserPassword = (id: number, data: PasswordSchema) =>
   axiosInstance.patch(`/api/users/${id}/password`, data);
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");
-export const getUsersStats = () => axiosInstance.get("/api/users/stats");
+export const getUsersStats = (): Promise<AxiosResponse<{ message: string, stats: UserStats }>> => axiosInstance.get("/api/users/stats");
 
 interface EmployeeStoreModel {
   employee_id: number;

@@ -602,7 +602,7 @@ const WasteManagement = () => {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormDate control={form.control} name="date_from" label="Date début" extra={{ size: "small" }} />
+            <FormDate control={form.control} name="date_from" label="Date début" extra={{ slotProps: { textField: { size: "small" } } }} />
             {/* <TextField
               fullWidth
               size="small"
@@ -615,7 +615,7 @@ const WasteManagement = () => {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormDate control={form.control} name="date_to" label="Date fin" extra={{ size: "small" }} />
+            <FormDate control={form.control} name="date_to" label="Date fin" extra={{ slotProps: { textField: { size: "small" } } }} />
 
             {/* <TextField
               fullWidth

@@ -40,13 +40,14 @@ export const StoreOpeningForm = ({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      store_id: defaultValues?.store_id || "",
-      day_of_week: defaultValues?.day_of_week || "",
-      is_open: defaultValues?.is_open || true,
-      open_time: defaultValues?.open_time || new Date().setHours(9, 0),
-      close_time: defaultValues?.close_time || new Date().setHours(17, 0),
-      is_24h: defaultValues?.is_24h || false,
-      notes: defaultValues?.notes || "",
+      store_id: "",
+      day_of_week: "",
+      is_open: true,
+      open_time: new Date().setHours(9, 0),
+      close_time: new Date().setHours(17, 0),
+      is_24h: false,
+      notes: "",
+      ...data
     },
   });
 

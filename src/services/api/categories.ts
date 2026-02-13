@@ -1,9 +1,10 @@
 import type { AxiosResponse } from "axios";
 import type { CategoryModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
+import type { Schema } from "../../components/forms/CategorieForm";
 
 interface filters {
-  include?: "category"|"parent";
+  include?: "category" | "parent";
   only_category?: boolean;
   only_sub?: boolean;
   in?: boolean;
@@ -28,10 +29,14 @@ export const fetchCategories = (
  */
 export const getSubcategories = () => axiosInstance.get("/api/subcategories");
 
-export const createCategory = (data: CategoryModel) =>
+export const createCategory = (data: Schema): Promise<AxiosResponse<{
+  message: string, category: CategoryModel
+}>> =>
   axiosInstance.post("/api/categories", data);
 
-export const updateCategory = (id: number, data: CategoryModel) =>
+export const updateCategory = (id: number, data: Schema): Promise<AxiosResponse<{
+  message: string, category: CategoryModel
+}>> =>
   axiosInstance.put(`/api/categories/${id}`, data);
 
 export const deleteCategory = (id: number) =>

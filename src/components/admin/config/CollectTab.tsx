@@ -22,15 +22,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import type { ScheduleModel } from "../../../interfaces/Models";
+import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import {
   createPlanning,
   deletePlanning,
   getPlanning,
   updatePlanning,
 } from "../../../services/api/planning";
-import { CollecteForm, type Schema } from "../../forms/CollecteForm";
-import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import { fetchStores } from "../../../services/api/store";
+import { CollecteForm, type Schema } from "../../forms/CollecteForm";
 
 export const CollectTab = () => {
   const queryClient = useQueryClient();
@@ -61,8 +61,8 @@ export const CollectTab = () => {
     queryFn: () => fetchStores({ active: true }).then(res => res.data.stores),
   });
 
-  const mutation = useMutation({
-    mutationFn: (formData: ScheduleModel) => {
+  const addCollecte = useMutation({
+    mutationFn: (formData: Partial<ScheduleModel>) => {
       return createPlanning(formData);
     },
     onSuccess: (newItem) => {
@@ -74,8 +74,8 @@ export const CollectTab = () => {
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: ScheduleModel }) => {
+  const editCollecte = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: Partial<ScheduleModel> }) => {
       return updatePlanning(id, data);
     },
     onSuccess: (updatedItem) => {
@@ -90,7 +90,7 @@ export const CollectTab = () => {
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
 
-  const deleteMutation = useMutation({
+  const removeCollecte = useMutation({
     mutationFn: (id: number) => deletePlanning(id),
     onSuccess: (deleted) => {
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
@@ -99,11 +99,11 @@ export const CollectTab = () => {
   });
 
   const handleOpenDialog = (collecte: ScheduleModel | null = null) => {
-    if (collecte?.collection_point_id) {
-      collecte.location2 = `point.${collecte.collection_point_id}`;
-    } else if (collecte?.store_id) {
-      collecte.location2 = `store.${collecte.store_id}`;
-    }
+    // if (collecte?.collection_point_id) {
+    //   collecte.location2 = `point.${collecte.collection_point_id}`;
+    // } else if (collecte?.store_id) {
+    //   collecte.location2 = `store.${collecte.store_id}`;
+    // }
     if (collecte)
       collecte.location = collecte.location
         ? collecte.location === "" ? [] : collecte.location.split(",")
@@ -125,17 +125,16 @@ export const CollectTab = () => {
       category: "collection",
       recurrence_pattern: "weekly",
       collection_point_id: undefined,
-      store_id: undefined,
     };
 
-    const [type, id] = data.location2?.split(".") ?? [];
-    if (type === "point") {
-      result.collection_point_id = +id;
-      result.name += ` - déchet ${collectionPoints.data?.find(point => point.id === +id)?.name}`;
-    } else if (type === "store") {
-      result.store_id = +id;
-      result.name += ` - magasin ${stores.data?.find(store => store.id === +id)?.name}`;
-    }
+    // const [type, id] = data.location2?.split(".") ?? [];
+    // if (type === "point") {
+    //   result.collection_point_id = +id;
+    //   result.name += ` - déchet ${collectionPoints.data?.find(point => point.id === +id)?.name}`;
+    // } else if (type === "store") {
+    //   result.store_id = +id;
+    //   result.name += ` - magasin ${stores.data?.find(store => store.id === +id)?.name}`;
+    // }
     //TODO FIXME BEUUUUUUURK
     result.scheduled_date = (() => {
       const today = new Date();
@@ -151,9 +150,9 @@ export const CollectTab = () => {
       }
     })();
     if (editingCollecte?.id) {
-      updateMutation.mutate({ id: editingCollecte.id, data: result });
+      editCollecte.mutate({ id: editingCollecte.id, data: result });
     } else {
-      mutation.mutate(result);
+      addCollecte.mutate(result);
     }
   };
 
@@ -163,7 +162,7 @@ export const CollectTab = () => {
     ) {
       return;
     }
-    deleteMutation.mutate(collecte.id);
+    removeCollecte.mutate(collecte.id);
   };
 
   return (
@@ -290,7 +289,7 @@ export const CollectTab = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button type="submit" form="createLogistic" variant="contained">
+          <Button type="submit" form="createLogistic" variant="contained" loading={addCollecte.isPending ||editCollecte.isPending}>
             {editingCollecte ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>

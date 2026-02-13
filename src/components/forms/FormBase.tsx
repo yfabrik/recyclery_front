@@ -29,14 +29,14 @@ import {
 } from "react-hook-form";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker, type DatePickerSlotProps } from "@mui/x-date-pickers/DatePicker";
+import { DatePicker, type DatePickerProps, type DatePickerSlotProps } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
 export interface BaseFormProps<T> {
   formId: string;
-  defaultValues?: T;
+  defaultValues?: Partial<T> | null;
   onSubmit: SubmitHandler<T>;
 }
 
@@ -160,7 +160,7 @@ export const FormDate = <
   control,
   label,
   extra
-}: FormControlProps<TFieldValues, TName, TTransformedValues> & { extra: DatePickerSlotProps<true>["textField"] }) => {
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & { extra?: DatePickerProps }) => {
   return (
     <Controller
       name={name}
@@ -169,9 +169,9 @@ export const FormDate = <
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label={label}
+            {...extra}
             slotProps={{
               textField: {
-                ...extra,
                 fullWidth: true,
                 error: fieldState.invalid,
                 helperText: fieldState.invalid && fieldState.error?.message,

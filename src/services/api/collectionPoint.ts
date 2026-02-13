@@ -16,10 +16,10 @@ interface axiosReturn {
 export const fetchCollectionPoints = (filters?: CollectionPointFilters): Promise<AxiosResponse<axiosReturn>> =>
   axiosInstance.get("/api/collection-points", { params: filters });
 
-export const createCollectionPoint = (data: Schema) =>
+export const createCollectionPoint = (data: Schema): Promise<AxiosResponse<{ message: string, collection_point: CollectionPointModel }>> =>
   axiosInstance.post("/api/collection-points", data);
 
-export const updateCollectionPoint = (id: number, data: Schema) =>
+export const updateCollectionPoint = (id: number, data: Schema): Promise<AxiosResponse<{ message: string, collection_point: CollectionPointModel }>> =>
   axiosInstance.put(`/api/collection-points/${id}`, data);
 
 export const deleteCollectionPoint = (id: number) =>
