@@ -2,6 +2,7 @@ import {
   AccessTime,
   Add,
   CalendarToday,
+  CheckBox,
   Delete,
   Edit,
   LocationOn,
@@ -20,6 +21,7 @@ import {
   Card,
   CardActions,
   CardContent,
+  Checkbox,
   Chip,
   Container,
   Dialog,
@@ -27,19 +29,20 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
   Grid,
   IconButton,
-  InputLabel,
   MenuItem,
   Paper,
-  Select,
   Stack,
-  TextField,
   Tooltip,
   Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { EmployeeModel } from "../../../interfaces/Models";
 import {
@@ -52,20 +55,20 @@ import { fetchStores } from "../../../services/api/store";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
+import { FormInput, FormSelect } from "../../forms/FormBase";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeModel | null>(
     null,
   );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
 
   // Nouveaux états pour les dialogs d'affectation et jours de travail
   const [openStoreAssignmentDialog, setOpenStoreAssignmentDialog] =
     useState(false);
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
+  const [openSkillsDialog, setOpenSkillsDialog] = useState(false);
+
 
   const skillsOptions = [
     "Collecte",
@@ -96,6 +99,15 @@ const EmployeeManagement = () => {
   ];
 
 
+  const form = useForm({
+    defaultValues: {
+      search: "",
+      role: "",
+      status: ""
+    }
+  })
+  const filters = form.watch()
+
   const queryClient = useQueryClient()
 
   const stores = useQuery({
@@ -122,7 +134,7 @@ const EmployeeManagement = () => {
     ),
   })
   const addEmployee = useMutation({
-    mutationFn: (data:Schema) => createEmployees(data),
+    mutationFn: (data: Schema) => createEmployees(data),
     onSuccess: () => {
       toast.success("Employé créé avec succès");
       handleCloseDialog();
@@ -163,6 +175,11 @@ const EmployeeManagement = () => {
     setOpenWorkdaysDialog(true);
   };
 
+  const handleOpenSkills = (employee: EmployeeModel) => {
+    setEditingEmployee(employee);
+    setOpenSkillsDialog(true);
+  }
+
   const handleCloseStoreAssignment = () => {
     setOpenStoreAssignmentDialog(false);
     setEditingEmployee(null);
@@ -172,6 +189,12 @@ const EmployeeManagement = () => {
     setOpenWorkdaysDialog(false);
     setEditingEmployee(null);
   };
+
+  const handleCloseSkills = () => {
+    setOpenSkillsDialog(false)
+    setEditingEmployee(null);
+  };
+
 
   const handleSave = async (data: Schema) => {
     if (editingEmployee?.id) editEmployee.mutate({ id: editingEmployee.id, data })
@@ -185,7 +208,7 @@ const EmployeeManagement = () => {
     removeEmployee.mutate(employeeId)
   };
 
-  const getRoleColor = (role:string) => {
+  const getRoleColor = (role: string) => {
     const colors = {
       employee: "default",
       manager: "primary",
@@ -196,7 +219,7 @@ const EmployeeManagement = () => {
     return colors[role] || "default";
   };
 
-  const getAvailabilityColor = (availability:string) => {
+  const getAvailabilityColor = (availability: string) => {
     const colors = {
       full_time: "success",
       part_time: "warning",
@@ -210,13 +233,13 @@ const EmployeeManagement = () => {
   const filteredEmployees =
     employees.data?.filter((employee) => {
       const matchesSearch =
-        employee.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        employee.nom?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        employee.email?.toLowerCase().includes(filters.search.toLowerCase());
       // const matchesRole = filterRole === "all" || employee.role === filterRole;
       const matchesStatus =
-        filterStatus === "all" ||
-        (filterStatus === "active" && employee.isActive !== false) ||
-        (filterStatus === "inactive" && employee.isActive === false);
+        filters.status === "" ||
+        (filters.status === "active" && employee.isActive !== false) ||
+        (filters.status === "inactive" && employee.isActive === false);
 
       return matchesSearch && matchesStatus;
     }) || [];
@@ -237,6 +260,7 @@ const EmployeeManagement = () => {
       </Container>
     );
   }
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
@@ -270,7 +294,15 @@ const EmployeeManagement = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
+            <FormInput control={form.control} name="search" label="" extra={{
+              placeholder: "Rechercher un employé...",
+              slotProps: {
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />
+                }
+              }
+            }} />
+            {/* <TextField
               fullWidth
               placeholder="Rechercher un employé..."
               value={searchTerm}
@@ -282,10 +314,19 @@ const EmployeeManagement = () => {
                   ),
                 },
               }}
-            />
+            /> */}
           </Grid>
           <Grid size={{ xs: 12, md: 3 }}>
-            <FormControl fullWidth>
+            <FormSelect label="Rôle" control={form.control} name="role">
+              <MenuItem key={"all"} value="">Tous les rôles</MenuItem>
+              {roleOptions.map((role) => (
+                <MenuItem key={role.value} value={role.value}>
+                  {role.label}
+                </MenuItem>
+              ))}
+
+            </FormSelect>
+            {/* <FormControl fullWidth>
               <InputLabel>Rôle</InputLabel>
               <Select
                 value={filterRole}
@@ -299,10 +340,15 @@ const EmployeeManagement = () => {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
           </Grid>
           <Grid size={{ xs: 12, md: 3 }}>
-            <FormControl fullWidth>
+            <FormSelect control={form.control} name="status" label="Statut">
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="active">Actif</MenuItem>
+              <MenuItem value="inactive">Inactif</MenuItem>
+            </FormSelect>
+            {/* <FormControl fullWidth>
               <InputLabel>Statut</InputLabel>
               <Select
                 value={filterStatus}
@@ -313,16 +359,19 @@ const EmployeeManagement = () => {
                 <MenuItem value="active">Actif</MenuItem>
                 <MenuItem value="inactive">Inactif</MenuItem>
               </Select>
-            </FormControl>
+            </FormControl> */}
           </Grid>
           <Grid size={{ xs: 12, md: 2 }}>
             <Button
               variant="outlined"
               startIcon={<Refresh />}
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["employees"] })}
+              type="reset"
+
+              onClick={() => form.reset() //queryClient.invalidateQueries({ queryKey: ["employees"] })
+              }
               fullWidth
             >
-              Actualiser
+              Reset
             </Button>
           </Grid>
         </Grid>
@@ -470,15 +519,15 @@ const EmployeeManagement = () => {
               </CardContent>
               {/* Boutons d'action supplémentaires */}
               <CardActions>
-              <Tooltip title="Définir les compétences des employés">
+                <Tooltip title="Définir les compétences des employés">
                   <Button
                     size="small"
                     variant="outlined"
                     startIcon={<Quiz />}
-                    onClick={() => handleOpenStoreAssignment(employee)}
+                    onClick={() => handleOpenSkills(employee)}
                     sx={{ flex: 1 }}
                   >
-                    Magasins
+                    Skills
                   </Button>
                 </Tooltip>
                 <Tooltip title="Gérer les affectations aux magasins">
@@ -514,7 +563,7 @@ const EmployeeManagement = () => {
             Aucun employé trouvé
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            {searchTerm || filterRole !== "all" || filterStatus !== "all"
+            {filters.search || filters.role || filters.status
               ? "Essayez de modifier vos critères de recherche"
               : "Commencez par ajouter un employé"}
           </Typography>
@@ -535,7 +584,7 @@ const EmployeeManagement = () => {
             formId="employeeForm"
             onSubmit={handleSave}
             stores={stores.data || []}
-            defaultValues={editingEmployee}
+            defaultValues={editingEmployee || undefined}
           />
         </DialogContent>
         <DialogActions>
@@ -589,6 +638,34 @@ const EmployeeManagement = () => {
 
               }}
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de gestion des Comptences */}
+      <Dialog
+        open={openSkillsDialog}
+        onClose={handleCloseSkills}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>Competences MARCHE PAS</DialogTitle>
+        <DialogContent>
+          {editingEmployee && (
+            <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
+              <FormLabel component="legend">Competences de l'employée</FormLabel>
+              <FormGroup>
+                {skillsOptions.map(skill => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox name={skill} />
+                    }
+                    label={skill}
+                  />
+                ))}
+              </FormGroup>
+            </FormControl>
+
           )}
         </DialogContent>
       </Dialog>
