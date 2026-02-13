@@ -14,6 +14,7 @@ import type { CollectionPointModel, StoreModel } from "../../interfaces/Models";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { useEffect } from "react";
+import { idSchema } from "../../interfaces/ZodTypes";
 
 const schema = z.object({
   day_of_week: z.string().nonempty("choissisez un jour"),
@@ -21,7 +22,7 @@ const schema = z.object({
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
   notes: z.string(),
-  location2: z.string().nonempty("choissisez un point de collecte"),
+  store_id: idSchema(),// z.string().nonempty("choissisez un point de collecte"),
   location: z.array(z.string()).default([]),
 });
 
@@ -48,7 +49,7 @@ export const CollecteForm = ({
       start_time: new Date().setHours(9, 0),
       end_time: new Date().setHours(17, 0),
       notes: "",
-      location2: "",
+      store_id: "",
       location: [],
       ...data,
 
@@ -94,17 +95,10 @@ export const CollecteForm = ({
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormSelect label="Point de collecte" control={form.control} name="location2">
-            <MenuItem value="">Aucun</MenuItem>
-            <ListSubheader>Points de collecte</ListSubheader>
-            {collectionPoints.map((point) => (
-              <MenuItem key={`point.${point.id}`} value={`point.${point.id}`}>
-                {point.name}
-              </MenuItem>
-            ))}
-            <ListSubheader>Magasins</ListSubheader>
+          <FormSelect label="Magasin" control={form.control} name="store_id">
+            <MenuItem key={"emptyStore"} value="">Aucun</MenuItem>
             {stores.map((store) => (
-              <MenuItem key={`store.${store.id}`} value={`store.${store.id}`}>
+              <MenuItem key={store.id} value={store.id}>
                 Magasin {store.name}
               </MenuItem>
             ))}
@@ -142,14 +136,14 @@ export const CollecteForm = ({
                   <ListSubheader>Points de collecte</ListSubheader>
                   {collectionPoints.map((point) => (
                     <MenuItem key={`point.${point.id}`} value={`point.${point.id}`}>
-                      <Checkbox checked={field.value.includes(`point.${point.id}`)} />
+                      <Checkbox checked={field.value?.includes(`point.${point.id}`)} />
                       {point.name}
                     </MenuItem>
                   ))}
                   <ListSubheader>Magasins</ListSubheader>
                   {stores.map((store) => (
                     <MenuItem key={`store.${store.id}`} value={`store.${store.id}`}>
-                      <Checkbox checked={field.value.includes(`store.${store.id}`)} />
+                      <Checkbox checked={field.value?.includes(`store.${store.id}`)} />
                       Magasin {store.name}
                     </MenuItem>
                   ))}
