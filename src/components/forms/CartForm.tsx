@@ -8,6 +8,7 @@ import { DevTool } from "@hookform/devtools"
 import { idSchema } from "../../interfaces/ZodTypes"
 
 const itemSchema = z.object({
+
     quantity: z.number(),
     price: z.number(),
     name: z.string(),
@@ -15,14 +16,14 @@ const itemSchema = z.object({
     subcategory_name: z.string(),
 
 
-    id: idSchema(),
+    // id: idSchema(),
     barcode: z.string(),
     category_id: idSchema(),
-    subcategory_id: idSchema(),
+    subcategory_id: idSchema().nullish(),
     description: z.string(),
 
     weight: z.number(),
-    is_manual: z.boolean(), // Flag pour identifier les articles manuels
+    is_manual: z.boolean().default(false), // Flag pour identifier les articles manuels
 
 })
 
@@ -31,6 +32,8 @@ const schema = z.object(
 )
 
 export type Schema = z.infer<typeof schema>
+export type CartItem = Schema["cart"][number];
+
 export const CartForm = ({ formId, onSubmit }: BaseFormProps<Schema>) => {
     const form = useForm({
         defaultValues: {

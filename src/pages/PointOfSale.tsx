@@ -38,6 +38,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import {
   schema,
+  type CartItem,
   type Schema as CartSchema,
 } from "../components/forms/cartSchema";
 import {
@@ -48,13 +49,13 @@ import {
   EncaissementForm,
   type Schema as EncaissementSchema,
 } from "../components/forms/EncaissementForm";
-import { ManualItemForm } from "../components/forms/ManualItemForm";
+import { ManualItemForm, type Schema as ManualItemSchema } from "../components/forms/ManualItemForm";
 import {
   OpenCaisseForm,
   type Schema as OpenCaisseSchema,
 } from "../components/forms/OpenCaisseForm";
 import { useAuth } from "../contexts/AuthContext";
-import type { TransactionModel } from "../interfaces/Models";
+import type { CashSession, TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import {
@@ -63,11 +64,12 @@ import {
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
+import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
 
   // const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
@@ -82,6 +84,21 @@ const PointOfSale = () => {
     customer_name: "",
     customer_email: "",
   });
+
+
+  const form = useForm({
+    defaultValues: {
+      cart: [],
+    },
+    resolver: zodResolver(schema),
+  });
+
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "cart",
+  });
+
+  const cart = form.watch("cart");
 
   const queryClient = useQueryClient();
 
@@ -142,13 +159,13 @@ const PointOfSale = () => {
     openSession.mutate(data);
   };
   const handleCloseSession = (data: CloseCaisseSchema) => {
-    closeSession.mutate({ id: activeSession.data.id, data: data });
+    if (activeSession.data)//TODO faire sans ou raise error ??? use type never ?
+      closeSession.mutate({ id: activeSession.data.id, data: data });
   };
   const handleSell = useMutation({
     mutationFn: (data: TransactionModel) => createSell(data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success("Vente enregistrée avec succès");
-      form.reset({ cart: [] });
       setPaymentDialog(false);
       setPaymentData({
         payment_method: "cash",
@@ -156,28 +173,19 @@ const PointOfSale = () => {
         customer_name: "",
         customer_email: "",
       });
+      console.log(data, variables)
       if (window.confirm("Imprimer le ticket de caisse ?")) {
-        printReceipt(data.data.data, cart, paymentAmount - total);
+        if (activeSession.data)
+          printReceipt(variables, cart as CartItem[], activeSession.data, user);
       }
+      form.reset({ cart: [] });
     },
     onError: (error) => {
       toast.error("Erreur lors de l'enregistrement de la vente");
     },
   });
 
-  const form = useForm({
-    defaultValues: {
-      cart: [],
-    },
-    resolver: zodResolver(schema),
-  });
 
-  const { fields, append, remove, update } = useFieldArray({
-    control: form.control,
-    name: "cart",
-  });
-
-  const cart = form.watch("cart");
 
   const handleScanProduct = async () => {
     if (!scanInput.trim()) {
@@ -187,7 +195,7 @@ const PointOfSale = () => {
 
     try {
       const response = await getItemFromBarcode(scanInput);
-      const item = response.data.item;
+      const item = response.data.item
 
       if (item.status !== "available") {
         toast.error("Cet article n'est pas disponible à la vente");
@@ -201,7 +209,7 @@ const PointOfSale = () => {
 
       if (existingItem !== -1) {
         update(existingItem, {
-          ...item,
+          ...cart[existingItem],
           quantity: cart[existingItem].quantity + 1,
         });
         // setCart((prev) =>
@@ -212,7 +220,14 @@ const PointOfSale = () => {
         //   ),
         // );
       } else {
-        append({ ...item, quantity: 1 });
+        const category_name = categories.data?.find(cat => cat.id === item.category_id)?.name ?? ""
+        const subcategory_name = categories.data?.find(cat => cat.id === item.subcategory_id)?.name ?? ""
+        let itemName = category_name || "Article";
+        if (subcategory_name) {
+          itemName = `${category_name} (${subcategory_name})`;
+        }
+
+        append({ ...item, quantity: 1, name: itemName, category_name, subcategory_name });
         // setCart((prev) => [
         //   ...prev,
         //   {
@@ -257,7 +272,7 @@ const PointOfSale = () => {
   //   setCart((prev) => prev.filter((item) => item.barcode !== barcode));
   // };
 
-  const handleAddManualItem = (data: CartSchema) => {
+  const handleAddManualItem = (data: ManualItemSchema) => {
     // Générer un code-barres temporaire pour l'article manuel
     const tempBarcode = `MANUAL${Date.now()}`;
 
@@ -275,20 +290,21 @@ const PointOfSale = () => {
     }
 
     const manualItem = {
-      id: tempBarcode,
+      // id: tempBarcode,
       barcode: tempBarcode,
-      category_id: selectedCategory?.id,
-      subcategory_id: selectedSubcategory?.id,
+      category_id: data.category_id,
+      subcategory_id: data.subcategory_id,
       name: itemName,
       description: data.description || "",
       category_name: selectedCategory?.name || "",
       subcategory_name: selectedSubcategory?.name || "",
       price: data.price,
-      weight: data.weight ? data.weight : null,
+      weight: data.weight,
       quantity: 1,
+
       // total_price: parseFloat(data.price),
       is_manual: true, // Flag pour identifier les articles manuels
-    };
+    } satisfies CartItem;
 
     append(manualItem);
     // setCart((prev) => [...prev, manualItem]);
@@ -304,10 +320,10 @@ const PointOfSale = () => {
     );
   };
 
-  const quantity = cart.reduce(
-    (prev, current) => (prev += current.quantity),
-    0,
-  );
+  // const quantity = cart.reduce(
+  //   (prev, current) => (prev += current.quantity),
+  //   0,
+  // );
 
   const handleValidateCart = async (data: CartSchema) => {
     setPaymentData((prev) => ({
@@ -334,28 +350,30 @@ const PointOfSale = () => {
     //   setLoading(true);
 
     // Créer la transaction
-    const transactionData = {
-      cash_session_id: activeSession.data?.id,
-      store_id: activeSession.data?.CashRegister?.Recyclery?.id,
-      total_amount: total,
-      payment_method: data.payment_method,
-      payment_amount: paymentAmount,
-      change_amount: paymentAmount - total,
-      customer_name: data.customer_name || null,
-      customer_email: data.customer_email || null,
-      items: cart.map((item) => ({
-        labeled_item_id: item.is_manual ? null : item.id,
-        barcode: item.barcode,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        total_price: item.quantity * item.price,
-        is_manual: item.is_manual || false,
-        category_id: item.category_id,
-        subcategory_id: item.subcategory_id,
-      })),
-    };
-    handleSell.mutate(transactionData);
+    if (activeSession.data) {
+      const transactionData = {
+        cash_session_id: activeSession.data.id,
+        // cash_register_id: activeSession.data.cash_register_id,
+        total_amount: total,
+        payment_method: data.payment_method,
+        payment_amount: paymentAmount,
+        change_amount: paymentAmount - total,
+        customer_name: data.customer_name || undefined,
+        customer_email: data.customer_email || undefined,
+        items: cart.map((item) => ({
+          labeled_item_id: item.is_manual ? null : item.id,
+          barcode: item.barcode,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          total_price: item.quantity * item.price,
+          is_manual: item.is_manual || false,
+          category_id: item.category_id,
+          subcategory_id: item.subcategory_id,
+        })),
+      } satisfies TransactionModel & { items: CartItem[] };
+      handleSell.mutate(transactionData);
+    }
 
     // const response = await createSell(transactionData);
 
@@ -383,74 +401,74 @@ const PointOfSale = () => {
     // }
   };
 
-  const printReceipt = (
-    transaction: TransactionModel,
-    items: CartSchema[],
-    change: number,
-  ) => {
-    const printWindow = window.open("", "", "width=400,height=600");
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Ticket de caisse</title>
-          <style>
-            body { font-family: monospace; margin: 20px; font-size: 12px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .line { border-bottom: 1px dashed #000; margin: 10px 0; }
-            .total { font-weight: bold; font-size: 14px; }
-            .right { text-align: right; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2>${activeSession.data?.Recyclery.name}</h2>
-            <p>Ticket N°: ${transaction.id}</p>
-            <p>Date: ${new Date().toLocaleString()}</p>
-            <p>Caissier: ${user.username}</p>
-          </div>
-          
-          <div class="line"></div>
-          
-          ${items
-            .map(
-              (item) => `
-            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-              <span>${item.name}</span>
-              <span>${item.quantity} x ${parseFloat(item.price).toFixed(2)}€</span>
-              <span class="right">${item.total_price.toFixed(2)}€</span>
-            </div>
-          `,
-            )
-            .join("")}
-          
-          <div class="line"></div>
-          
-          <div class="total">
-            <div style="display: flex; justify-content: space-between;">
-              <span>TOTAL:</span>
-              <span>${getCartTotal().toFixed(2)}€</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span>Payé:</span>
-              <span>${parseFloat(paymentData.payment_amount).toFixed(2)}€</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span>Rendu:</span>
-              <span>${change.toFixed(2)}€</span>
-            </div>
-          </div>
-          
-          <div class="line"></div>
-          <div style="text-align: center; margin-top: 20px;">
-            <p>Merci de votre visite !</p>
-          </div>
-        </body>
-      </html>
-    `);
+  // const printReceipt = (
+  //   transaction: TransactionModel,
+  //   items: CartSchema[],
+  //   change: number,
+  // ) => {
+  //   const printWindow = window.open("", "", "width=400,height=600");
+  //   printWindow.document.write(`
+  //     <html>
+  //       <head>
+  //         <title>Ticket de caisse</title>
+  //         <style>
+  //           body { font-family: monospace; margin: 20px; font-size: 12px; }
+  //           .header { text-align: center; margin-bottom: 20px; }
+  //           .line { border-bottom: 1px dashed #000; margin: 10px 0; }
+  //           .total { font-weight: bold; font-size: 14px; }
+  //           .right { text-align: right; }
+  //         </style>
+  //       </head>
+  //       <body>
+  //         <div class="header">
+  //           <h2>${activeSession.data?.Recyclery.name}</h2>
+  //           <p>Ticket N°: ${transaction.id}</p>
+  //           <p>Date: ${new Date().toLocaleString()}</p>
+  //           <p>Caissier: ${user.username}</p>
+  //         </div>
 
-    printWindow.document.close();
-    printWindow.print();
-  };
+  //         <div class="line"></div>
+
+  //         ${items
+  //       .map(
+  //         (item) => `
+  //           <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+  //             <span>${item.name}</span>
+  //             <span>${item.quantity} x ${parseFloat(item.price).toFixed(2)}€</span>
+  //             <span class="right">${item.total_price.toFixed(2)}€</span>
+  //           </div>
+  //         `,
+  //       )
+  //       .join("")}
+
+  //         <div class="line"></div>
+
+  //         <div class="total">
+  //           <div style="display: flex; justify-content: space-between;">
+  //             <span>TOTAL:</span>
+  //             <span>${getCartTotal().toFixed(2)}€</span>
+  //           </div>
+  //           <div style="display: flex; justify-content: space-between;">
+  //             <span>Payé:</span>
+  //             <span>${parseFloat(paymentData.payment_amount).toFixed(2)}€</span>
+  //           </div>
+  //           <div style="display: flex; justify-content: space-between;">
+  //             <span>Rendu:</span>
+  //             <span>${change.toFixed(2)}€</span>
+  //           </div>
+  //         </div>
+
+  //         <div class="line"></div>
+  //         <div style="text-align: center; margin-top: 20px;">
+  //           <p>Merci de votre visite !</p>
+  //         </div>
+  //       </body>
+  //     </html>
+  //   `);
+
+  //   printWindow.document.close();
+  //   printWindow.print();
+  // };
 
   if (!activeSession.data) {
     return (
@@ -485,8 +503,8 @@ const PointOfSale = () => {
             <OpenCaisseForm
               formId="OpenCaisseForm"
               onSubmit={handleOpenSession}
-              // stores={stores}
-              // cashRegisters={cashRegisters}
+            // stores={stores}
+            // cashRegisters={cashRegisters}
             />
           </DialogContent>
           <DialogActions>
@@ -510,7 +528,7 @@ const PointOfSale = () => {
               <PosIcon color="primary" />
               <Box>
                 <Typography variant="h6">
-                  {activeSession.data?.Recyclery.name} -{" "}
+                  {activeSession.data?.Recyclery?.name} -{" "}
                   {activeSession.data?.CashRegister?.name}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
@@ -559,6 +577,7 @@ const PointOfSale = () => {
                 variant="contained"
                 onClick={handleScanProduct}
                 sx={{ minWidth: 100 }}
+                disabled={scanInput.length < 1}
               >
                 Scanner
               </Button>
@@ -632,15 +651,15 @@ const PointOfSale = () => {
                               </Typography>
                               {(item.category_name ||
                                 item.subcategory_name) && (
-                                <Typography
-                                  variant="body2"
-                                  color="textSecondary"
-                                >
-                                  {item.category_name}
-                                  {item.subcategory_name &&
-                                    ` > ${item.subcategory_name}`}
-                                </Typography>
-                              )}
+                                  <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                  >
+                                    {item.category_name}
+                                    {item.subcategory_name &&
+                                      ` > ${item.subcategory_name}`}
+                                  </Typography>
+                                )}
                             </Box>
                           </TableCell>
                           <TableCell>{item.price.toFixed(2)}€</TableCell>
@@ -658,9 +677,9 @@ const PointOfSale = () => {
                                   return item.quantity - 1 <= 0
                                     ? remove(index)
                                     : update(index, {
-                                        ...item,
-                                        quantity: item.quantity - 1,
-                                      });
+                                      ...item,
+                                      quantity: item.quantity - 1,
+                                    });
                                 }}
                               >
                                 <Remove />
@@ -907,7 +926,7 @@ const PointOfSale = () => {
             type="submit"
             form="manualItemForm"
             variant="contained"
-            // disabled={!manualItemData.category_id || !manualItemData.price}
+          // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>
@@ -966,8 +985,8 @@ const PointOfSale = () => {
             type="submit"
             form="encaissementForm"
             variant="contained"
+            loading={handleSell.isPending}
             disabled={
-              handleSell.isPending ||
               parseFloat(paymentData.payment_amount) < getCartTotal()
             }
           >
