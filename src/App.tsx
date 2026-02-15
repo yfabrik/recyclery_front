@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, type ReactNode } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useAuth } from "./contexts/AuthContext";
@@ -35,8 +35,8 @@ import Planning from "./pages/Planning";
 import { TestPage } from "./pages/TestPage";
 
 // Route protégée
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children }:{children:ReactNode}) => {
+  const { isAuthenticated, loading, hasModuleAccess } = useAuth();
 
   if (loading) {
     return (
@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Route publique (redirection si déjà connecté)
-const PublicRoute = ({ children }) => {
+const PublicRoute = ({ children }:{children:ReactNode}) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {

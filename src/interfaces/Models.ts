@@ -133,7 +133,7 @@ export interface UserModel extends BaseModel {
   password?: string;
 
   phone: string;
-  role: string;
+  role: "admin"|"employee"|"manager";
   isActive: boolean;
   last_login: Date;
 }

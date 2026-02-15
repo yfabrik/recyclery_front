@@ -1,47 +1,47 @@
-import React, { useState } from 'react';
+import {
+  AccountCircle,
+  AdminPanelSettings,
+  Build,
+  Dashboard,
+  DeleteSweep,
+  ExitToApp,
+  Inventory,
+  Menu as MenuIcon,
+  Notifications,
+  PointOfSale,
+  QrCode,
+  Settings,
+  Store
+} from '@mui/icons-material';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Badge,
+  Box,
   Button,
   IconButton,
   Menu,
   MenuItem,
-  Avatar,
-  Box,
+  Toolbar,
   Tooltip,
-  Badge,
+  Typography,
 } from '@mui/material';
-import {
-  Menu as MenuIcon,
-  AccountCircle,
-  Notifications,
-  Store,
-  Dashboard,
-  Inventory,
-  LocalShipping,
-  VolunteerActivism,
-  PointOfSale,
-  DeleteSweep,
-  Settings,
-  ExitToApp,
-  AdminPanelSettings,
-  Schedule,
-  Receipt,
-  Category,
-  QrCode,
-  Build,
-} from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router';
+import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 
-const Navbar = ({ onMenuToggle }) => {
+interface NavBarProps {
+  onMenuToggle: () => void
+}
+
+const Navbar = ({ onMenuToggle }: NavBarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAuthenticated, isManager, hasModuleAccess } = useAuth();
+  const { user, logout, isAuthenticated, hasModuleAccess } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleUserMenuOpen = (event) => {
+    console.log("useropen",event)
     setAnchorEl(event.currentTarget);
   };
 
@@ -56,14 +56,17 @@ const Navbar = ({ onMenuToggle }) => {
     navigate('/login');
   };
 
+
+
   const mainMenuItems = [
     { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, permission: 'dashboard.read' },
-    { label: 'Arrivages', path: '/arrivals', icon: Inventory, permission: 'arrivals.read' },
-    { label: 'Étiquetage', path: '/labels', icon: QrCode, permission: 'inventory.read' },
-    { label: 'Logiciel de caisse', path: '/pos', icon: PointOfSale, permission: 'sales.read' },
-    { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'admin.read' },
-    { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: 'inventory.read' },
-  ];
+    { label: 'Arrivages', path: '/arrivals', icon: Inventory, permission: 'arrival.read' },
+    { label: 'Étiquetage', path: '/labels', icon: QrCode, permission: 'label.read' },
+    { label: 'Logiciel de caisse', path: '/pos', icon: PointOfSale, permission: 'caisse.read' },
+    { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'waste.read' },
+    { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: "" },
+    { label: 'Administration', path: '/admin', icon: AdminPanelSettings, permission: "administration.read" },
+  ] as const;
 
   const otherMenuItems = [
     { label: 'Ventes', path: '/sales', icon: PointOfSale, permission: 'reports.sales' },
@@ -81,11 +84,11 @@ const Navbar = ({ onMenuToggle }) => {
   if (!isAuthenticated) {
     return null;
   }
-//TODO ADD DRAWER FOR RESPONSIVE 
+  //TODO ADD DRAWER FOR RESPONSIVE 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         // background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%)',
         boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)',
@@ -105,7 +108,7 @@ const Navbar = ({ onMenuToggle }) => {
         <Typography
           variant="h6"
           component="div"
-          sx={{ 
+          sx={{
             flexGrow: 1,
             fontWeight: 'bold',
             display: 'flex',
@@ -147,16 +150,16 @@ const Navbar = ({ onMenuToggle }) => {
                 </Tooltip>
               );
             })}
-            
+
             {/* Administration - Lien direct */}
-            <Tooltip title="Administration">
+            {/* <Tooltip title="Administration">
               <Button
                 color="inherit"
                 onClick={() => navigate('/admin')}
                 startIcon={<AdminPanelSettings />}
                 sx={{
-                  backgroundColor: location.pathname === '/admin' 
-                    ? 'rgba(255,255,255,0.15)' 
+                  backgroundColor: location.pathname === '/admin'
+                    ? 'rgba(255,255,255,0.15)'
                     : 'transparent',
                   borderRadius: '8px',
                   fontWeight: location.pathname === '/admin' ? 'bold' : 'normal',
@@ -170,12 +173,12 @@ const Navbar = ({ onMenuToggle }) => {
               >
                 Administration
               </Button>
-            </Tooltip>
+            </Tooltip> */}
           </Box>
 
           {/* Notifications */}
           <Tooltip title="Notifications">
-            <IconButton 
+            <IconButton
               color="inherit"
               sx={{
                 '&:hover': {
@@ -211,9 +214,9 @@ const Navbar = ({ onMenuToggle }) => {
                 borderRadius: '50%',
               }}
             >
-              <Avatar sx={{ 
-                width: 32, 
-                height: 32, 
+              <Avatar sx={{
+                width: 32,
+                height: 32,
                 bgcolor: 'rgba(255,255,255,0.2)',
                 color: 'white',
                 fontWeight: 'bold',
@@ -243,22 +246,22 @@ const Navbar = ({ onMenuToggle }) => {
               <Box>
                 <Typography variant="subtitle2">{user?.username}</Typography>
                 <Typography variant="caption" color="textSecondary">
-                  {user?.role === 'admin' ? 'Administrateur' : 
-                   user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
+                  {user?.role === 'admin' ? 'Administrateur' :
+                    user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
                 </Typography>
               </Box>
             </MenuItem>
-            
+
             <MenuItem onClick={() => { navigate('/profile'); handleUserMenuClose(); }}>
               <AccountCircle sx={{ mr: 1 }} />
               Mon profil
             </MenuItem>
-            
+
             <MenuItem onClick={() => { navigate('/settings'); handleUserMenuClose(); }}>
               <Settings sx={{ mr: 1 }} />
               Paramètres
             </MenuItem>
-            
+
             <MenuItem onClick={handleLogout}>
               <ExitToApp sx={{ mr: 1 }} />
               Déconnexion
