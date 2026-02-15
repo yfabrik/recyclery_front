@@ -21,8 +21,8 @@ const schema = z.object({
   store_id: idSchema("choississez un magasin"),
   day_of_week: z.string().nonempty("choisissez un jour"),
   is_open: z.boolean(),
-  open_time: z.coerce.date(),
-  close_time: z.coerce.date(),
+  start_time: z.coerce.date(),
+  end_time: z.coerce.date(),
   is_24h: z.boolean(),
   notes: z.string().transform((val) => (val == "" ? null : val)),
 });
@@ -43,8 +43,8 @@ export const StoreOpeningForm = ({
       store_id: "",
       day_of_week: "",
       is_open: true,
-      open_time: new Date().setHours(9, 0),
-      close_time: new Date().setHours(17, 0),
+      start_time: new Date().setHours(9, 0),
+      end_time: new Date().setHours(17, 0),
       is_24h: false,
       notes: "",
       ...data
@@ -102,7 +102,7 @@ export const StoreOpeningForm = ({
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormTime
                     control={form.control}
-                    name="open_time"
+                    name="start_time"
                     label="Heure d'ouverture"
                   />
 
@@ -110,7 +110,7 @@ export const StoreOpeningForm = ({
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormTime
                     control={form.control}
-                    name="close_time"
+                    name="end_time"
                     label="Heure de fermeture"
                   />
 
