@@ -40,7 +40,8 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-import type { StoreModel, TransactionModel } from "../../interfaces/Models";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { TransactionModel } from "../../interfaces/Models";
 import { fetchStores as fStore } from "../../services/api/store";
 import {
   createCreditNote,
@@ -75,7 +76,7 @@ interface refund {
 
 export const SalesAnalyticsTab = () => {
   const [salesData, setSalesData] = useState<TransactionModel[]>([]);
-  const [stores, setStores] = useState<StoreModel[]>([]);
+  // const [stores, setStores] = useState<StoreModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     store_id: "",
@@ -128,24 +129,39 @@ export const SalesAnalyticsTab = () => {
     notes: "",
   });
 
-  useEffect(() => {
-    fetchStores();
-  }, []);
+  // useEffect(() => {
+  //   fetchStores();
+  // }, []);
 
   useEffect(() => {
     fetchSalesData();
   }, [filters]);
 
-  const fetchStores = async () => {
-    try {
-      const response = await fStore({ active: true });
 
-      setStores(response.data.stores);
-    } catch (error) {
-      console.error("Erreur lors du chargement des magasins:", error);
-      toast.error("Erreur lors du chargement des magasins");
-    }
-  };
+  const queryClient = useQueryClient()
+  
+  const stores = useQuery({
+    queryKey: ["stores", { active: true }],
+    queryFn: () => fStore({ active: true }).then(response => response.data.stores)
+  })
+  if (stores.isError) toast.error("Erreur lors du chargement des magasins");
+  // const fetchStores = async () => {
+  //   try {
+  //     const response = await fStore({ active: true });
+
+  //     setStores(response.data.stores);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des magasins:", error);
+  //     toast.error("Erreur lors du chargement des magasins");
+  //   }
+  // };
+
+  // const stats = useQuery({
+  //   queryKey:["transactionStats"],
+  //   queryFn:()=>{
+
+  //   }
+  // })
 
   const fetchSalesData = async () => {
     try {
@@ -335,7 +351,7 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonction pour ouvrir les détails d'une transaction
-  const handleViewTransactionDetails = async (transaction) => {
+  const handleViewTransactionDetails = async (transaction: TransactionModel) => {
     setSelectedTransaction(transaction);
     setTransactionDetailsDialog(true);
     await fetchTransactionRefunds(transaction.id);
@@ -513,7 +529,7 @@ export const SalesAnalyticsTab = () => {
                 <MenuItem key="all-stores" value="">
                   Tous les magasins
                 </MenuItem>
-                {stores.map((store) => (
+                {stores.data?.map((store) => (
                   <MenuItem key={store.id} value={store.id}>
                     {store.name}
                   </MenuItem>
@@ -676,7 +692,7 @@ export const SalesAnalyticsTab = () => {
                     Brut:{" "}
                     {formatCurrency(
                       statistics.total_sales_before_refunds ||
-                        statistics.total_sales,
+                      statistics.total_sales,
                     )}
                   </Typography>
                   <Typography variant="caption" color="error" display="block">
@@ -842,9 +858,8 @@ export const SalesAnalyticsTab = () => {
             <Typography variant="h6">📋 Détail des transactions</Typography>
             {filters.transaction_number && (
               <Chip
-                label={`Filtré par: ${filters.transaction_number} (${
-                  salesData.length
-                } résultat${salesData.length > 1 ? "s" : ""})`}
+                label={`Filtré par: ${filters.transaction_number} (${salesData.length
+                  } résultat${salesData.length > 1 ? "s" : ""})`}
                 color="primary"
                 variant="outlined"
                 onDelete={() =>
@@ -1550,11 +1565,11 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="h6" color="primary">
                         {formatCurrency(
                           selectedTransaction.total_amount -
-                            transactionRefunds.reduce(
-                              (sum, refund) =>
-                                sum + parseFloat(refund.refund_amount),
-                              0,
-                            ),
+                          transactionRefunds.reduce(
+                            (sum, refund) =>
+                              sum + parseFloat(refund.refund_amount),
+                            0,
+                          ),
                         )}
                       </Typography>
                     </Grid>
