@@ -159,24 +159,26 @@ const Planning = () => {
         new Date(selectedDate).setDate(selectedDate.getDate() -
           selectedDate.getDay() + (
             selectedDate.getDay() === 0 ? -6 : 1)))
+
       return {
-        date_from: lundi,
-        date_to: new Date(lundi.getDate() + 6)
+        date_from: lundi.toLocaleString("en-ca", { year: 'numeric', month: '2-digit', day: '2-digit' }),
+        date_to: new Date(new Date(lundi).setDate(lundi.getDate() + 6)).toLocaleString("en-ca", { year: 'numeric', month: '2-digit', day: '2-digit' }),
       }
     }
 
     if (viewMode == "calendar") {
       const first = new Date(new Date(selectedDate).setDate(1))
       return {
-        date_from: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 1)),
-        date_to: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 42))
+        date_from: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 1)).toLocaleDateString().replaceAll("/", "-"),
+        date_to: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 42)).toLocaleDateString().replaceAll("/", "-")
       }
     }
     return {
-      date_from: selectedDate,
-      date_to: selectedDate
+      date_from: selectedDate.toISOString().slice(0,10),
+      date_to: selectedDate.toISOString().slice(0,10)
     }
   }
+
   const queryclient = useQueryClient()
 
   const schedules = useQuery({
@@ -184,8 +186,8 @@ const Planning = () => {
     queryFn: () => getTasks({
       store_id: selectedStore?.id,
       include: ["user", "store"],
-      date_from: new Date(new Date(selectedDate).setDate(selectedDate.getDate() - selectedDate.getDay() + 1)),
-      date_to: new Date(new Date(selectedDate).setDate(selectedDate.getDate() - selectedDate.getDay() + 7))
+      date_from: date_from().date_from,
+      date_to: date_from().date_to
     }).then(response => response.data.tasks)
   })
   if (schedules.isError) {
@@ -417,10 +419,9 @@ const Planning = () => {
 
 
     const newYear = new Date(selectedDate.getFullYear(), 0, 1);
-    const dayNumber = Math.floor((selectedDate-newYear)/(24*60*60*1000));
-    const weekNumber = Math.ceil((selectedDate.getDay()+dayNumber+1) / 7);
-    const weekToProcess = viewMode!="calendar"? (weekNumber%2 ?"week2":"week1"):null
-    console.log("weekToProcess", weekToProcess,weekNumber)
+    const dayNumber = Math.floor((selectedDate - newYear) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((selectedDate.getDay() + dayNumber + 1) / 7);
+    const weekToProcess = viewMode != "calendar" ? (weekNumber % 2 ? "week2" : "week1") : null
     const employeesByDay: {
       [key: string]: {
         label: string;
@@ -437,7 +438,7 @@ const Planning = () => {
             wd.day_of_week === day &&
             wd.time_slot === "morning" &&
             wd.is_working === true &&
-            (weekToProcess && wd?.week===weekToProcess)
+            (weekToProcess && wd?.week === weekToProcess)
         );
       });
       const afternoon = employeesToProcess.filter((employee) => {
@@ -447,7 +448,7 @@ const Planning = () => {
             wd.day_of_week === day &&
             wd.time_slot === "afternoon" &&
             wd.is_working === true &&
-            (weekToProcess && wd?.week===weekToProcess)
+            (weekToProcess && wd?.week === weekToProcess)
         );
       });
 
