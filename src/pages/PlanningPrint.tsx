@@ -105,12 +105,12 @@ export default function PlanningPrint() {
     }));
   })();
 
-  const weekLabel = `${selectedDate.toLocaleDateString("fr-FR", {
+  const weekLabel = selectedDate.toLocaleDateString("fr-FR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-  })} (semaine du ${date_from} au ${date_to})`;
+  });
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -134,11 +134,18 @@ export default function PlanningPrint() {
         </Button>
       </Box>
 
-      <Box ref={printContentRef}>
+      <Box
+        ref={printContentRef}
+        sx={{
+          "@media print": {
+            padding: 4,
+          },
+        }}
+      >
         <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
           Planning de la semaine
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="h6" color="text.secondary" sx={{ mb: 3, fontSize: "1.15rem" }}>
           {weekLabel}
           {storeName && ` — ${storeName}`}
         </Typography>
