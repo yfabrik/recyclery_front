@@ -325,7 +325,7 @@ const WeekViewSections = ({
         title={
           <>
             <LocalShipping sx={{ fontSize: 28, mr: 0.5 }} />
-            Lieux de collecte
+            Logistique
           </>
         }
         chipLabel={`${filteredSchedules("collection", 8, 12).length + filteredSchedules("collection", 13, 17).length} lieux de collecte`}
