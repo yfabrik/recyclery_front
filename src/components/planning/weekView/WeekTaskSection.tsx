@@ -14,8 +14,12 @@ import {
   type Theme,
 
 } from "@mui/material";
-import React, { createContext, type ReactNode } from "react";
-import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
+import React, { type ReactNode } from "react";
+import type { TaskModel } from "../../../interfaces/Models";
+import {
+  categoryStyles as sharedCategoryStyles,
+  getCategoryKey,
+} from "../planningTaskStyles";
 
 // Extended schedule interface with additional fields used in the component
 // interface Schedule {
@@ -65,13 +69,6 @@ interface TaskCardControlsProps {
   schedule: TaskModel;
 }
 
-interface TaskCss {
-  color: string;
-  fontSize: string;
-  fontWeight: string | number;
-  border: string;
-  bgColor: string;
-}
 
 
 // const color = useContext()
@@ -237,126 +234,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
     hour12: false,
   })}`;
 
-  // CSS grouped by category: card sx, task sx, and TaskCss for content
-  const categoryStyles: Record<
-    string,
-    {
-      card: Record<string, unknown>;
-      task: Record<string, unknown>;
-      taskCss: TaskCss;
-    }
-  > = {
-    vente: {
-      card: {
-        backgroundColor: "#f1f8e9",
-        border: "1px solid #c8e6c9",
-        "&:hover": {
-          backgroundColor: "#e8f5e8",
-          boxShadow: "0 2px 8px rgba(76, 175, 80, 0.2)",
-        },
-      },
-      task: {
-        backgroundColor: "#e8f5e8",
-        border: "2px solid #4caf50",
-        borderLeft: "4px solid #4caf50",
-        "&:hover": {
-          backgroundColor: "#d4edda",
-          transform: "translateY(-2px)",
-          boxShadow: "0 4px 8px rgba(76, 175, 80, 0.3)",
-        },
-      },
-      taskCss: {
-        color: "#2e7d32",
-        fontSize: "0.65rem",
-        fontWeight: "bold",
-        border: "1px solid #4caf50",
-        bgColor: "#e8f5e8",
-      },
-    },
-    point: {
-      card: {
-        backgroundColor: "#fff8e1",
-        border: "1px solid #ffcc02",
-        "&:hover": {
-          backgroundColor: "#fff3e0",
-          boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
-        },
-      },
-      task: {
-        backgroundColor: "#fff3e0",
-        border: "2px solid #ff9800",
-        borderLeft: "4px solid #ff9800",
-        "&:hover": {
-          backgroundColor: "#ffe0b2",
-          transform: "translateY(-2px)",
-          boxShadow: "0 4px 8px rgba(255, 152, 0, 0.3)",
-        },
-      },
-      taskCss: {
-        color: "#e65100",
-        fontSize: "0.7rem",
-        fontWeight: "medium",
-        border: "1px solid #ffcc02",
-        bgColor: "#fff3e0",
-      },
-    },
-    custom: {
-      card: {
-        backgroundColor: "#e3f2fd",
-        border: "1px solid #90caf9",
-        "&:hover": {
-          backgroundColor: "#bbdefb",
-          boxShadow: "0 2px 8px rgba(33, 150, 243, 0.2)",
-        },
-      },
-      task: {
-        backgroundColor: "#bbdefb",
-        border: "2px solid #2196f3",
-        borderLeft: "4px solid #2196f3",
-        "&:hover": {
-          backgroundColor: "#90caf9",
-          transform: "translateY(-2px)",
-          boxShadow: "0 4px 8px rgba(33, 150, 243, 0.3)",
-        },
-      },
-      taskCss: {
-        color: "#1565c0",
-        fontSize: "0.65rem",
-        fontWeight: "bold",
-        border: "1px solid #2196f3",
-        bgColor: "#e3f2fd",
-      },
-    },
-    collection: {
-      card: {
-        backgroundColor: "#f3e5f5",
-        border: "1px solid #ce93d8",
-        "&:hover": {
-          backgroundColor: "#e1bee7",
-          boxShadow: "0 2px 8px rgba(156, 39, 176, 0.2)",
-        },
-      },
-      task: {
-        backgroundColor: "#e1bee7",
-        border: "2px solid #9c27b0",
-        borderLeft: "4px solid #9c27b0",
-        "&:hover": {
-          backgroundColor: "#ce93d8",
-          transform: "translateY(-2px)",
-          boxShadow: "0 4px 8px rgba(156, 39, 176, 0.3)",
-        },
-      },
-      taskCss: {
-        color: "#6a1b9a",
-        fontSize: "0.65rem",
-        fontWeight: "bold",
-        border: "1px solid #9c27b0",
-        bgColor: "#f3e5f5",
-      },
-    },
-  };
-
-  const styles = categoryStyles[schedule.category] ?? categoryStyles.vente;
+  const styles = sharedCategoryStyles[getCategoryKey(schedule)];
   const { card: cardSx, taskCss } = styles;
 
   return (

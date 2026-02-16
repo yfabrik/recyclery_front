@@ -15,41 +15,39 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { ReactNode } from "react";
 import type { TaskModel } from "../../interfaces/Models";
+import { getTaskVariant, taskCardStyles } from "./planningTaskStyles";
+
+interface StatusInfo {
+  label: string;
+  color: string;
+}
+
+interface PriorityInfo {
+  label: string;
+  color: string;
+}
 
 interface DayViewProps {
   filteredSchedules: TaskModel[];
   handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
-  // isOpeningTask: (t: TaskModel) => boolean;
-  // isPresenceTask: (t: TaskModel) => boolean;
-  // getTaskDisplayName: (t: TaskModel) => string;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
   formatTime: (s: string) => string;
-  // handleQuickTimeSlot: (s: string) => void;
-  getOpeningTaskStyle: (t: TaskModel) => object;
-  getOpeningCardStyle: (t: TaskModel) => object;
-  getPresenceTaskStyle: (t: TaskModel) => object;
-  getPresenceCardStyle: (t: TaskModel) => object;
-  getPriorityInfo: (s: string) => string;
+  getStatusInfo: (status: string | null) => StatusInfo;
+  getPriorityInfo: (priority: string) => PriorityInfo;
+  isManuallyCreatedTask?: (t: TaskModel) => boolean;
 }
 
 export const DayView = ({
   handleOpenDialog,
-  // isOpeningTask,
-  // isPresenceTask,
-  // getTaskDisplayName,
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
   formatTime,
-  // handleQuickTimeSlot,
-  getOpeningTaskStyle,
-  getOpeningCardStyle,
-  getPresenceTaskStyle,
-  getPresenceCardStyle,
+  getStatusInfo,
   getPriorityInfo,
+  isManuallyCreatedTask = () => false,
 }: DayViewProps) => {
   const daySchedules = Array.isArray(filteredSchedules)
     ? filteredSchedules.filter((schedule) => {
@@ -147,10 +145,7 @@ export const DayView = ({
                               transform: "translateY(-1px)",
                             },
                             transition: "all 0.2s ease",
-                            ...getOpeningTaskStyle(schedule),
-                            ...getOpeningCardStyle(schedule),
-                            ...getPresenceTaskStyle(schedule),
-                            ...getPresenceCardStyle(schedule),
+                            ...taskCardStyles[getTaskVariant(schedule)],
                           }}
                         >
                           <CardContent sx={{ p: 2 }}>
@@ -408,10 +403,7 @@ export const DayView = ({
                               transform: "translateY(-1px)",
                             },
                             transition: "all 0.2s ease",
-                            ...getOpeningTaskStyle(schedule),
-                            ...getOpeningCardStyle(schedule),
-                            ...getPresenceTaskStyle(schedule),
-                            ...getPresenceCardStyle(schedule),
+                            ...taskCardStyles[getTaskVariant(schedule)],
                           }}
                         >
                           <CardContent sx={{ p: 2 }}>

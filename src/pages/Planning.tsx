@@ -538,88 +538,10 @@ const Planning = () => {
     if (!timeString) return "";
     return timeString.substring(0, 5);
   };
-
-  const filteredSchedules = schedules.data?.filter((schedule) => {
-    return true;
-  });
   const getStatusInfo = (status) => {
     return statusOptions.find((s) => s.value === status) || statusOptions[1]; // Utiliser 'planned' par défaut
   };
 
-  // Fonction pour identifier si une tâche est une tâche d'ouverture
-  const isOpeningTask = (schedule: TaskModel) => {
-    return schedule.category == "vente";
-  };
-
-  // Fonction pour identifier si une tâche est une tâche de présence
-  const isPresenceTask = (schedule: TaskModel) => {
-    return schedule.category == "point";
-  };
-
-  // Fonction pour identifier si une tâche est une tâche de collecte
-  const isCollectionTask = (schedule: TaskModel) => {
-    return schedule.category == "collection";
-  };
-
-  // Fonction pour obtenir le style d'une tâche d'ouverture
-  const getOpeningTaskStyle = (schedule: TaskModel) => {
-    if (!isOpeningTask(schedule)) return {};
-
-    return {
-      backgroundColor: "#e8f5e8",
-      border: "2px solid #4caf50",
-      borderLeft: "4px solid #4caf50",
-      "&:hover": {
-        backgroundColor: "#d4edda",
-        transform: "translateY(-2px)",
-        boxShadow: "0 4px 8px rgba(76, 175, 80, 0.3)",
-      },
-    };
-  };
-
-  // Fonction pour obtenir le style de fond des cartes d'ouverture
-  const getOpeningCardStyle = (schedule: TaskModel) => {
-    if (!isOpeningTask(schedule)) return {};
-
-    return {
-      backgroundColor: "#f1f8e9",
-      border: "1px solid #c8e6c9",
-      "&:hover": {
-        backgroundColor: "#e8f5e8",
-        boxShadow: "0 2px 8px rgba(76, 175, 80, 0.2)",
-      },
-    };
-  };
-
-  // Fonction pour obtenir le style d'une tâche de présence
-  const getPresenceTaskStyle = (schedule: TaskModel) => {
-    if (!isPresenceTask(schedule)) return {};
-
-    return {
-      backgroundColor: "#fff3e0",
-      border: "2px solid #ff9800",
-      borderLeft: "4px solid #ff9800",
-      "&:hover": {
-        backgroundColor: "#ffe0b2",
-        transform: "translateY(-2px)",
-        boxShadow: "0 4px 8px rgba(255, 152, 0, 0.3)",
-      },
-    };
-  };
-
-  // Fonction pour obtenir le style de fond des cartes de présence
-  const getPresenceCardStyle = (schedule: TaskModel) => {
-    if (!isPresenceTask(schedule)) return {};
-
-    return {
-      backgroundColor: "#fff8e1",
-      border: "1px solid #ffcc02",
-      "&:hover": {
-        backgroundColor: "#fff3e0",
-        boxShadow: "0 2px 8px rgba(255, 152, 0, 0.2)",
-      },
-    };
-  };
 
   const getPriorityInfo = (priority: string) => {
     return (
@@ -627,18 +549,6 @@ const Planning = () => {
     );
   };
 
-  // Fonction pour obtenir le nom d'affichage correct de la tâche
-  // Fonction utilitaire pour filtrer les valeurs "Utilisateur inconnu"
-  const getValidEmployeeName = (employeeName: string) => {
-    if (!employeeName || employeeName === "Utilisateur inconnu") {
-      return null;
-    }
-    return employeeName;
-  };
-
-  const getTaskDisplayName = (schedule: TaskModel) => {
-    return schedule.name;
-  };
 
   return (
     <Box>
@@ -722,18 +632,14 @@ const Planning = () => {
         {viewMode === "calendar" && (
           <CalendarView
             filteredSchedules={schedules.data || []}
-            // getTaskDisplayName={getTaskDisplayName}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
             handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-            // isOpeningTask={isOpeningTask}
-            // isPresenceTask={isPresenceTask}
             selectedDate={selectedDate}
           />
         )}
         {viewMode === "week" && (
           <WeekViewSections
-            // collections={collections}
             schedules={schedules.data || []}
             getEmployeeColor={getEmployeeColor}
             getEmployeeInitials={getEmployeeInitials}
@@ -747,17 +653,10 @@ const Planning = () => {
           <DayView
             filteredSchedules={schedules.data || []}
             formatTime={formatTime}
-            getOpeningCardStyle={getOpeningCardStyle}
-            getOpeningTaskStyle={getOpeningTaskStyle}
-            getPresenceCardStyle={getPresenceCardStyle}
-            getPresenceTaskStyle={getPresenceCardStyle}
             getPriorityInfo={getPriorityInfo}
-            // getTaskDisplayName={getTaskDisplayName}
+            getStatusInfo={getStatusInfo}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
-            // handleQuickTimeSlot={handleQuickTimeSlot}
-            // isOpeningTask={isOpeningTask}
-            // isPresenceTask={isPresenceTask}
             selectedDate={selectedDate}
           />
         )}
