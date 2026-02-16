@@ -100,7 +100,7 @@ const Sidebar = ({ open, onClose }) => {
         keepMounted: true, // Better open performance on mobile.
       }}
       sx={{
-        display: { xs: 'block', md: 'none' },
+        display: { xs: 'block', md: 'block' },
         '& .MuiDrawer-paper': {
           boxSizing: 'border-box',
           width: drawerWidth,
