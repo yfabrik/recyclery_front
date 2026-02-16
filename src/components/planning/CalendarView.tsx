@@ -15,9 +15,9 @@ import { weekDays } from "../../services/dateService";
 interface CalendarViewProps {
   filteredSchedules: TaskModel[];
   handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
-  isOpeningTask: (t: TaskModel) => boolean;
-  isPresenceTask: (t: TaskModel) => boolean;
-  getTaskDisplayName: (t: TaskModel) => string;
+  // isOpeningTask: (t: TaskModel) => boolean;
+  // isPresenceTask: (t: TaskModel) => boolean;
+  // getTaskDisplayName: (t: TaskModel) => string;
   handleDeleteTask: (t: TaskModel) => void;
   handleAssignEmployeesToTask: (t: TaskModel) => void;
   selectedDate: Date;
@@ -30,9 +30,9 @@ interface CalendarDay {
 }
 export const CalendarView = ({
   handleOpenDialog,
-  isOpeningTask,
-  isPresenceTask,
-  getTaskDisplayName,
+  // isOpeningTask,
+  // isPresenceTask,
+  // getTaskDisplayName,
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
@@ -88,7 +88,7 @@ export const CalendarView = ({
 
   type TaskVariant = "opening" | "presence" | "default";
   const getTaskVariant = (schedule: TaskModel): TaskVariant =>
-    isOpeningTask(schedule) ? "opening" : isPresenceTask(schedule) ? "presence" : "default";
+    schedule.category=="vente" ? "opening" : schedule.category=="point" ? "presence" : "default";
 
   const taskCardStyles: Record<
     TaskVariant,
@@ -272,7 +272,7 @@ export const CalendarView = ({
                                 fontWeight="bold"
                                 sx={styles.typography}
                               >
-                                {getTaskDisplayName(schedule)}
+                                {schedule.name}
                               </Typography>
                               <TaskIcon variant={variant} />
                             </Box>

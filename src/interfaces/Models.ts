@@ -141,7 +141,7 @@ export interface UserModel extends BaseModel {
 export interface TaskModel extends BaseModel {
   name: string;
   description: string | null;
-  category: string;
+  category: "vente"|"point"|"collection"|"custom";
   priority: string | null;
   required_skills: string | null;
   location: string | null;

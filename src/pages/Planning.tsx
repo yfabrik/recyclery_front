@@ -38,7 +38,10 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import { PlaningForm, type Schema as TaskFormSchema } from "../components/forms/planningForm";
+import {
+  PlaningForm,
+  type Schema as TaskFormSchema,
+} from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
 import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
@@ -51,10 +54,7 @@ import type {
   TaskModel,
 } from "../interfaces/Models";
 import { getEmployees } from "../services/api/employee";
-import {
-  createPlanning,
-  updatePlanning
-} from "../services/api/planning";
+import { createPlanning, updatePlanning } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
 import {
   createTask,
@@ -66,7 +66,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDay } from "../services/dateService";
 
 const Planning = () => {
-
   const navigate = useNavigate();
   // Fonction pour générer une couleur basée sur le nom de l'employé
   const getEmployeeColor = (employeeName: string) => {
@@ -87,8 +86,6 @@ const Planning = () => {
     }, 0);
     return colors[Math.abs(hash) % colors.length];
   };
-
-
 
   // Fonction pour obtenir les initiales d'un employé
   const getEmployeeInitials = (employeeName: string) => {
@@ -111,28 +108,22 @@ const Planning = () => {
   const [selectedTaskForAssignment, setSelectedTaskForAssignment] =
     useState<TaskModel | null>(null);
 
-
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "calendar" | "day">("week"); // semaine par défaut
 
   // États pour la gestion des conflits
-  const [conflictDialog, setConflictDialog] = useState(false);
-  const [conflictInfo, setConflictInfo] = useState(null);
-  const [pendingScheduleData, setPendingScheduleData] = useState(null);
+  // const [conflictDialog, setConflictDialog] = useState(false);
+  // const [conflictInfo, setConflictInfo] = useState(null);
+  // const [pendingScheduleData, setPendingScheduleData] = useState(null);
 
   // État pour les employés présents
   // const [employeesPresent, setEmployeesPresent] = useState<StoreModel[]>([]);
   // const [loadingEmployeesPresent, setLoadingEmployeesPresent] = useState(false);
   const [missingEmployeesDialogDismissed, setMissingEmployeesDialogDismissed] =
     useState(false);
-  const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
-  const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
-
-  // useEffect(() => {
-  //   console.log("e", employeesPresent);
-  //   console.log("u", schedules);
-  // }, [schedules, employeesPresent]);
+  // const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
+  // const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
   const statusOptions = [
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
@@ -153,218 +144,136 @@ const Planning = () => {
     { value: "high", label: "Élevée", color: "error", icon: <PriorityHigh /> },
   ];
 
-
   const date_from = () => {
     if (viewMode == "week") {
       const lundi = new Date(
-        new Date(selectedDate).setDate(selectedDate.getDate() -
-          selectedDate.getDay() + (
-            selectedDate.getDay() === 0 ? -6 : 1)))
+        new Date(selectedDate).setDate(
+          selectedDate.getDate() -
+            selectedDate.getDay() +
+            (selectedDate.getDay() === 0 ? -6 : 1),
+        ),
+      );
 
       return {
-        date_from: lundi.toLocaleString("en-ca", { year: 'numeric', month: '2-digit', day: '2-digit' }),
-        date_to: new Date(new Date(lundi).setDate(lundi.getDate() + 6)).toLocaleString("en-ca", { year: 'numeric', month: '2-digit', day: '2-digit' }),
-      }
+        date_from: lundi.toLocaleString("en-ca", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }),
+        date_to: new Date(
+          new Date(lundi).setDate(lundi.getDate() + 6),
+        ).toLocaleString("en-ca", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }),
+      };
     }
 
     if (viewMode == "calendar") {
-      const first = new Date(new Date(selectedDate).setDate(1))
+      const first = new Date(new Date(selectedDate).setDate(1));
       return {
-        date_from: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 1)).toLocaleDateString().replaceAll("/", "-"),
-        date_to: new Date(new Date(first).setDate(first.getDate() - first.getDay() + 42)).toLocaleDateString().replaceAll("/", "-")
-      }
+        date_from: new Date(
+          new Date(first).setDate(first.getDate() - first.getDay() + 1),
+        )
+          .toLocaleDateString()
+          .replaceAll("/", "-"),
+        date_to: new Date(
+          new Date(first).setDate(first.getDate() - first.getDay() + 42),
+        )
+          .toLocaleDateString()
+          .replaceAll("/", "-"),
+      };
     }
     return {
-      date_from: selectedDate.toISOString().slice(0,10),
-      date_to: selectedDate.toISOString().slice(0,10)
-    }
-  }
+      date_from: selectedDate.toISOString().slice(0, 10),
+      date_to: selectedDate.toISOString().slice(0, 10),
+    };
+  };
 
-  const queryclient = useQueryClient()
+  const queryclient = useQueryClient();
 
   const schedules = useQuery({
-    queryKey: ["tasks", { include: ["user", "store"], store: selectedStore?.id, viewMode, ...date_from() }],
-    queryFn: () => getTasks({
-      store_id: selectedStore?.id,
-      include: ["user", "store"],
-      date_from: date_from().date_from,
-      date_to: date_from().date_to
-    }).then(response => response.data.tasks)
-  })
+    queryKey: [
+      "tasks",
+      {
+        include: ["user", "store"],
+        store: selectedStore?.id,
+        viewMode,
+        ...date_from(),
+      },
+    ],
+    queryFn: () =>
+      getTasks({
+        store_id: selectedStore?.id,
+        include: ["user", "store"],
+        date_from: date_from().date_from,
+        date_to: date_from().date_to,
+      }).then((response) => response.data.tasks),
+  });
   if (schedules.isError) {
     toast.error("Erreur lors du chargement des plannings");
   }
 
   const stores = useQuery({
     queryKey: ["stores", { include: ["employees"] }],
-    queryFn: () => fstore({ include: ["employees"] }).then(response => response.data.stores)
-  })
+    queryFn: () =>
+      fstore({ include: ["employees"] }).then(
+        (response) => response.data.stores,
+      ),
+  });
 
   const addTask = useMutation({
     mutationFn: (data: TaskFormSchema) => createTask(data),
 
     onSuccess: () => {
       toast.success("Planning créé avec succès");
-      queryclient.invalidateQueries({ queryKey: ["tasks"] })
+      queryclient.invalidateQueries({ queryKey: ["tasks"] });
 
       handleCloseDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde")
-  })
+    onError: () => toast.error("Erreur lors de la sauvegarde"),
+  });
   const editTask = useMutation({
-    mutationFn: (data: { id: number, data: TaskFormSchema }) => updateTask(data.id, data.data),
+    mutationFn: (data: { id: number; data: TaskFormSchema }) =>
+      updateTask(data.id, data.data),
     onSuccess: () => {
       toast.success("Planning mis à jour avec succès");
       handleCloseDialog();
-      queryclient.invalidateQueries({ queryKey: ["tasks"] })
-
+      queryclient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
-      toast.error("Erreur lors de la sauvegarde")
-      console.log("edit error", error)
-    }
-  })
+      toast.error("Erreur lors de la sauvegarde");
+      console.log("edit error", error);
+    },
+  });
   const removeTask = useMutation({
     mutationFn: (id: number) => deleteTask(id),
     onSuccess: () => {
       toast.success("Tâche supprimée avec succès");
-      queryclient.invalidateQueries({ queryKey: ["tasks"] })
-
+      queryclient.invalidateQueries({ queryKey: ["tasks"] });
     },
-    onError: () => toast.error("Erreur lors de la suppression")
-  })
-
-
-
-  // useEffect(() => {
-  //   if (stores.data && stores.data?.length > 0) {
-  //     fetchEmployeesPresent();
-  //   }
-  // }, [stores.data]);
-
-  // useEffect(() => {
-  //   fetchSchedules();
-  // }, [selectedStore, selectedDate]);
-
-  // Recharger les employés quand le magasin sélectionné change
-  // useEffect(() => {
-  //   if (stores.data && stores.data?.length > 0) {
-  //     fetchEmployeesPresent();
-  //   }
-  // }, [selectedStore]);
-
-  // const fetchSchedules = async () => {
-  //   try {
-  //     // setLoading(true);
-  //     const params = {};
-  //     if (selectedStore) {
-  //       // params.store_id = parseInt(selectedStore);
-  //       params.store_id = selectedStore.id;
-  //     }
-  //     if (viewMode == "week") {
-  //       const thisWeek = new Date(selectedDate);
-  //       params.date_from = new Date(new Date(selectedDate).setDate(thisWeek.getDate() - thisWeek.getDay() + 1));
-  //       params.date_to = new Date(new Date(params.date_from).setDate(params.date_from.getDate() + 6));
-  //     }
-  //     const r = await getTasks({ include: "user", ...params });
-  //     const tasks: TaskModel[] = r.data.tasks;
-  //     const synchronizedSchedules = tasks.map((task, i, array) => {
-  //       const users = task.Employees || [];
-  //       const occuped = [];
-
-  //       array
-  //         .filter((a, j) => i != j)
-  //         .forEach((other) => {
-  //           const otherUsers = other.Employees || [];
-  //           users.forEach(
-  //             (user) =>
-  //               otherUsers.some((o) => o.id == user.id) &&
-  //               occuped.push({
-  //                 ...user,
-  //                 assigned_to_task_id: task.id,
-  //                 assigned_to_task_name: task.name || "",
-  //               }),
-  //           );
-  //         });
-  //       return { ...task, occupied_employees: occuped };
-  //     });
-
-  //     setSchedules(synchronizedSchedules);
-  //   } catch (error) {
-  //     console.error("❌ ERREUR lors du chargement des plannings:", error);
-  //     console.error("❌ Error details:", error.response?.data);
-  //     toast.error("Erreur lors du chargement des plannings");
-  //     setSchedules([]);
-  //   } finally {
-  //     // setLoading(false);
-  //   }
-  // };
-
-  // const fetchStores = async () => {
-  //   try {
-  //     const response = await fstore();
-  //     setStores(response.data.stores || []);
-  //   } catch (error) {
-  //     console.error("❌ ERREUR lors du chargement des magasins:", error);
-  //     setStores([]);
-  //   }
-  // };
+    onError: () => toast.error("Erreur lors de la suppression"),
+  });
 
   const employees = useQuery({
     queryKey: ["employees"],
-    queryFn: () => getEmployees().then(response => response.data.data)
-  })
+    queryFn: () => getEmployees().then((response) => response.data.data),
+  });
   if (employees.isError) {
     toast.error("Erreur lors du chargement des employés");
   }
 
   const missingEmployees = useMemo(() => {
-    const data = employees.data
-    if (!data?.length) return []
+    const data = employees.data;
+    if (!data?.length) return [];
     return data.filter(
-      (emp) =>
-        emp.stores?.length === 0 || emp.EmployeeWorkdays?.length === 0,
-    )
-  }, [employees.data])
+      (emp) => emp.stores?.length === 0 || emp.EmployeeWorkdays?.length === 0,
+    );
+  }, [employees.data]);
 
   const showMissingEmployeesDialog =
-    missingEmployees.length > 0 && !missingEmployeesDialogDismissed
-
-  //TODO fixme
-  // const fetchEmployeesPresent = async () => {
-  //   try {
-  //     setLoadingEmployeesPresent(true);
-  //     const [
-  //       // infoStoreResponse, 
-  //       employeesResponse] = await Promise.all([
-  //         // fstore({ include: "employees" }),
-  //         getEmployees(),
-  //       ]);
-
-  //     const filteredEmployees = employeesResponse.data.data;
-
-  //     // setEmployeesPresent(infoStoreResponse.data.stores);
-
-  //     const missingEmployeesList = filteredEmployees.filter(
-  //       (emp) =>
-  //         emp.stores?.length == 0 || emp.EmployeeWorkdays?.length == 0,
-  //     );
-  //     setMissingEmployees(missingEmployeesList);
-
-  //     // Afficher le popup s'il y a des employés manquants
-  //     if (missingEmployeesList.length > 0) {
-  //       setShowMissingEmployeesDialog(true);
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       "❌ ERREUR lors du chargement des employés présents:",
-  //       error,
-  //     );
-  //     // setEmployeesPresent([]);
-  //   } finally {
-  //     setLoadingEmployeesPresent(false);
-  //   }
-  // };
+    missingEmployees.length > 0 && !missingEmployeesDialogDismissed;
 
   // Fonction pour organiser les employés par jour de la semaine
   const getEmployeesByDay = (): {
@@ -375,7 +284,6 @@ const Planning = () => {
       allDay: EmployeeModel[];
     };
   } => {
-
     //TODO get rid OF ME
     const daysOfWeek = [
       "monday",
@@ -401,28 +309,26 @@ const Planning = () => {
 
     if (selectedStore) {
       employeesToProcess =
-        stores.data?.find((s) => s.id === selectedStore.id)?.employees ||
-        [];
+        stores.data?.find((s) => s.id === selectedStore.id)?.employees || [];
     } else {
-      const tmpEmployeeToProcess = stores.data?.reduce(
-        (prev: EmployeeModel[], current) => {
+      const tmpEmployeeToProcess =
+        stores.data?.reduce((prev: EmployeeModel[], current) => {
           const employees = current.employees || [];
           prev = [...prev, ...employees];
           return prev;
-        },
-        [],
-      ) || [];
+        }, []) || [];
       employeesToProcess = [
         ...new Map(tmpEmployeeToProcess.map((obj) => [obj.id, obj])).values(),
       ];
     }
 
-
-
     const newYear = new Date(selectedDate.getFullYear(), 0, 1);
-    const dayNumber = Math.floor((selectedDate - newYear) / (24 * 60 * 60 * 1000));
+    const dayNumber = Math.floor(
+      (selectedDate - newYear) / (24 * 60 * 60 * 1000),
+    );
     const weekNumber = Math.ceil((selectedDate.getDay() + dayNumber + 1) / 7);
-    const weekToProcess = viewMode != "calendar" ? (weekNumber % 2 ? "week2" : "week1") : null
+    const weekToProcess =
+      viewMode != "calendar" ? (weekNumber % 2 ? "week2" : "week1") : null;
     const employeesByDay: {
       [key: string]: {
         label: string;
@@ -439,7 +345,8 @@ const Planning = () => {
             wd.day_of_week === day &&
             wd.time_slot === "morning" &&
             wd.is_working === true &&
-            (weekToProcess && wd?.week === weekToProcess)
+            weekToProcess &&
+            wd?.week === weekToProcess,
         );
       });
       const afternoon = employeesToProcess.filter((employee) => {
@@ -449,7 +356,8 @@ const Planning = () => {
             wd.day_of_week === day &&
             wd.time_slot === "afternoon" &&
             wd.is_working === true &&
-            (weekToProcess && wd?.week === weekToProcess)
+            weekToProcess &&
+            wd?.week === weekToProcess,
         );
       });
 
@@ -502,34 +410,8 @@ const Planning = () => {
   };
 
   const handleSave = async (data: TaskFormSchema) => {
-    if (editingSchedule?.id) editTask.mutate({ id: editingSchedule.id, data })
-    else addTask.mutate(data)
-    // try {
-    //   if (editingSchedule?.id) {
-    //     await updateTask(editingSchedule.id, data);
-    //     toast.success("Planning mis à jour avec succès");
-    //   } else {
-    //     await createTask(data);
-    //     toast.success("Planning créé avec succès");
-    //   }
-
-    //   // fetchSchedules();
-    //   queryclient.invalidateQueries({ queryKey: ["tasks"] })
-    //   handleCloseDialog();
-    // } catch (error) {
-    //   if (error.response?.status === 409) {
-    //     const errorMessage = error.response?.data?.message || "Conflit détecté";
-    //     toast.error(`Conflit: ${errorMessage}`);
-    //   } else if (error.response?.status === 400) {
-    //     const errorMessage =
-    //       error.response?.data?.message || "Données invalides";
-    //     toast.error(`Erreur de validation: ${errorMessage}`);
-    //   } else if (error.response?.status === 401) {
-    //     toast.error("Session expirée. Veuillez vous reconnecter.");
-    //   } else {
-    //     toast.error("Erreur lors de la sauvegarde");
-    //   }
-    // }
+    if (editingSchedule?.id) editTask.mutate({ id: editingSchedule.id, data });
+    else addTask.mutate(data);
   };
 
   const handleDeleteTask = async (schedule: TaskModel) => {
@@ -538,19 +420,7 @@ const Planning = () => {
         `Êtes-vous sûr de vouloir supprimer la tâche "${schedule.name}" ?`,
       )
     )
-      removeTask.mutate(schedule.id)
-    // {
-    //   try {
-    //     await deleteTask(schedule.id);
-    //     toast.success("Tâche supprimée avec succès");
-    //     // fetchSchedules();
-    //     queryclient.invalidateQueries({ queryKey: ["tasks"] })
-
-    //   } catch (error) {
-    //     console.error("Erreur lors de la suppression:", error);
-    //     toast.error("Erreur lors de la suppression");
-    //   }
-    // }
+      removeTask.mutate(schedule.id);
   };
 
   // Fonction pour ouvrir le dialogue d'assignation des employés depuis le planning
@@ -580,30 +450,6 @@ const Planning = () => {
         return;
       }
 
-      // const availableEmployeesResponse = await getAvailableUserForTask(
-      //   schedule.id,
-      // );
-
-      // if (availableEmployeesResponse.data.success) {
-      //   // Le backend renvoie déjà les employés avec leur statut de disponibilité correct
-      //   const employeesWithStatus =
-      //     availableEmployeesResponse.data.employees.map((emp) => ({
-      //       ...emp,
-      //       is_assigned_to_task: !emp.is_available,
-      //     }));
-
-      //   setAvailableEmployeesForTask(employeesWithStatus);
-
-      //   // Récupérer aussi les employés déjà assignés à cette tâche
-      //   setTaskAssignedEmployees(
-      //     availableEmployeesResponse.data.employees.filter(
-      //       (emp) => emp.already_assigned,
-      //     ),
-      //   );
-      // } else {
-      //   throw new Error("Erreur lors du chargement des employés disponibles");
-      // }
-
       setOpenTaskAssignmentDialog(true);
     } catch (error) {
       console.error("Erreur lors du chargement des employés:", error);
@@ -617,161 +463,72 @@ const Planning = () => {
     setSelectedTaskForAssignment(null);
   };
 
-  // Fonction pour assigner un employé à une tâche spécifique
-  // const handleAssignEmployeeToTask = async (employeeId) => {
-  //   // Vérification de sécurité
-  //   if (!selectedTaskForAssignment || !selectedTaskForAssignment.id) {
-  //     console.error(
-  //       "Erreur: selectedTaskForAssignment invalide dans handleAssignEmployeeToTask",
-  //     );
-  //     toast.error("Erreur: Tâche non sélectionnée");
-  //     return;
-  //   }
-
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const apiBaseUrl = "";
-  //     await axios.post(
-  //       `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees`,
-  //       {
-  //         employee_id: employeeId,
-  //       },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       },
-  //     );
-
-  //     // Mettre à jour la liste des employés assignés
-  //     const employee = availableEmployeesForTask.find(
-  //       (emp) => emp.id === employeeId,
-  //     );
-  //     if (employee) {
-  //       setTaskAssignedEmployees((prev) => [...prev, employee]);
-  //     }
-
-  //     toast.success("Employé assigné avec succès");
-
-  //     // Fermer le dialogue et forcer le rechargement complet
-  //     handleCloseTaskAssignmentDialog();
-
-  //     // Forcer le rechargement complet des données
-  //     setTimeout(() => {
-  //       fetchSchedules();
-  //       // setForceUpdate((prev) => prev + 1);
-  //     }, 500);
-  //   } catch (error) {
-  //     console.error("Erreur lors de l'assignation:", error);
-
-  //     // Gérer spécifiquement les erreurs de conflit d'horaires
-  //     if (
-  //       error.response &&
-  //       error.response.status === 400 &&
-  //       error.response.data.message
-  //     ) {
-  //       toast.error(error.response.data.message);
-  //     } else {
-  //       toast.error("Erreur lors de l'assignation");
-  //     }
-  //   }
-  // };
-
-  // Fonction pour retirer un employé d'une tâche spécifique
-  // const handleUnassignEmployeeFromTask = async (employeeId) => {
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const apiBaseUrl = ""; // import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-  //     await axios.delete(
-  //       `${apiBaseUrl}/api/planning/${selectedTaskForAssignment.id}/employees/${employeeId}`,
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       },
-  //     );
-
-  //     // Mettre à jour la liste des employés assignés
-  //     setTaskAssignedEmployees((prev) =>
-  //       prev.filter((emp) => emp.id !== employeeId),
-  //     );
-
-  //     toast.success("Employé retiré avec succès");
-
-  //     // Rafraîchir les données du planning sans recharger la page
-  //     setTimeout(() => {
-  //       fetchSchedules();
-  //     }, 1000);
-  //   } catch (error) {
-  //     console.error("Erreur lors du retrait:", error);
-  //     toast.error("Erreur lors du retrait");
-  //   }
-  // };
-
   // Fonctions pour gérer le popup de conflit
-  const handleConfirmConflict = async () => {
-    try {
-      if (editingSchedule) {
-        await updatePlanning(editingSchedule.id, pendingScheduleData);
-        // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
-        toast.success("Planning mis à jour avec succès (conflit ignoré)");
-      } else {
-        await createPlanning(pendingScheduleData);
-        // await axios.post('/api/planning', pendingScheduleData);
-        toast.success("Planning créé avec succès (conflit ignoré)");
-      }
+  // const handleConfirmConflict = async () => {
+  //   try {
+  //     if (editingSchedule) {
+  //       await updatePlanning(editingSchedule.id, pendingScheduleData);
+  //       toast.success("Planning mis à jour avec succès (conflit ignoré)");
+  //     } else {
+  //       await createPlanning(pendingScheduleData);
+  //       toast.success("Planning créé avec succès (conflit ignoré)");
+  //     }
 
-      // fetchSchedules();
-      queryclient.invalidateQueries({ queryKey: ["tasks"] })
+  //     // fetchSchedules();
+  //     queryclient.invalidateQueries({ queryKey: ["tasks"] })
 
-      handleCloseDialog();
-      setConflictDialog(false);
-      setConflictInfo(null);
-      setPendingScheduleData(null);
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde avec conflit:", error);
-      toast.error("Erreur lors de la sauvegarde");
-    }
-  };
+  //     handleCloseDialog();
+  //     setConflictDialog(false);
+  //     setConflictInfo(null);
+  //     setPendingScheduleData(null);
+  //   } catch (error) {
+  //     console.error("Erreur lors de la sauvegarde avec conflit:", error);
+  //     toast.error("Erreur lors de la sauvegarde");
+  //   }
+  // };
 
-  const handleCancelWorkdayWarning = () => {
-    setShowWorkdayWarning(false);
-    setPendingScheduleData(null);
-    setWorkdayWarningInfo(null);
-  };
+  // const handleCancelWorkdayWarning = () => {
+  //   setShowWorkdayWarning(false);
+  //   setPendingScheduleData(null);
+  //   setWorkdayWarningInfo(null);
+  // };
 
-  const handleConfirmWorkdayWarning = async () => {
-    setShowWorkdayWarning(false);
-    if (pendingScheduleData) {
-      try {
-        if (editingSchedule) {
-          await updatePlanning(editingSchedule.id, pendingScheduleData);
+  // const handleConfirmWorkdayWarning = async () => {
+  //   setShowWorkdayWarning(false);
+  //   if (pendingScheduleData) {
+  //     try {
+  //       if (editingSchedule) {
+  //         await updatePlanning(editingSchedule.id, pendingScheduleData);
 
-          // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
-          toast.success(
-            "Planning créé avec succès (malgré l'absence de l'employé)",
-          );
-        } else {
-          await createPlanning(pendingScheduleData);
-          // await axios.post('/api/planning', pendingScheduleData);
-          toast.success(
-            "Planning créé avec succès (malgré l'absence de l'employé)",
-          );
-        }
-        // fetchSchedules();
-        queryclient.invalidateQueries({ queryKey: ["tasks"] })
+  //         // await axios.put(`/api/planning/${editingSchedule.id}`, pendingScheduleData);
+  //         toast.success(
+  //           "Planning créé avec succès (malgré l'absence de l'employé)",
+  //         );
+  //       } else {
+  //         await createPlanning(pendingScheduleData);
+  //         // await axios.post('/api/planning', pendingScheduleData);
+  //         toast.success(
+  //           "Planning créé avec succès (malgré l'absence de l'employé)",
+  //         );
+  //       }
+  //       // fetchSchedules();
+  //       queryclient.invalidateQueries({ queryKey: ["tasks"] })
 
-        handleCloseDialog();
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde malgré l'alerte:", error);
-        toast.error("Erreur lors de la sauvegarde");
-      }
-    }
-    setPendingScheduleData(null);
-    setWorkdayWarningInfo(null);
-  };
+  //       handleCloseDialog();
+  //     } catch (error) {
+  //       console.error("Erreur lors de la sauvegarde malgré l'alerte:", error);
+  //       toast.error("Erreur lors de la sauvegarde");
+  //     }
+  //   }
+  //   setPendingScheduleData(null);
+  //   setWorkdayWarningInfo(null);
+  // };
 
-  const handleCancelConflict = () => {
-    setConflictDialog(false);
-    setConflictInfo(null);
-    setPendingScheduleData(null);
-  };
+  // const handleCancelConflict = () => {
+  //   setConflictDialog(false);
+  //   setConflictInfo(null);
+  //   setPendingScheduleData(null);
+  // };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("fr-FR");
@@ -784,9 +541,7 @@ const Planning = () => {
 
   const filteredSchedules = schedules.data?.filter((schedule) => {
     return true;
-  })
-    ;
-
+  });
   const getStatusInfo = (status) => {
     return statusOptions.find((s) => s.value === status) || statusOptions[1]; // Utiliser 'planned' par défaut
   };
@@ -883,29 +638,6 @@ const Planning = () => {
 
   const getTaskDisplayName = (schedule: TaskModel) => {
     return schedule.name;
-    // Si c'est une tâche de vente (avec notes contenant "Vente -")
-    if (schedule.notes?.includes("Vente -")) {
-      return "Vente";
-    }
-
-    // Si c'est une tâche d'ouverture
-    if (isOpeningTask(schedule)) {
-      return "Ouverture magasin";
-    }
-
-    // Si c'est une tâche de présence
-    if (isPresenceTask(schedule)) {
-      // Enlever "Présence point de collecte -" et ne garder que le nom qui suit
-      if (schedule.task_name?.includes("Présence point de collecte -")) {
-        return schedule.task_name
-          .replace("Présence point de collecte -", "")
-          .trim();
-      }
-      return schedule.task_name || "Présence point de collecte";
-    }
-
-    // Pour les autres tâches, utiliser le nom de la tâche ou un nom par défaut
-    return schedule.task_name || "Tâche sans nom";
   };
 
   return (
@@ -939,43 +671,15 @@ const Planning = () => {
               </Select>
             </FormControl>
           </Grid>
-          {/* <Grid size={{ xs: 12, sm: 4 }}>
-            <FormControl fullWidth disabled={!selectedStore}>
-              <InputLabel>Filtrer par lieu</InputLabel>
-              <Select
-                value={selectedLocation}
-                onChange={(e) => {
-                  console.log("📍 LOCATION SELECTION CHANGED");
-                  console.log("📍 New selected location:", e.target.value);
-                  setSelectedLocation(e.target.value);
-                }}
-                label="Filtrer par lieu"
-              >
-                <MenuItem value="">
-                  <em>Tous les lieux</em>
-                </MenuItem>
-                {locations
-                  .filter(
-                    (loc) =>
-                      !selectedStore || loc.store_id === parseInt(selectedStore)
-                  )
-                  .map((location) => (
-                    <MenuItem key={location.id} value={location.id}>
-                      {location.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Grid> */}
+
           <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="body2" color="text.secondary">
               {selectedStore
-                ? `Affichage des tâches pour ${stores.data?.find((s) => s.id === selectedStore.id)?.name ||
-                "magasin sélectionné"
-                }`
+                ? `Affichage des tâches pour ${
+                    stores.data?.find((s) => s.id === selectedStore.id)?.name ||
+                    "magasin sélectionné"
+                  }`
                 : "Affichage de toutes les tâches"}
-              {/* {selectedLocation &&
-                ` - Lieu: ${locations.find((l) => l.id === parseInt(selectedLocation))?.name || "lieu sélectionné"}`} */}
             </Typography>
           </Grid>
         </Grid>
@@ -1018,12 +722,12 @@ const Planning = () => {
         {viewMode === "calendar" && (
           <CalendarView
             filteredSchedules={schedules.data || []}
-            getTaskDisplayName={getTaskDisplayName}
+            // getTaskDisplayName={getTaskDisplayName}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
             handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-            isOpeningTask={isOpeningTask}
-            isPresenceTask={isPresenceTask}
+            // isOpeningTask={isOpeningTask}
+            // isPresenceTask={isPresenceTask}
             selectedDate={selectedDate}
           />
         )}
@@ -1048,12 +752,12 @@ const Planning = () => {
             getPresenceCardStyle={getPresenceCardStyle}
             getPresenceTaskStyle={getPresenceCardStyle}
             getPriorityInfo={getPriorityInfo}
-            getTaskDisplayName={getTaskDisplayName}
+            // getTaskDisplayName={getTaskDisplayName}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
             // handleQuickTimeSlot={handleQuickTimeSlot}
-            isOpeningTask={isOpeningTask}
-            isPresenceTask={isPresenceTask}
+            // isOpeningTask={isOpeningTask}
+            // isPresenceTask={isPresenceTask}
             selectedDate={selectedDate}
           />
         )}
@@ -1083,7 +787,7 @@ const Planning = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button
-            onClick={handleSave}
+            // onClick={handleSave}
             type="submit"
             form="planningForm"
             variant="contained"
@@ -1096,7 +800,7 @@ const Planning = () => {
 
       {/* TODO JE L'AI JAMAIS VU */}
       {/* Dialog de conflit d'horaires */}
-      <Dialog
+      {/* <Dialog
         open={conflictDialog}
         onClose={handleCancelConflict}
         maxWidth="sm"
@@ -1187,11 +891,11 @@ const Planning = () => {
             Continuer malgré le conflit
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* TODO JE L'AI JAMAIS VU */}
       {/* Dialog pour l'alerte de jour de travail */}
-      <Dialog
+      {/* <Dialog
         open={showWorkdayWarning}
         onClose={handleCancelWorkdayWarning}
         maxWidth="sm"
@@ -1253,7 +957,7 @@ const Planning = () => {
             Créer malgré tout
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* Dialog pour les employés manquants */}
       <Dialog
@@ -1383,9 +1087,8 @@ const Planning = () => {
           <Button
             onClick={() => {
               setMissingEmployeesDialogDismissed(true);
-              navigate("/admin/config");
+              navigate("/admin/config/employees");
               // Rediriger vers la page d'administration
-              window.location.href = "/admin";
             }}
             variant="contained"
             color="primary"
@@ -1397,24 +1100,17 @@ const Planning = () => {
       </Dialog>
 
       {/* Dialogue d'assignation des employés depuis le planning */}
-      {selectedTaskForAssignment &&
+      {selectedTaskForAssignment && (
         <TaskAssignmentDialog
           open={openTaskAssignmentDialog}
           onClose={handleCloseTaskAssignmentDialog}
           selectedTask={selectedTaskForAssignment}
-          // assignedEmployees={taskAssignedEmployees}
-          // availableEmployees={availableEmployeesForTask}
-          // onAssignEmployee={handleAssignEmployeeToTask}
-          // onUnassignEmployee={handleUnassignEmployeeFromTask}
           onCloseWithChanges={() => {
             // Only refetch schedules if changes were made when dialog closes
-            // fetchSchedules();
-            queryclient.invalidateQueries({ queryKey: ["tasks"] })
-
+            queryclient.invalidateQueries({ queryKey: ["tasks"] });
           }}
         />
-      }
-
+      )}
     </Box>
   );
 };

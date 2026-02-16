@@ -21,9 +21,9 @@ import type { TaskModel } from "../../interfaces/Models";
 interface DayViewProps {
   filteredSchedules: TaskModel[];
   handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
-  isOpeningTask: (t: TaskModel) => boolean;
-  isPresenceTask: (t: TaskModel) => boolean;
-  getTaskDisplayName: (t: TaskModel) => string;
+  // isOpeningTask: (t: TaskModel) => boolean;
+  // isPresenceTask: (t: TaskModel) => boolean;
+  // getTaskDisplayName: (t: TaskModel) => string;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
   formatTime: (s: string) => string;
@@ -37,9 +37,9 @@ interface DayViewProps {
 
 export const DayView = ({
   handleOpenDialog,
-  isOpeningTask,
-  isPresenceTask,
-  getTaskDisplayName,
+  // isOpeningTask,
+  // isPresenceTask,
+  // getTaskDisplayName,
   handleDeleteTask,
   filteredSchedules,
   selectedDate,
@@ -160,16 +160,16 @@ export const DayView = ({
                                 fontWeight="bold"
                                 noWrap
                                 sx={{
-                                  color: isOpeningTask(schedule)
+                                  color: schedule.category=="vente"
                                     ? "#4caf50"
-                                    : isPresenceTask(schedule)
+                                    : schedule.category=="point"
                                       ? "#ff9800"
                                       : "inherit",
                                 }}
                               >
-                                {getTaskDisplayName(schedule)}
+                                {schedule.name}
                               </Typography>
-                              {isOpeningTask(schedule) && (
+                              {schedule.category=="vente" && (
                                 <Chip
                                   label="🏪 Ouverture"
                                   size="small"
@@ -421,16 +421,16 @@ export const DayView = ({
                                 fontWeight="bold"
                                 noWrap
                                 sx={{
-                                  color: isOpeningTask(schedule)
+                                  color: schedule.category=="vente"
                                     ? "#4caf50"
-                                    : isPresenceTask(schedule)
+                                    : schedule.category=="point"
                                       ? "#ff9800"
                                       : "inherit",
                                 }}
                               >
-                                {getTaskDisplayName(schedule)}
+                                {schedule.name}
                               </Typography>
-                              {isOpeningTask(schedule) && (
+                              {schedule.category=="vente" && (
                                 <Chip
                                   label="🏪 Ouverture"
                                   size="small"
