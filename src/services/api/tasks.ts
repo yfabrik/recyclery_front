@@ -4,8 +4,8 @@ import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 interface filterTask {
   include?: ("user" | "store")[];
   store_id?: number;
-  date_from?: Date;
-  date_to?: Date;
+  date_from?: string | Date;
+  date_to?: string | Date;
   category?: "vente" | "point" | "collection" | "custom";
 }
 export const getTasks = (filter?: filterTask): Promise<AxiosResponse<{ message: string, tasks: TaskModel[] }>> => {

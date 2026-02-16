@@ -6,6 +6,7 @@ import {
   Person,
   PersonAdd,
   PlayArrow,
+  Print,
   PriorityHigh,
   Save,
   Settings,
@@ -35,7 +36,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { PlaningForm, type Schema as TaskFormSchema } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
@@ -1001,6 +1002,19 @@ const Planning = () => {
             viewMode === "calendar" ? setFilterStatus : undefined
           }
         />
+        {viewMode === "week" && (
+          <Box sx={{ mb: 2 }}>
+            <Button
+              component={Link}
+              to={`/admin/planning/print?date=${selectedDate.toISOString().slice(0, 10)}${selectedStore?.id != null ? `&store_id=${selectedStore.id}` : ""}`}
+              variant="outlined"
+              startIcon={<Print />}
+              size="small"
+            >
+              Imprimer la semaine
+            </Button>
+          </Box>
+        )}
         {viewMode === "calendar" && (
           <CalendarView
             filteredSchedules={schedules.data || []}

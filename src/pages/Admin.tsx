@@ -16,6 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import Planning from "./Planning";
+import PlanningPrint from "./PlanningPrint";
 
 import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 import { ConfigurationTab } from "../components/admin/ConfigurationTab";
@@ -160,6 +161,7 @@ const Admin = () => {
             <Route path="sales" element={<SalesAnalyticsTab />} />
             <Route path="don" element={<DonationsTab />} />
             <Route path="logistic" element={<LogisticsTab />} />
+            <Route path="planning/print" element={<PlanningPrint />} />
             <Route path="planning" element={<Planning />} />
             <Route path="users" element={<UsersTab />} />
           </Routes>

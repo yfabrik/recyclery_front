@@ -34,3 +34,17 @@ export const formatDate = (d: Date) => {
 export const formatTime = (d: Date) => {
     return d.toLocaleTimeString("fr-FR", { minute: "2-digit", hour: "2-digit", hour12: false })
 }
+
+/** Week (Monday–Sunday) containing the given date. Returns date_from and date_to in en-ca format for API. */
+export const getWeekRangeFromDate = (selectedDate: Date): { date_from: string; date_to: string } => {
+    const lundi = new Date(selectedDate)
+    const day = lundi.getDay()
+    const diff = lundi.getDate() - day + (day === 0 ? -6 : 1)
+    lundi.setDate(diff)
+    const dimanche = new Date(lundi)
+    dimanche.setDate(lundi.getDate() + 6)
+    return {
+        date_from: lundi.toLocaleString("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }),
+        date_to: dimanche.toLocaleString("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }),
+    }
+}
