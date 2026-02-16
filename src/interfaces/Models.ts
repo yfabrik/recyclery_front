@@ -10,6 +10,8 @@ export interface CategoryModel extends BaseModel {
   icon: string | null;
   parent_id: number | null;
   subcategories?: CategoryModel[];
+  parent?: CategoryModel;
+  LabeledItems?: LabeledItemModel[];
   defaultWeight: number;
   defaultPrice: number;
   IO: number;
@@ -21,33 +23,39 @@ export interface SkillModel extends BaseModel {
 
 export interface StoreModel extends BaseModel {
   employees?: Array<EmployeeModel>;
-  manager_id: number;
+  manager_id: number | null;
   manager?: UserModel;
   caisses?: CaisseModel[];
   name: string;
-  address: string;
-  phone: string;
-  email: string;
-  city: string;
-  postal_code: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  city: string | null;
+  postal_code: string | null;
   is_active: boolean;
-  TaskSchedules?: ScheduleModel[]
+  TaskSchedules?: ScheduleModel[];
+  Tasks?: TaskModel[];
+  CollectionPoints?: CollectionPointModel[];
+  LabeledItems?: LabeledItemModel[];
+  Donations?: DonModel[];
 }
 
 export interface CollectionPointModel extends BaseModel {
   name: string;
-  address: string;
-  city: string;
-  postal_code: string;
-  contact_person: string;
-  contact_phone: string;
-  contact_email: string;
-  type: string;
-  notes: string;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  contact_person: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  type: "standard" | "entreprise" | "association" | "school" | "hospital" | "other";
+  notes: string | null;
   is_active: boolean;
-  recyclery_id?: number;
-  Recycleries: StoreModel[];
-  TaskSchedules?: ScheduleModel[]
+  recyclery_id?: number | null;
+  Recyclery?: StoreModel;
+  TaskSchedules?: ScheduleModel[];
+  Tasks?: TaskModel[];
+  Arrivals?: ArrivalModel[];
 }
 
 // export interface PointPresenceModel extends BaseModel {
@@ -88,20 +96,22 @@ export interface DonModel extends BaseModel {
   donor_email: string | null;
   item_description: string;
   estimated_value: number;
-  status: string;
+  status: "pending" | "accepted" | "rejected";
   received_at: Date | null;
-  donor_contact?: string | null
-  User?: UserModel
+  donor_contact?: string | null;
+  User?: UserModel;
+  Recyclery?: StoreModel;
 }
 
 export interface EcoOrgModel extends BaseModel {
   name: string;
-  description: string;
-  contact_email: string;
-  contact_phone: string;
-  address: string;
-  website: string;
+  description: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  address: string | null;
+  website: string | null;
   is_active: boolean;
+  WasteDisposals?: WasteModel[];
 }
 
 export interface LabeledItemModel extends BaseModel {
@@ -110,38 +120,41 @@ export interface LabeledItemModel extends BaseModel {
   subcategory_id: number | null;
   soldBy: number | null;
   created_by: number;
-  transaction_id: string | null;
+  transaction_id: number | null;
 
   barcode: string;
-  // name: string;
   description: string;
   weight: number;
   price: number;
   cost: number | null;
   condition_state: "excellent" | "good" | "fair" | "poor";
-  // location: string;
-  status: `available` | `reserved` | `sold`;
-  category: Pick<CategoryModel, "name">
-  subcategory: Pick<CategoryModel, "name"> | null
-  createdBy: Pick<UserModel, "username">
-
+  status: "available" | "sold";
+  category?: Pick<CategoryModel, "name">;
+  subcategory?: Pick<CategoryModel, "name"> | null;
+  createdBy?: Pick<UserModel, "username">;
+  recyclery?: StoreModel;
+  SalesTransaction?: TransactionModel;
 }
 
 export interface UserModel extends BaseModel {
   username: string;
   email: string;
   password?: string;
-
   phone: string;
-  role: "admin"|"employee"|"manager";
+  role: "admin" | "employee" | "manager";
   isActive: boolean;
   last_login: Date;
+  Donations?: DonModel[];
+  SalesTransactions?: TransactionModel[];
+  LabeledItems?: LabeledItemModel[];
+  Arrivals?: ArrivalModel[];
+  managedStores?: StoreModel[];
 }
 
 export interface TaskModel extends BaseModel {
   name: string;
   description: string | null;
-  category: "vente"|"point"|"collection"|"custom";
+  category: "vente" | "point" | "collection" | "custom";
   priority: string | null;
   required_skills: string | null;
   location: string | null;
@@ -152,15 +165,15 @@ export interface TaskModel extends BaseModel {
   end_time: Date | string;
   notes: string | null;
   status: string | null;
-  CollectionPointId: number | null;
-  RecycleryId: number | null;
+  CollectionPointId?: number | null;
+  RecycleryId?: number | null;
   schedule_id: number;
-  store_id?: number
-  collection_point_id?: number
-  Recyclery?: StoreModel
-
-  day_of_week: string
-  // Legacy/computed fields (may be populated by frontend)
+  store_id?: number | null;
+  collection_point_id?: number | null;
+  Recyclery?: StoreModel;
+  TaskSchedule?: ScheduleModel;
+  CollectionPoint?: CollectionPointModel;
+  day_of_week: string;
   task_employees?: UserModel[];
   assigned_employees?: UserModel[];
   Employees?: EmployeeModel[];
@@ -178,6 +191,8 @@ export interface EmployeeModel extends BaseModel {
   EmployeeStore?: {
     is_primary: boolean;
   }[];
+  Tasks?: TaskModel[];
+  TaskSchedules?: ScheduleModel[];
 }
 
 export interface WorkdaysModel extends BaseModel {
@@ -189,6 +204,7 @@ export interface WorkdaysModel extends BaseModel {
   notes: string;
   employee_id?: number;
   week?: "week1" | "week2";
+  Employee?: EmployeeModel;
 }
 
 export interface StoreHoursModel extends BaseModel {
@@ -200,6 +216,7 @@ export interface StoreHoursModel extends BaseModel {
   notes: string;
   is_24h: boolean;
   store_id: number;
+  Recyclery?: StoreModel;
 }
 
 export interface CaisseModel extends BaseModel {
@@ -215,18 +232,19 @@ export interface CaisseModel extends BaseModel {
 
 export interface CashSession extends BaseModel {
   opening_amount: number;
-  closing_amount: number;
-  expected_amount: number;
+  closing_amount?: number | null;
+  expected_amount?: number | null;
   difference_amount: number;
   status: "open" | "close";
-  closed_at: Date;
-  notes: string;
+  closed_at?: Date | null;
+  notes?: string | null;
   cash_register_id: number;
-  user_id?: number;
+  user_id: number;
 
   CashRegister?: Pick<CaisseModel, "name">;
   User?: UserModel;
-  Recyclery?: Pick<StoreModel, "name">
+  Recyclery?: Pick<StoreModel, "name">;
+  SalesTransactions?: TransactionModel[];
 }
 
 export interface TransactionModel extends BaseModel {
@@ -238,34 +256,38 @@ export interface TransactionModel extends BaseModel {
   customer_name?: string;
   customer_email?: string;
   customer_postal_code?: string;
-  status: "completed";
+  status: "pending" | "completed" | "cancelled";
 
   cash_session_id: number;
   CashSession?: CashSession;
-  sold_by: number;
+  created_by?: number;
+  sold_by?: number;
+  User?: UserModel;
+  LabeledItems?: LabeledItemModel[];
 }
 
 export interface ScheduleModel extends TaskModel {
   is_recurring: boolean;
   recurrence_pattern: "daily" | "weekly" | "monthly";
+  Tasks?: TaskModel[];
 }
 
 
 export interface WasteModel extends BaseModel {
-  disposal_date: Date
-  disposal_type: "landfill" | "eco_organism" | "recycling" | "other"
-  weight_kg: number | null
-  volume_m3: number | null
-  transport_method: string | null
-  transport_company: string | null
-  transport_cost: string | null
-  notes: string | null
-  category_id: number
-  category?: CategoryModel
-  subcategory?: CategoryModel | null
-  subcategory_id: number | null
-  eco_organism?: EcoOrgModel | null
-  eco_organism_id: number | null
-  created_by: number
-  User?: UserModel
+  disposal_date: Date;
+  disposal_type: "eco_organism" | "landfill" | "recycling" | "other";
+  weight_kg: number;
+  volume_m3: number | null;
+  transport_method: string | null;
+  transport_company: string | null;
+  transport_cost: number | null;
+  notes: string | null;
+  category_id: number;
+  category?: CategoryModel;
+  subcategory?: CategoryModel | null;
+  subcategory_id: number | null;
+  eco_organism?: EcoOrgModel | null;
+  eco_organism_id: number | null;
+  created_by: number;
+  User?: UserModel;
 }
