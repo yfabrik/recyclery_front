@@ -1,5 +1,8 @@
 import { Add, Delete, Edit } from "@mui/icons-material";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Avatar,
   Box,
   Button,
@@ -35,12 +38,18 @@ import {
 // }
 
 interface WeekTaskSectionProps {
-  title: string;
+  /** Title text; can include an icon as ReactNode (e.g. <><Icon /> Title</>) */
+  title: ReactNode;
   chipLabel: string;
   chipSx?: SxProps<Theme>;
   cardColor: string;
   borderColor: string;
+  /** Rendered outside the grid (e.g. row label); does not count as a grid cell. Ignored when `rowLabels` is set. */
+  leftLabel?: ReactNode;
+  /** Grid children: 7 TaskCards (single row) or 7 × rowLabels.length TaskCards (multiple rows). */
   children?: ReactNode;
+  /** Row labels (e.g. ["MATIN", "APRÈS-MIDI"]). One label per row; left column is always rendered (label or empty box). */
+  rowLabels?: string[];
 }
 
 interface TaskCardProps {
@@ -78,22 +87,108 @@ interface TaskCardControlsProps {
  * Everything is driven by the filterDaySchedules function so the same
  * component can render sales, presence, or normal tasks.
  */
+const rowLayoutSx = {
+  display: "flex",
+  alignItems: "stretch",
+  gap: 0,
+} as const;
+
+const leftLabelWrapperSx = {
+  flexShrink: 0,
+  display: "flex",
+  flexDirection: "column" as const,
+  alignSelf: "stretch",
+  minHeight: 0,
+};
+
+const gridSx = {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, 1fr)",
+  gap: 2,
+  flex: 1,
+  minWidth: 0,
+};
+
+const ROW_LABEL_WIDTH = 36;
+const ROW_LABEL_COLUMN_WIDTH = 44;
+
 const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
   title,
   chipLabel,
   chipSx,
   cardColor,
   borderColor,
+  leftLabel,
   children,
+  rowLabels,
 }) => {
-  return (
-    // <ColorContext value={{ mainColor: cardColor, secondColor: chipSx.bgColor || cardColor }}>
-    <Box>
+  const useRowLabels = rowLabels != null && rowLabels.length > 0;
+  const childArray = React.Children.toArray(children);
+  const numRows = useRowLabels ? rowLabels.length : 1;
+  const chunks = useRowLabels
+    ? Array.from({ length: numRows }, (_, i) =>
+      childArray.slice(i * 7, (i + 1) * 7),
+    )
+    : [childArray];
+
+  const renderRowLabel = (label: string | undefined) => (
+    <Box
+      sx={{
+        flexShrink: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignSelf: "stretch",
+        minHeight: 0,
+        width: ROW_LABEL_COLUMN_WIDTH,
+        marginRight: 2,
+      }}
+    >
       <Box
         sx={{
+          flex: 1,
+          minHeight: 0,
+          width: ROW_LABEL_WIDTH,
+          borderRadius: 2,
           display: "flex",
           alignItems: "center",
-          gap: 2,
+          justifyContent: "center",
+          bgcolor: label != null ? cardColor : "transparent",
+          color: label != null ? "white" : "transparent",
+          writingMode: "vertical-rl",
+          textOrientation: "upright",
+        }}
+      >
+        {label != null && (
+          <Typography variant="h6" fontWeight="bold" noWrap>
+            {label}
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Accordion
+      defaultExpanded
+      disableGutters
+      elevation={0}
+      sx={{
+        "&:before": { display: "none" },
+        bgcolor: "transparent",
+      }}
+    >
+      <AccordionSummary
+        expandIcon={null}
+        sx={{
+          minHeight: "unset",
+          "&.Mui-expanded": { minHeight: "unset" },
+          "& .MuiAccordionSummary-content": {
+            my: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            flex: 1,
+          },
           mb: 2,
           p: 2,
           bgcolor: "#f8f9fa",
@@ -114,15 +209,27 @@ const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
           {title}
         </Typography>
         <Chip label={chipLabel} size="small" sx={chipSx} />
-      </Box>
-
-      <Box
-        sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}
-      >
-        {children}
-      </Box>
-    </Box>
-    // </ColorContext>
+      </AccordionSummary>
+      <AccordionDetails sx={{ p: 0, pt: 0 }}>
+        {useRowLabels ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {chunks.map((chunk, index) => (
+              <Box key={index} sx={rowLayoutSx}>
+                {renderRowLabel(rowLabels?.[index])}
+                <Box sx={gridSx}>{chunk}</Box>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Box sx={rowLayoutSx}>
+            {leftLabel != null && (
+              <Box sx={leftLabelWrapperSx}>{leftLabel}</Box>
+            )}
+            <Box sx={gridSx}>{children}</Box>
+          </Box>
+        )}
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

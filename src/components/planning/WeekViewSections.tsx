@@ -1,18 +1,22 @@
+import {
+  LocalShipping,
+  LocationOn,
+  ShoppingCart,
+  WbSunny,
+} from "@mui/icons-material";
 import { Box } from "@mui/material";
-import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import type { TaskModel } from "../../interfaces/Models";
 import WeekTaskSection, {
   TaskCard,
   TaskCardContent,
 } from "./weekView/WeekTaskSection";
-import { getDay } from "../../services/dateService";
-import { useContext } from "react";
 
 interface WeekViewSectionsProps {
   schedules: TaskModel[];
   getEmployeeColor: (s: string) => string;
   getEmployeeInitials: (s: string) => string;
   handleAssignEmployeesToTask: (e: TaskModel) => void;
-  handleOpenDialog: (t:TaskModel|null,day?:Date) => void;
+  handleOpenDialog: (t: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
 }
@@ -62,11 +66,18 @@ const WeekViewSections = ({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <WeekTaskSection
-        title="🛒 Tâches de vente - Matin (8h-12h)"
-        chipLabel={`${filteredSchedules("vente", 8, 12).length} tâches`}
+        title={
+          <>
+            <ShoppingCart sx={{ fontSize: 28, mr: 0.5 }} />
+            Tâches de vente
+          </>
+        }
+        chipLabel={`${filteredSchedules("vente", 8, 12).length + filteredSchedules("vente", 13, 17).length
+          } tâches`}
         chipSx={{ bgcolor: "#e8f5e8", color: "#4caf50", fontWeight: "bold" }}
         cardColor="#4caf50"
         borderColor="#4caf50"
+        rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day) => {
           const daySchedules = filteredSchedules("vente", 8, 12).filter((schedule) => {
@@ -79,39 +90,27 @@ const WeekViewSections = ({
           });
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`m-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#4caf50"
-              // borderColor="#4caf50"
               emptyText="Aucune tâche"
             >
-              {daySchedules.map((schedule, j) => {
-                return (
-                  <TaskCardContent
-                    key={j}
-                    schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
-                    handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-                    handleOpenDialog={handleOpenDialog}
-                    handleDeleteTask={handleDeleteTask}
-                  />
-                );
-              })}
+              {daySchedules.map((schedule, j) => (
+                <TaskCardContent
+                  key={j}
+                  schedule={schedule}
+                  getEmployeeColor={getEmployeeColor}
+                  getEmployeeInitials={getEmployeeInitials}
+                  handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                  handleOpenDialog={handleOpenDialog}
+                  handleDeleteTask={handleDeleteTask}
+                />
+              ))}
             </TaskCard>
           );
         })}
-      </WeekTaskSection>
-
-      <WeekTaskSection
-        title="🛒 Tâches de vente - Après-midi (13h-17h)"
-        chipLabel={`${filteredSchedules("vente", 13, 17).length} tâches`}
-        chipSx={{ bgcolor: "#e8f5e8", color: "#4caf50", fontWeight: "bold" }}
-        cardColor="#4caf50"
-        borderColor="#4caf50"
-      >
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = filteredSchedules("vente", 13, 17).filter((schedule) => {
             const scheduleDate = new Date(schedule.scheduled_date);
             return (
@@ -119,40 +118,43 @@ const WeekViewSections = ({
               scheduleDate.getMonth() === day.getMonth() &&
               scheduleDate.getFullYear() === day.getFullYear()
             );
-          })
-            ;
+          });
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`a-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#4caf50"
               emptyText="Aucune tâche"
             >
-              {daySchedules.map((schedule, j) => {
-                return (
-                  <TaskCardContent
-                    key={j}
-                    schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
-                    handleAssignEmployeesToTask={handleAssignEmployeesToTask}
-                    handleOpenDialog={handleOpenDialog}
-                    handleDeleteTask={handleDeleteTask}
-                  ></TaskCardContent>
-                );
-              })}
+              {daySchedules.map((schedule, j) => (
+                <TaskCardContent
+                  key={j}
+                  schedule={schedule}
+                  getEmployeeColor={getEmployeeColor}
+                  getEmployeeInitials={getEmployeeInitials}
+                  handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                  handleOpenDialog={handleOpenDialog}
+                  handleDeleteTask={handleDeleteTask}
+                />
+              ))}
             </TaskCard>
           );
         })}
       </WeekTaskSection>
 
       <WeekTaskSection
-        title="📍 Présence déchèterie - Matin (8h-12h)"
-        chipLabel={`${filteredSchedules("point", 8, 12).length} présences`}
+        title={
+          <>
+            <LocationOn sx={{ fontSize: 28, mr: 0.5 }} />
+            Présence déchèterie
+          </>
+        }
+        chipLabel={`${filteredSchedules("point", 8, 12).length + filteredSchedules("point", 13, 17).length} présences`}
         chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
         cardColor="#ff9800"
         borderColor="#ff9800"
+        rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -167,7 +169,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`m-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#ff9800"
@@ -189,15 +191,7 @@ const WeekViewSections = ({
             </TaskCard>
           );
         })}
-      </WeekTaskSection>
 
-      <WeekTaskSection
-        title="📍 Présence déchèterie - Après-midi (13h-17h)"
-        chipLabel={`${filteredSchedules("point", 13, 17).length} présences`}
-        chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
-        cardColor="#ff9800"
-        borderColor="#ff9800"
-      >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("point", 13, 17).filter((schedule) => {
@@ -211,7 +205,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`a-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#ff9800"
@@ -236,13 +230,19 @@ const WeekViewSections = ({
       </WeekTaskSection>
 
       <WeekTaskSection
-        title="🌅 Tâches normales - Matin (8h00 - 12h00)"
-        chipLabel={`${filteredSchedules("custom", 8, 12).length} tâches`}
+        title={
+          <>
+            <WbSunny sx={{ fontSize: 28, mr: 0.5 }} />
+            Tâches normales
+          </>
+        }
+        chipLabel={`${filteredSchedules("custom", 8, 12).length + filteredSchedules("custom", 13, 17).length} tâches`}
         chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
         cardColor="#2196f3"
         borderColor="#2196f3"
         showAddButton
         onAddClick={(day) => handleOpenDialog(null, day)}
+        rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -257,7 +257,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`m-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#2196f3"
@@ -281,15 +281,7 @@ const WeekViewSections = ({
             </TaskCard>
           );
         })}
-      </WeekTaskSection>
 
-      <WeekTaskSection
-        title="🌞 Tâches normales - Après-midi (13h30 - 17h)"
-        chipLabel={`${filteredSchedules("custom", 13, 17).length} tâches`}
-        chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
-        cardColor="#2196f3"
-        borderColor="#2196f3"
-      >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("custom", 13, 17).filter((schedule) => {
@@ -303,7 +295,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`a-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#2196f3"
@@ -330,11 +322,17 @@ const WeekViewSections = ({
       </WeekTaskSection>
 
       <WeekTaskSection
-        title="🚚 Lieux de collecte - Matin (8h-12h)"
-        chipLabel={`${filteredSchedules("collection", 8, 12).length} lieux de collecte`}
+        title={
+          <>
+            <LocalShipping sx={{ fontSize: 28, mr: 0.5 }} />
+            Lieux de collecte
+          </>
+        }
+        chipLabel={`${filteredSchedules("collection", 8, 12).length + filteredSchedules("collection", 13, 17).length} lieux de collecte`}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         cardColor="#9c27b0"
         borderColor="#9c27b0"
+        rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
@@ -349,7 +347,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`m-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#9c27b0"
@@ -371,15 +369,7 @@ const WeekViewSections = ({
             </TaskCard>
           );
         })}
-      </WeekTaskSection>
-
-      <WeekTaskSection
-        title="🚚 Lieux de collecte - Après-midi (13h-17h)"
-        chipLabel={`${filteredSchedules("collection", 13, 17).length} lieux de collecte`}
-        chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
-        cardColor="#9c27b0"
-        borderColor="#9c27b0"
-      >
+     
         {weekDays.map((day, index) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("collection", 13, 17).filter((schedule) => {
@@ -393,7 +383,7 @@ const WeekViewSections = ({
             : [];
           return (
             <TaskCard
-              key={day.toISOString()}
+              key={`a-${day.toISOString()}`}
               day={day}
               dayName={day.toLocaleString(undefined, { weekday: "long" })}
               cardColor="#9c27b0"
