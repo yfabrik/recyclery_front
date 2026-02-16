@@ -3,7 +3,7 @@ import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { PRIORITIES as priorities } from "../../interfaces/shared";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr } from "../../interfaces/ZodTypes";
 import {
   FormDate,
   FormInput,
@@ -11,6 +11,7 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 type StoreOption = {
   id: number;
@@ -18,7 +19,7 @@ type StoreOption = {
 };
 
 const schema = z.object({
-  name: z.string().trim().nonempty("name requis"),
+  name: noEmptyStr("name requis"),
   category: z.enum(
     ["vente", "point", "collection", "custom"],
     "La tâche est requise",
@@ -45,6 +46,7 @@ export const PlaningForm = ({
   defaultValues,
   stores,
 }: ScheduleFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -58,7 +60,7 @@ export const PlaningForm = ({
       scheduled_date: new Date(),
       store_id: "",
 
-      ...(defaultValues || {}),
+      ...data,
     },
   });
 
