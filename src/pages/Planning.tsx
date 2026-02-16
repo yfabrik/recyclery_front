@@ -176,13 +176,13 @@ const Planning = () => {
         date_from: new Date(
           new Date(first).setDate(first.getDate() - first.getDay() + 1),
         )
-          .toLocaleDateString()
-          .replaceAll("/", "-"),
+          .toISOString().slice(0, 10),
+          // .replaceAll("/", "-"),
         date_to: new Date(
           new Date(first).setDate(first.getDate() - first.getDay() + 42),
         )
-          .toLocaleDateString()
-          .replaceAll("/", "-"),
+          .toISOString().slice(0, 10),
+          // .replaceAll("/", "-"),
       };
     }
     return {
