@@ -10,9 +10,7 @@ import {
 } from "./FormBase";
 
 import * as z from "zod";
-import {
-  DAYS_OF_WEEK as daysOfWeek
-} from "../../interfaces/shared";
+import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import type { StoreModel } from "../../interfaces/Models";
@@ -20,7 +18,7 @@ import type { StoreModel } from "../../interfaces/Models";
 const schema = z.object({
   store_id: idSchema("choississez un magasin"),
   day_of_week: z.string().nonempty("choisissez un jour"),
-  is_open: z.boolean(),
+  is_recurring: z.boolean(),
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
   is_24h: z.boolean(),
@@ -42,16 +40,16 @@ export const StoreOpeningForm = ({
     defaultValues: {
       store_id: "",
       day_of_week: "",
-      is_open: true,
+      is_recurring: true,
       start_time: new Date().setHours(9, 0),
       end_time: new Date().setHours(17, 0),
       is_24h: false,
       notes: "",
-      ...data
+      ...data,
     },
   });
 
-  const watchFields = form.watch(["is_open", "is_24h"]);
+  const watchFields = form.watch(["is_recurring", "is_24h"]);
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -83,7 +81,7 @@ export const StoreOpeningForm = ({
           <FormSwitch
             control={form.control}
             label="Magasin ouvert ce jour"
-            name="is_open"
+            name="is_recurring"
           />
         </Grid>
 
@@ -105,7 +103,6 @@ export const StoreOpeningForm = ({
                     name="start_time"
                     label="Heure d'ouverture"
                   />
-
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormTime
@@ -113,7 +110,6 @@ export const StoreOpeningForm = ({
                     name="end_time"
                     label="Heure de fermeture"
                   />
-
                 </Grid>
               </>
             )}
