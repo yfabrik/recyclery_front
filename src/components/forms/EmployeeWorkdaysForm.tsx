@@ -146,7 +146,7 @@ export const EmployeeWorkdaysForm = ({
                   </Typography>
                 </Grid>
               )}
-              <Grid size={{ xs: 4.5 }} key={field.id}>
+              <Grid size={{ xs: 4.5 }} key={"week1"+field.id}>
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
@@ -172,7 +172,7 @@ export const EmployeeWorkdaysForm = ({
                   </Typography>
                 </Grid>
               )}
-              <Grid size={{ xs: 4.5 }} key={field.id}>
+              <Grid size={{ xs: 4.5 }} key={"week2"+field.id}>
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
