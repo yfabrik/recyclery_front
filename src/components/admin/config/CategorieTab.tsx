@@ -42,27 +42,35 @@ import {
   patchCategory as patchCategoryApi,
 } from "../../../services/api/categories";
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
+import { IO } from "../../../services/categoriesMask";
 
 export const CategoriesTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<
-    Partial<CategoryModel> | null
-  >(null);
+  const [editingCategory, setEditingCategory] =
+    useState<Partial<CategoryModel> | null>(null);
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const availableIcons = useQuery<{ name: string; label: string }[]>({
-    queryFn: () => fetchCategoryIcons().then(result => result.data.icons).then(result => result.map((icon: string) => ({
-      name: icon,
-      label: icon,
-    }))),
+    queryFn: () =>
+      fetchCategoryIcons()
+        .then((result) => result.data.icons)
+        .then((result) =>
+          result.map((icon: string) => ({
+            name: icon,
+            label: icon,
+          })),
+        ),
     placeholderData: [],
-    queryKey: ["icons",]
-  })
+    queryKey: ["icons"],
+  });
 
   const categories = useQuery({
-    queryFn: () => fCat({ only_category: true, include: "category" }).then(result => result.data.categories || []),
-    queryKey: ["categorie", { only_category: true, include: "Category" }]
+    queryFn: () =>
+      fCat({ only_category: true, include: "category" }).then(
+        (result) => result.data.categories || [],
+      ),
+    queryKey: ["categorie", { only_category: true, include: "Category" }],
   });
 
   useEffect(() => {
@@ -72,41 +80,56 @@ export const CategoriesTab = () => {
   }, [categories.error]);
 
   const editCategory = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateCategory(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
+      updateCategory(id, data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
       toast.success("Catégorie mise à jour avec succès");
-      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
-      handleCloseDialog()
-    }
-  })
+      queryClient.invalidateQueries({
+        queryKey: ["categorie", { only_category: true, include: "Category" }],
+      });
+      handleCloseDialog();
+    },
+  });
   const addCategory = useMutation({
     mutationFn: (data: Schema) => createCategory(data),
     onError: () => toast.error("Erreur lors de la sauvegarde"),
     onSuccess: () => {
       toast.success("Catégorie créée avec succès");
-      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
-      handleCloseDialog()
-    }
-  })
+      queryClient.invalidateQueries({
+        queryKey: ["categorie", { only_category: true, include: "Category" }],
+      });
+      handleCloseDialog();
+    },
+  });
 
   const removeCategory = useMutation({
     mutationFn: (id: number) => deleteCategory(id),
     onError: () => toast.error("Erreur lors de la suppression"),
     onSuccess: () => {
-      toast.success("Catégorie supprimée avec succès")
-      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
-    }
-  })
+      toast.success("Catégorie supprimée avec succès");
+      queryClient.invalidateQueries({
+        queryKey: ["categorie", { only_category: true, include: "Category" }],
+      });
+    },
+  });
 
   const patchCategory = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: { in?: boolean, out?: boolean } }) => patchCategoryApi(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { in?: boolean; out?: boolean; sell?: boolean };
+    }) => patchCategoryApi(id, data),
     onError: () => toast.error("Erreur lors de la mise à jour"),
     onSuccess: () => {
-      toast.success("Catégorie mise à jour avec succès")
-      queryClient.invalidateQueries({ queryKey: ["categorie", { only_category: true, include: "Category" }] })
-    }
-  })
+      toast.success("Catégorie mise à jour avec succès");
+      queryClient.invalidateQueries({
+        queryKey: ["categorie", { only_category: true, include: "Category" }],
+      });
+    },
+  });
 
   const handleOpenDialog = (
     category: CategoryModel | null = null,
@@ -126,15 +149,16 @@ export const CategoriesTab = () => {
   };
 
   const handleSave = async (formData: Schema) => {
-    if (editingCategory?.id) editCategory.mutate({ id: editingCategory.id, data: formData })
-    else addCategory.mutate(formData)
+    if (editingCategory?.id)
+      editCategory.mutate({ id: editingCategory.id, data: formData });
+    else addCategory.mutate(formData);
   };
 
   const handleDelete = async (category: CategoryModel) => {
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${category.name}" ?`)
     ) {
-      removeCategory.mutate(category.id)
+      removeCategory.mutate(category.id);
     }
   };
 
@@ -174,7 +198,9 @@ export const CategoriesTab = () => {
             gap: 3,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}
+          >
             <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
               {category.icon ? getIconComponent(category.icon) : <Category />}
             </Avatar>
@@ -201,31 +227,70 @@ export const CategoriesTab = () => {
               />
             </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              alignContent: "flex-end",
+            }}
+          >
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={!!(category.IO & 0b10)}
+                  checked={!!(category.IO & IO.IN)}
                   name="in"
-                  onChange={(e) => patchCategory.mutate({ id: category.id, data: { in: e.target.checked } })}
+                  onChange={(e) =>
+                    patchCategory.mutate({
+                      id: category.id,
+                      data: { in: e.target.checked },
+                    })
+                  }
                 />
               }
               labelPlacement="top"
-              label="Entrée"
+              label="Arrivage"
             />
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={!!(category.IO & 0b01)}
+                  checked={!!(category.IO & IO.SELL)}
+                  name="sell"
+                  onChange={(e) =>
+                    patchCategory.mutate({
+                      id: category.id,
+                      data: { sell: e.target.checked },
+                    })
+                  }
+                />
+              }
+              labelPlacement="top"
+              label="Vente"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={!!(category.IO & IO.OUT)}
                   name="out"
-                  onChange={(e) => patchCategory.mutate({ id: category.id, data: { out: e.target.checked } })}
+                  onChange={(e) =>
+                    patchCategory.mutate({
+                      id: category.id,
+                      data: { out: e.target.checked },
+                    })
+                  }
                 />
               }
               labelPlacement="top"
               label="Sortie"
             />
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
             <Tooltip title="Modifier">
               <IconButton
                 onClick={() => handleOpenDialog(category)}
@@ -347,8 +412,8 @@ export const CategoriesTab = () => {
             startIcon={<Save />}
             type="submit"
             form="CategorieForm"
-            loading={addCategory.isPending||editCategory.isPending}
-          > 
+            loading={addCategory.isPending || editCategory.isPending}
+          >
             Sauvegarder
           </Button>
         </DialogActions>

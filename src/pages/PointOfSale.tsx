@@ -111,10 +111,10 @@ const PointOfSale = () => {
   const categories = useQuery({
     queryKey: [
       "categories",
-      { include: "category", only_category: true, in: true },
+      { include: "category", only_category: true, sell: true },
     ],
     queryFn: () =>
-      fcat({ include: "category", only_category: true, in: true }).then(
+      fcat({ include: "category", only_category: true, sell: true }).then(
         (response) => response.data.categories,
       ),
   });

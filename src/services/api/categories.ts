@@ -9,6 +9,7 @@ interface filters {
   only_sub?: boolean;
   in?: boolean;
   out?: boolean;
+  sell?: boolean;
 }
 
 interface axiosReturn {
@@ -29,20 +30,29 @@ export const fetchCategories = (
  */
 export const getSubcategories = () => axiosInstance.get("/api/subcategories");
 
-export const createCategory = (data: Schema): Promise<AxiosResponse<{
-  message: string, category: CategoryModel
-}>> =>
-  axiosInstance.post("/api/categories", data);
+export const createCategory = (
+  data: Schema,
+): Promise<
+  AxiosResponse<{
+    message: string;
+    category: CategoryModel;
+  }>
+> => axiosInstance.post("/api/categories", data);
 
-export const updateCategory = (id: number, data: Schema): Promise<AxiosResponse<{
-  message: string, category: CategoryModel
-}>> =>
-  axiosInstance.put(`/api/categories/${id}`, data);
+export const updateCategory = (
+  id: number,
+  data: Schema,
+): Promise<
+  AxiosResponse<{
+    message: string;
+    category: CategoryModel;
+  }>
+> => axiosInstance.put(`/api/categories/${id}`, data);
 
 export const deleteCategory = (id: number) =>
   axiosInstance.delete(`/api/categories/${id}`);
 
 export const patchCategory = (
   id: number,
-  data: { in?: boolean; out?: boolean },
+  data: { in?: boolean; out?: boolean; sell?: boolean },
 ) => axiosInstance.patch(`/api/categories/${id}`, data);
