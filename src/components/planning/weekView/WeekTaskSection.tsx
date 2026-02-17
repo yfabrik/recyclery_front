@@ -1,4 +1,4 @@
-import { Add, Delete, Edit } from "@mui/icons-material";
+import { Add, Delete, Edit, ExpandMore } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
@@ -15,7 +15,6 @@ import {
   Typography,
   type SxProps,
   type Theme,
-
 } from "@mui/material";
 import React, { type ReactNode } from "react";
 import type { TaskModel } from "../../../interfaces/Models";
@@ -78,8 +77,6 @@ interface TaskCardControlsProps {
   schedule: TaskModel;
 }
 
-
-
 // const color = useContext()
 // const ColorContext = createContext(null)
 /**
@@ -127,8 +124,8 @@ const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
   const numRows = useRowLabels ? rowLabels.length : 1;
   const chunks = useRowLabels
     ? Array.from({ length: numRows }, (_, i) =>
-      childArray.slice(i * 7, (i + 1) * 7),
-    )
+        childArray.slice(i * 7, (i + 1) * 7),
+      )
     : [childArray];
 
   const renderRowLabel = (label: string | undefined) => (
@@ -178,7 +175,7 @@ const WeekTaskSection: React.FC<WeekTaskSectionProps> = ({
       }}
     >
       <AccordionSummary
-        expandIcon={null}
+        expandIcon={<ExpandMore />}
         sx={{
           minHeight: "unset",
           "&.Mui-expanded": { minHeight: "unset" },
@@ -367,89 +364,87 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
           sx={{ fontWeight: "bold", color: "#2196f3" }}
         >
           🏪 {schedule.name || "Magasin non assigné"}
-
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           {periode}
         </Typography>
         {/* //TODO assigned doesnt exist */}
-        {schedule.Employees &&
-          schedule.Employees.length > 0 && (
+        {schedule.Employees && schedule.Employees.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 0.3,
+              mb: 0.5,
+              p: 0.5,
+              backgroundColor: taskCss.bgColor,
+              borderRadius: 1,
+              border: taskCss.border,
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: taskCss.color,
+                fontSize: taskCss.fontSize,
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
+            >
+              👥 Employés ({schedule?.Employees?.length || "0"})
+            </Typography>
             <Box
               sx={{
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.3,
-                mb: 0.5,
-                p: 0.5,
-                backgroundColor: taskCss.bgColor,
-                borderRadius: 1,
-                border: taskCss.border,
+                alignItems: "center",
               }}
             >
-              <Typography
-                variant="caption"
-                sx={{
-                  color: taskCss.color,
-                  fontSize: taskCss.fontSize,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                }}
-              >
-                👥 Employés ({schedule?.Employees?.length || "0"})
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.3,
-                  alignItems: "center",
-                }}
-              >
-                {schedule?.Employees?.map((emp, idx) => (
-                  <Box
-                    key={idx}
+              {schedule?.Employees?.map((emp, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    p: 0.3,
+                    bgcolor: "white",
+                    borderRadius: 0.5,
+                    border: taskCss.border,
+                    width: "100%",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Avatar
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      p: 0.3,
-                      bgcolor: "white",
-                      borderRadius: 0.5,
-                      border: taskCss.border,
-                      width: "100%",
-                      justifyContent: "center",
+                      width: 16,
+                      height: 16,
+                      fontSize: taskCss.fontSize,
+                      bgcolor: getEmployeeColor(emp.fullName),
+                      color: "white",
+                      fontWeight: "bold",
+                    }}
+                    title={emp.fullName}
+                  >
+                    {getEmployeeInitials(emp.fullName)}
+                  </Avatar>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: taskCss.color,
+                      fontSize: taskCss.fontSize,
+                      fontWeight: taskCss.fontWeight,
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <Avatar
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        fontSize: taskCss.fontSize,
-                        bgcolor: getEmployeeColor(emp.fullName),
-                        color: "white",
-                        fontWeight: "bold",
-                      }}
-                      title={emp.fullName}
-                    >
-                      {getEmployeeInitials(emp.fullName)}
-                    </Avatar>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: taskCss.color,
-                        fontSize: taskCss.fontSize,
-                        fontWeight: taskCss.fontWeight,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {emp.fullName}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
+                    {emp.fullName}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
-          )}
+          </Box>
+        )}
       </Box>
       <TaskCardControls
         handleAssignEmployeesToTask={handleAssignEmployeesToTask}

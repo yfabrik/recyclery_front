@@ -69,7 +69,7 @@ const WeekViewSections = ({
         title={
           <>
             <ShoppingCart sx={{ fontSize: 28, mr: 0.5 }} />
-            Tâches de vente
+            Ventes
           </>
         }
         chipLabel={`${filteredSchedules("vente", 8, 12).length + filteredSchedules("vente", 13, 17).length
@@ -147,7 +147,7 @@ const WeekViewSections = ({
         title={
           <>
             <LocationOn sx={{ fontSize: 28, mr: 0.5 }} />
-            Présence déchèterie
+            Déchetteries
           </>
         }
         chipLabel={`${filteredSchedules("point", 8, 12).length + filteredSchedules("point", 13, 17).length} présences`}
