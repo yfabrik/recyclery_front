@@ -193,7 +193,7 @@ export const CategoriesTab = () => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 180px auto",
+            gridTemplateColumns: "1fr minmax(180px, auto) minmax(120px, auto)",
             alignItems: "center",
             gap: 3,
           }}
@@ -230,9 +230,11 @@ export const CategoriesTab = () => {
           <Box
             sx={{
               display: "flex",
+              flexWrap: "nowrap",
               alignItems: "center",
+              justifyContent: "center",
               gap: 1,
-              alignContent: "flex-end",
+              minWidth: 0,
             }}
           >
             <FormControlLabel
@@ -289,6 +291,9 @@ export const CategoriesTab = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-end",
+              minWidth: 0,
+              flexShrink: 0,
+              pl: 4,
             }}
           >
             <Tooltip title="Modifier">
