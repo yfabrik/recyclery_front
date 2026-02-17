@@ -28,7 +28,18 @@ const schema = z.object({
   transport_company: z.string().transform(v => v == "" ? null : v),
   transport_cost: z.coerce.number().nonnegative().default(0),
   notes: z.string().transform(v => v == "" ? null : v),
-});
+}).refine(
+  (data) => {
+      if (data.disposal_type === "eco_organism") {
+        return !!data.eco_organism_id;
+      }
+      return true;
+    },
+    {
+      message: "Veuillez sélectionner un eco_orgnism",
+      path: ["eco_organism_id"],
+    },
+) ;
 
 export type Schema = z.infer<typeof schema>;
 
@@ -46,7 +57,6 @@ export const WasteForm = ({
   ecoOrganisms,
   onWeightFieldClick,
 }: WasteFormProps) => {
-  console.log(defaultValues)
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
