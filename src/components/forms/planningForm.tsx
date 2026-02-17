@@ -12,6 +12,7 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { SelectedIcon } from "../SelectedIcon";
 
 type StoreOption = {
   id: number;
@@ -175,7 +176,7 @@ export const PlaningForm = ({
             {priorities.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {priority.icon}
+                  <SelectedIcon iconName={priority.icon || "Flag" } />
                   {priority.label}
                 </Box>
               </MenuItem>

@@ -15,6 +15,17 @@ export const Default: Story = {
     formId: "formId",
     defaultValues: {},
     onSubmit: {},
-    icons: []
+    icons: [
+      "Tv",
+      "Watch",
+      "Camera",
+      "Headphones",
+      "SportsEsports",
+      "DirectionsBike",
+      "DirectionsCar",
+      "Home",
+      "Bed",
+      
+    ]
   }
 };

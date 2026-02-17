@@ -31,7 +31,7 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-
+import { SelectedIcon } from "../SelectedIcon";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
 const schema = z
@@ -176,7 +176,7 @@ export const ArrivalForm = ({
                           gap: 1,
                         }}
                       >
-                        <Category />
+                        {category.icon ? <SelectedIcon iconName={category.icon || "Category" } /> : <Category />}
                         {category.name}
                       </Box>
                     </MenuItem>

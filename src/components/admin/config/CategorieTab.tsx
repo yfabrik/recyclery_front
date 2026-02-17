@@ -43,6 +43,7 @@ import {
 } from "../../../services/api/categories";
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
 import { IO } from "../../../services/categoriesMask";
+import { SelectedIcon } from "../../SelectedIcon";
 
 export const CategoriesTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -51,16 +52,8 @@ export const CategoriesTab = () => {
 
   const queryClient = useQueryClient();
 
-  const availableIcons = useQuery<{ name: string; label: string }[]>({
-    queryFn: () =>
-      fetchCategoryIcons()
-        .then((result) => result.data.icons)
-        .then((result) =>
-          result.map((icon: string) => ({
-            name: icon,
-            label: icon,
-          })),
-        ),
+  const availableIcons = useQuery({
+    queryFn: () => fetchCategoryIcons().then(result => result.data.icons),
     placeholderData: [],
     queryKey: ["icons"],
   });
@@ -162,19 +155,19 @@ export const CategoriesTab = () => {
     }
   };
 
-  const getIconComponent = (iconName: string): ReactNode => {
-    // Import dynamique des icônes Material-UI
-    const iconMap = {
-      Category: Category,
-      Inventory: Inventory,
-      Settings: Settings,
-      Palette: Palette,
-      AdminPanelSettings: AdminPanelSettings,
-    };
+  // const getIconComponent = (iconName: string): ReactNode => {
+  //   // Import dynamique des icônes Material-UI
+  //   const iconMap = {
+  //     Category: Category,
+  //     Inventory: Inventory,
+  //     Settings: Settings,
+  //     Palette: Palette,
+  //     AdminPanelSettings: AdminPanelSettings,
+  //   };
 
-    const IconComponent = iconMap[iconName] || Category;
-    return <IconComponent />;
-  };
+  //   const IconComponent = iconMap[iconName] || Category;
+  //   return <IconComponent />;
+  // };
 
   const renderCategoryCard = (
     category: CategoryModel,
@@ -202,7 +195,7 @@ export const CategoriesTab = () => {
             sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}
           >
             <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
-              {category.icon ? getIconComponent(category.icon) : <Category />}
+              {category.icon ? <SelectedIcon iconName={category.icon} /> : <Category />}
             </Avatar>
             <Box>
               <Typography
