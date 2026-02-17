@@ -22,7 +22,6 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
-  FormControlLabel,
   Grid,
   IconButton,
   InputLabel,
@@ -30,12 +29,12 @@ import {
   Paper,
   Select,
   Stack,
-  Switch,
   TextField,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import {
   addEmployeeToTask,
   createTask,
@@ -46,7 +45,6 @@ import {
   updateTask,
 } from "../../../services/api/tasks";
 import { fetchUsers } from "../../../services/api/users";
-import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import { TaskForm } from "../../forms/TaskForm";
 
 /**

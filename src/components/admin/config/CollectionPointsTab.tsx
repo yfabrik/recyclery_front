@@ -38,6 +38,7 @@ import {
 } from "../../forms/CollectionPointForm";
 import type { Schema as PresenceSchema } from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
+import { emptyStringToNull } from "../../../services/zodTransform";
 
 const CollectionPointsTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -266,7 +267,7 @@ const CollectionPointsTab = () => {
             formId="collectionPointForm"
             recycleries={recycleries.data || []}
             onSubmit={handleSave}
-            defaultValues={editingPoint}
+            defaultValues={editingPoint ? emptyStringToNull(editingPoint) : undefined}
           />
         </DialogContent>
         <DialogActions>
@@ -309,7 +310,7 @@ const CollectionPointsTab = () => {
             formId="presencePointForm"
             collectionPoints={collectionPoints.data || []}
             onSubmit={handleSavePresence}
-            defaultValues={editingPresence}
+            defaultValues={editingPresence ? emptyStringToNull(editingPresence) : undefined}
           />
         </DialogContent>
         <DialogActions>

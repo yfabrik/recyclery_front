@@ -39,26 +39,10 @@ import {
 import { DonForm, type Schema } from "../forms/DonForm";
 import { StatCard } from "../StatCard";
 
-// interface donStats {
-//   total_donations: number;
-//   pending_donations: number;
-//   accepted_donations: number;
-//   rejected_donations: number;
-//   total_estimated_value: number;
-// }
-
 export const DonationsTab = () => {
-  // const [donations, setDonations] = useState<DonModel[]>([]);
-  // const [loading, setLoading] = useState(true);
+
   const [donationDialog, setDonationDialog] = useState(false);
   const [editingDonation, setEditingDonation] = useState<DonModel | null>(null);
-
-  // const [donationStats, setDonationStats] = useState<donStats | null>(null);
-
-  // useEffect(() => {
-  //   fetchDonations();
-  //   fetchDonationStats();
-  // }, []);
 
   const queryClient = useQueryClient()
 
@@ -99,28 +83,7 @@ export const DonationsTab = () => {
     queryClient.invalidateQueries({ queryKey: ["dons"] })
     handleCloseDonationDialog();
   }
-  // const fetchDonations = async () => {
-  //   try {
-  //     const response = await getDonations();
-  //     setDonations(response.data.donations || []);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des dons:", error);
-  //     toast.error("Erreur lors du chargement des dons");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const fetchDonationStats = async () => {
-  //   try {
-  //     const response = await getDonationsStats();
-
-  //     setDonationStats(response.data.stats);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des statistiques:", error);
-  //   }
-  // };
-
+ 
   const handleOpenDonationDialog = (donation: DonModel | null = null) => {
     setEditingDonation(donation);
     setDonationDialog(true);
@@ -132,24 +95,11 @@ export const DonationsTab = () => {
   };
 
   const handleSaveDonation = async (data: Schema) => {
-    editingDonation?.id ? editDon.mutate({ id: editingDonation.id, data }) : addDon.mutate(data)
-    // try {
-    //   const result = editingDonation?.id
-    //     ? await updateDonation(editingDonation.id, data)
-    //     : await createDonation(data);
-    //   toast.success(
-    //     editingDonation
-    //       ? "Don mis à jour avec succès"
-    //       : "Don enregistré avec succès"
-    //   );
-
-    //   handleCloseDonationDialog();
-    //   fetchDonations();
-    //   fetchDonationStats();
-    // } catch (error) {
-    //   console.error("Erreur lors de la sauvegarde:", error);
-    //   toast.error("Erreur lors de la sauvegarde");
-    // }
+    if (editingDonation?.id) {
+      editDon.mutate({ id: editingDonation.id, data })
+    } else {
+      addDon.mutate(data)
+    }
   };
 
   const getStatusColor = (status: string) => {

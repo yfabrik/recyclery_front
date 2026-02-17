@@ -1,14 +1,10 @@
 import {
   Add,
-  AdminPanelSettings,
   Cancel,
   Category,
   Delete,
   Edit,
-  Inventory,
-  Palette,
-  Save,
-  Settings,
+  Save
 } from "@mui/icons-material";
 import {
   Alert,
@@ -30,7 +26,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import type { CategoryModel } from "../../../interfaces/Models";
 import {
@@ -38,11 +34,11 @@ import {
   deleteCategory,
   fetchCategories as fCat,
   fetchCategoryIcons,
-  updateCategory,
   patchCategory as patchCategoryApi,
+  updateCategory,
 } from "../../../services/api/categories";
-import { CategorieForm, type Schema } from "../../forms/CategorieForm";
 import { IO } from "../../../services/categoriesMask";
+import { CategorieForm, type Schema } from "../../forms/CategorieForm";
 import { SelectedIcon } from "../../SelectedIcon";
 
 export const CategoriesTab = () => {

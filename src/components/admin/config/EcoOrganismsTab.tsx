@@ -127,25 +127,11 @@ export const EcoOrganismsTab = () => {
   };
 
   const handleSaveEcoOrganism = async (data: Schema) => {
-    editingEcoOrganism?.id ? editEcoOrganism.mutate({ id: editingEcoOrganism.id, data }) : addEcoOrganism.mutate(data)
-    // try {
-    //   const response = editingEcoOrganism?.id
-    //     ? await updateEcoOrganism(editingEcoOrganism.id, data)
-    //     : await createEcoOrganism(data);
-
-    //   toast.success(
-    //     editingEcoOrganism
-    //       ? "Éco-organisme mis à jour avec succès"
-    //       : "Éco-organisme créé avec succès"
-    //   );
-
-    //   handleCloseEcoOrganismDialog();
-    //   fetchEcoOrganisms();
-    //   fetchEcoOrganismStats();
-    // } catch (error) {
-    //   console.error("Erreur lors de la sauvegarde:", error);
-    //   toast.error("Erreur lors de la sauvegarde");
-    // }
+    if (editingEcoOrganism?.id) {
+      editEcoOrganism.mutate({ id: editingEcoOrganism.id, data })
+    } else {
+      addEcoOrganism.mutate(data)
+    }
   };
 
   const handleDeleteEcoOrganism = async (id: number) => {
@@ -155,16 +141,6 @@ export const EcoOrganismsTab = () => {
       return;
     }
     removeEcoOrganism.mutate(id)
-
-    // try {
-    //   await deleteEcoOrganism(id);
-    //   toast.success("Éco-organisme supprimé avec succès");
-    //   fetchEcoOrganisms();
-    //   fetchEcoOrganismStats();
-    // } catch (error) {
-    //   console.error("Erreur lors de la suppression:", error);
-    //   toast.error("Erreur lors de la suppression");
-    // }
   };
 
   if (ecoOrganisms.isLoading) {

@@ -2,7 +2,6 @@ import {
   AccessTime,
   Add,
   CalendarToday,
-  CheckBox,
   Delete,
   Edit,
   LocationOn,
@@ -12,7 +11,7 @@ import {
   Refresh,
   Schedule,
   Search,
-  Store,
+  Store
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -123,7 +122,7 @@ const EmployeeManagement = () => {
   if (employees.isError) toast.error("Erreur lors du chargement des employés");
 
   const editEmployee = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => updateEmployee(id, data),
+    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEmployee(id, data),
     onSuccess: () => {
       toast.success("Employé mis à jour avec succès");
       handleCloseDialog();
@@ -208,27 +207,26 @@ const EmployeeManagement = () => {
     removeEmployee.mutate(employeeId)
   };
 
-  const getRoleColor = (role: string) => {
-    const colors = {
-      employee: "default",
-      manager: "primary",
-      supervisor: "secondary",
-      driver: "warning",
-      collector: "info",
-    };
-    return colors[role] || "default";
-  };
+  // const getRoleColor = (role: string) => {
+  //   const colors = {
+  //     employee: "default",
+  //     manager: "primary",
+  //     supervisor: "secondary",
+  //     driver: "warning",
+  //     collector: "info",
+  //   };
+  //   return colors[role] || "default";
+  // };
 
-  const getAvailabilityColor = (availability: string) => {
-    const colors = {
-      full_time: "success",
-      part_time: "warning",
-      weekend: "info",
-      evening: "secondary",
-      flexible: "default",
-    };
-    return colors[availability] || "default";
-  };
+  const AVAILABILITY_COLORS = {
+    full_time: "success",
+    part_time: "warning",
+    weekend: "info",
+    evening: "secondary",
+    flexible: "default",
+  } as const;
+  const getAvailabilityColor = (availability: keyof typeof AVAILABILITY_COLORS) =>
+    AVAILABILITY_COLORS[availability] ?? "default";
 
   const filteredEmployees =
     employees.data?.filter((employee) => {
@@ -302,19 +300,6 @@ const EmployeeManagement = () => {
                 }
               }
             }} />
-            {/* <TextField
-              fullWidth
-              placeholder="Rechercher un employé..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <Search sx={{ mr: 1, color: "text.secondary" }} />
-                  ),
-                },
-              }}
-            /> */}
           </Grid>
           <Grid size={{ xs: 12, md: 3 }}>
             <FormSelect label="Rôle" control={form.control} name="role">
@@ -326,21 +311,6 @@ const EmployeeManagement = () => {
               ))}
 
             </FormSelect>
-            {/* <FormControl fullWidth>
-              <InputLabel>Rôle</InputLabel>
-              <Select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                label="Rôle"
-              >
-                <MenuItem value="all">Tous les rôles</MenuItem>
-                {roleOptions.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl> */}
           </Grid>
           <Grid size={{ xs: 12, md: 3 }}>
             <FormSelect control={form.control} name="status" label="Statut">
@@ -348,18 +318,6 @@ const EmployeeManagement = () => {
               <MenuItem value="active">Actif</MenuItem>
               <MenuItem value="inactive">Inactif</MenuItem>
             </FormSelect>
-            {/* <FormControl fullWidth>
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                label="Statut"
-              >
-                <MenuItem value="all">Tous</MenuItem>
-                <MenuItem value="active">Actif</MenuItem>
-                <MenuItem value="inactive">Inactif</MenuItem>
-              </Select>
-            </FormControl> */}
           </Grid>
           <Grid size={{ xs: 12, md: 2 }}>
             <Button

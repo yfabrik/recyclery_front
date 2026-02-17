@@ -52,17 +52,6 @@ import {
   getTranscationStats,
 } from "../../services/api/transactions";
 
-// interface transcation {
-//   id?: number;
-//   transaction_number: string;
-//   created_at: Date;
-//   store_name: string;
-//   payment_method: string;
-//   cashier_name: string;
-//   total_amount: string;
-//   refunded_at?: Date;
-// }
-
 interface refund {
   id?: number;
   refund_type: string;
@@ -76,7 +65,6 @@ interface refund {
 
 export const SalesAnalyticsTab = () => {
   const [salesData, setSalesData] = useState<TransactionModel[]>([]);
-  // const [stores, setStores] = useState<StoreModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     store_id: "",
@@ -129,9 +117,6 @@ export const SalesAnalyticsTab = () => {
     notes: "",
   });
 
-  // useEffect(() => {
-  //   fetchStores();
-  // }, []);
 
   useEffect(() => {
     fetchSalesData();

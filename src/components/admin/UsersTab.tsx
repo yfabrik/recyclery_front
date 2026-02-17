@@ -111,12 +111,6 @@ export const UsersTab = () => {
     queryFn: () => fStores({ active: true }).then(response => response.data.stores)
   })
 
-  // const [passwordForm, setPasswordForm] = useState({
-  //   currentPassword: "",
-  //   newPassword: "",
-  //   confirmPassword: "",
-  // });
-
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
     setEditingUser(user);
@@ -135,87 +129,34 @@ export const UsersTab = () => {
 
   const handleOpenPasswordDialog = (user: UserModel) => {
     setEditingUser(user);
-    // setPasswordForm({
-    //   currentPassword: "",
-    //   newPassword: "",
-    //   confirmPassword: "",
-    // });
     setPasswordDialog(true);
   };
 
   const handleClosePasswordDialog = () => {
     setPasswordDialog(false);
     setEditingUser(null);
-    // setPasswordForm({
-    //   currentPassword: "",
-    //   newPassword: "",
-    //   confirmPassword: "",
-    // });
   };
 
   const handleChangePassword = async (data: PasswordSchema) => {
-    // if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    //   toast.error("Les mots de passe ne correspondent pas");
-    //   return;
-    // }
-
-    // if (passwordForm.newPassword.length < 6) {
-    //   toast.error("Le mot de passe doit contenir au moins 6 caractères");
-    //   return;
-    // }
     if (!editingUser?.id) return
     changePassword.mutate({ id: editingUser?.id, data })
-    // try {
-    //   await updateUserPassword(editingUser.id, {
-    //     currentPassword: data.currentPassword,
-    //     newPassword: data.newPassword,
-    //   });
-
-    //   toast.success("Mot de passe mis à jour avec succès");
-    //   handleClosePasswordDialog();
-    // } catch (error) {
-    //   console.error("Erreur lors du changement de mot de passe:", error);
-    //   toast.error(
-    //     error.response?.data?.error ||
-    //     "Erreur lors du changement de mot de passe",
-    //   );
-    // }
   };
 
   const handleToggleUserStatus = async (user: UserModel) => {
-    // try {
     const updatedUser: UserModel = { ...user, isActive: !user.isActive }
-    editUser.mutate({ id: user.id, data: updatedUser })
-    //   if (newStatus) {
-    //     await updateUser(user.id, { isActive: newStatus });
-    //     // Réactiver l'utilisateur
-    //     toast.success("Utilisateur réactivé");
-    //   } else {
-    //     // Désactiver l'utilisateur
-    //     await updateUser(user.id, { isActive: false });
-
-    //     toast.success("Utilisateur désactivé");
-    //   }
-
-    //   // fetchUsers();
-    //   // fetchUserStats();
-    // } catch (error) {
-    //   console.error("Erreur lors du changement de statut:", error);
-    //   toast.error(
-    //     error.response?.data?.error || "Erreur lors du changement de statut",
-    //   );
-    // }
+    editUser.mutate({ id: user.id, data: updatedUser })//TODO faudrait un autre endpoint ? le cast marche pas le as unknown as Schema c'est moche
+   
   };
 
   const getRoleBadgeColor = (role:string) => {
-    const colors = {
+    const COLORS = {
       admin: "error",
       direction: "warning",
       coordination: "info",
       encadrant: "primary",
       salarie: "default",
-    };
-    return colors[role] || "default";
+    } as const as Record<string, "error" | "warning" | "info" | "primary" | "default">;
+    return COLORS[role] || "default";
   };
 
   const formatLastLogin = (lastLogin: string) => {
@@ -271,7 +212,7 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title="Utilisateurs actifs"
-            value={userStats.data.totalUsers}
+            value={userStats.data?.totalUsers || 0}
             color="primary"
           />
         </Grid>
@@ -279,7 +220,7 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title=" Connectés (30j)"
-            value={userStats.data.activeEmployees}
+            value={userStats.data?.activeEmployees || 0}
             color="success.main"
           />
         </Grid>
@@ -287,14 +228,14 @@ export const UsersTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCardNoIcon
             title=" Rôles différents"
-            value={userStats.data.usersByRole?.length}
+            value={userStats.data?.usersByRole?.length || 0}
             color="info.main"
           />
         </Grid>
       </Grid>
 
       {/* Répartition par rôles */}
-      {userStats.data.usersByRole && userStats.data.usersByRole.length > 0 && (
+      {userStats.data?.usersByRole && userStats.data?.usersByRole.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
@@ -381,7 +322,7 @@ export const UsersTab = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {formatLastLogin(user.last_login)}
+                          {formatLastLogin(user.last_login.toISOString())}//TODO j'aime pas
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -490,50 +431,10 @@ export const UsersTab = () => {
 
           <PasswordChangeForm formId="passwordChange" onSubmit={handleChangePassword} />
 
-          {/* <TextField
-            fullWidth
-            margin="normal"
-            label="Mot de passe actuel"
-            type="password"
-            value={passwordForm.currentPassword}
-            onChange={(e) =>
-              setPasswordForm((prev) => ({
-                ...prev,
-                currentPassword: e.target.value,
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Nouveau mot de passe"
-            type="password"
-            value={passwordForm.newPassword}
-            onChange={(e) =>
-              setPasswordForm((prev) => ({
-                ...prev,
-                newPassword: e.target.value,
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Confirmer le nouveau mot de passe"
-            type="password"
-            value={passwordForm.confirmPassword}
-            onChange={(e) =>
-              setPasswordForm((prev) => ({
-                ...prev,
-                confirmPassword: e.target.value,
-              }))
-            }
-          /> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog}>Annuler</Button>
           <Button
-            // onClick={handleChangePassword}
             variant="contained"
             color="warning"
             type="submit"

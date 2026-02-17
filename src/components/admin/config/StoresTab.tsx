@@ -37,14 +37,13 @@ import { StatCardNoIcon } from "../../StatCard";
 import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
+import { emptyStringToNull } from "../../../services/zodTransform";
 
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreModel | null>(null);
   const [cashRegistersDialog, setCashRegistersDialog] = useState(false);
 
-  // États pour les onglets et horaires
-  // const [tabValue, setTabValue] = useState(0);
   const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
   const [editingHours, setEditingHours] = useState<Partial<ScheduleModel> | null>(
     null,
@@ -52,10 +51,9 @@ const StoresTab = () => {
 
   const queryClient = useQueryClient()
 
-  //TODO y'a peu etre plus besoin des hours vu que je peux les recup avec les store ?
   const stores = useQuery({
-    queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores),
-    queryKey: ["stores", "horaires"]
+    queryKey: ["stores", "horaires"],
+    queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores)
   })
   if (stores.error) toast.error("Erreur lors du chargement des magasins");
 
@@ -92,29 +90,6 @@ const StoresTab = () => {
     queryFn: () => fUsers({ role: "admin" }).then(response => response.data.users)
   })
   if (users.error) toast.error("Erreur lors du chargement des utilisateurs")
-
-  // const fetchUsers = async () => {
-  //   try {
-  //     const response = await fUsers();
-  //     const managers = (response.data.users || []).filter(
-  //       (user) => user.role === "manager" || user.role === "admin",
-  //     );
-  //     setUsers(managers);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des utilisateurs:", error);
-  //   }
-  // };
-
-
-
-
-
-
-  // const storeHours = useQuery({
-  //   queryKey: ["storeHour"],
-  //   queryFn: () => fStoreHours().then(response => response.data.storeHours)
-  // })
-  // if (storeHours.isError) toast.error("Erreur lors du chargement des horaires");
 
 
   const saveHoraire = useMutation({
@@ -233,21 +208,7 @@ const StoresTab = () => {
           Nouveau Magasin
         </Button>
       </Box>
-      {/* <Tabs
-        value={tabValue}
-        onChange={(e, newValue) => setTabValue(newValue)}
-        sx={{ mb: 3 }}
-      >
-        <Tab label="Liste des Magasins" icon={<Store />} iconPosition="start" />
-        <Tab
-          label="Horaires d'Ouverture"
-          icon={<AccessTime />}
-          iconPosition="start"
-        />
-      </Tabs> */}
-      {/* Contenu des onglets */}
-      {/* {tabValue === 0 && (
-        <> */}
+
           {/* Statistiques rapides */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -291,223 +252,7 @@ const StoresTab = () => {
             </Grid>
           ))}
           </Grid>
-          {/* <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Magasin</TableCell>
-                  <TableCell>Manager</TableCell>
-                  <TableCell>Contact</TableCell>
-                  <TableCell>Caisses</TableCell>
-                  <TableCell>Statut</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {stores.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      Chargement...
-                    </TableCell>
-                  </TableRow>
-                ) : stores.data?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      Aucun magasin trouvé
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  stores.data?.map((store) => (
-                    <TableRow key={store.id} hover>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Store color="primary" />
-                          <Box>
-                            <Typography variant="body1" fontWeight="medium">
-                              {store.name}
-                            </Typography>
-                            {store.address && (
-                              <Typography variant="body2" color="textSecondary">
-                                {store.address}
-                                {store.city && `, ${store.city}`}
-                                {store.postal_code && ` ${store.postal_code}`}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {store.manager?.username ? (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <Person fontSize="small" />
-                            {store.manager.username}
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="textSecondary">
-                            Non assigné
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          {store.phone && (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 0.5,
-                              }}
-                            >
-                              <Phone fontSize="small" />
-                              <Typography variant="body2">
-                                {store.phone}
-                              </Typography>
-                            </Box>
-                          )}
-                          {store.email && (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <Email fontSize="small" />
-                              <Typography variant="body2">
-                                {store.email}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<AccountBalance />}
-                          onClick={() => handleOpenCashRegisters(store)}
-                        >
-                          {store.caisses?.length || 0} caisse(s)
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          label={store.is_active ? "Actif" : "Inactif"}
-                          color={store.is_active ? "success" : "default"}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Tooltip title="Modifier">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleOpenDialog(store)}
-                            >
-                              <Edit />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Supprimer">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(store.id)}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer> */}
-        {/* </>
-      )} */}
-      {/* Onglet Horaires d'ouverture */}
-      {/* {tabValue === 1 && (
-        <Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-            }}
-          >
-            <Typography variant="h6">
-              Horaires d'ouverture des magasins
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenHoursDialog()}
-            >
-              Ajouter des horaires
-            </Button>
-          </Box>
-
-          {stores.isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : stores.data?.length === 0 ? (
-            <Alert severity="info">
-              Aucun horaire d'ouverture configuré. Cliquez sur "Ajouter des
-              horaires" pour commencer.
-            </Alert>
-          ) : (
-            <Grid container spacing={3}>
-              {
-                stores.data?.map((store) => (
-                  <Grid size={{ xs: 12, md: 6 }} key={store.id}>
-                    <StoreOpen
-                      store={store}
-                      handleOpenHoursDialog={handleOpenHoursDialog}
-                      handleDeleteHours={handleDeleteHours}
-                    />
-                  </Grid>
-                ))
-              } */}
-              {/* {Object.entries(
-                storeHours.data?.reduce(
-                  (acc: Record<number, StoreHoursModel[]>, hours) => {
-                    if (!acc[hours.store_id]) {
-                      acc[hours.store_id] = [];
-                    }
-                    acc[hours.store_id].push(hours);
-                    return acc;
-                  },
-                  {}
-                )
-              ).map(([storeId, hours]) => {
-                const currentStore = stores.data?.find((s) => s.id === parseInt(storeId))
-                if (currentStore)
-                  return (
-                    <Grid size={{ xs: 12, md: 6 }} key={storeId}>
-                      <StoreOpen
-                        store={currentStore}
-                        hours={hours}
-                        handleOpenHoursDialog={handleOpenHoursDialog}
-                        handleDeleteHours={handleDeleteHours}
-                      />
-                    </Grid>)
-              })} */}
-            {/* </Grid>
-          )}
-        </Box>
-      )} */}
+         
 
       {/* Dialog de gestion des caisses */}
       {editingStore &&
@@ -529,7 +274,7 @@ const StoresTab = () => {
             formId="createStore"
             onSubmit={handleSave}
             managers={users.data || []}
-            defaultValues={editingStore}
+            defaultValues={editingStore ? emptyStringToNull(editingStore) : undefined}
           />
         </DialogContent>
         <DialogActions>
@@ -558,7 +303,7 @@ const StoresTab = () => {
             formId="openHours"
             onSubmit={handleSaveHours}
             stores={stores.data || []}
-            defaultValues={editingHours}
+            defaultValues={editingHours ? emptyStringToNull(editingHours) : undefined}
           />
         </DialogContent>
         <DialogActions>
