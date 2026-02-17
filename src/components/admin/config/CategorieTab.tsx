@@ -42,7 +42,7 @@ import {
   patchCategory as patchCategoryApi,
 } from "../../../services/api/categories";
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
-import { getIcon } from "../../MuiIconSelect";
+import { SelectedIcon } from "../../SelectedIcon";
 
 export const CategoriesTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -174,7 +174,7 @@ export const CategoriesTab = () => {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
             <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
-              {category.icon ? getIcon({ iconName: category.icon }) : <Category />}
+              {category.icon ? <SelectedIcon iconName={category.icon} /> : <Category />}
             </Avatar>
             <Box>
               <Typography

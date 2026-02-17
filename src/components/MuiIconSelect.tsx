@@ -5,27 +5,21 @@ import {
   type AutocompleteProps,
   type TextFieldProps,
 } from "@mui/material";
-import * as MuiIcons from "@mui/icons-material";
-import type { SvgIconComponent } from "@mui/icons-material";
+// import * as MuiIcons from "@mui/icons-material";
+// import type { SvgIconComponent } from "@mui/icons-material";
 import { useMemo, useState } from "react";
+import { SelectedIcon } from "./SelectedIcon";
 
-const VARIANT_SUFFIXES = ["Outlined", "Rounded", "Sharp", "TwoTone"];
+// const VARIANT_SUFFIXES = ["Outlined", "Rounded", "Sharp", "TwoTone"];
 
-function isBaseIconName(name: string): boolean {
-  return !VARIANT_SUFFIXES.some((s) => name.endsWith(s));
-}
+// function isBaseIconName(name: string): boolean {
+//   return !VARIANT_SUFFIXES.some((s) => name.endsWith(s));
+// }
 
 /** Sorted list of MUI filled (default) icon names only. Exported for use in forms (e.g. CategorieForm). */
-export const MUI_ICON_NAMES: string[] = Object.keys(MuiIcons)
-  .filter((key) => isBaseIconName(key))
-  .sort();
-
-
- export const getIcon=({ iconName }: { iconName: string }) =>{
-    const IconComponent = (MuiIcons as Record<string, SvgIconComponent>)[iconName];
-    if (!IconComponent) return null;
-    return <IconComponent />;
-  }
+// const MUI_ICON_NAMES: string[] = Object.keys(MuiIcons)
+//   .filter((key) => isBaseIconName(key))
+//   .sort();
 
 export type MuiIconSelectValue = string | null;
 
@@ -58,11 +52,11 @@ export interface MuiIconSelectProps
 }
 
 /** Renders the selected MUI icon by name (uses the icons map) */
-function SelectedIcon({ iconName }: { iconName: string }) {
-  const IconComponent = (MuiIcons as Record<string, SvgIconComponent>)[iconName];
-  if (!IconComponent) return null;
-  return <IconComponent sx={{ fontSize: 24 }} />;
-}
+// function SelectedIcon({ iconName }: { iconName: string }) {
+//   const IconComponent = (MuiIcons as Record<string, SvgIconComponent>)[iconName];
+//   if (!IconComponent) return null;
+//   return <IconComponent sx={{ fontSize: 24 }} />;
+// }
 
 export function MuiIconSelect({
   value,
@@ -78,7 +72,7 @@ export function MuiIconSelect({
   const normalizedValue = normalizeValue(value);
 
   const options = useMemo(
-    () => (iconNames != null ? [...iconNames].sort() : MUI_ICON_NAMES),
+    () => (iconNames != null ? [...iconNames].sort() : []),
     [iconNames]
   );
 
@@ -105,7 +99,7 @@ export function MuiIconSelect({
               startAdornment: (<>
                 {normalizedValue ? (
                   <Box component="span" sx={{ display: "flex", alignItems: "center", mr: 1 }}>
-                    <SelectedIcon iconName={normalizedValue} />
+                    <SelectedIcon iconName={normalizedValue} props={{ sx: { fontSize: 24 } }} />
                   </Box>
                 ) : null}
                 {params.InputProps.startAdornment}
