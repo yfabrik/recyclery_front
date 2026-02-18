@@ -32,6 +32,7 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import { SelectedIcon } from "../SelectedIcon";
+import { emptyStringToNull } from "../../services/zodTransform";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
 const schema = z
@@ -78,18 +79,20 @@ export const ArrivalForm = ({
   collectionPoints,
   loading = false,
 }: ArrivalFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      category_id: defaultValues?.category_id || "",
-      subcategory_id: defaultValues?.subcategory_id || "",
-      weight: defaultValues?.weight || "",
-      arrival_date: defaultValues?.arrival_date || new Date(),
-      arrival_time: defaultValues?.arrival_time || new Date(),
-      source_type: defaultValues?.source_type || "point",
-      collection_point_id: defaultValues?.collection_point_id || "",
-      source_details: defaultValues?.source_details || "",
-      notes: defaultValues?.notes || "",
+      category_id: "",
+      subcategory_id: "",
+      weight: "",
+      arrival_date: new Date(),
+      arrival_time: new Date(),
+      source_type: "point",
+      collection_point_id: "",
+      source_details: "",
+      notes: "",
+      ...data,
     },
   });
 

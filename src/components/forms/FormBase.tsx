@@ -7,7 +7,6 @@ import {
   FormHelperText,
   FormLabel,
   InputLabel,
-  MenuItem,
   Radio,
   RadioGroup,
   Select,
@@ -17,7 +16,7 @@ import {
   useRadioGroup,
   useTheme,
   type FormControlOwnProps,
-  type TextFieldProps,
+  type TextFieldProps
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import type { ReactNode } from "react";
@@ -30,13 +29,12 @@ import {
 } from "react-hook-form";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker, type DatePickerProps, type DatePickerSlotProps } from "@mui/x-date-pickers/DatePicker";
+import { DatePicker, type DatePickerProps } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
 import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
-import { weekDaysArray } from "../../services/dateService";
 export interface BaseFormProps<T> {
   formId: string;
   defaultValues?: Partial<T> | null;

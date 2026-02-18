@@ -12,6 +12,7 @@ import {
   Box,
   Button,
   Chip,
+  type ChipProps,
   Container,
   Dialog,
   DialogActions,
@@ -32,8 +33,7 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography,
-  type TypographyPropsColorOverrides
+  Typography
 } from '@mui/material';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -60,14 +60,14 @@ const Labels = () => {
 
 
   //TODO  faut limiter pour que y'ai que 1 foix la value et ensure que la value soit presente +type color
-  const conditionOptions: { value: LabeledItemModel["condition_state"], label: string, color: "success" | "primary" | "warning" | "error" | "default" | "secondary" | "info" | undefined }[] = [
+  const conditionOptions: { value: LabeledItemModel["condition_state"], label: string, color: NonNullable<ChipProps['color']> }[] = [
     { value: 'excellent', label: 'Excellent', color: 'success' },
     { value: 'good', label: 'Bon état', color: 'primary' },
     { value: 'fair', label: 'État correct', color: 'warning' },
     { value: 'poor', label: 'Mauvais état', color: 'error' },
   ] as const;
 
-  const statusOptions: { value: LabeledItemModel["status"], label: string, color: TypographyPropsColorOverrides }[] = [
+  const statusOptions: { value: LabeledItemModel["status"], label: string, color: NonNullable<ChipProps['color']> }[] = [
     { value: 'available', label: 'Disponible', color: 'success' },
     { value: 'reserved', label: 'Réservé', color: 'warning' },
     { value: 'sold', label: 'Vendu', color: 'error' },
@@ -105,7 +105,7 @@ const Labels = () => {
   const editItem = useMutation({
     mutationFn: (data: { id: number, data: Schema }) => updateLabeledItem(data.id, data.data),
     onSuccess: (data, variables, context) => {
-      console.log(context)
+      console.log(context,data,variables)
       return saved(data, variables.data)
     },
     onError: () => toast.error('Erreur lors de la sauvegarde')
@@ -137,7 +137,7 @@ const Labels = () => {
     success: true;
     message: string;
     item?: LabeledItemModel
-  }, any, {}>, variables: Schema) => {
+  }, unknown, object>, variables: Schema) => {
     if (variables.autoPrint && data.data.item) printLabel(data.data.item)
 
     toast.success(data.config.method == "post" ? 'Article créé avec succès' : 'Article mis à jour avec succès');

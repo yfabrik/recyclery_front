@@ -87,7 +87,7 @@ export const CreateCaisseDialog = ({ store, open, onClose }: CreateCaisseDialogP
                 </TableContainer>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Fermer</Button>
+                <Button onClick={(e) => onClose?.(e as React.MouseEvent<HTMLButtonElement>, "backdropClick")}>Fermer</Button>
             </DialogActions>
         </Dialog>
     )

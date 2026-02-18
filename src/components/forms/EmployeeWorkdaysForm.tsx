@@ -73,7 +73,7 @@ export const EmployeeWorkdaysForm = ({
 
   const fillWithDefault = (
     def?: WorkdaysModel[],
-  ): z.infer<typeof workdaySchema>[] => {
+  ): Workday[] => {
     return [1, 2, 3, 4, 5, 6, 0].flatMap((day) => {
       return (["morning", "afternoon"] as const).map((slot) => {
         const today = new Intl.DateTimeFormat("fr", {

@@ -12,6 +12,7 @@ import {
 } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
 import type { CategoryModel, EcoOrgModel } from "../../interfaces/Models";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 
 const disposalTypeEnum = z.enum(["eco_organism", "landfill", "other"]);
@@ -57,20 +58,22 @@ export const WasteForm = ({
   ecoOrganisms,
   onWeightFieldClick,
 }: WasteFormProps) => {
+  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      disposal_date: defaultValues?.disposal_date || new Date(),
-      disposal_type: defaultValues?.disposal_type || "eco_organism",
-      category_id: defaultValues?.category_id || "",
-      subcategory_id: defaultValues?.subcategory_id || "",
-      eco_organism_id: defaultValues?.eco_organism_id || "",
-      weight_kg: defaultValues?.weight_kg || 0,
-      volume_m3: defaultValues?.volume_m3 || "",
-      transport_method: defaultValues?.transport_method || "",
-      transport_company: defaultValues?.transport_company || "",
-      transport_cost: defaultValues?.transport_cost || 0,
-      notes: defaultValues?.notes || "",
+      disposal_date: new Date(),
+      disposal_type: "eco_organism",
+      category_id: "",
+      subcategory_id: "",
+      eco_organism_id: "",
+      weight_kg: 0,
+      volume_m3: 0,
+      transport_method: "",
+      transport_company: "",
+      transport_cost: 0,
+      notes: "",
+      ...data,
 
     },
   });

@@ -26,16 +26,16 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "react-toastify";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import { getAvailableUserForTask } from "../../services/api/planning";
 import {
   addEmployeeToTask,
   getEmployeesForTask,
   removeEmployeeFromTask,
 } from "../../services/api/tasks";
-import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import { getAvailableUserForTask } from "../../services/api/planning";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface TaskAssignmentDialogTitleProps {
   taskName: string;
@@ -101,7 +101,7 @@ const TaskAssignmentDialogInfo = ({
 };
 
 interface TaskAssignmentEmployeeCardProps {
-  employee: EmployeeModel;
+  employee: EmployeeModel & { is_assigned_to_task: boolean; conflicts: TaskModel[]; already_assigned: boolean; };
   type: "assigned" | "available";
   onAssign?: (employeeId: number) => void;
   onUnassign?: (employeeId: number) => void;
@@ -221,7 +221,7 @@ const TaskAssignmentEmployeeCard = ({
               <Tooltip title="Employé occupé à ce moment">
                 <Block color="error" sx={{ fontSize: 20 }} />
               </Tooltip>
-            ) : (employee as any).already_assigned ? (
+            ) : employee.already_assigned ? (
               <Tooltip title="Déjà assigné à cette tâche">
                 <Person color="primary" sx={{ fontSize: 20 }} />
               </Tooltip>
@@ -260,7 +260,7 @@ const TaskAssignmentEmployeeCard = ({
                   sx={{ fontSize: "0.7rem" }}
                 />
               </Tooltip>
-            ) : (employee as any).already_assigned ? (
+            ) : employee.already_assigned ? (
               <Tooltip title="Déjà assigné à cette tâche">
                 <Chip
                   icon={<Person />}
@@ -316,8 +316,8 @@ const TaskAssignmentEmployeeCard = ({
 
         {/* Message d'information pour les employés occupés */}
         {isAssignedToOtherTask &&
-          (employee as any).conflicts &&
-          (employee as any).conflicts.length > 0 && (
+          employee.conflicts &&
+          employee.conflicts.length > 0 && (
             <Box
               sx={{
                 mt: 1,
@@ -345,8 +345,6 @@ interface TaskAssignmentDialogProps {
   open: boolean;
   onClose: () => void;
   selectedTask: TaskModel;
-  // assignedEmployees: EmployeeModel[];
-  // availableEmployees: EmployeeModel[];
   onAssignEmployee?: (employeeId: number) => void;
   onUnassignEmployee?: (employeeId: number) => void;
   onCloseWithChanges?: () => void; // Callback triggered when dialog closes AND changes were made
@@ -356,8 +354,6 @@ const TaskAssignmentDialog = ({
   open,
   onClose,
   selectedTask,
-  // assignedEmployees,
-  // availableEmployees,
   onAssignEmployee,
   onUnassignEmployee,
   onCloseWithChanges,
@@ -384,25 +380,23 @@ const TaskAssignmentDialog = ({
 
   const assignEmployee = useMutation({
     mutationFn: (employeeId: number) => addEmployeeToTask(selectedTask.id, employeeId),
-    onSuccess: (data) => {
-      console.log(data) //TODO comment j'ai acces au context pour avoir employeeID dans le success ?
+    onSuccess: (data,variables) => {
       toast.success("Employé assigné avec succès");
       setHasChanges(true);
       queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
       queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
-      // onAssignEmployee?.(employeeId);
+      onAssignEmployee?.(variables);
     },
     onError: () => toast.error("Erreur lors de l'assignation"),
   })
   const unassignEmployee = useMutation({
     mutationFn: (employeeId: number) => removeEmployeeFromTask(selectedTask.id, employeeId),
-    onSuccess: (data) => {
-      console.log(data)
+    onSuccess: (data,variables) => {
       toast.success("Employé retiré avec succès");
       setHasChanges(true);
       queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
       queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
-      // onUnassignEmployee?.(employeeId);
+      onUnassignEmployee?.(variables);
     },
     onError: () => toast.error("Erreur lors du retrait"),
   })
@@ -414,70 +408,11 @@ const TaskAssignmentDialog = ({
   // Fonction pour assigner un employé à une tâche spécifique
   const handleAssignEmployee = async (employeeId: number) => {
     assignEmployee.mutate(employeeId)
-
-    // try {
-    //   await addEmployeeToTask(selectedTask.id, employeeId);
-
-    //   // Mettre à jour la liste des employés assignés
-    //   const employee = availableEmployeesForTask.find(
-    //     (emp) => emp.id === employeeId,
-    //   );
-    //   if (employee) {
-    //     setTaskAssignedEmployees((prev) => [...prev, employee]);
-    //   }
-
-    //   toast.success("Employé assigné avec succès");
-
-    //   // Mark that changes were made
-    //   setHasChanges(true);
-
-    //   // Trigger refresh
-    //   setRefreshTrigger((prev) => prev + 1);
-
-    //   // Also call parent handler if provided
-    //   onAssignEmployee?.(employeeId);
-    // } catch (error: any) {
-    //   console.error("Erreur lors de l'assignation:", error);
-
-    //   // Gérer spécifiquement les erreurs de conflit d'horaires
-    //   if (
-    //     error.response &&
-    //     error.response.status === 400 &&
-    //     error.response.data.message
-    //   ) {
-    //     toast.error(error.response.data.message);
-    //   } else {
-    //     toast.error("Erreur lors de l'assignation");
-    //   }
-    // }
   };
 
   // Fonction pour retirer un employé d'une tâche spécifique
   const handleUnassignEmployee = async (employeeId: number) => {
     unassignEmployee.mutate(employeeId)
-
-    // try {
-    //   await removeEmployeeFromTask(selectedTask.id, employeeId);
-
-    //   // Mettre à jour la liste des employés assignés
-    //   setTaskAssignedEmployees((prev) =>
-    //     prev.filter((emp) => emp.id !== employeeId),
-    //   );
-
-    //   toast.success("Employé retiré avec succès");
-
-    //   // Mark that changes were made
-    //   setHasChanges(true);
-
-    //   // Trigger refresh
-    //   setRefreshTrigger((prev) => prev + 1);
-
-    //   // Also call parent handler if provided
-    //   onUnassignEmployee?.(employeeId);
-    // } catch (error: unknown) {
-    //   console.error("Erreur lors du retrait:", error);
-    //   toast.error("Erreur lors du retrait");
-    // }
   };
 
   // Handle dialog close - trigger callback if changes were made
@@ -568,7 +503,7 @@ const TaskAssignmentDialog = ({
                   type="available"
                   onAssign={handleAssignEmployee}
                   isAssignedToOtherTask={
-                    (employee as any).is_assigned_to_task || false
+                    employee.has_conflicts || false
                   }
                 />
               ))}

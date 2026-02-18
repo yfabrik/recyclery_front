@@ -10,11 +10,10 @@ import {
 } from "./FormBase";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema, weekDays } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
 import type { CollectionPointModel } from "../../interfaces/Models";
-import {  weekDaysArray } from "../../services/dateService";
+import { idSchema, weekDays } from "../../interfaces/ZodTypes";
+import { weekDaysArray } from "../../services/dateService";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   collection_point_id: idSchema("un point de collecte est requis"),

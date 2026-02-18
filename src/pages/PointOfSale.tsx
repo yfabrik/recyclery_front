@@ -68,9 +68,6 @@ import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
 
-  // const [cart, setCart] = useState([]);
-  // const [loading, setLoading] = useState(false);
-
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
@@ -212,13 +209,7 @@ const PointOfSale = () => {
           ...cart[existingItem],
           quantity: cart[existingItem].quantity + 1,
         });
-        // setCart((prev) =>
-        //   prev.map((cartItem) =>
-        //     cartItem.barcode === item.barcode
-        //       ? { ...cartItem, quantity: cartItem.quantity + 1 }
-        //       : cartItem,
-        //   ),
-        // );
+
       } else {
         const category_name = categories.data?.find(cat => cat.id === item.category_id)?.name ?? ""
         const subcategory_name = categories.data?.find(cat => cat.id === item.subcategory_id)?.name ?? ""
@@ -228,14 +219,7 @@ const PointOfSale = () => {
         }
 
         append({ ...item, quantity: 1, name: itemName, category_name, subcategory_name });
-        // setCart((prev) => [
-        //   ...prev,
-        //   {
-        //     ...item,
-        //     quantity: 1,
-        //     total_price: parseFloat(item.price),
-        //   },
-        // ]);
+
       }
 
       setScanInput("");
@@ -249,28 +233,6 @@ const PointOfSale = () => {
       }
     }
   };
-
-  // const updateCartItemQuantity = (barcode, newQuantity) => {
-  //   if (newQuantity <= 0) {
-  //     setCart((prev) => prev.filter((item) => item.barcode !== barcode));
-  //   } else {
-  //     setCart((prev) =>
-  //       prev.map((item) =>
-  //         item.barcode === barcode
-  //           ? {
-  //             ...item,
-  //             quantity: newQuantity,
-  //             total_price: parseFloat(item.price) * newQuantity,
-  //           }
-  //           : item,
-  //       ),
-  //     );
-  //   }
-  // };
-
-  // const removeFromCart = (barcode) => {
-  //   setCart((prev) => prev.filter((item) => item.barcode !== barcode));
-  // };
 
   const handleAddManualItem = (data: ManualItemSchema) => {
     // Générer un code-barres temporaire pour l'article manuel
@@ -320,10 +282,7 @@ const PointOfSale = () => {
     );
   };
 
-  // const quantity = cart.reduce(
-  //   (prev, current) => (prev += current.quantity),
-  //   0,
-  // );
+
 
   const handleValidateCart = async (data: CartSchema) => {
     setPaymentData((prev) => ({
@@ -374,101 +333,8 @@ const PointOfSale = () => {
       } satisfies TransactionModel & { items: CartItem[] };
       handleSell.mutate(transactionData);
     }
-
-    // const response = await createSell(transactionData);
-
-    // toast.success("Vente enregistrée avec succès");
-
-    // // Reset cart form
-    // form.reset({ cart: [] });
-    // setPaymentDialog(false);
-    // setPaymentData({
-    //   payment_method: "cash",
-    //   payment_amount: "0",
-    //   customer_name: "",
-    //   customer_email: "",
-    // });
-
-    // // Optionnel: imprimer le ticket
-    // if (window.confirm("Imprimer le ticket de caisse ?")) {
-    //   printReceipt(response.data.data, cart, paymentAmount - total);
-    // }
-    // } catch (error) {
-    //   console.error("Erreur lors du paiement:", error);
-    //   toast.error("Erreur lors du paiement");
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
-  // const printReceipt = (
-  //   transaction: TransactionModel,
-  //   items: CartSchema[],
-  //   change: number,
-  // ) => {
-  //   const printWindow = window.open("", "", "width=400,height=600");
-  //   printWindow.document.write(`
-  //     <html>
-  //       <head>
-  //         <title>Ticket de caisse</title>
-  //         <style>
-  //           body { font-family: monospace; margin: 20px; font-size: 12px; }
-  //           .header { text-align: center; margin-bottom: 20px; }
-  //           .line { border-bottom: 1px dashed #000; margin: 10px 0; }
-  //           .total { font-weight: bold; font-size: 14px; }
-  //           .right { text-align: right; }
-  //         </style>
-  //       </head>
-  //       <body>
-  //         <div class="header">
-  //           <h2>${activeSession.data?.Recyclery.name}</h2>
-  //           <p>Ticket N°: ${transaction.id}</p>
-  //           <p>Date: ${new Date().toLocaleString()}</p>
-  //           <p>Caissier: ${user.username}</p>
-  //         </div>
-
-  //         <div class="line"></div>
-
-  //         ${items
-  //       .map(
-  //         (item) => `
-  //           <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-  //             <span>${item.name}</span>
-  //             <span>${item.quantity} x ${parseFloat(item.price).toFixed(2)}€</span>
-  //             <span class="right">${item.total_price.toFixed(2)}€</span>
-  //           </div>
-  //         `,
-  //       )
-  //       .join("")}
-
-  //         <div class="line"></div>
-
-  //         <div class="total">
-  //           <div style="display: flex; justify-content: space-between;">
-  //             <span>TOTAL:</span>
-  //             <span>${getCartTotal().toFixed(2)}€</span>
-  //           </div>
-  //           <div style="display: flex; justify-content: space-between;">
-  //             <span>Payé:</span>
-  //             <span>${parseFloat(paymentData.payment_amount).toFixed(2)}€</span>
-  //           </div>
-  //           <div style="display: flex; justify-content: space-between;">
-  //             <span>Rendu:</span>
-  //             <span>${change.toFixed(2)}€</span>
-  //           </div>
-  //         </div>
-
-  //         <div class="line"></div>
-  //         <div style="text-align: center; margin-top: 20px;">
-  //           <p>Merci de votre visite !</p>
-  //         </div>
-  //       </body>
-  //     </html>
-  //   `);
-
-  //   printWindow.document.close();
-  //   printWindow.print();
-  // };
 
   if (!activeSession.data) {
     return (
@@ -503,8 +369,7 @@ const PointOfSale = () => {
             <OpenCaisseForm
               formId="OpenCaisseForm"
               onSubmit={handleOpenSession}
-            // stores={stores}
-            // cashRegisters={cashRegisters}
+
             />
           </DialogContent>
           <DialogActions>
@@ -724,129 +589,7 @@ const PointOfSale = () => {
               )}
             </Paper>
           </form>
-          {/* <Paper sx={{ p: 2 }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <ShoppingCart />
-              Panier ({cart.length} article{cart.length > 1 ? "s" : ""})
-            </Typography>
-
-            {cart.length === 0 ? (
-              <Alert severity="info">
-                Le panier est vide. Scannez des articles pour commencer.
-              </Alert>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Article</TableCell>
-                      <TableCell>Prix unitaire</TableCell>
-                      <TableCell>Quantité</TableCell>
-                      <TableCell>Total</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {cart.map((item) => (
-                      <TableRow key={item.barcode}>
-                        <TableCell>
-                          <Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <Typography variant="body1" fontWeight="medium">
-                                {item.name}
-                              </Typography>
-                              {item.is_manual && (
-                                <Chip
-                                  size="small"
-                                  label="Manuel"
-                                  color="info"
-                                  variant="outlined"
-                                />
-                              )}
-                            </Box>
-                            <Typography variant="body2" color="textSecondary">
-                              {item.barcode}
-                            </Typography>
-                            {(item.category_name || item.subcategory_name) && (
-                              <Typography variant="body2" color="textSecondary">
-                                {item.category_name}
-                                {item.subcategory_name &&
-                                  ` > ${item.subcategory_name}`}
-                              </Typography>
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          {parseFloat(item.price).toFixed(2)}€
-                        </TableCell>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                updateCartItemQuantity(
-                                  item.barcode,
-                                  item.quantity - 1,
-                                )
-                              }
-                            >
-                              <Remove />
-                            </IconButton>
-                            <Typography
-                              sx={{ minWidth: 30, textAlign: "center" }}
-                            >
-                              {item.quantity}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                updateCartItemQuantity(
-                                  item.barcode,
-                                  item.quantity + 1,
-                                )
-                              }
-                            >
-                              <Add />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Typography fontWeight="bold">
-                            {item.total_price.toFixed(2)}€
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => removeFromCart(item.barcode)}
-                          >
-                            <Close />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </Paper> */}
+         
         </Grid>
 
         {/* Résumé et paiement */}

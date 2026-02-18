@@ -1,18 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Box, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { FormIconSelect, FormInput, FormSelect, type BaseFormProps } from "./FormBase";
-import {
-  AdminPanelSettings,
-  Category,
-  Inventory,
-  Palette,
-  Settings,
-} from "@mui/icons-material";
-import type { ReactNode } from "react";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { FormIconSelect, FormInput, type BaseFormProps } from "./FormBase";
 
 interface CategorieFormProps extends BaseFormProps<Schema> {
   icons: string[];
@@ -49,20 +40,7 @@ export const CategorieForm = ({
     resolver: zodResolver(schema),
   });
 
-  // const getIconComponent = (iconName: string): ReactNode => {
-  //   // Import dynamique des icônes Material-UI
-  //   const iconMap = {
-      
-  //     Category: Category,
-  //     Inventory: Inventory,
-  //     Settings: Settings,
-  //     Palette: Palette,
-  //     AdminPanelSettings: AdminPanelSettings,
-  //   };
 
-  //   const IconComponent = iconMap[iconName] || Category;
-  //   return <IconComponent />;
-  // };
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <FormInput
@@ -100,21 +78,6 @@ export const CategorieForm = ({
         name="icon"
         extra={{ iconNames: icons }}
       />
-      {/* <FormSelect
-        control={form.control}
-        label="Icône"
-        name="icon"
-        extra={{ margin: "normal" }}
-      >
-        {icons.map((icon) => (
-          <MenuItem key={icon.name} value={icon.name}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {getIconComponent(icon.name)}
-              {icon.label}
-            </Box>
-          </MenuItem>
-        ))}
-      </FormSelect> */}
     </form>
   );
 };

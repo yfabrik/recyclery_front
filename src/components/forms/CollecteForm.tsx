@@ -12,9 +12,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CollectionPointModel, StoreModel } from "../../interfaces/Models";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { emptyStringToNull } from "../../services/zodTransform";
-import { useEffect } from "react";
 import { idSchema } from "../../interfaces/ZodTypes";
+import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   day_of_week: z.string().nonempty("choissisez un jour"),

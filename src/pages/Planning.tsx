@@ -35,7 +35,8 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
@@ -54,7 +55,6 @@ import type {
   TaskModel,
 } from "../interfaces/Models";
 import { getEmployees } from "../services/api/employee";
-import { createPlanning, updatePlanning } from "../services/api/planning";
 import { fetchStores as fstore } from "../services/api/store";
 import {
   createTask,
@@ -62,8 +62,6 @@ import {
   getTasks,
   updateTask,
 } from "../services/api/tasks";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDay } from "../services/dateService";
 
 const Planning = () => {
   const navigate = useNavigate();

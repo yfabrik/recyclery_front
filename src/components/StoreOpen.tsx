@@ -23,6 +23,11 @@ interface StoreOpenProps {
   handleOpenHoursDialog: (hours?: ScheduleModel | null, storeId?: number) => void;
   handleDeleteHours: (hourId: number) => void;
 }
+/**
+ * @deprecated
+ * @param param0 
+ * @returns 
+ */
 export const StoreOpen = ({
   store,
   handleOpenHoursDialog,
