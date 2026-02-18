@@ -38,6 +38,7 @@ import {
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { useLabelPrint } from '../components/LabelPrint';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AxiosResponse } from 'axios';
 import { StatCardNoIcon } from '../components/StatCard';
@@ -45,10 +46,9 @@ import { LabeledItemForm, type Schema } from '../components/forms/LabeledItemFor
 import type { LabeledItemModel } from '../interfaces/Models';
 import { fetchCategories as fcat } from '../services/api/categories';
 import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem, type itemsFilters } from '../services/api/labeledItems';
-import { printLabel } from '../services/printService';
 
 const Labels = () => {
-
+  const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LabeledItemModel | null>(null);
 
@@ -138,7 +138,7 @@ const Labels = () => {
     message: string;
     item?: LabeledItemModel
   }, unknown, object>, variables: Schema) => {
-    if (variables.autoPrint && data.data.item) printLabel(data.data.item)
+    if (variables.autoPrint && data.data.item) triggerPrintLabel(data.data.item)
 
     toast.success(data.config.method == "post" ? 'Article créé avec succès' : 'Article mis à jour avec succès');
     handleCloseDialog();
@@ -353,7 +353,7 @@ const Labels = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Tooltip title="Imprimer étiquette">
-                        <IconButton size="small" onClick={() => printLabel(item)}>
+                        <IconButton size="small" onClick={() => triggerPrintLabel(item)}>
                           <Print />
                         </IconButton>
                       </Tooltip>
@@ -398,6 +398,7 @@ const Labels = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {labelPrintNode}
     </Container>
   );
 };
