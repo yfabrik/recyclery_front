@@ -1,7 +1,7 @@
 interface BaseModel {
   id: number;
-  createdAt: Date;
-  updatedAt?: Date;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CategoryModel extends BaseModel {
@@ -139,11 +139,11 @@ export interface LabeledItemModel extends BaseModel {
 export interface UserModel extends BaseModel {
   username: string;
   email: string;
-  password?: string;
-  phone: string;
+  // password?: string;
+  phone?: string;
   role: "admin" | "employee" | "manager";
   isActive: boolean;
-  last_login: Date;
+  last_login: string;
   Donations?: DonModel[];
   SalesTransactions?: TransactionModel[];
   LabeledItems?: LabeledItemModel[];

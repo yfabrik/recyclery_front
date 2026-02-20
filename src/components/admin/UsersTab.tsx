@@ -53,8 +53,8 @@ export const UsersTab = () => {
   const queryClient = useQueryClient()
 
   const users = useQuery({
-    queryKey: ["users"],
-    queryFn: () => fUsers().then(response => response.data.users)
+    queryKey: ["users",{ include: "managedStores" }],
+    queryFn: () => fUsers({ include: "managedStores" }).then(response => response.data.users)
   })
   if (users.isError) toast.error("Erreur lors du chargement des utilisateurs");
 
@@ -145,10 +145,10 @@ export const UsersTab = () => {
   const handleToggleUserStatus = async (user: UserModel) => {
     const updatedUser: UserModel = { ...user, isActive: !user.isActive }
     editUser.mutate({ id: user.id, data: updatedUser })//TODO faudrait un autre endpoint ? le cast marche pas le as unknown as Schema c'est moche
-   
+
   };
 
-  const getRoleBadgeColor = (role:string) => {
+  const getRoleBadgeColor = (role: string) => {
     const COLORS = {
       admin: "error",
       direction: "warning",
@@ -311,18 +311,17 @@ export const UsersTab = () => {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Chip
-                          label={user.role_name || user.role}
+                          label={user.role}
                           color={getRoleBadgeColor(user.role)}
                           size="small"
                         />
                       </TableCell>
                       <TableCell>
-                        {/* //FIXME c'est bancal et pas forcement utile vu que peut y avoir plusieur store */}
-                        {user.recyclery_name || "Non assigné"}
+                        {user.managedStores?.map(s=>s.name).toString() || "Non assigné"}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {formatLastLogin(user.last_login.toISOString())}//TODO j'aime pas
+                          {formatLastLogin(user.last_login)}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -389,7 +388,7 @@ export const UsersTab = () => {
             formId="UserForm"
             roles={roles.data}
             stores={stores.data || []}
-            defaultValues={editingUser}
+            defaultValues={{ ...editingUser, managedStores: editingUser?.managedStores?.map(s => s.id) }}
             onSubmit={handleSaveUser}
           />
         </DialogContent>
@@ -399,7 +398,7 @@ export const UsersTab = () => {
             type="submit"
             form="UserForm"
             variant="contained"
-            loading={editUser.isPending ||addUser.isPending}
+            loading={editUser.isPending || addUser.isPending}
           // disabled={
           //   !userForm.username ||
           //   !userForm.email ||

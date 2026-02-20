@@ -5,6 +5,7 @@ import * as z from "zod";
 
 import {
   FormInput,
+  FormMultiSelect,
   FormSelect,
   FormSwitch,
   type BaseFormProps,
@@ -26,9 +27,10 @@ const schema = z.object({
     .transform((val) => (val == "" ? null : val)),
   phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   password: z.string(),
-  role: z.string().nonempty("role requis"),
+  role: z.enum(["employee","manager","admin"],"role requis"),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   isActive: z.boolean().default(true),
+  managedStores: z.array(idSchema())
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -56,9 +58,10 @@ export const UserForm = ({
       first_name: "",
       last_name: "",
       phone: "",
-      role: "",
+      role: "employee",
       recyclery_id: "",
       isActive: true,
+      managedStores:[],
       ...data
     },
   });
@@ -69,12 +72,12 @@ export const UserForm = ({
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput
             control={form.control}
-            label="Nom d'utilisateur *"
+            label="Nom d'utilisateur"
             name="username"
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput control={form.control} label="Email *" name="email" />
+          <FormInput control={form.control} label="Email" name="email" />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput control={form.control} label="Prénom" name="first_name" />
@@ -89,14 +92,14 @@ export const UserForm = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <FormInput
               control={form.control}
-              label="Mot de passe *"
+              label="Mot de passe"
               name="password"
               extra={{ type: "password" }}
             />
           </Grid>
         )}
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect control={form.control} label="Rôle *" name="role">
+          <FormSelect control={form.control} label="Rôle" name="role">
             {roles.map((role) => (
               <MenuItem key={role.name} value={role.name}>
                 {role.display_name}
@@ -105,7 +108,29 @@ export const UserForm = ({
           </FormSelect>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect
+          <FormMultiSelect
+            control={form.control}
+            label="Manager de :"
+            name="managedStores"
+            // renderValue={(selected) => {
+            //   return selected.map(item => {
+            //     const [type, id] = item.split(".");
+            //     return stores.find(store => store.id === +id)?.name;
+            //   }).join(", ");
+
+            // }}
+          >
+            <MenuItem key="no-store" value="">
+              Aucun magasin assigné
+            </MenuItem>
+            {stores.map((store) => (
+              <MenuItem key={store.id} value={store.id}>
+                {store.name}
+              </MenuItem>
+            ))}
+
+          </FormMultiSelect>
+          {/* <FormSelect
             control={form.control}
             label="Magasin"
             name="recyclery_id"
@@ -118,7 +143,7 @@ export const UserForm = ({
                 {store.name}
               </MenuItem>
             ))}
-          </FormSelect>
+          </FormSelect> */}
         </Grid>
         <Grid size={{ xs: 12 }}>
           <FormSwitch

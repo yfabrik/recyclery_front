@@ -377,3 +377,49 @@ export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
     </Box>
   );
 };
+
+
+export const FormMultiSelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  name,
+  control,
+  label,
+  children,
+  extra,
+  renderValue
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  extra?: FormControlOwnProps;
+  renderValue?: (selected: PathValueImpl<TFieldValues, TName>) => any
+}) => {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <FormControl fullWidth error={fieldState.invalid}>
+          <InputLabel id={name} shrink>
+            {label}
+          </InputLabel>
+          <Select
+            multiple
+            labelId={name}
+            label={label}
+            renderValue={renderValue}
+            {...field}
+            displayEmpty
+            error={fieldState.invalid}
+          >
+            {children}
+
+          </Select>
+          {fieldState.invalid && (
+            <FormHelperText>{fieldState.error?.message}</FormHelperText>
+          )}
+        </FormControl>
+      )}
+    />
+  )
+}
