@@ -1,7 +1,7 @@
 import React, { useState, type ReactNode } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import { Box, CircularProgress, Container } from "@mui/material";
-import { useAuth } from "./contexts/AuthContext";
+import { useAuth, type PermissionModule } from "./contexts/AuthContext";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -35,7 +35,7 @@ import Planning from "./pages/Planning";
 import { TestPage } from "./pages/TestPage";
 
 // Route protégée
-const ProtectedRoute = ({ children }:{children:ReactNode}) => {
+const ProtectedRoute = ({ children, module }: { children: ReactNode, module?: PermissionModule }) => {
   const { isAuthenticated, loading, hasModuleAccess } = useAuth();
 
   if (loading) {
@@ -50,12 +50,15 @@ const ProtectedRoute = ({ children }:{children:ReactNode}) => {
       </Box>
     );
   }
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (module) {
+    if (!hasModuleAccess(module, "read")) return <Navigate to="/dashboard" replace />;
+  }
+  return children;
 };
 
 // Route publique (redirection si déjà connecté)
-const PublicRoute = ({ children }:{children:ReactNode}) => {
+const PublicRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -127,7 +130,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="dashboard">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Dashboard />
                 </Container>
@@ -137,7 +140,7 @@ function App() {
           <Route
             path="/recycleries"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Recycleries />
                 </Container>
@@ -147,7 +150,7 @@ function App() {
           <Route
             path="/stores"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Stores />
                 </Container>
@@ -157,7 +160,7 @@ function App() {
           <Route
             path="/items"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Items />
                 </Container>
@@ -167,7 +170,7 @@ function App() {
           <Route
             path="/donations"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="dons">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Donations />
                 </Container>
@@ -177,7 +180,7 @@ function App() {
           <Route
             path="/collections"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="arrival">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Collections />
                 </Container>
@@ -187,7 +190,7 @@ function App() {
           <Route
             path="/sales"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="sales">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Sales />
                 </Container>
@@ -197,7 +200,7 @@ function App() {
           <Route
             path="/users"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="users">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Users />
                 </Container>
@@ -207,7 +210,7 @@ function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <Settings />
                 </Container>
@@ -227,7 +230,7 @@ function App() {
           <Route
             path="/waste-management"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="waste">
                 <Container maxWidth="xl" sx={{ py: 3 }}>
                   <WasteManagement />
                 </Container>
@@ -237,7 +240,7 @@ function App() {
           <Route
             path="/admin/*"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="administration">
                 <Admin />
               </ProtectedRoute>
             }
@@ -245,7 +248,7 @@ function App() {
           <Route
             path="/collection-schedule"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="planning">
                 <CollectionSchedule />
               </ProtectedRoute>
             }
@@ -253,7 +256,7 @@ function App() {
           <Route
             path="/collection-receipts"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="arrival">
                 <CollectionReceipts />
               </ProtectedRoute>
             }
@@ -261,7 +264,7 @@ function App() {
           <Route
             path="/arrivals"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="arrival">
                 <Arrivals />
               </ProtectedRoute>
             }
@@ -269,7 +272,7 @@ function App() {
           <Route
             path="/labels"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="label">
                 <Labels />
               </ProtectedRoute>
             }
@@ -277,7 +280,7 @@ function App() {
           <Route
             path="/pos"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="caisse">
                 <PointOfSale />
               </ProtectedRoute>
             }
@@ -295,7 +298,7 @@ function App() {
           <Route
             path="/employee-management"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <EmployeeManagement />
               </ProtectedRoute>
             }
@@ -303,7 +306,7 @@ function App() {
           <Route
             path="/task-management"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="config">
                 <TaskManagement />
               </ProtectedRoute>
             }
@@ -311,7 +314,7 @@ function App() {
           <Route
             path="/planning"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute module="planning">
                 <Planning />
               </ProtectedRoute>
             }

@@ -1,17 +1,7 @@
-import React, { createContext, useState, useContext, useEffect, type ReactNode } from "react";
 import axios from "axios";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
 import type { UserModel } from "../interfaces/Models";
-
-const AuthContext = createContext(null);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth doit être utilisé dans un AuthProvider");
-  }
-  return context;
-};
 
 const PERMISSIONS = {
   admin: {
@@ -59,6 +49,29 @@ const PERMISSIONS = {
   }
 } as const;
 
+export type PermissionRole = keyof typeof PERMISSIONS;
+export type PermissionModule = keyof (typeof PERMISSIONS)[PermissionRole];
+export type PermissionAction = (typeof PERMISSIONS)[PermissionRole][PermissionModule][number];
+
+interface AuthContextValue {
+  user: UserModel | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: { username: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  loading: boolean;
+  hasModuleAccess: (module: PermissionModule, action?: PermissionAction) => boolean;
+  isAuthenticated: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth doit être utilisé dans un AuthProvider");
+  }
+  return context;
+};
 
 interface AuthProps {
   children: ReactNode
@@ -207,9 +220,10 @@ export const AuthProvider = ({ children }: AuthProps) => {
   // };
 
   // Fonction pour vérifier si l'utilisateur a accès à un module
-  const hasModuleAccess = (module: keyof typeof PERMISSIONS["admin" | "employee" | "manager"], action: string = "read") => {
+  const hasModuleAccess = (module: PermissionModule, action: PermissionAction = "read") => {
     if (!user?.role) return false
-    return PERMISSIONS[user?.role][module].includes(action)
+    const role = user.role as PermissionRole
+    return (PERMISSIONS[role][module] as readonly string[]).includes(action)
     // if (permissionsByModule[module])
     //   return permissionsByModule[module].includes(action)
     // return hasPermission(`${module}.${action}`);

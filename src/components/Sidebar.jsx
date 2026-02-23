@@ -40,7 +40,7 @@ const drawerWidth = 280;
 const Sidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isManager, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   const menuSections = [
     {
