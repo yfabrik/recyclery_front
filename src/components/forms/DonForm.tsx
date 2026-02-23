@@ -16,6 +16,13 @@ const schema = z.object({
   donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(v => null)]),
   item_description: z.string().trim().nonempty(),
   estimated_value: z.coerce.number().min(0),
+  weight: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.union([
+      z.undefined().refine(() => false, { message: "Poids requis" }),
+      z.coerce.number().min(0),
+    ])
+  ) as z.ZodType<number>,//TODO remake
   status: z.enum(["pending", "accepted", "rejected"]),
 });
 
@@ -35,6 +42,7 @@ export const DonForm = ({
       donor_contact: "",
       item_description: "",
       estimated_value: "",
+      weight: "",
       status: "pending",
       ...data
       // ...(defaultValues ?? {}),
@@ -71,6 +79,14 @@ export const DonForm = ({
             control={form.control}
             label="Valeur Estimée (€)"
             name="estimated_value"
+            extra={{ type: "number" }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormInput
+            control={form.control}
+            label="Poids (kg)"
+            name="weight"
             extra={{ type: "number" }}
           />
         </Grid>

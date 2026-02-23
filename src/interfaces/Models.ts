@@ -99,6 +99,7 @@ export interface DonModel extends BaseModel {
   status: "pending" | "accepted" | "rejected";
   received_at: Date | null;
   donor_contact?: string | null;
+  weight?: number | null;
   User?: UserModel;
   Recyclery?: StoreModel;
 }

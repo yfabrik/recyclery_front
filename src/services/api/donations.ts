@@ -15,3 +15,4 @@ export const getDonations = (): Promise<AxiosResponse<{ message: string, donatio
 export const getDonationsStats = (): Promise<AxiosResponse<{ message: string, stats: donStats }>> => axiosInstance.get("/api/donations/stats")
 export const createDonation = (data: Schema) => axiosInstance.post(`/api/donations`, data)
 export const updateDonation = (id: number, data: Schema) => axiosInstance.put(`/api/donations/${id}`, data)
+export const deleteDonation = (id: number) => axiosInstance.delete(`/api/donations/${id}`)

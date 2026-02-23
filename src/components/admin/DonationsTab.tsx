@@ -2,6 +2,7 @@ import {
   Add,
   CardGiftcard,
   CheckCircle,
+  Delete,
   Edit,
   Schedule,
   TrendingUp,
@@ -32,6 +33,7 @@ import { toast } from "react-toastify";
 import type { DonModel } from "../../interfaces/Models";
 import {
   createDonation,
+  deleteDonation,
   getDonations,
   getDonationsStats,
   updateDonation,
@@ -77,13 +79,22 @@ export const DonationsTab = () => {
     }
 
   })
+  const deleteDon = useMutation({
+    mutationFn: (id: number) => deleteDonation(id),
+    onError: () => toast.error("Erreur lors de la suppression"),
+    onSuccess: () => {
+      toast.success("Don supprimé avec succès")
+      queryClient.invalidateQueries({ queryKey: ["donStats"] })
+      queryClient.invalidateQueries({ queryKey: ["dons"] })
+    }
+  })
 
   const saved = () => {
     queryClient.invalidateQueries({ queryKey: ["donStats"] })
     queryClient.invalidateQueries({ queryKey: ["dons"] })
     handleCloseDonationDialog();
   }
- 
+
   const handleOpenDonationDialog = (donation: DonModel | null = null) => {
     setEditingDonation(donation);
     setDonationDialog(true);
@@ -101,6 +112,12 @@ export const DonationsTab = () => {
       addDon.mutate(data)
     }
   };
+
+  const handleDeleteDonation = (donation: DonModel) => {
+    if (confirm("Voulez-vous vraiment supprimer ce don ?")) {
+      deleteDon.mutate(donation.id)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -197,6 +214,7 @@ export const DonationsTab = () => {
               <TableCell>Bénéficiaire</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Valeur Estimée</TableCell>
+              <TableCell>Poids</TableCell>
               <TableCell>Statut</TableCell>
               <TableCell>Donné par</TableCell>
               <TableCell>Actions</TableCell>
@@ -231,13 +249,18 @@ export const DonationsTab = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
+                  <Typography variant="body2" fontWeight="bold">
+                    {donation.weight || 0} kg
+                  </Typography>
+                </TableCell>
+                <TableCell>
                   <Chip
                     label={getStatusLabel(donation.status)}
                     color={getStatusColor(donation.status)}
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{donation.received_by || "-"}</TableCell>
+                <TableCell>{donation.User?.username || "-"}</TableCell>
                 <TableCell>
                   <IconButton
                     size="small"
@@ -252,6 +275,13 @@ export const DonationsTab = () => {
                     title="Voir les détails"
                   >
                     <Visibility />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteDonation(donation)}
+                    title="Supprimer"
+                  >
+                    <Delete />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -274,7 +304,7 @@ export const DonationsTab = () => {
           <DonForm
             formId="donForm"
             onSubmit={handleSaveDonation}
-            defaultValues={editingDonation||undefined}
+            defaultValues={editingDonation}
           />
         </DialogContent>
         <DialogActions>
