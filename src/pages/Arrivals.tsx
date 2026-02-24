@@ -27,10 +27,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { ArrivalForm, type ArrivalFormSchema } from "../components/forms/ArrivalForm";
-import type {
-  ArrivalModel
-} from "../interfaces/Models";
+import {
+  ArrivalForm,
+  type ArrivalFormSchema,
+} from "../components/forms/ArrivalForm";
+import type { ArrivalModel } from "../interfaces/Models";
 import { createArrival, getArrivals } from "../services/api/arrival";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { fetchCollectionPoints as fCollP } from "../services/api/collectionPoint";
@@ -43,34 +44,45 @@ const Arrivals = () => {
   const [showHistory, setShowHistory] = useState(false);
 
   const { data: categories = [] } = useQuery({
-    queryKey: ["arrivals", "categories"],
-    queryFn:
-      () => fcat({
+    queryKey: [
+      "categories",
+      {
         include: "category",
         only_category: true,
         in: true,
-      }).then(result => result.data.categories ?? []),
+      },
+    ],
+    queryFn: () =>
+      fcat({
+        include: "category",
+        only_category: true,
+        in: true,
+      }).then((result) => result.data.categories ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const { data: collectionPoints = [] } = useQuery({
-    queryKey: ["arrivals", "collectionPoints"],
-    queryFn: () => fCollP({ active_only: "true" }).then(result => result.data.collection_points ?? []),
+    queryKey: ["collectionPoints",{ active_only: "true" }],
+    queryFn: () =>
+      fCollP({ active_only: "true" }).then(
+        (result) => result.data.collection_points ?? [],
+      ),
     staleTime: 5 * 60 * 1000,
   });
   const { data: arrivals = [] } = useQuery({
     queryKey: ["arrivals", "today", todayKey()],
-    queryFn: () => getArrivals({
-      date_from: todayKey(),
-      date_to: todayKey(),
-    }).then(result => result.data.arrivals ?? []),
+    queryFn: () =>
+      getArrivals({
+        date_from: todayKey(),
+        date_to: todayKey(),
+      }).then((result) => result.data.arrivals ?? []),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: ArrivalFormSchema) =>
-      createArrival(data),
+    mutationFn: (data: ArrivalFormSchema) => createArrival(data),
     onSuccess: (response) => {
       toast.success(
-        `Arrivage ${response.data.arrival?.id} enregistré avec succès`)
+        `Arrivage ${response.data.arrival?.id} enregistré avec succès`,
+      );
 
       queryClient.invalidateQueries({ queryKey: ["arrivals"] });
     },
@@ -80,13 +92,11 @@ const Arrivals = () => {
         error.response?.data?.error ?? "Erreur lors de l'enregistrement",
       );
     },
-  }
-  );
+  });
 
   const handleSubmit = (data: ArrivalFormSchema) => {
     createMutation.mutate(data);
   };
-
 
   const getSourceTypeLabel = (type: ArrivalModel["source_type"]): string => {
     const types: Record<ArrivalModel["source_type"], string> = {
@@ -97,7 +107,9 @@ const Arrivals = () => {
     return types[type] || type;
   };
 
-  const getSourceTypeIcon = (type: ArrivalModel["source_type"]): React.ReactNode => {
+  const getSourceTypeIcon = (
+    type: ArrivalModel["source_type"],
+  ): React.ReactNode => {
     const icons: Record<ArrivalModel["source_type"], React.ReactNode> = {
       point: <LocalShipping />,
       apport: <VolunteerActivism />,
@@ -105,7 +117,6 @@ const Arrivals = () => {
     };
     return icons[type] || <Business />;
   };
-
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4, minHeight: "100vh" }}>
@@ -196,22 +207,28 @@ const Arrivals = () => {
                   <Typography variant="body2">Points de collecte:</Typography>
                   <Typography variant="body2" fontWeight="bold">
                     {
-                      arrivals.filter(
-                        (arr) => arr.source_type === "point",
-                      ).length
+                      arrivals.filter((arr) => arr.source_type === "point")
+                        .length
                     }
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="body2">Apports volontaires:</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {arrivals.filter((arr) => arr.source_type === "apport").length}
+                    {
+                      arrivals.filter((arr) => arr.source_type === "apport")
+                        .length
+                    }
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="body2">Vides maison:</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {arrivals.filter((arr) => arr.source_type === "house_clearance").length}
+                    {
+                      arrivals.filter(
+                        (arr) => arr.source_type === "house_clearance",
+                      ).length
+                    }
                   </Typography>
                 </Box>
               </Box>
@@ -253,7 +270,9 @@ const Arrivals = () => {
                           {arrival.id}
                         </Typography>
                       </TableCell>
-                      <TableCell>{new Date(arrival.arrival_time).toLocaleTimeString()}</TableCell>
+                      <TableCell>
+                        {new Date(arrival.arrival_time).toLocaleTimeString()}
+                      </TableCell>
                       <TableCell>
                         <Box>
                           <Typography variant="body2">
