@@ -124,7 +124,7 @@ const NumericKeypad = ({
   defaultValue,
   onClose,
   maxValue = 9999,
-  decimalPlaces = 1,
+  decimalPlaces = 2,
   unit = "kg",
 }: KeypadProps) => {
 

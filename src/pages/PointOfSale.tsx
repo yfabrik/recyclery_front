@@ -481,6 +481,7 @@ const PointOfSale = () => {
                     <TableHead>
                       <TableRow>
                         <TableCell>Article</TableCell>
+                        <TableCell>Poids unitaire</TableCell>
                         <TableCell>Prix unitaire</TableCell>
                         <TableCell>Quantité</TableCell>
                         <TableCell>Total</TableCell>
@@ -527,6 +528,7 @@ const PointOfSale = () => {
                                 )}
                             </Box>
                           </TableCell>
+                          <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
                           <TableCell>{item.price.toFixed(2)}€</TableCell>
                           <TableCell>
                             <Box
@@ -589,7 +591,7 @@ const PointOfSale = () => {
               )}
             </Paper>
           </form>
-         
+
         </Grid>
 
         {/* Résumé et paiement */}
