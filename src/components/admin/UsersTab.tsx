@@ -1,9 +1,8 @@
 import {
-  Block,
-  CheckCircle,
+  Delete,
   Edit,
   PersonAdd,
-  VpnKey,
+  VpnKey
 } from "@mui/icons-material";
 import {
   Alert,
@@ -35,6 +34,7 @@ import { type UserModel } from "../../interfaces/Models";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
+  deleteUser,
   fetchUsers as fUsers,
   getRoles,
   getUsersStats,
@@ -53,7 +53,7 @@ export const UsersTab = () => {
   const queryClient = useQueryClient()
 
   const users = useQuery({
-    queryKey: ["users",{ include: "managedStores" }],
+    queryKey: ["users", { include: "managedStores" }],
     queryFn: () => fUsers({ include: "managedStores" }).then(response => response.data.users)
   })
   if (users.isError) toast.error("Erreur lors du chargement des utilisateurs");
@@ -95,6 +95,16 @@ export const UsersTab = () => {
     queryClient.invalidateQueries({ queryKey: ["users"] })
     queryClient.invalidateQueries({ queryKey: ["userStats"] })
   }
+
+  const removeUser = useMutation({
+    mutationFn: (data: number) => deleteUser(data),
+    onError: () => toast.error("Erreur lors de la suppression"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["userStats"] })
+      toast.success("Utilisateur supprimé avec succès");
+    }
+  })
 
   const changePassword = useMutation({
     mutationFn: (data: { id: number, data: PasswordSchema }) => updateUserPassword(data.id, data.data),
@@ -142,10 +152,8 @@ export const UsersTab = () => {
     changePassword.mutate({ id: editingUser?.id, data })
   };
 
-  const handleToggleUserStatus = async (user: UserModel) => {
-    const updatedUser: UserModel = { ...user, isActive: !user.isActive }
-    editUser.mutate({ id: user.id, data: updatedUser })//TODO faudrait un autre endpoint ? le cast marche pas le as unknown as Schema c'est moche
-
+  const handleDeleteUser = async (user: UserModel) => {
+    removeUser.mutate(user.id)
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -317,7 +325,7 @@ export const UsersTab = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {user.managedStores?.map(s=>s.name).toString() || "Non assigné"}
+                        {user.managedStores?.map(s => s.name).toString() || "Non assigné"}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
@@ -352,14 +360,14 @@ export const UsersTab = () => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip
-                            title={user.isActive ? "Désactiver" : "Réactiver"}
+                            title="supprimer utilisateur"
                           >
                             <IconButton
                               size="small"
-                              color={user.isActive ? "error" : "success"}
-                              onClick={() => handleToggleUserStatus(user)}
+                              color="error"
+                              onClick={() => handleDeleteUser(user)}
                             >
-                              {user.isActive ? <Block /> : <CheckCircle />}
+                              <Delete />
                             </IconButton>
                           </Tooltip>
                         </Box>
