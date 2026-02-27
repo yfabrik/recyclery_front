@@ -13,6 +13,7 @@ import {
 import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { useEffect } from "react";
 
 const schema = z.object({
   username: z.string().trim().nonempty("username requis"),
@@ -27,7 +28,7 @@ const schema = z.object({
     .transform((val) => (val == "" ? null : val)),
   phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   password: z.string(),
-  role: z.enum(["employee","manager","admin"],"role requis"),
+  role: z.enum(["employee", "manager", "admin"], "role requis"),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   isActive: z.boolean().default(true),
   managedStores: z.array(idSchema())
@@ -61,10 +62,13 @@ export const UserForm = ({
       role: "employee",
       recyclery_id: "",
       isActive: true,
-      managedStores:[],
+      managedStores: [],
       ...data
     },
   });
+
+  const role = form.watch("role")
+  useEffect(() => { if (role == "employee") form.setValue("managedStores", []) }, [role])
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -107,11 +111,12 @@ export const UserForm = ({
             ))}
           </FormSelect>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormMultiSelect
-            control={form.control}
-            label="Manager de :"
-            name="managedStores"
+        {role != "employee" &&
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormMultiSelect
+              control={form.control}
+              label="Manager de :"
+              name="managedStores"
             // renderValue={(selected) => {
             //   return selected.map(item => {
             //     const [type, id] = item.split(".");
@@ -119,18 +124,18 @@ export const UserForm = ({
             //   }).join(", ");
 
             // }}
-          >
-            <MenuItem key="no-store" value="">
-              Aucun magasin assigné
-            </MenuItem>
-            {stores.map((store) => (
-              <MenuItem key={store.id} value={store.id}>
-                {store.name}
+            >
+              <MenuItem key="no-store" value="">
+                Aucun magasin assigné
               </MenuItem>
-            ))}
+              {stores.map((store) => (
+                <MenuItem key={store.id} value={store.id}>
+                  {store.name}
+                </MenuItem>
+              ))}
 
-          </FormMultiSelect>
-          {/* <FormSelect
+            </FormMultiSelect>
+            {/* <FormSelect
             control={form.control}
             label="Magasin"
             name="recyclery_id"
@@ -144,7 +149,8 @@ export const UserForm = ({
               </MenuItem>
             ))}
           </FormSelect> */}
-        </Grid>
+          </Grid>
+        }
         <Grid size={{ xs: 12 }}>
           <FormSwitch
             control={form.control}
