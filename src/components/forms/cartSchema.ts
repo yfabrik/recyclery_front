@@ -1,18 +1,19 @@
 import z from "zod";
+import { idSchema } from "../../interfaces/ZodTypes";
 
 export const itemSchema = z.object({
-  quantity: z.number(),
-  price: z.number(),
+  quantity: z.number().nonnegative(),
+  price: z.number().nonnegative(),
   name: z.string(),
   category_name: z.string(),
   subcategory_name: z.string(),
   // id: z.coerce.number().positive(),
   barcode: z.string(),
-  category_id: z.coerce.number().positive(),
-  subcategory_id: z.coerce.number().positive().nullish(),
+  category_id: idSchema(),
+  subcategory_id: idSchema().nullish(),
   description: z.string(),
   weight: z.number(),
-  is_manual: z.boolean().default(false),
+  // is_manual: z.boolean().default(false),
 });
 
 export const schema = z.object({

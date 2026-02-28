@@ -6,6 +6,7 @@ import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import { Euro } from "@mui/icons-material";
 import * as z from "zod";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { nullString, postalSchema } from "../../interfaces/ZodTypes";
 
 export type Schema = z.infer<ReturnType<typeof createSchema>>;
 
@@ -17,8 +18,9 @@ const createSchema = (totalCart: number) =>
       .min(totalCart, {
         message: `Le montant payé ne peut pas être inférieur au total du panier (${totalCart.toFixed(2)}€)`,
       }),
-    customer_name: z.string().transform((val) => (val == "" ? null : val)),
-    customer_email: z.union([z.email(), z.literal("").transform(() => null)]),
+    customer_postal_code: z.union([postalSchema(), nullString()])
+    // customer_name: z.string().transform((val) => (val == "" ? null : val)),
+    // customer_email: z.union([z.email(), z.literal("").transform(() => null)]),
   });
 
 export const EncaissementForm = ({
@@ -33,10 +35,9 @@ export const EncaissementForm = ({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      payment_method: "cash" as const,
+      payment_method: "cash",
       payment_amount: "",
-      customer_name: "",
-      customer_email: "",
+      customer_postal_code: "",
       ...data,
     },
   });
@@ -97,7 +98,8 @@ export const EncaissementForm = ({
         )}
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput
+          <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />
+          {/* <FormInput
             label="Nom du client (optionnel)"
             control={form.control}
             name="customer_name"
@@ -109,8 +111,12 @@ export const EncaissementForm = ({
             label="Email du client (optionnel)"
             control={form.control}
             name="customer_email"
-          />
+          />*/}
         </Grid>
+        <Grid size={{ xs: 12 }}>
+
+        </Grid>
+
       </Grid>
     </form>
   );

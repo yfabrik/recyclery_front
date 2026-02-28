@@ -55,7 +55,7 @@ import {
   type Schema as OpenCaisseSchema,
 } from "../components/forms/OpenCaisseForm";
 import { useAuth } from "../contexts/AuthContext";
-import type { CashSession, TransactionModel } from "../interfaces/Models";
+import type { TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import {
@@ -170,7 +170,6 @@ const PointOfSale = () => {
         customer_name: "",
         customer_email: "",
       });
-      console.log(data, variables)
       if (window.confirm("Imprimer le ticket de caisse ?")) {
         if (activeSession.data)
           printReceipt(variables, cart as CartItem[], activeSession.data, user);
@@ -225,7 +224,6 @@ const PointOfSale = () => {
       setScanInput("");
       toast.success(`${item.barcode} ajouté au panier`);
     } catch (error) {
-      console.error("Erreur lors du scan:", error);
       if (error.response?.status === 404) {
         toast.error("Article non trouvé");
       } else {
@@ -265,7 +263,7 @@ const PointOfSale = () => {
       quantity: 1,
 
       // total_price: parseFloat(data.price),
-      is_manual: true, // Flag pour identifier les articles manuels
+      // is_manual: true, // Flag pour identifier les articles manuels
     } satisfies CartItem;
 
     append(manualItem);
@@ -317,20 +315,21 @@ const PointOfSale = () => {
         payment_method: data.payment_method,
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
-        customer_name: data.customer_name || undefined,
-        customer_email: data.customer_email || undefined,
+        customer_postal_code: data.customer_postal_code,
+        // customer_name: data.customer_name || undefined,
+        // customer_email: data.customer_email || undefined,
         items: cart.map((item) => ({
-          labeled_item_id: item.is_manual ? null : item.id,
+          // labeled_item_id: item.is_manual ? null : item.id,
           barcode: item.barcode,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
           total_price: item.quantity * item.price,
-          is_manual: item.is_manual || false,
+          // is_manual: item.is_manual || false,
           category_id: item.category_id,
           subcategory_id: item.subcategory_id,
         })),
-      } satisfies TransactionModel & { items: CartItem[] };
+      } satisfies Omit<TransactionModel, "LabeledItems"> & { items: CartItem[] };
       handleSell.mutate(transactionData);
     }
   };
@@ -503,7 +502,7 @@ const PointOfSale = () => {
                                 <Typography variant="body1" fontWeight="medium">
                                   {item.name}
                                 </Typography>
-                                {item.is_manual && (
+                                {isNaN(+item.barcode) && (
                                   <Chip
                                     size="small"
                                     label="Manuel"

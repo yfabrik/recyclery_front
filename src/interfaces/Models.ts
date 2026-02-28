@@ -254,9 +254,9 @@ export interface TransactionModel extends BaseModel {
   payment_method: "cash" | "card" | "check";
   transactionType: "sell" | "refund";
   payment_amount: number;
-  customer_name?: string;
-  customer_email?: string;
-  customer_postal_code?: string;
+  // customer_name?: string;
+  // customer_email?: string;
+  customer_postal_code?: string|null;
   status: "pending" | "completed" | "cancelled";
 
   cash_session_id: number;
