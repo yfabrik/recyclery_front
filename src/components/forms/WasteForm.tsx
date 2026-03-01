@@ -31,16 +31,16 @@ const schema = z.object({
   notes: z.string().transform(v => v == "" ? null : v),
 }).refine(
   (data) => {
-      if (data.disposal_type === "eco_organism") {
-        return !!data.eco_organism_id;
-      }
-      return true;
-    },
-    {
-      message: "Veuillez sélectionner un eco_orgnism",
-      path: ["eco_organism_id"],
-    },
-) ;
+    if (data.disposal_type === "eco_organism") {
+      return !!data.eco_organism_id;
+    }
+    return true;
+  },
+  {
+    message: "Veuillez sélectionner un eco_orgnism",
+    path: ["eco_organism_id"],
+  },
+);
 
 export type Schema = z.infer<typeof schema>;
 
@@ -117,7 +117,22 @@ export const WasteForm = ({
             <MenuItem value="other">Autre</MenuItem>
           </FormSelect>
         </Grid>
-
+        {disposalType === "eco_organism" && (
+          <Grid size={{ xs: 12 }}>
+            <FormSelect
+              control={form.control}
+              name="eco_organism_id"
+              label="Éco-organisme"
+            >
+              <MenuItem value="">Sélectionner un éco-organisme</MenuItem>
+              {ecoOrganisms.map((org) => (
+                <MenuItem key={org.id} value={org.id}>
+                  {org.name}
+                </MenuItem>
+              ))}
+            </FormSelect>
+          </Grid>
+        )}
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect
             control={form.control}
@@ -149,22 +164,7 @@ export const WasteForm = ({
           </FormSelect>
         </Grid>
 
-        {disposalType === "eco_organism" && (
-          <Grid size={{ xs: 12 }}>
-            <FormSelect
-              control={form.control}
-              name="eco_organism_id"
-              label="Éco-organisme"
-            >
-              <MenuItem value="">Sélectionner un éco-organisme</MenuItem>
-              {ecoOrganisms.map((org) => (
-                <MenuItem key={org.id} value={org.id}>
-                  {org.name}
-                </MenuItem>
-              ))}
-            </FormSelect>
-          </Grid>
-        )}
+
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormInput
