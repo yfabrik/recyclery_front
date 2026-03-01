@@ -1,8 +1,12 @@
 import {
+  AdminPanelSettings,
   Delete,
   Edit,
+  ManageAccounts,
+  Person,
   PersonAdd,
-  VpnKey
+  VpnKey,
+  Work
 } from "@mui/icons-material";
 import {
   Alert,
@@ -166,6 +170,32 @@ export const UsersTab = () => {
     } as const as Record<string, "error" | "warning" | "info" | "primary" | "default">;
     return COLORS[role] || "default";
   };
+  const getRoleColor = (role: UserModel["role"]) => {
+    switch (role) {
+      case 'admin': return 'error';
+      case 'manager': return 'warning';
+      case 'employee': return 'info';
+      default: role satisfies never;
+    }
+  };
+
+  const getRoleLabel = (role: UserModel["role"]) => {
+    switch (role) {
+      case 'admin': return 'Administrateur';
+      case 'manager': return 'Gestionnaire';
+      case 'employee': return 'Employé';
+      default: role satisfies never;
+    }
+  };
+
+  const getRoleIcon = (role: UserModel["role"]) => {
+    switch (role) {
+      case 'admin': return <AdminPanelSettings />;
+      case 'manager': return <ManageAccounts />;
+      case 'employee': return <Work />;
+      default: return <Person />;
+    }
+  };
 
   const formatLastLogin = (lastLogin: string) => {
     if (!lastLogin) return "Jamais connecté";
@@ -254,8 +284,9 @@ export const UsersTab = () => {
                 <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
                   <Box sx={{ textAlign: "center" }}>
                     <Chip
-                      label={rolestat.role}
-                      color={getRoleBadgeColor(rolestat.role)}
+                      icon={getRoleIcon(rolestat.role)}
+                      label={getRoleLabel(rolestat.role)}
+                      color={getRoleColor(rolestat.role)}
                       sx={{ mb: 1 }}
                     />
                     <Typography variant="h6">{rolestat.count}</Typography>
@@ -319,8 +350,8 @@ export const UsersTab = () => {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Chip
-                          label={user.role}
-                          color={getRoleBadgeColor(user.role)}
+                          label={getRoleLabel(user.role)}
+                          color={getRoleColor(user.role)}
                           size="small"
                         />
                       </TableCell>
