@@ -210,8 +210,10 @@ const PointOfSale = () => {
         });
 
       } else {
-        const category_name = categories.data?.find(cat => cat.id === item.category_id)?.name ?? ""
-        const subcategory_name = categories.data?.find(cat => cat.id === item.subcategory_id)?.name ?? ""
+        const category = categories.data?.find(cat => cat.id === item.category_id)
+        const subCategory = categories.data?.find(cat => cat.id === item.subcategory_id)
+        const category_name = category?.name ?? ""
+        const subcategory_name = subCategory?.name ?? ""
         let itemName = category_name || "Article";
         if (subcategory_name) {
           itemName = `${category_name} (${subcategory_name})`;
@@ -235,7 +237,7 @@ const PointOfSale = () => {
   const handleAddManualItem = (data: ManualItemSchema) => {
     // Générer un code-barres temporaire pour l'article manuel
     const tempBarcode = `MANUAL${Date.now()}`;
-
+    ////// ce bloc c'est le meme que add item with barcode///////////
     const selectedCategory = categories.data?.find(
       (cat) => cat.id == data.category_id,
     );
@@ -248,6 +250,12 @@ const PointOfSale = () => {
     if (selectedSubcategory) {
       itemName = `${selectedSubcategory.name} (${selectedCategory?.name})`;
     }
+
+    if (selectedSubcategory)
+      selectedSubcategory.priceBasedOnWeight ? data.price = data.price * data.weight : null
+    else
+      selectedCategory?.priceBasedOnWeight ? data.price = data.price * data.weight : null
+    ////////////
 
     const manualItem = {
       // id: tempBarcode,
