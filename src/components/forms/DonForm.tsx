@@ -13,7 +13,9 @@ import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   donor_name: z.string().trim().nonempty(),
-  donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(v => null)]),
+  donor_email: z.union([z.email(), z.literal("").transform(() => null)]),
+  donor_phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
+  // donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(() => null)]),
   item_description: z.string().trim().nonempty(),
   estimated_value: z.coerce.number().min(0),
   weight: z.preprocess(
@@ -39,7 +41,9 @@ export const DonForm = ({
     resolver: zodResolver(schema),
     defaultValues: {
       donor_name: "",
-      donor_contact: "",
+      donor_email: "",
+      donor_phone: "",
+      // donor_contact: "",
       item_description: "",
       estimated_value: "",
       weight: "",
@@ -62,8 +66,15 @@ export const DonForm = ({
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormInput
             control={form.control}
-            label="Contact (email/téléphone)"
-            name="donor_contact"
+            label="Contact (email)"
+            name="donor_email"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <FormInput
+            control={form.control}
+            label="Contact (téléphone)"
+            name="donor_phone"
           />
         </Grid>
         <Grid size={{ xs: 12 }}>
