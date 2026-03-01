@@ -58,23 +58,23 @@ const Sidebar = ({ open, onClose }) => {
     {
       title: 'Opérations',
       items: [
-        { label: 'Apports', path: '/donations', icon: VolunteerActivism, roles: ['employee', 'manager', 'admin'] },
-        { label: 'Collectes', path: '/collections', icon: LocalShipping, roles: ['employee', 'manager', 'admin'] },
-        { label: 'Planning Collectes', path: '/collection-schedule', icon: Schedule, roles: ['employee', 'manager', 'admin'] },
-        { label: 'Bordereaux', path: '/collection-receipts', icon: Receipt, roles: ['employee', 'manager', 'admin'] },
+        // { label: 'Apports', path: '/donations', icon: VolunteerActivism, roles: ['employee', 'manager', 'admin'] },
+        // { label: 'Collectes', path: '/collections', icon: LocalShipping, roles: ['employee', 'manager', 'admin'] },
+        // { label: 'Planning Collectes', path: '/collection-schedule', icon: Schedule, roles: ['employee', 'manager', 'admin'] },
+        // { label: 'Bordereaux', path: '/collection-receipts', icon: Receipt, roles: ['employee', 'manager', 'admin'] },
       ]
     },
     {
       title: 'Gestion',
       items: [
-        { label: 'Recycleries', path: '/recycleries', icon: Store, roles: ['manager', 'admin'] },
-        { label: 'Magasins', path: '/stores', icon: Store, roles: ['manager', 'admin'] },
+        // { label: 'Recycleries', path: '/recycleries', icon: Store, roles: ['manager', 'admin'] },
+        { label: 'Magasins', path: '/admin/config/store', icon: Store, roles: ['manager', 'admin'] },
         { label: 'Employés', path: '/employee-management', icon: People, roles: ['manager', 'admin'] },
-        { label: 'Tâches', path: '/task-management', icon: Assignment, roles: ['manager', 'admin'] },
+        { label: 'Tâches', path: '/task-management', icon: Assignment, roles: ['admin'] },
         { label: 'Planning', path: '/planning', icon: CalendarToday, roles: ['manager', 'admin'] },
-        { label: 'Utilisateurs', path: '/users', icon: People, roles: ['admin'] },
+        // { label: 'Utilisateurs', path: '/users', icon: People, roles: ['admin'] },
         { label: 'Administration', path: '/admin', icon: AdminPanelSettings, roles: ['admin'] },
-        { label: 'Rapports', path: '/reports', icon: Assessment, roles: ['manager', 'admin'] },
+        { label: 'Ventes', path: '/admin/sales', icon: Assessment, roles: ['manager', 'admin'] },
         { label: 'Paramètres', path: '/settings', icon: Settings, roles: ['manager', 'admin'] },
       ]
     }
@@ -121,12 +121,12 @@ const Sidebar = ({ open, onClose }) => {
         <Typography variant="subtitle2" gutterBottom>
           {user?.username}
         </Typography>
-        <Chip 
-          label={user?.role === 'admin' ? 'Administrateur' : 
-                user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
+        <Chip
+          label={user?.role === 'admin' ? 'Administrateur' :
+            user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
           size="small"
-          color={user?.role === 'admin' ? 'error' : 
-                 user?.role === 'manager' ? 'warning' : 'default'}
+          color={user?.role === 'admin' ? 'error' :
+            user?.role === 'manager' ? 'warning' : 'default'}
           variant="outlined"
         />
       </Box>
@@ -147,14 +147,14 @@ const Sidebar = ({ open, onClose }) => {
           >
             {section.title}
           </Typography>
-          
+
           <List dense>
             {section.items
               .filter(item => canAccessItem(item.roles))
               .map((item) => {
                 const Icon = item.icon;
                 const active = isItemActive(item.path);
-                
+
                 return (
                   <ListItem key={item.path} disablePadding>
                     <ListItemButton
@@ -178,7 +178,7 @@ const Sidebar = ({ open, onClose }) => {
                       <ListItemIcon>
                         <Icon />
                       </ListItemIcon>
-                      <ListItemText 
+                      <ListItemText
                         primary={item.label}
                         slotProps={{
                           primary: {
