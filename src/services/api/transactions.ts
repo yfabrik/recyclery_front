@@ -7,10 +7,15 @@ interface transactionsFilters {
   period?: string;
   date_from?: string;
   date_to?: string;
+  session?: number;
+  payment_method?: TransactionModel["payment_method"];
 }
 
-export const getTransactions = (filters: transactionsFilters | null = null) =>
-  axiosInstance.get("/api/sales-transactions", { params: filters });
+export const getTransactions = (
+  filters: transactionsFilters | null = null,
+): Promise<
+  AxiosResponse<{ success: boolean; transactions: TransactionModel[] }>
+> => axiosInstance.get("/api/sales-transactions", { params: filters });
 
 export const getTranscationStats = (
   filters: transactionsFilters | null = null,

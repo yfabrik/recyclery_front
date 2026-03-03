@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { AttachMoney, Euro } from "@mui/icons-material";
+import { useEffect } from "react";
 import { usePrompt } from "../Prompt";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
@@ -19,7 +20,12 @@ export type Schema = z.infer<typeof schema>;
 export const CloseCaisseForm = ({
   formId,
   onSubmit,
-}: BaseFormProps<Schema>) => {
+  state,
+  setState,
+}: BaseFormProps<Schema> & {
+  state: "prepare" | "valid";
+  setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
+}) => {
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -28,6 +34,13 @@ export const CloseCaisseForm = ({
     },
   });
   const { prompt, PromptDialog } = usePrompt();
+
+  const watchedValues = form.watch("closing_amount");
+
+  useEffect(() => {
+    setState("prepare");
+  }, [watchedValues,setState]);
+
   return (
     <>
       <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -46,6 +59,7 @@ export const CloseCaisseForm = ({
                       form.getValues("closing_amount")?.toString() || "",
                       { unit: "€" },
                     ),
+                    { shouldDirty: true, shouldTouch: true },
                   ),
                 sx: {
                   "& .MuiInputBase-input": {
@@ -76,6 +90,7 @@ export const CloseCaisseForm = ({
                                   "",
                                 { unit: "€", mode: "money" },
                               ),
+                              { shouldDirty: true, shouldTouch: true },
                             );
                           }}
                           startIcon={<AttachMoney />}
@@ -102,6 +117,14 @@ export const CloseCaisseForm = ({
             />
           </Grid>
         </Grid>
+        <Button 
+          onClick={form.handleSubmit(() => setState("valid"))}
+          sx={{margin :1}}
+          type="button"
+          variant="contained"
+        >
+          valider
+        </Button>
       </form>
       {PromptDialog}
     </>

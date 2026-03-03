@@ -68,6 +68,7 @@ import {
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 import { printReceipt } from "../services/printService";
+import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
 const PointOfSale = () => {
   const { user } = useAuth();
 
@@ -166,6 +167,7 @@ const PointOfSale = () => {
     mutationFn: (data: TransactionModel) => createSell(data),
     onSuccess: (data, variables) => {
       toast.success("Vente enregistrée avec succès");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
       setPaymentDialog(false);
       setPaymentData({
         payment_method: "cash",
@@ -640,12 +642,17 @@ const PointOfSale = () => {
                 {cart.reduce((prev, current) => (prev += current.quantity), 0)}
               </Typography>
             </Box>
-                        <Box
+            <Box
               sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
             >
               <Typography>Poids</Typography>
               <Typography>
-                {cart.reduce((prev, current) => (prev += (current.weight*current.quantity)), 0)} Kg
+                {cart.reduce(
+                  (prev, current) =>
+                    (prev += current.weight * current.quantity),
+                  0,
+                )}{" "}
+                Kg
               </Typography>
             </Box>
 
@@ -718,7 +725,13 @@ const PointOfSale = () => {
       </Dialog>
 
       {/* Dialog de fermeture de session */}
-      <Dialog
+      <DialogCloseCaisse
+        closeSessionDialog={closeSessionDialog}
+        setCloseSessionDialog={setCloseSessionDialog}
+        currentSession={activeSession.data}
+        handleCloseSession={handleCloseSession}
+      />
+      {/* <Dialog
         open={closeSessionDialog}
         onClose={() => setCloseSessionDialog(false)}
         maxWidth="sm"
@@ -746,7 +759,7 @@ const PointOfSale = () => {
             Fermer la Caisse
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       <Dialog
         open={paymentDialog}
