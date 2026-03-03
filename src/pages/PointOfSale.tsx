@@ -49,7 +49,10 @@ import {
   EncaissementForm,
   type Schema as EncaissementSchema,
 } from "../components/forms/EncaissementForm";
-import { ManualItemForm, type Schema as ManualItemSchema } from "../components/forms/ManualItemForm";
+import {
+  ManualItemForm,
+  type Schema as ManualItemSchema,
+} from "../components/forms/ManualItemForm";
 import {
   OpenCaisseForm,
   type Schema as OpenCaisseSchema,
@@ -81,7 +84,6 @@ const PointOfSale = () => {
     customer_name: "",
     customer_email: "",
   });
-
 
   const form = useForm({
     defaultValues: {
@@ -156,7 +158,8 @@ const PointOfSale = () => {
     openSession.mutate(data);
   };
   const handleCloseSession = (data: CloseCaisseSchema) => {
-    if (activeSession.data)//TODO faire sans ou raise error ??? use type never ?
+    if (activeSession.data)
+      //TODO faire sans ou raise error ??? use type never ?
       closeSession.mutate({ id: activeSession.data.id, data: data });
   };
   const handleSell = useMutation({
@@ -170,9 +173,14 @@ const PointOfSale = () => {
         customer_name: "",
         customer_email: "",
       });
-      if (window.confirm("Imprimer le ticket de caisse ?")) {
+      if (window.confirm("Imprimer le ticket de caisse ?")) {//TODO should be detached from the request
         if (activeSession.data)
-          printReceipt(variables, cart as CartItem[], activeSession.data, user);
+          printReceipt(
+            data.data.data.sale,
+            cart as CartItem[],
+            activeSession.data,
+            user!,
+          );
       }
       form.reset({ cart: [] });
     },
@@ -180,8 +188,6 @@ const PointOfSale = () => {
       toast.error("Erreur lors de l'enregistrement de la vente");
     },
   });
-
-
 
   const handleScanProduct = async () => {
     if (!scanInput.trim()) {
@@ -191,7 +197,7 @@ const PointOfSale = () => {
 
     try {
       const response = await getItemFromBarcode(scanInput);
-      const item = response.data.item
+      const item = response.data.item;
 
       if (item.status !== "available") {
         toast.error("Cet article n'est pas disponible à la vente");
@@ -208,19 +214,27 @@ const PointOfSale = () => {
           ...cart[existingItem],
           quantity: cart[existingItem].quantity + 1,
         });
-
       } else {
-        const category = categories.data?.find(cat => cat.id === item.category_id)
-        const subCategory = categories.data?.find(cat => cat.id === item.subcategory_id)
-        const category_name = category?.name ?? ""
-        const subcategory_name = subCategory?.name ?? ""
+        const category = categories.data?.find(
+          (cat) => cat.id === item.category_id,
+        );
+        const subCategory = categories.data?.find(
+          (cat) => cat.id === item.subcategory_id,
+        );
+        const category_name = category?.name ?? "";
+        const subcategory_name = subCategory?.name ?? "";
         let itemName = category_name || "Article";
         if (subcategory_name) {
           itemName = `${category_name} (${subcategory_name})`;
         }
 
-        append({ ...item, quantity: 1, name: itemName, category_name, subcategory_name });
-
+        append({
+          ...item,
+          quantity: 1,
+          name: itemName,
+          category_name,
+          subcategory_name,
+        });
       }
 
       setScanInput("");
@@ -252,9 +266,13 @@ const PointOfSale = () => {
     }
 
     if (selectedSubcategory)
-      selectedSubcategory.priceBasedOnWeight ? data.price = data.price * data.weight : null
+      selectedSubcategory.priceBasedOnWeight
+        ? (data.price = data.price * data.weight)
+        : null;
     else
-      selectedCategory?.priceBasedOnWeight ? data.price = data.price * data.weight : null
+      selectedCategory?.priceBasedOnWeight
+        ? (data.price = data.price * data.weight)
+        : null;
     ////////////
 
     const manualItem = {
@@ -287,8 +305,6 @@ const PointOfSale = () => {
       0,
     );
   };
-
-
 
   const handleValidateCart = async (data: CartSchema) => {
     setPaymentData((prev) => ({
@@ -337,11 +353,12 @@ const PointOfSale = () => {
           category_id: item.category_id,
           subcategory_id: item.subcategory_id,
         })),
-      } satisfies Omit<TransactionModel, "LabeledItems"> & { items: CartItem[] };
+      } satisfies Omit<TransactionModel, "LabeledItems"> & {
+        items: CartItem[];
+      };
       handleSell.mutate(transactionData);
     }
   };
-
 
   if (!activeSession.data) {
     return (
@@ -376,7 +393,6 @@ const PointOfSale = () => {
             <OpenCaisseForm
               formId="OpenCaisseForm"
               onSubmit={handleOpenSession}
-
             />
           </DialogContent>
           <DialogActions>
@@ -524,15 +540,15 @@ const PointOfSale = () => {
                               </Typography>
                               {(item.category_name ||
                                 item.subcategory_name) && (
-                                  <Typography
-                                    variant="body2"
-                                    color="textSecondary"
-                                  >
-                                    {item.category_name}
-                                    {item.subcategory_name &&
-                                      ` > ${item.subcategory_name}`}
-                                  </Typography>
-                                )}
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                >
+                                  {item.category_name}
+                                  {item.subcategory_name &&
+                                    ` > ${item.subcategory_name}`}
+                                </Typography>
+                              )}
                             </Box>
                           </TableCell>
                           <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
@@ -551,9 +567,9 @@ const PointOfSale = () => {
                                   return item.quantity - 1 <= 0
                                     ? remove(index)
                                     : update(index, {
-                                      ...item,
-                                      quantity: item.quantity - 1,
-                                    });
+                                        ...item,
+                                        quantity: item.quantity - 1,
+                                      });
                                 }}
                               >
                                 <Remove />
@@ -598,7 +614,6 @@ const PointOfSale = () => {
               )}
             </Paper>
           </form>
-
         </Grid>
 
         {/* Résumé et paiement */}
@@ -678,7 +693,7 @@ const PointOfSale = () => {
             type="submit"
             form="manualItemForm"
             variant="contained"
-          // disabled={!manualItemData.category_id || !manualItemData.price}
+            // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>
@@ -738,9 +753,7 @@ const PointOfSale = () => {
             form="encaissementForm"
             variant="contained"
             loading={handleSell.isPending}
-            disabled={
-              parseFloat(paymentData.payment_amount) < getCartTotal()
-            }
+            disabled={parseFloat(paymentData.payment_amount) < getCartTotal()}
           >
             {handleSell.isPending ? "Traitement..." : "Valider le Paiement"}
           </Button>
