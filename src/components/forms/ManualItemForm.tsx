@@ -139,7 +139,6 @@ export const ManualItemForm = ({
                     startAdornment: (
                       <Scale sx={{ mr: 1, color: "text.secondary" }} />
                     ),
-                    readOnly: true,
                   },
                 },
               }}
@@ -175,7 +174,6 @@ export const ManualItemForm = ({
                     startAdornment: (
                       <Euro sx={{ mr: 1, color: "text.secondary" }} />
                     ),
-                    readOnly: true,
                   },
                 },
               }}

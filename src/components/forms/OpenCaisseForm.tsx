@@ -124,7 +124,7 @@ export const OpenCaisseForm = ({
                     startAdornment: (
                       <Euro sx={{ mr: 1, color: "text.secondary" }} />
                     ),
-                    readOnly: true,
+                    // readOnly: true,
                     endAdornment: (
                       <InputAdornment position="end">
                         <Button
