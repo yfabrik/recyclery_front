@@ -22,9 +22,13 @@ export const CloseCaisseForm = ({
   onSubmit,
   state,
   setState,
+  closingAmount,
+  setClosingAmount,
 }: BaseFormProps<Schema> & {
   state: "prepare" | "valid";
   setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
+  closingAmount: number;
+  setClosingAmount: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   const form = useForm({
     resolver: zodResolver(schema),
@@ -39,11 +43,16 @@ export const CloseCaisseForm = ({
 
   useEffect(() => {
     setState("prepare");
-  }, [watchedValues,setState]);
+  }, [watchedValues, setState]);
+
+  const submited = (data: Schema) => {
+    if (state == "prepare") setState("valid");
+    else onSubmit(data);
+  };
 
   return (
     <>
-      <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+      <form id={formId} onSubmit={form.handleSubmit(submited)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
             <FormInput
@@ -74,7 +83,6 @@ export const CloseCaisseForm = ({
                     startAdornment: (
                       <Euro sx={{ mr: 1, color: "text.secondary" }} />
                     ),
-                    readOnly: true,
                     endAdornment: (
                       <InputAdornment position="end">
                         <Button
@@ -117,9 +125,12 @@ export const CloseCaisseForm = ({
             />
           </Grid>
         </Grid>
-        <Button 
-          onClick={form.handleSubmit(() => setState("valid"))}
-          sx={{margin :1}}
+        <Button
+          onClick={form.handleSubmit((values) => {
+            setState("valid");
+            setClosingAmount(values.closing_amount);
+          })}
+          sx={{ margin: 1 }}
           type="button"
           variant="contained"
         >
