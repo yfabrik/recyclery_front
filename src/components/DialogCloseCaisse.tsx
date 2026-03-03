@@ -72,12 +72,14 @@ export const DialogCloseCaisse = ({
           onSubmit={handleCloseSession}
           state={state}
           setState={setState}
-          
+          closingAmount={closingAmount}
+          setClosingAmount={setClosingAmount}
         />
         {state == "valid" && (
           <BilanCaissePrint
             session={currentSession}
             transactions={transactions.data?.transactions || []}
+            closingAmount={closingAmount}
           />
         )}
       </DialogContent>

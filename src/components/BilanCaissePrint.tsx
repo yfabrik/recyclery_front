@@ -1,10 +1,5 @@
 import { Print } from "@mui/icons-material";
-import {
-    Box,
-    Button,
-    Stack,
-    Typography
-} from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, TransactionModel } from "../interfaces/Models";
@@ -12,13 +7,25 @@ import type { CashSession, TransactionModel } from "../interfaces/Models";
 interface BilanCaisseProps {
   session: CashSession;
   transactions: TransactionModel[];
-  closingAMount?: number;
+  closingAmount?: number;
 }
 export const BilanCaissePrint = ({
   session,
   transactions,
-  closingAMount,
+  closingAmount,
 }: BilanCaisseProps) => {
+  const expected_amount = useMemo(
+    () =>
+      transactions.reduce(
+        (prev, current) =>
+          current.payment_method == "cash"
+            ? (prev += current.total_amount)
+            : prev,
+        session.opening_amount,
+      ),
+    [transactions, session.opening_amount],
+  );
+
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({
     contentRef,
@@ -97,10 +104,22 @@ export const BilanCaissePrint = ({
               : "pas fermé" + new Date() + " ?"}
           </Typography>
           <Typography> fond de caisse :{session.opening_amount} €</Typography>
-          <Typography> comptage:{session.closing_amount}€</Typography>
+          <Typography>
+            {" "}
+            comptage:{session.closing_amount || closingAmount}€
+          </Typography>
 
-          <Typography> expected:{session.expected_amount}€</Typography>
-          <Typography> difference: {session.difference_amount}€</Typography>
+          <Typography>
+            {" "}
+            expected:{session.expected_amount || expected_amount}€
+          </Typography>
+          <Typography>
+            {" "}
+            difference:{" "}
+            {session.difference_amount ||
+              expected_amount - (closingAmount || 0)}
+            €
+          </Typography>
 
           <Typography>
             {" "}
