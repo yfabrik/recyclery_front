@@ -173,7 +173,8 @@ const PointOfSale = () => {
         customer_name: "",
         customer_email: "",
       });
-      if (window.confirm("Imprimer le ticket de caisse ?")) {//TODO should be detached from the request
+      if (window.confirm("Imprimer le ticket de caisse ?")) {
+        //TODO should be detached from the request
         if (activeSession.data)
           printReceipt(
             data.data.data.sale,
@@ -628,8 +629,24 @@ const PointOfSale = () => {
             <Box
               sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
             >
-              <Typography>Articles:</Typography>
+              <Typography>Types d'articles:</Typography>
               <Typography>{cart.length}</Typography>
+            </Box>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+            >
+              <Typography>Total d'articles:</Typography>
+              <Typography>
+                {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+              </Typography>
+            </Box>
+                        <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+            >
+              <Typography>Poids</Typography>
+              <Typography>
+                {cart.reduce((prev, current) => (prev += (current.weight*current.quantity)), 0)} Kg
+              </Typography>
             </Box>
 
             <Box
