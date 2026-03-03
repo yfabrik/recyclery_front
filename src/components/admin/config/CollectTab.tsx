@@ -104,12 +104,13 @@ export const CollectTab = () => {
     // } else if (collecte?.store_id) {
     //   collecte.location2 = `store.${collecte.store_id}`;
     // }
-    if (collecte)
-      collecte.location = collecte.location
-        ? collecte.location === "" ? [] : collecte.location.split(",")
-        : [];
+    const tmp = {...collecte,location: collecte?.location? collecte.location.split(","):[]}
+    // if (collecte)
+    //   tmp.location = tmp.location
+    //     ? collecte.location === "" ? [] : collecte.location.split(",")//TODO FIXME error si tu essai de reouvrir
+    //     : [];
 
-    setEditingCollecte(collecte);
+    setEditingCollecte(tmp);
     setDialogOpen(true);
   };
   const handleCloseDialog = () => {
