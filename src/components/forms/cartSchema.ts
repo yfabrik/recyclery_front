@@ -13,6 +13,7 @@ export const itemSchema = z.object({
   subcategory_id: idSchema().nullish(),
   description: z.string(),
   weight: z.number(),
+  promotion: z.number(),
   // is_manual: z.boolean().default(false),
 });
 

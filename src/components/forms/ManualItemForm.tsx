@@ -17,6 +17,7 @@ const schema = z.object({
   weight: z.coerce.number().positive(),
   price: z.coerce.number("prix requis").positive("prix requis"),
   description: z.string(),
+  promotion: z.coerce.number().min(0).max(100),
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -38,6 +39,7 @@ export const ManualItemForm = ({
       weight: "",
       price: "",
       description: "",
+      promotion: "",
       ...data,
     },
   });
@@ -71,7 +73,9 @@ export const ManualItemForm = ({
 
   useEffect(() => {
     const category = categories.find((c) => c.id == categoryId);
-    const subcategory = category?.subcategories?.find((c) => c.id == subcategoryId);
+    const subcategory = category?.subcategories?.find(
+      (c) => c.id == subcategoryId,
+    );
     const source = subcategory ?? category;
     if (!source) return;
 
@@ -84,6 +88,8 @@ export const ManualItemForm = ({
     if (currentWeight === 0) {
       form.setValue("weight", source.defaultWeight ?? 0);
     }
+    if (source.isInPromotion && source.promotionValue != 0)
+      form.setValue("promotion", source.promotionValue);
   }, [categoryId, subcategoryId, categories]);
 
   return (
@@ -177,6 +183,15 @@ export const ManualItemForm = ({
                   },
                 },
               }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormInput
+              label="Promotion (%)"
+              control={form.control}
+              name="promotion"
+              extra={{}}
             />
           </Grid>
 

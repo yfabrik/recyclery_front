@@ -16,6 +16,8 @@ export interface CategoryModel extends BaseModel {
   defaultPrice: number;
   IO: number;
   priceBasedOnWeight: boolean
+  isInPromotion:boolean
+  promotionValue:number
 }
 
 export interface SkillModel extends BaseModel {

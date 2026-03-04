@@ -3,6 +3,7 @@ import {
   AccountBalance,
   Add,
   Close,
+  Loyalty,
   Payment,
   PointOfSale as PosIcon,
   QrCodeScanner,
@@ -224,6 +225,8 @@ const PointOfSale = () => {
         const subCategory = categories.data?.find(
           (cat) => cat.id === item.subcategory_id,
         );
+        const source = subCategory ?? category;
+
         const category_name = category?.name ?? "";
         const subcategory_name = subCategory?.name ?? "";
         let itemName = category_name || "Article";
@@ -237,6 +240,7 @@ const PointOfSale = () => {
           name: itemName,
           category_name,
           subcategory_name,
+          promotion: source?.isInPromotion ? source?.promotionValue || 0 : 0,
         });
       }
 
@@ -267,15 +271,9 @@ const PointOfSale = () => {
     if (selectedSubcategory) {
       itemName = `${selectedSubcategory.name} (${selectedCategory?.name})`;
     }
+    const source = selectedSubcategory ?? selectedCategory;
+    if (source?.priceBasedOnWeight) data.price = data.price * data.weight;
 
-    if (selectedSubcategory)
-      selectedSubcategory.priceBasedOnWeight
-        ? (data.price = data.price * data.weight)
-        : null;
-    else
-      selectedCategory?.priceBasedOnWeight
-        ? (data.price = data.price * data.weight)
-        : null;
     ////////////
 
     const manualItem = {
@@ -290,6 +288,7 @@ const PointOfSale = () => {
       price: data.price,
       weight: data.weight,
       quantity: 1,
+      promotion: data.promotion,
 
       // total_price: parseFloat(data.price),
       // is_manual: true, // Flag pour identifier les articles manuels
@@ -304,7 +303,9 @@ const PointOfSale = () => {
 
   const getCartTotal = () => {
     return cart.reduce(
-      (prev, current) => (prev += current.quantity * current.price),
+      (prev, current) =>
+        (prev +=
+          current.quantity * current.price * (1 - current.promotion / 100)),
       0,
     );
   };
@@ -555,7 +556,20 @@ const PointOfSale = () => {
                             </Box>
                           </TableCell>
                           <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
-                          <TableCell>{item.price.toFixed(2)}€</TableCell>
+                          <TableCell>
+                            {item.price.toFixed(2)}€
+                            {item.promotion != 0 && (
+                              <Chip
+                                color="secondary"
+                                icon={<Loyalty />}
+                                sx={{
+                                  marginLeft: 1,
+                                }}
+                                label={`-${item.promotion}%`}
+                                size="small"
+                              />
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Box
                               sx={{
@@ -597,7 +611,12 @@ const PointOfSale = () => {
                           </TableCell>
                           <TableCell>
                             <Typography fontWeight="bold">
-                              {(item.price * item.quantity).toFixed(2)}€
+                              {(
+                                item.price *
+                                item.quantity *
+                                (1 - item.promotion / 100)
+                              ).toFixed(2)}
+                              €
                             </Typography>
                           </TableCell>
                           <TableCell>
