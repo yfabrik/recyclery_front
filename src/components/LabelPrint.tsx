@@ -46,11 +46,6 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
 
   return (
     <div className="label-print-root" style={rootStyle}>
-      <style>{`
-        @page { size: 60mm 45mm; margin: 0; }
-        html, body { margin: 0; padding: 0; }
-        .label-print-root { page-break-inside: avoid; page-break-after: avoid; }
-      `}</style>
       <canvas
         ref={canvasRef}
         style={{ position: "absolute", left: -9999 }}
@@ -106,7 +101,7 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
 };
 
 const printPageStyle = `
-  @page { size: 60mm 45mm; margin: 0; }
+  @page { size: 60mm auto; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; overflow: hidden; }
   .label-print-root { page-break-inside: avoid; page-break-after: avoid; }
 `;
@@ -135,17 +130,18 @@ export function useLabelPrint() {
   const labelPrintNode = (
     <Box
       sx={{
-        position: "absolute",
-        left: -9999,
-        top: 0,
-        zIndex: -1,
-        visibility: "hidden",
-        pointerEvents: "none",
+        display:"none",
+        displayPrint:"block",
+        // position: "absolute",
+        // left: -9999,
+        // top: 0,
+        // zIndex: -1,
+        // visibility: "hidden",
+        // pointerEvents: "none",
       }}
+      ref={labelPrintRef}
     >
-      <div ref={labelPrintRef}>
-        {itemToPrint && <LabelPrintContent item={itemToPrint} />}
-      </div>
+      {itemToPrint && <LabelPrintContent item={itemToPrint} />}
     </Box>
   );
 
