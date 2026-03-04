@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Link, Typography } from "@mui/material";
 
 const Banner = () => {
   const envText = import.meta.env.VITE_BANNER_TEXT;
@@ -24,7 +24,11 @@ const Banner = () => {
       }}
     >
       <Typography variant="body2" align="left">
-        bug trouvé ? bug reporté: <a href={`mailto:${envText}`}> {envText}</a>
+        bug trouvé ? bug reporté:{" "}
+        <Link href={`mailto:${envText}`} color="secondary">
+          {" "}
+          {envText}
+        </Link>
       </Typography>
     </Box>
   );
