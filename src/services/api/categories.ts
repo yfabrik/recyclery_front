@@ -3,8 +3,9 @@ import type { CategoryModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/CategorieForm";
 
+type include = "category" | "parent" | "promo"
 interface filters {
-  include?: "category" | "parent";
+  include?: include | include[];
   only_category?: boolean;
   only_sub?: boolean;
   in?: boolean;
@@ -21,10 +22,12 @@ export const fetchCategoryIcons = () =>
 
 export const fetchCategories = (
   filters?: filters,
-): Promise<AxiosResponse<axiosReturn>> =>
-  axiosInstance.get("/api/categories", {
-    params: filters,
+): Promise<AxiosResponse<axiosReturn>> => {
+  return axiosInstance.get("/api/categories", {
+    params: { ...filters, include: filters?.include?.toString() },
   });
+}
+
 /**
  * @deprecated use fetch categorie with filters
  */

@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import {
   FormIconSelect,
@@ -21,8 +21,8 @@ export const schema = z.object({
   defaultWeight: z.coerce.number().nonnegative().default(0),
   parent_id: idSchema().nullable(),
   priceBasedOnWeight: z.boolean().default(false),
-  isInPromotion: z.boolean().default(false),
-  promotionValue: z.coerce.number().min(0).max(100),
+  bundlePrice: z.union([nullString(), z.coerce.number("nombre attendu").nonnegative("le nombre doit etre positif")]),
+  bundleQuantity: z.union([nullString(), z.coerce.number("nombre attendu").nonnegative("le nombre doit etre positif")]),
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -44,15 +44,14 @@ export const CategorieForm = ({
       defaultWeight: 0,
       parent_id: null,
       priceBasedOnWeight: false,
-      isInPromotion: false,
-      promotionValue: 0,
+      bundlePrice: "",
+      bundleQuantity: "",
       ...data,
     },
     resolver: zodResolver(schema),
   });
 
   const prixAuKg = form.watch("priceBasedOnWeight");
-  const isInPromotion = form.watch("isInPromotion");
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <FormInput
@@ -80,6 +79,25 @@ export const CategorieForm = ({
         name="defaultPrice"
         extra={{ margin: "normal" }}
       />
+
+      <FormInput
+        control={form.control}
+        label="produits par lots"
+        name="bundleQuantity"
+        extra={{
+          type: "number",
+          margin: "normal",
+        }}
+      />
+      <FormInput
+        control={form.control}
+        label="prix des lots"
+        name="bundlePrice"
+        extra={{
+          type: "number",
+          margin: "normal",
+        }}
+      />
       <FormInput
         control={form.control}
         label="Description"
@@ -90,22 +108,7 @@ export const CategorieForm = ({
           margin: "normal",
         }}
       />
-      <FormSwitch
-        control={form.control}
-        label="en Promo"
-        name="isInPromotion"
-      />
-      {isInPromotion && (
-        <FormInput
-          control={form.control}
-          label="promotion en %"
-          name="promotionValue"
-          extra={{
-            type: "number",
-            margin: "normal",
-          }}
-        />
-      )}
+
 
       <FormIconSelect
         control={form.control}

@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AccountBalance,
   Add,
+  Backpack,
   Close,
   Loyalty,
   Payment,
@@ -37,14 +38,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
 import {
   schema,
   type CartItem,
   type Schema as CartSchema,
 } from "../components/forms/cartSchema";
 import {
-  CloseCaisseForm,
-  type Schema as CloseCaisseSchema,
+  type Schema as CloseCaisseSchema
 } from "../components/forms/CloseCaisseForm";
 import {
   EncaissementForm,
@@ -69,7 +70,6 @@ import {
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 import { printReceipt } from "../services/printService";
-import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
 const PointOfSale = () => {
   const { user } = useAuth();
 
@@ -112,10 +112,10 @@ const PointOfSale = () => {
   const categories = useQuery({
     queryKey: [
       "categories",
-      { include: "category", only_category: true, sell: true },
+      { include: ["category", "promo"], only_category: true, sell: true },
     ],
     queryFn: () =>
-      fcat({ include: "category", only_category: true, sell: true }).then(
+      fcat({ include: ["category", "promo"], only_category: true, sell: true }).then(
         (response) => response.data.categories,
       ),
   });
@@ -240,7 +240,9 @@ const PointOfSale = () => {
           name: itemName,
           category_name,
           subcategory_name,
-          promotion: source?.isInPromotion ? source?.promotionValue || 0 : 0,
+          promotion: source?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0,
+          bundlePrice: source?.bundlePrice,
+          bundleQuantity: source?.bundleQuantity
         });
       }
 
@@ -289,6 +291,8 @@ const PointOfSale = () => {
       weight: data.weight,
       quantity: 1,
       promotion: data.promotion,
+      bundlePrice: source?.bundlePrice,
+      bundleQuantity: source?.bundleQuantity
 
       // total_price: parseFloat(data.price),
       // is_manual: true, // Flag pour identifier les articles manuels
@@ -301,14 +305,30 @@ const PointOfSale = () => {
     toast.success(`${itemName} ajouté au panier`);
   };
 
+
+
+  const getCartLinePrice = (line: CartItem): number => {
+
+    let bundles = 0
+    let extraItems = line.quantity
+    if (line.bundleQuantity && line.bundleQuantity !== 0) {
+      bundles = Math.trunc(line.quantity / line.bundleQuantity)
+      extraItems = line.quantity % line.bundleQuantity
+    }
+    const sum = (price: number, quantity: number) => price * quantity * (1 - line.promotion / 100)
+    return (
+      sum(line.price, extraItems) + sum(line.bundlePrice || line.price, bundles)
+    )
+  }
   const getCartTotal = () => {
     return cart.reduce(
       (prev, current) =>
-        (prev +=
-          current.quantity * current.price * (1 - current.promotion / 100)),
+      (prev +=
+        getCartLinePrice(current)),
       0,
     );
   };
+
 
   const handleValidateCart = async (data: CartSchema) => {
     setPaymentData((prev) => ({
@@ -544,15 +564,15 @@ const PointOfSale = () => {
                               </Typography>
                               {(item.category_name ||
                                 item.subcategory_name) && (
-                                <Typography
-                                  variant="body2"
-                                  color="textSecondary"
-                                >
-                                  {item.category_name}
-                                  {item.subcategory_name &&
-                                    ` > ${item.subcategory_name}`}
-                                </Typography>
-                              )}
+                                  <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                  >
+                                    {item.category_name}
+                                    {item.subcategory_name &&
+                                      ` > ${item.subcategory_name}`}
+                                  </Typography>
+                                )}
                             </Box>
                           </TableCell>
                           <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
@@ -584,9 +604,9 @@ const PointOfSale = () => {
                                   return item.quantity - 1 <= 0
                                     ? remove(index)
                                     : update(index, {
-                                        ...item,
-                                        quantity: item.quantity - 1,
-                                      });
+                                      ...item,
+                                      quantity: item.quantity - 1,
+                                    });
                                 }}
                               >
                                 <Remove />
@@ -607,15 +627,22 @@ const PointOfSale = () => {
                               >
                                 <Add />
                               </IconButton>
+                              {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity > item.bundleQuantity &&
+                                <Chip
+                                  color="secondary"
+                                  icon={<Backpack />}
+                                  sx={{
+                                    marginLeft: 1,
+                                  }}
+                                  label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
+                                  size="small"
+                                />
+                              }
                             </Box>
                           </TableCell>
                           <TableCell>
                             <Typography fontWeight="bold">
-                              {(
-                                item.price *
-                                item.quantity *
-                                (1 - item.promotion / 100)
-                              ).toFixed(2)}
+                              {getCartLinePrice(item).toFixed(2)}
                               €
                             </Typography>
                           </TableCell>
@@ -736,7 +763,7 @@ const PointOfSale = () => {
             type="submit"
             form="manualItemForm"
             variant="contained"
-            // disabled={!manualItemData.category_id || !manualItemData.price}
+          // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>

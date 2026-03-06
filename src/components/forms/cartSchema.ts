@@ -14,6 +14,8 @@ export const itemSchema = z.object({
   description: z.string(),
   weight: z.number(),
   promotion: z.number(),
+  bundlePrice: z.number().nullish(),
+  bundleQuantity: z.number().nullish(),
   // is_manual: z.boolean().default(false),
 });
 
@@ -22,4 +24,5 @@ export const schema = z.object({
 });
 
 export type Schema = z.infer<typeof schema>;
-export type CartItem = Schema["cart"][number];
+export type CartItem = z.infer<typeof itemSchema>
+// export type CartItem = Schema["cart"][number];

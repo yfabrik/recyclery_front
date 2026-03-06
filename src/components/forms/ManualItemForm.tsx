@@ -4,12 +4,12 @@ import { useForm, useWatch } from "react-hook-form";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
 import { Euro, Scale } from "@mui/icons-material";
+import { useEffect } from "react";
 import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
-import { usePrompt } from "../Prompt";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
-import { useEffect } from "react";
+import { usePrompt } from "../Prompt";
 
 const schema = z.object({
   category_id: idSchema("categorie requis"),
@@ -44,6 +44,9 @@ export const ManualItemForm = ({
     },
   });
 
+
+
+
   const SubCategories = ({ control }: { control: typeof form.control }) => {
     const category = useWatch({
       control: control,
@@ -51,6 +54,7 @@ export const ManualItemForm = ({
     });
     const subcats =
       categories.find((c) => c.id == category)?.subcategories ?? [];
+    if (subcats.length === 0) return
     return (
       <FormSelect
         control={control}
@@ -72,6 +76,12 @@ export const ManualItemForm = ({
   const subcategoryId = form.watch("subcategory_id");
 
   useEffect(() => {
+    const priceState = form.getFieldState("price")
+    const weightState = form.getFieldState("weight")
+    const promoState = form.getFieldState("promotion")
+
+    const promoValue = (form.getValues("promotion") || 0) as number
+
     const category = categories.find((c) => c.id == categoryId);
     const subcategory = category?.subcategories?.find(
       (c) => c.id == subcategoryId,
@@ -79,17 +89,17 @@ export const ManualItemForm = ({
     const source = subcategory ?? category;
     if (!source) return;
 
-    const currentPrice = Number(form.getValues("price"));
-    const currentWeight = Number(form.getValues("weight"));
-
-    if (currentPrice === 0) {
+    if (!priceState.isDirty) {
       form.setValue("price", source.defaultPrice ?? 0);
     }
-    if (currentWeight === 0) {
+    if (!weightState.isDirty) {
       form.setValue("weight", source.defaultWeight ?? 0);
     }
-    if (source.isInPromotion && source.promotionValue != 0)
-      form.setValue("promotion", source.promotionValue);
+    const promo = source.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
+    if (!promoState.isDirty || promo > (promoValue)) {
+      form.setValue("promotion", promo);
+    }
+
   }, [categoryId, subcategoryId, categories]);
 
   return (
@@ -132,6 +142,10 @@ export const ManualItemForm = ({
                         unit: "Kg",
                       },
                     ),
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true
+                    }
                   ),
                 sx: {
                   "& .MuiInputBase-input": {
@@ -167,6 +181,10 @@ export const ManualItemForm = ({
                         unit: "€",
                       },
                     ),
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true
+                    }
                   ),
                 sx: {
                   "& .MuiInputBase-input": {
