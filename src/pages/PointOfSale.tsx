@@ -627,7 +627,7 @@ const PointOfSale = () => {
                               >
                                 <Add />
                               </IconButton>
-                              {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity > item.bundleQuantity &&
+                              {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity >= item.bundleQuantity &&
                                 <Chip
                                   color="secondary"
                                   icon={<Backpack />}
