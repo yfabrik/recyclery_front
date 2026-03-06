@@ -16,9 +16,9 @@ export interface CategoryModel extends BaseModel {
   defaultPrice: number;
   IO: number;
   priceBasedOnWeight: boolean
-  bundlePrice:number
-  bundleQuantity:number
-  Promotions?:PromoModel[]
+  bundlePrice: number
+  bundleQuantity: number
+  Promotions?: PromoModel[]
 
 }
 
@@ -301,9 +301,9 @@ export interface WasteModel extends BaseModel {
 
 export interface PromoModel extends BaseModel {
   category_id: number
-  subcategory_id: number | null
   promotionValue: number
   startDate: string
   endDate: string | null
-  isActive:boolean
+  isActive: boolean
+  Category?: CategoryModel
 }
