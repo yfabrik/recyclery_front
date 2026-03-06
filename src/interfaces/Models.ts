@@ -295,3 +295,13 @@ export interface WasteModel extends BaseModel {
   created_by: number;
   User?: UserModel;
 }
+
+
+export interface PromoModel extends BaseModel {
+  category_id: number
+  subcategory_id: number | null
+  promotionValue: number
+  startDate: string
+  endDate: string | null
+  isActive:boolean
+}

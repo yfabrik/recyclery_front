@@ -2,6 +2,7 @@ import {
   Category,
   FireTruck,
   LocationOn,
+  Loyalty,
   Nature,
   People,
   Psychology,
@@ -16,6 +17,7 @@ import { EcoOrganismsTab } from "./config/EcoOrganismsTab";
 import { SkillsTab } from "./config/SkillsTab";
 import EmployeeManagement from "./config/EmployeeManagement";
 import StoresTab from "./config/StoresTab";
+import { PromoTab } from "./config/PromoTab";
 
 const CONFIG_BASE = "/admin/config";
 
@@ -141,6 +143,17 @@ export const ConfigurationTab = () => {
             "&.Mui-selected": { color: "#0288d1", backgroundColor: "#e1f5fe" },
           }}
         />
+        <Tab
+          component={Link}
+          label="Promotions"
+          to={`${CONFIG_BASE}/promotions`}
+          value={`${CONFIG_BASE}/promotions`}
+          icon={<Loyalty />}
+          iconPosition="start"
+          sx={{
+            "&.Mui-selected": { color: "#0288d1", backgroundColor: "#e1f5fe" },
+          }}
+        />
       </Tabs>
 
       <Box sx={{ p: 3 }}>
@@ -153,6 +166,8 @@ export const ConfigurationTab = () => {
           <Route path="employees" element={<EmployeeManagement />} />
           <Route path="logistic" element={<CollectTab />} />
           <Route path="skills" element={<SkillsTab />} />
+          <Route path="promotions" element={<PromoTab />} />
+
         </Routes>
       </Box>
     </Box>
