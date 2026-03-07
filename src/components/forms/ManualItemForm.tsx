@@ -95,7 +95,7 @@ export const ManualItemForm = ({
     if (!weightState.isDirty) {
       form.setValue("weight", source.defaultWeight ?? 0);
     }
-    const promo = source.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
+    const promo = (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subcategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0)
     if (!promoState.isDirty || promo > (promoValue)) {
       form.setValue("promotion", promo);
     }

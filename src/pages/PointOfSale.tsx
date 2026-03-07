@@ -240,7 +240,7 @@ const PointOfSale = () => {
           name: itemName,
           category_name,
           subcategory_name,
-          promotion: source?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0,
+          promotion: (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subCategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0),
           bundlePrice: source?.bundlePrice,
           bundleQuantity: source?.bundleQuantity
         });
