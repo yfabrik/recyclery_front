@@ -10,23 +10,33 @@ interface transactionsFilters {
   session?: number;
   payment_method?: TransactionModel["payment_method"];
 }
+interface Stats {
+  total_transactions: number,
+  total_sales: number,
+  total_sales_before_refunds: number,
+  total_refunded: number,
+  average_transaction: number,
+  sessions_count: number,
+  payment_methods: { count: number, payment_method: TransactionModel["payment_method"], total: number }[],
+}
+
 
 export const getTransactions = (
   filters: transactionsFilters | null = null,
 ): Promise<
-  AxiosResponse<{ success: boolean; transactions: TransactionModel[] }>
+  AxiosResponse<{ success: true; transactions: TransactionModel[] }>
 > => axiosInstance.get("/api/sales-transactions", { params: filters });
 
 export const getTranscationStats = (
   filters: transactionsFilters | null = null,
-) =>
+): Promise<AxiosResponse<{ stats: Stats }>> =>
   axiosInstance.get("/api/sales-transactions/stats/summary", {
     params: filters,
   });
 
 export const getTranscationPostalStats = (
   filters: transactionsFilters | null = null,
-) =>
+): Promise<AxiosResponse<{ postal_codes: { customer_postal_code: string,transaction_count:number, total_sales: number, average_transaction: number }[] }>> =>
   axiosInstance.get("/api/sales-transactions/stats/postal-codes", {
     params: filters,
   });

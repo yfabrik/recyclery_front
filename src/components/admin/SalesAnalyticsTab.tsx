@@ -51,6 +51,11 @@ import {
   getTranscationPostalStats,
   getTranscationStats,
 } from "../../services/api/transactions";
+import { useForm } from "react-hook-form";
+import { FormDate, FormInput, FormSelect } from "../forms/FormBase";
+import z from "zod";
+import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface refund {
   id?: number;
@@ -63,9 +68,32 @@ interface refund {
   status: string;
 }
 
+
+
 export const SalesAnalyticsTab = () => {
-  const [salesData, setSalesData] = useState<TransactionModel[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const filterSchema = z.object({
+    store_id: [idSchema(), nullString()],
+    date_from: z.coerce.date().transform(val => val.toISOString().slice(0, 10)),
+    date_to: z.coerce.date().transform(val => val.toISOString().slice(0, 10)),
+    transaction_number: [z.string().trim().nonempty(), nullString()]
+  })
+  type Filters = z.infer<typeof filterSchema>
+
+  // const filters = useForm({
+  //   defaultValues: {
+  //     store_id: "",
+  //     period: "month", // 'week', 'month', 'custom'
+  //     date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  //       .toISOString()
+  //       .split("T")[0],
+  //     date_to: new Date().toISOString().split("T")[0],
+  //     transaction_number: "", // Recherche par numéro de transaction
+  //   },
+  //   resolver:zodResolver(filterSchema)
+  // })
+  // const [salesData, setSalesData] = useState<TransactionModel[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     store_id: "",
     period: "month", // 'week', 'month', 'custom'
@@ -75,16 +103,16 @@ export const SalesAnalyticsTab = () => {
     date_to: new Date().toISOString().split("T")[0],
     transaction_number: "", // Recherche par numéro de transaction
   });
-  const [statistics, setStatistics] = useState({
-    total_transactions: 0,
-    total_sales: 0,
-    total_sales_before_refunds: 0,
-    total_refunded: 0,
-    average_transaction: 0,
-    sessions_count: 0,
-    payment_methods: [],
-  });
-  const [postalCodeStats, setPostalCodeStats] = useState([]);
+  // const [statistics, setStatistics] = useState({
+  //   total_transactions: 0,
+  //   total_sales: 0,
+  //   total_sales_before_refunds: 0,
+  //   total_refunded: 0,
+  //   average_transaction: 0,
+  //   sessions_count: 0,
+  //   payment_methods: [],
+  // });
+  // const [postalCodeStats, setPostalCodeStats] = useState([]);
 
   // États pour la pop-up de remboursement
   const [refundDialog, setRefundDialog] = useState(false);
@@ -118,13 +146,13 @@ export const SalesAnalyticsTab = () => {
   });
 
 
-  useEffect(() => {
-    fetchSalesData();
-  }, [filters]);
+  // useEffect(() => {
+  //   fetchSalesData();
+  // }, [filters]);
 
 
   const queryClient = useQueryClient()
-  
+
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
     queryFn: () => fStore({ active: true }).then(response => response.data.stores)
@@ -147,49 +175,72 @@ export const SalesAnalyticsTab = () => {
 
   //   }
   // })
+  const transactions = useQuery({
+    queryKey: ["transactions", filters],
+    queryFn: () => getTransactions(filters).then(response => response.data.transactions)
+  })
+  const statistics = useQuery({
+    queryKey: ["transactionsStats", filters],
+    queryFn: () => getTranscationStats(filters).then(response => response.data.stats),
+    // placeholderData: {
+    //   stats: {
+    //     total_transactions: 0,
+    //     total_sales: 0,
+    //     total_sales_before_refunds: 0,
+    //     total_refunded: 0,
+    //     average_transaction: 0,
+    //     sessions_count: 0,
+    //     payment_methods: []
+    //   }
+    // }
+  })
+  const postalCodeStats = useQuery({
+    queryKey: ["transactionsPostalStats", filters],
+    queryFn: () => getTranscationPostalStats(filters).then(response => response.data.postal_codes)
+  })
 
-  const fetchSalesData = async () => {
-    try {
-      setLoading(true);
-      // Préparer les paramètres pour l'API (sans transaction_number pour l'instant)
-      const apiParams = {
-        store_id: filters.store_id,
-        period: filters.period,
-        date_from: filters.date_from,
-        date_to: filters.date_to,
-      };
+  // const fetchSalesData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // Préparer les paramètres pour l'API (sans transaction_number pour l'instant)
+  //     const apiParams = {
+  //       store_id: filters.store_id,
+  //       period: filters.period,
+  //       date_from: filters.date_from,
+  //       date_to: filters.date_to,
+  //     };
 
-      // Récupérer les transactions
-      const transactionsResponse = await getTransactions(apiParams);
-      // Récupérer les statistiques
-      const statsResponse = await getTranscationStats(apiParams);
-      // Récupérer les statistiques par code postal
-      const postalResponse = await getTranscationPostalStats(apiParams);
+  //     // Récupérer les transactions
+  //     const transactionsResponse = await getTransactions(apiParams);
+  //     // Récupérer les statistiques
+  //     const statsResponse = await getTranscationStats(apiParams);
+  //     // Récupérer les statistiques par code postal
+  //     const postalResponse = await getTranscationPostalStats(apiParams);
 
-      let transactions = transactionsResponse.data.transactions || [];
+  //     let transactions = transactionsResponse.data.transactions || [];
 
-      // Filtrage côté client par numéro de transaction si spécifié
-      if (filters.transaction_number) {
-        transactions = transactions.filter(
-          (transaction: TransactionModel) =>
-            transaction.id &&
-            transaction.id.toString().includes(filters.transaction_number),
-        );
-      }
+  //     // Filtrage côté client par numéro de transaction si spécifié
+  //     if (filters.transaction_number) {
+  //       transactions = transactions.filter(
+  //         (transaction: TransactionModel) =>
+  //           transaction.id &&
+  //           transaction.id.toString().includes(filters.transaction_number),
+  //       );
+  //     }
 
-      setSalesData(transactions);
-      setStatistics(statsResponse.data.stats || {});
-      setPostalCodeStats(postalResponse.data.postal_codes || []);
+  //     setSalesData(transactions);
+  //     setStatistics(statsResponse.data.stats || {});
+  //     setPostalCodeStats(postalResponse.data.postal_codes || []);
 
-      // Récupérer les remboursements pour toutes les transactions
-      // await fetchAllTransactionRefunds(transactions);
-    } catch (error) {
-      console.error("Erreur lors du chargement des données de vente:", error);
-      toast.error("Erreur lors du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Récupérer les remboursements pour toutes les transactions
+  //     // await fetchAllTransactionRefunds(transactions);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des données de vente:", error);
+  //     toast.error("Erreur lors du chargement des données");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handlePeriodChange = (period: string) => {
     const today = new Date();
@@ -316,7 +367,7 @@ export const SalesAnalyticsTab = () => {
       toast.success("Remboursement effectué avec succès");
       setRefundDialog(false);
       setSelectedTransaction(null);
-      fetchSalesData(); // Recharger les données
+      // fetchSalesData(); // Recharger les données
     } catch (error) {
       console.error("Erreur lors du remboursement:", error);
       toast.error("Erreur lors du remboursement");
@@ -398,7 +449,7 @@ export const SalesAnalyticsTab = () => {
       toast.success("Avoir créé avec succès");
       setCreditNoteDialog(false);
       setSelectedTransactionForCredit(null);
-      fetchSalesData(); // Recharger les données
+      // fetchSalesData(); // Recharger les données
     } catch (error) {
       console.error("Erreur lors de la création de l'avoir:", error);
       toast.error("Erreur lors de la création de l'avoir");
@@ -450,7 +501,8 @@ export const SalesAnalyticsTab = () => {
     }
   };
 
-  if (loading) {
+
+  if (transactions.isLoading || statistics.isLoading || postalCodeStats.isLoading) {
     return (
       <Box
         sx={{
@@ -481,11 +533,11 @@ export const SalesAnalyticsTab = () => {
         <Button
           variant="contained"
           startIcon={<Refresh />}
-          onClick={fetchSalesData}
-          disabled={loading}
+          // onClick={fetchSalesData}
+          // disabled={loading}
           sx={{ minWidth: 140 }}
         >
-          {loading ? "Chargement..." : "Actualiser"}
+          {/* {loading ? "Chargement..." : "Actualiser"} */}
         </Button>
       </Box>
       {/* Filtres */}
@@ -502,6 +554,16 @@ export const SalesAnalyticsTab = () => {
         <Grid container spacing={2} alignItems="center">
           {/* Filtre par magasin */}
           <Grid size={{ xs: 12, md: 3 }}>
+            {/* <FormSelect control={filters.control} name="store_id" label="Magasin" >
+              <MenuItem key="all-stores" value="">
+                Tous les magasins
+              </MenuItem>
+              {stores.data?.map((store) => (
+                <MenuItem key={store.id} value={store.id}>
+                  {store.name}
+                </MenuItem>
+              ))}
+            </FormSelect> */}
             <FormControl fullWidth>
               <InputLabel>Magasin</InputLabel>
               <Select
@@ -525,6 +587,17 @@ export const SalesAnalyticsTab = () => {
 
           {/* Filtre par période */}
           <Grid size={{ xs: 12, md: 3 }}>
+            {/* <FormSelect control={filters.control} name="period" label="Période">
+              <MenuItem key="week" value="week">
+                Cette semaine
+              </MenuItem>
+              <MenuItem key="month" value="month">
+                Ce mois
+              </MenuItem>
+              <MenuItem key="custom" value="custom">
+                Personnalisée
+              </MenuItem>
+            </FormSelect> */}
             <FormControl fullWidth>
               <InputLabel>Période</InputLabel>
               <Select
@@ -549,6 +622,8 @@ export const SalesAnalyticsTab = () => {
           {filters.period === "custom" && (
             <>
               <Grid size={{ xs: 12, md: 3 }}>
+                {/* <FormDate control={filters.control} label="Date de début" name="date_from" /> */}
+
                 <TextField
                   fullWidth
                   label="Date de début"
@@ -564,6 +639,8 @@ export const SalesAnalyticsTab = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
+                {/* <FormDate control={filters.control} label="Date de fin" name="date_to" /> */}
+
                 <TextField
                   fullWidth
                   label="Date de fin"
@@ -580,6 +657,23 @@ export const SalesAnalyticsTab = () => {
 
           {/* Recherche par numéro de transaction */}
           <Grid size={{ xs: 12, md: 3 }}>
+            {/* <FormInput control={filters.control} name="transaction_number" label="N° de transaction" extra={{
+              placeholder: "Ex: 20231215-001",
+              slotProps: {
+                input: {
+                  endAdornment:
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        filters.resetField('transaction_number')
+                      }
+                      edge="end"
+                    >
+                      <Clear />
+                    </IconButton>
+                }
+              }
+            }} /> */}
             <TextField
               fullWidth
               label="N° de transaction"
@@ -617,6 +711,11 @@ export const SalesAnalyticsTab = () => {
           {/* Bouton pour effacer tous les filtres */}
           <Grid size={{ xs: 12 }}>
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+              {/* <Button
+                variant="outlined"
+                startIcon={<Clear />}
+                onClick={() => filters.reset()}
+              >Effacer tous les filtres</Button> */}
               <Button
                 variant="outlined"
                 startIcon={<Clear />}
@@ -649,7 +748,7 @@ export const SalesAnalyticsTab = () => {
           <Card>
             <CardContent sx={{ textAlign: "center" }}>
               <Typography variant="h4" color="primary" fontWeight="bold">
-                {statistics.total_transactions || 0}
+                {statistics.data?.total_transactions || 0}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Transactions totales
@@ -662,12 +761,12 @@ export const SalesAnalyticsTab = () => {
           <Card>
             <CardContent sx={{ textAlign: "center" }}>
               <Typography variant="h4" color="success.main" fontWeight="bold">
-                {formatCurrency(statistics.total_sales)}
+                {formatCurrency(statistics.data?.total_sales || 0)}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Chiffre d'affaires net
               </Typography>
-              {statistics.total_refunded > 0 && (
+              {statistics.data?.total_refunded || 0 > 0 && (
                 <Box sx={{ mt: 1 }}>
                   <Typography
                     variant="caption"
@@ -676,12 +775,12 @@ export const SalesAnalyticsTab = () => {
                   >
                     Brut:{" "}
                     {formatCurrency(
-                      statistics.total_sales_before_refunds ||
-                      statistics.total_sales,
+                      statistics.data?.total_sales_before_refunds ||
+                      statistics.data?.total_sales || 0
                     )}
                   </Typography>
                   <Typography variant="caption" color="error" display="block">
-                    Remboursé: -{formatCurrency(statistics.total_refunded)}
+                    Remboursé: -{formatCurrency(statistics.data?.total_refunded || 0)}
                   </Typography>
                 </Box>
               )}
@@ -693,7 +792,7 @@ export const SalesAnalyticsTab = () => {
           <Card>
             <CardContent sx={{ textAlign: "center" }}>
               <Typography variant="h4" color="info.main" fontWeight="bold">
-                {formatCurrency(statistics.average_transaction)}
+                {formatCurrency(statistics.data?.average_transaction || 0)}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Panier moyen
@@ -706,7 +805,7 @@ export const SalesAnalyticsTab = () => {
           <Card>
             <CardContent sx={{ textAlign: "center" }}>
               <Typography variant="h4" color="warning.main" fontWeight="bold">
-                {statistics.sessions_count || 0}
+                {statistics.data?.sessions_count || 0}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Sessions de caisse
@@ -718,15 +817,15 @@ export const SalesAnalyticsTab = () => {
       {/* Répartition par mode de paiement et codes postaux */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {/* Répartition par mode de paiement */}
-        {statistics.payment_methods &&
-          statistics.payment_methods.length > 0 && (
+        {statistics.data?.payment_methods &&
+          statistics.data?.payment_methods.length > 0 && (
             <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     💳 Répartition par mode de paiement
                   </Typography>
-                  {statistics.payment_methods.map((method, index) => (
+                  {statistics.data?.payment_methods.map((method, index) => (
                     <Box key={index} sx={{ mb: 2 }}>
                       <Box
                         sx={{
@@ -741,7 +840,7 @@ export const SalesAnalyticsTab = () => {
                         <Typography variant="body2" fontWeight="bold">
                           {method.count} (
                           {(
-                            (method.count / statistics.total_transactions) *
+                            (method.count / statistics.data?.total_transactions) *
                             100
                           ).toFixed(1)}
                           %)
@@ -773,7 +872,7 @@ export const SalesAnalyticsTab = () => {
           )}
 
         {/* Statistiques par code postal */}
-        {postalCodeStats.length > 0 && (
+        {postalCodeStats.data && postalCodeStats.data.length > 0 && (
           <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
@@ -787,7 +886,7 @@ export const SalesAnalyticsTab = () => {
                 >
                   Les 10 codes postaux générant le plus de chiffre d'affaires
                 </Typography>
-                {postalCodeStats.slice(0, 10).map((postal, index) => (
+                {postalCodeStats.data?.slice(0, 10).map((postal, index) => (
                   <Box key={index} sx={{ mb: 2 }}>
                     <Box
                       sx={{
@@ -819,7 +918,7 @@ export const SalesAnalyticsTab = () => {
                         {formatCurrency(postal.average_transaction)}
                       </Typography>
                     </Box>
-                    {index < postalCodeStats.slice(0, 10).length - 1 && (
+                    {index < postalCodeStats.data?.slice(0, 10).length - 1 && (
                       <Divider sx={{ mt: 1 }} />
                     )}
                   </Box>
@@ -843,8 +942,8 @@ export const SalesAnalyticsTab = () => {
             <Typography variant="h6">📋 Détail des transactions</Typography>
             {filters.transaction_number && (
               <Chip
-                label={`Filtré par: ${filters.transaction_number} (${salesData.length
-                  } résultat${salesData.length > 1 ? "s" : ""})`}
+                label={`Filtré par: ${filters.transaction_number} (${transactions.data?.length
+                  } résultat${transactions.data?.length||0 > 1 ? "s" : ""})`}
                 color="primary"
                 variant="outlined"
                 onDelete={() =>
@@ -855,7 +954,7 @@ export const SalesAnalyticsTab = () => {
             )}
           </Box>
 
-          {salesData.length === 0 ? (
+          {transactions.data?.length === 0 ? (
             <Alert severity="info">
               Aucune transaction trouvée pour la période sélectionnée.
             </Alert>
@@ -875,7 +974,7 @@ export const SalesAnalyticsTab = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {salesData.map((transaction) => (
+                  {transactions.data?.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <Typography variant="body2" fontWeight="bold">
