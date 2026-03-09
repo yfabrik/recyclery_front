@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import JsBarcode from "jsbarcode";
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -33,70 +33,41 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
 
   const rootStyle: CSSProperties = {
     width: "60mm",
-    height: "45mm",
+    // height: "45mm",
     margin: 0,
     // padding: "2mm",
-    fontFamily: "Arial, sans-serif",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    boxSizing: "border-box",
+    // fontFamily: "Arial, sans-serif",
+    // display: "flex",
+    // flexDirection: "column",
+    // alignItems: "center",
+    // justifyContent: "flex-start",
+    // boxSizing: "border-box",
   };
 
   return (
-    <div className="label-print-root" style={rootStyle}>
-      <canvas
-        ref={canvasRef}
-        style={{ position: "absolute", left: -9999 }}
-        aria-hidden
-      />
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: "1mm",
-          padding: "0 1mm",
-        }}
-      >
-        {barcodeDataUrl && <img src={barcodeDataUrl} alt="Code-barres" />}
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontSize: 14,
-          marginTop: "0.5mm",
-        }}
-      >
-        <span style={{ fontWeight: "bold", color: "#d32f2f" }}>
-          {item.price.toFixed(2)} €
-        </span>
-        <span>
+    <Box sx={{ ...rootStyle }}>
+      <Grid container>
+        <Grid size={12}>
+          <canvas ref={canvasRef} />
+        </Grid>
+        <Grid size={6}>
+          <Typography fontWeight={"bold"}>
+            {" "}
+            {item.price.toFixed(2)} €
+          </Typography>
+        </Grid>
+        <Grid size={6}>
+          {" "}
           {new Date(item.createdAt).toLocaleDateString("fr-FR", {
             day: "2-digit",
             month: "2-digit",
             year: "numeric",
           })}
-        </span>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: "0.3mm",
-        }}
-      >
-        <span>{item.weight ? `${item.weight} kg` : ""}</span>
-        <span style={{ color: "#666" }}>{categoryLine}</span>
-      </div>
-    </div>
+        </Grid>
+        <Grid size={6}>{item.weight ? `${item.weight} kg` : ""}</Grid>
+        <Grid size={6}>{categoryLine}</Grid>
+      </Grid>
+    </Box>
   );
 };
 
@@ -130,8 +101,8 @@ export function useLabelPrint() {
   const labelPrintNode = (
     <Box
       sx={{
-        display:"none",
-        displayPrint:"block",
+        display: "none",
+        displayPrint: "block",
         // position: "absolute",
         // left: -9999,
         // top: 0,
