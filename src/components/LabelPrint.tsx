@@ -29,18 +29,18 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
     .join(" > ");
 
   return (
-    <Box sx={{ width: "60mm", margin: 0, paddingLeft: "3mm" }} className="label-print-root">
+    <Box sx={{ width: "60mm", margin: 0 }} className="label-print-root">
       <Grid container>
-        <Grid size={12}>
+        <Grid size={12} sx={{ display: "flex", justifyContent: "center" }}>
           <svg ref={canvasRef} />
         </Grid>
-        <Grid size={6}>
+        <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>
           <Typography fontWeight="bold">
             {" "}
             {item.price.toFixed(2)} €
           </Typography>
         </Grid>
-        <Grid size={6}>
+        <Grid size={8}sx={{ display: "flex", justifyContent: "center" }}>
           {" "}
           {new Date(item.createdAt).toLocaleDateString("fr-FR", {
             day: "2-digit",
@@ -48,8 +48,8 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
             year: "numeric",
           })}
         </Grid>
-        <Grid size={6}>{item.weight ? `${item.weight} kg` : ""}</Grid>
-        <Grid size={6}>
+        <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>{item.weight ? `${item.weight} kg` : ""}</Grid>
+        <Grid size={8} sx={{ display: "flex", justifyContent: "center" }}>
           <Typography
             variant="caption"
             sx={{
@@ -87,11 +87,13 @@ export function useLabelPrint() {
       ? `Étiquette - ${itemToPrint.barcode}`
       : "Étiquette",
   });
+  
 
   useEffect(() => {
     if (!itemToPrint) return;
-    const t = setTimeout(() => handlePrint(), 300);
-    return () => clearTimeout(t);
+    handlePrint()
+    // const t = setTimeout(() => handlePrint(), 300);
+    // return () => clearTimeout(t);
   }, [itemToPrint, handlePrint]);
 
   const triggerPrintLabel = (item: LabeledItemModel) => setItemToPrint(item);
