@@ -6,8 +6,8 @@ import type { LabeledItemModel } from "../interfaces/Models";
 
 const barcodeOptions = {
   format: "CODE128" as const,
-  width: 2,
-  height: 80,
+  width: 1.5,
+  height: 40,
   displayValue: true,
   fontSize: 14,
 };
@@ -29,18 +29,20 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
     .join(" > ");
 
   return (
-    <Box sx={{ width: "60mm", margin: 0 }} className="label-print-root">
+    <Box
+      sx={{
+        margin: 0,
+      }}
+      className="label-print-root"
+    >
       <Grid container>
         <Grid size={12} sx={{ display: "flex", justifyContent: "center" }}>
           <svg ref={canvasRef} />
         </Grid>
         <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>
-          <Typography fontWeight="bold">
-            {" "}
-            {item.price.toFixed(2)} €
-          </Typography>
+          <Typography fontWeight="bold"> {item.price.toFixed(2)} €</Typography>
         </Grid>
-        <Grid size={8}sx={{ display: "flex", justifyContent: "center" }}>
+        <Grid size={8} sx={{ display: "flex", justifyContent: "center" }}>
           {" "}
           {new Date(item.createdAt).toLocaleDateString("fr-FR", {
             day: "2-digit",
@@ -48,7 +50,9 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
             year: "numeric",
           })}
         </Grid>
-        <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>{item.weight ? `${item.weight} kg` : ""}</Grid>
+        <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>
+          {item.weight ? `${item.weight} kg` : ""}
+        </Grid>
         <Grid size={8} sx={{ display: "flex", justifyContent: "center" }}>
           <Typography
             variant="caption"
@@ -70,7 +74,7 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
 };
 
 const printPageStyle = `
-  @page { size: 60mm auto; margin: 0; }
+  @page { size: 62mm 40mm; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; overflow: hidden; }
   .label-print-root { page-break-inside: avoid; page-break-after: avoid; }
 `;
@@ -87,11 +91,10 @@ export function useLabelPrint() {
       ? `Étiquette - ${itemToPrint.barcode}`
       : "Étiquette",
   });
-  
 
   useEffect(() => {
     if (!itemToPrint) return;
-    handlePrint()
+    handlePrint();
     // const t = setTimeout(() => handlePrint(), 300);
     // return () => clearTimeout(t);
   }, [itemToPrint, handlePrint]);
@@ -99,10 +102,7 @@ export function useLabelPrint() {
   const triggerPrintLabel = (item: LabeledItemModel) => setItemToPrint(item);
 
   const labelPrintNode = (
-    <Box
-      sx={{ display: "none", displayPrint: "block" }}
-      ref={labelPrintRef}
-    >
+    <Box sx={{ display: "none", displayPrint: "block" }} ref={labelPrintRef}>
       {itemToPrint && <LabelPrintContent item={itemToPrint} />}
     </Box>
   );
