@@ -1,6 +1,5 @@
 import { Box, Grid, Typography } from "@mui/material";
 import JsBarcode from "jsbarcode";
-import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { LabeledItemModel } from "../interfaces/Models";
@@ -14,16 +13,14 @@ const barcodeOptions = {
 };
 
 const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [barcodeDataUrl, setBarcodeDataUrl] = useState<string>("");
+  const canvasRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!item?.barcode || !canvasRef.current) return;
     try {
       JsBarcode(canvasRef.current, item.barcode, barcodeOptions);
-      setBarcodeDataUrl(canvasRef.current.toDataURL());
     } catch {
-      setBarcodeDataUrl("");
+      // barcode render failed
     }
   }, [item?.barcode]);
 
@@ -31,27 +28,14 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
     .filter(Boolean)
     .join(" > ");
 
-  const rootStyle: CSSProperties = {
-    width: "60mm",
-    // height: "45mm",
-    margin: 0,
-    // padding: "2mm",
-    // fontFamily: "Arial, sans-serif",
-    // display: "flex",
-    // flexDirection: "column",
-    // alignItems: "center",
-    // justifyContent: "flex-start",
-    // boxSizing: "border-box",
-  };
-
   return (
-    <Box sx={{ ...rootStyle }}>
+    <Box sx={{ width: "60mm", margin: 0, paddingLeft: "3mm" }} className="label-print-root">
       <Grid container>
         <Grid size={12}>
-          <canvas ref={canvasRef} />
+          <svg ref={canvasRef} />
         </Grid>
         <Grid size={6}>
-          <Typography fontWeight={"bold"}>
+          <Typography fontWeight="bold">
             {" "}
             {item.price.toFixed(2)} €
           </Typography>
@@ -65,7 +49,21 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
           })}
         </Grid>
         <Grid size={6}>{item.weight ? `${item.weight} kg` : ""}</Grid>
-        <Grid size={6}>{categoryLine}</Grid>
+        <Grid size={6}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: "0.65rem",
+              lineHeight: 1.2,
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {categoryLine}
+          </Typography>
+        </Grid>
       </Grid>
     </Box>
   );
@@ -100,16 +98,7 @@ export function useLabelPrint() {
 
   const labelPrintNode = (
     <Box
-      sx={{
-        display: "none",
-        displayPrint: "block",
-        // position: "absolute",
-        // left: -9999,
-        // top: 0,
-        // zIndex: -1,
-        // visibility: "hidden",
-        // pointerEvents: "none",
-      }}
+      sx={{ display: "none", displayPrint: "block" }}
       ref={labelPrintRef}
     >
       {itemToPrint && <LabelPrintContent item={itemToPrint} />}
