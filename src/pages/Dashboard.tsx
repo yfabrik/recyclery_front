@@ -17,7 +17,6 @@ import {
   Badge,
   Box,
   Button,
-  ButtonGroup,
   Chip,
   CircularProgress,
   Divider,
@@ -27,14 +26,12 @@ import {
   List,
   Paper,
   Stack,
-  Tab,
-  Tabs,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 // Fonction pour obtenir l'icône par nom
 // const getIconByName = (iconName) => {
@@ -47,6 +44,7 @@ import React from "react";
 //   };
 //   return icons[iconName] || Info;
 // };
+import { BarChart, PieChart } from "@mui/x-charts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
 import SimpleBarChart from "../components/dashboard/SimpleBarChart";
@@ -56,6 +54,7 @@ import QuickStats from "../components/QuickStats";
 import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
+import type { StoreModel } from "../interfaces/Models";
 import {
   getActivities,
   getChartsData,
@@ -64,9 +63,11 @@ import {
   type Activity,
   type Stats,
 } from "../services/api/dashboard";
-import type { StoreModel } from "../interfaces/Models";
-import { getTranscationStats } from "../services/api/transactions";
-import { BarChart, PieChart, type PieSeries } from "@mui/x-charts";
+import {
+  getTranscationStats,
+  type transactionsFilters,
+} from "../services/api/transactions";
+import dayjs from "dayjs";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -84,6 +85,26 @@ const Dashboard = () => {
   const [viewStore, setViewStore] = React.useState<StoreModel["id"] | null>(
     null,
   );
+
+  const handleStatsFilter = (): transactionsFilters => {
+    const saleFilter: transactionsFilters = {};
+    if (viewStore) saleFilter.store_id = viewStore;
+    switch (view) {
+      case "week":
+        saleFilter.date_from = dayjs().startOf("week").toISOString();
+        break;
+      case "month":
+        saleFilter.date_from = dayjs().startOf("month").toISOString();
+        break;
+      case "year":
+        saleFilter.date_from = dayjs().startOf("year").toISOString();
+        break;
+      default:
+        view satisfies never;
+        break;
+    }
+    return saleFilter;
+  };
 
   const handleViewStoreChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -197,8 +218,8 @@ const Dashboard = () => {
   });
 
   const salesStats = useQuery({
-    queryKey: ["salesStats", {}],
-    queryFn: () => getTranscationStats({}),
+    queryKey: ["salesStats", handleStatsFilter()],
+    queryFn: () => getTranscationStats(handleStatsFilter()),
   });
 
   const handleRefresh = async () => {
@@ -459,59 +480,72 @@ const Dashboard = () => {
               <ToggleButton value={store.id}>{store.name}</ToggleButton>
             ))}
           </ToggleButtonGroup>
-          <BarChart
-            series={[
-              {
-                data: salesStats.data?.data.stats.by_day.map(
-                  (cat) => cat.total_amount,
-                ),
-                label: "money",
-                id: "money",
-              },
-              {
-                data: salesStats.data?.data.stats.by_day.map(
-                  (cat) => cat.total_amount,
-                ),
-                label: "quantite",
-                id: "quantite",
-              },
-            ]}
-            xAxis={[
-              {
-                data: salesStats.data?.data.stats.by_day.map((cat) => cat.date),
-                height: 28,
-              },
-            ]}
-            yAxis={[{ width: 50 }]}
-          />
-          <PieChart
-            series={[
-              {
-                data:
-                  salesStats.data?.data.stats.by_category.map((cat, index) => ({
-                    id: index,
-                    label: cat.category_name,
-                    value: cat.total_quantity,
-                  })) || [],
-              },
-            ]}
-            width={200}
-            height={200}
-          />
-          <PieChart
-            series={[
-              {
-                data:
-                  salesStats.data?.data.stats.by_category.map((cat, index) => ({
-                    id: index,
-                    label: cat.category_name,
-                    value: cat.total_price_sum,
-                  })) || [],
-              },
-            ]}
-            width={200}
-            height={200}
-          />
+          {salesStats.isSuccess && (
+            <Box>
+              <BarChart
+                height={350}
+                series={[
+                  {
+                    data:
+                      salesStats.data?.data.stats.by_day.map(
+                        (cat) => cat.total_amount,
+                      ) ?? [],
+                    label: "Chiffre d'affaires",
+                    id: "money",
+                  },
+                  {
+                    data:
+                      salesStats.data?.data.stats.by_day.map(
+                        (cat) => cat.transaction_count,
+                      ) ?? [],
+                    label: "nombre de transactions",
+                    id: "quantity",
+                  },
+                ]}
+                xAxis={[
+                  {
+                    data: salesStats.data?.data.stats.by_day.map(
+                      (cat) => cat.date,
+                    ),
+                    height: 28,
+                  },
+                ]}
+                yAxis={[{ width: 50 }]}
+              />
+              <PieChart
+                series={[
+                  {
+                    data:
+                      salesStats.data?.data.stats.by_category.map(
+                        (cat, index) => ({
+                          id: index,
+                          label: cat.category_name,
+                          value: cat.total_quantity,
+                        }),
+                      ) || [],
+                  },
+                ]}
+                width={200}
+                height={200}
+              />
+              <PieChart
+                series={[
+                  {
+                    data:
+                      salesStats.data?.data.stats.by_category.map(
+                        (cat, index) => ({
+                          id: index,
+                          label: cat.category_name,
+                          value: cat.total_price_sum,
+                        }),
+                      ) || [],
+                  },
+                ]}
+                width={200}
+                height={200}
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Activités récentes améliorées */}

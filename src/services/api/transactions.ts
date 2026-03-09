@@ -2,8 +2,8 @@ import type { AxiosResponse } from "axios";
 import type { TransactionModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
-interface transactionsFilters {
-  store_id?: string;
+export interface transactionsFilters {
+  store_id?: number;
   period?: string;
   date_from?: string;
   date_to?: string;
@@ -24,7 +24,7 @@ interface Stats {
   }[];
   by_day: {
     date: string;
-    transaction_amount: number;
+    transaction_count: number;
     total_amount: number;
   }[];
   by_category: {
