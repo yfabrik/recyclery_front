@@ -11,15 +11,29 @@ interface transactionsFilters {
   payment_method?: TransactionModel["payment_method"];
 }
 interface Stats {
-  total_transactions: number,
-  total_sales: number,
-  total_sales_before_refunds: number,
-  total_refunded: number,
-  average_transaction: number,
-  sessions_count: number,
-  payment_methods: { count: number, payment_method: TransactionModel["payment_method"], total: number }[],
+  total_transactions: number;
+  total_sales: number;
+  total_sales_before_refunds: number;
+  total_refunded: number;
+  average_transaction: number;
+  sessions_count: number;
+  payment_methods: {
+    count: number;
+    payment_method: TransactionModel["payment_method"];
+    total: number;
+  }[];
+  by_day: {
+    date: string;
+    transaction_amount: number;
+    total_amount: number;
+  }[];
+  by_category: {
+    category_id: number;
+    category_name: string;
+    total_quantity: number;
+    total_price_sum: number;
+  }[];
 }
-
 
 export const getTransactions = (
   filters: transactionsFilters | null = null,
@@ -36,7 +50,16 @@ export const getTranscationStats = (
 
 export const getTranscationPostalStats = (
   filters: transactionsFilters | null = null,
-): Promise<AxiosResponse<{ postal_codes: { customer_postal_code: string,transaction_count:number, total_sales: number, average_transaction: number }[] }>> =>
+): Promise<
+  AxiosResponse<{
+    postal_codes: {
+      customer_postal_code: string;
+      transaction_count: number;
+      total_sales: number;
+      average_transaction: number;
+    }[];
+  }>
+> =>
   axiosInstance.get("/api/sales-transactions/stats/postal-codes", {
     params: filters,
   });

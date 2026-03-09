@@ -17,6 +17,7 @@ import {
   Badge,
   Box,
   Button,
+  ButtonGroup,
   Chip,
   CircularProgress,
   Divider,
@@ -26,6 +27,10 @@ import {
   List,
   Paper,
   Stack,
+  Tab,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -51,10 +56,42 @@ import QuickStats from "../components/QuickStats";
 import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
-import { getActivities, getChartsData, getStats, getStoreStats, type Activity, type Stats } from "../services/api/dashboard";
+import {
+  getActivities,
+  getChartsData,
+  getStats,
+  getStoreStats,
+  type Activity,
+  type Stats,
+} from "../services/api/dashboard";
+import type { StoreModel } from "../interfaces/Models";
+import { getTranscationStats } from "../services/api/transactions";
+import { BarChart, PieChart, type PieSeries } from "@mui/x-charts";
 
 const Dashboard = () => {
   const { user } = useAuth();
+
+  type ViewType = "week" | "month" | "year";
+  const [view, setView] = React.useState<ViewType>("week");
+  const handleViewChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newView: ViewType,
+  ) => {
+    if (newView !== null) {
+      setView(newView);
+    }
+  };
+  const [viewStore, setViewStore] = React.useState<StoreModel["id"] | null>(
+    null,
+  );
+
+  const handleViewStoreChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newView: StoreModel["id"] | null,
+  ) => {
+    setViewStore(newView);
+  };
+
   // Données simulées réalistes pour la démonstration
   const mockStats = {
     totalItems: 1247,
@@ -133,43 +170,49 @@ const Dashboard = () => {
   const mockSalesData = [45, 52, 38, 67, 89, 72, 56];
   const mockRevenueData = [850, 920, 780, 1150, 1320, 980, 890];
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const activities = useQuery({
     queryKey: ["activities"],
-    queryFn: () => getActivities().then(response => response.data.data),
-    placeholderData: mockActivities
-  })
+    queryFn: () => getActivities().then((response) => response.data.data),
+    placeholderData: mockActivities,
+  });
   const charts = useQuery({
     queryKey: ["charts"],
-    queryFn: () => getChartsData().then(response => response.data.data),
+    queryFn: () => getChartsData().then((response) => response.data.data),
     placeholderData: {
       sales: mockSalesData,
       revenue: mockRevenueData,
       labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-    }
-  })
+    },
+  });
   const stats = useQuery({
     queryKey: ["stats"],
-    queryFn: () => getStats().then(response => response.data.data),
-    placeholderData: mockStats
-  })
+    queryFn: () => getStats().then((response) => response.data.data),
+    placeholderData: mockStats,
+  });
   const storesStats = useQuery({
     queryKey: ["storesStats"],
-    queryFn: () => getStoreStats().then(response => response.data.stores),
-  })
+    queryFn: () => getStoreStats().then((response) => response.data.stores),
+  });
 
-
+  const salesStats = useQuery({
+    queryKey: ["salesStats", {}],
+    queryFn: () => getTranscationStats({}),
+  });
 
   const handleRefresh = async () => {
     queryClient.invalidateQueries({
-      predicate: (query) => ["charts", "storesStats", "activities", "stats"].includes(query.queryKey[0] as string)
-    })
+      predicate: (query) =>
+        ["charts", "storesStats", "activities", "stats"].includes(
+          query.queryKey[0] as string,
+        ),
+    });
   };
 
   const calculateTrend = (current: number = 0, previous: number = 0) => {
     if (!previous) return null;
-    const percentage = (((current - previous) / previous) * 100);
+    const percentage = ((current - previous) / previous) * 100;
     return {
       direction: current > previous ? "up" : "down",
       value: `${Math.abs(percentage)}%`,
@@ -178,14 +221,19 @@ const Dashboard = () => {
 
   const revenueTrend = calculateTrend(
     stats.data?.thisMonthRevenue,
-    stats.data?.lastMonthRevenue
+    stats.data?.lastMonthRevenue,
   );
   const salesTrend = calculateTrend(
     stats.data?.thisMonthSales,
-    stats.data?.lastMonthSales
+    stats.data?.lastMonthSales,
   );
 
-  if (activities.isLoading || storesStats.isLoading || stats.isLoading || charts.isLoading) {
+  if (
+    activities.isLoading ||
+    storesStats.isLoading ||
+    stats.isLoading ||
+    charts.isLoading
+  ) {
     return (
       <Box
         sx={{
@@ -236,14 +284,17 @@ const Dashboard = () => {
           </Box>
         </Box>
 
-        {activities.isError || storesStats.isError || stats.isError || charts.isError && (
-          <Alert severity="error" sx={{ mb: 2 }} >
-            {activities.error}
-            {storesStats.isError}
-            {stats.isError}
-            {charts.isError}
-          </Alert>
-        )}
+        {activities.isError ||
+          storesStats.isError ||
+          stats.isError ||
+          (charts.isError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {activities.error}
+              {storesStats.isError}
+              {stats.isError}
+              {charts.isError}
+            </Alert>
+          ))}
       </Box>
 
       {/* Statistiques principales améliorées */}
@@ -325,8 +376,8 @@ const Dashboard = () => {
           <StatCard
             title="Taux de vente"
             value={`${(
-              (stats.data?.soldThisMonth || 0 / (stats.data?.availableItems || 0)) *
-              100
+              (stats.data?.soldThisMonth ||
+                0 / (stats.data?.availableItems || 0)) * 100
             ).toFixed(1)}%`}
             subtitle="ce mois"
             icon={<Assessment />}
@@ -347,8 +398,15 @@ const Dashboard = () => {
             label1="Ventes cette semaine"
             label2="Revenus cette semaine (€)"
             xLabels={
-              charts.data?.labels ||
-              ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+              charts.data?.labels || [
+                "Lun",
+                "Mar",
+                "Mer",
+                "Jeu",
+                "Ven",
+                "Sam",
+                "Dim",
+              ]
             }
           />
 
@@ -375,6 +433,86 @@ const Dashboard = () => {
             }
           /> */}
         </Grid>
+
+        <Box>
+          <ToggleButtonGroup
+            color="primary"
+            size="small"
+            value={view}
+            exclusive
+            onChange={handleViewChange}
+          >
+            <ToggleButton value="week">semaine</ToggleButton>
+            <ToggleButton value="month">mois</ToggleButton>
+            <ToggleButton value="year">année</ToggleButton>
+          </ToggleButtonGroup>
+
+          <ToggleButtonGroup
+            color="primary"
+            size="small"
+            value={viewStore}
+            exclusive
+            onChange={handleViewStoreChange}
+          >
+            <ToggleButton value={null}>TOUT</ToggleButton>
+            {storesStats.data?.map((store) => (
+              <ToggleButton value={store.id}>{store.name}</ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          <BarChart
+            series={[
+              {
+                data: salesStats.data?.data.stats.by_day.map(
+                  (cat) => cat.total_amount,
+                ),
+                label: "money",
+                id: "money",
+              },
+              {
+                data: salesStats.data?.data.stats.by_day.map(
+                  (cat) => cat.total_amount,
+                ),
+                label: "quantite",
+                id: "quantite",
+              },
+            ]}
+            xAxis={[
+              {
+                data: salesStats.data?.data.stats.by_day.map((cat) => cat.date),
+                height: 28,
+              },
+            ]}
+            yAxis={[{ width: 50 }]}
+          />
+          <PieChart
+            series={[
+              {
+                data:
+                  salesStats.data?.data.stats.by_category.map((cat, index) => ({
+                    id: index,
+                    label: cat.category_name,
+                    value: cat.total_quantity,
+                  })) || [],
+              },
+            ]}
+            width={200}
+            height={200}
+          />
+          <PieChart
+            series={[
+              {
+                data:
+                  salesStats.data?.data.stats.by_category.map((cat, index) => ({
+                    id: index,
+                    label: cat.category_name,
+                    value: cat.total_price_sum,
+                  })) || [],
+              },
+            ]}
+            width={200}
+            height={200}
+          />
+        </Box>
 
         {/* Activités récentes améliorées */}
         <Grid size={{ xs: 12, md: 8 }}>
@@ -498,7 +636,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications onDismiss={() => { }} />
+            <DashboardNotifications onDismiss={() => {}} />
           </Stack>
         </Grid>
       </Grid>
@@ -533,7 +671,10 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Typography variant="h4" color="warning.main">
-                {Math.max(0, 50 - Math.floor(stats.data?.availableItems || 0 / 100))}
+                {Math.max(
+                  0,
+                  50 - Math.floor(stats.data?.availableItems || 0 / 100),
+                )}
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 catégories en rupture
@@ -549,9 +690,11 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Typography variant="h4" color="success.main">
-                {(((stats.data?.soldThisMonth || 0) / (stats.data?.availableItems || 0)) * 100).toFixed(
-                  1
-                )}
+                {(
+                  ((stats.data?.soldThisMonth || 0) /
+                    (stats.data?.availableItems || 0)) *
+                  100
+                ).toFixed(1)}
                 %
               </Typography>
               <Typography variant="body2" color="textSecondary">
