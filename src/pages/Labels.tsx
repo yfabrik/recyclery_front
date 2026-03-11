@@ -23,6 +23,7 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -33,19 +34,29 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography
-} from '@mui/material';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
-import { useLabelPrint } from '../components/LabelPrint';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AxiosResponse } from 'axios';
-import { StatCardNoIcon } from '../components/StatCard';
-import { LabeledItemForm, type Schema } from '../components/forms/LabeledItemForm';
-import type { LabeledItemModel } from '../interfaces/Models';
-import { fetchCategories as fcat } from '../services/api/categories';
-import { createLabeledItem, deleteLabeledItem, getLabeledItems, sellItem, updateLabeledItem, type itemsFilters } from '../services/api/labeledItems';
+import { useLabelPrint } from "../components/LabelPrint";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosResponse } from "axios";
+import { StatCardNoIcon } from "../components/StatCard";
+import {
+  LabeledItemForm,
+  type Schema,
+} from "../components/forms/LabeledItemForm";
+import type { LabeledItemModel } from "../interfaces/Models";
+import { fetchCategories as fcat } from "../services/api/categories";
+import {
+  createLabeledItem,
+  deleteLabeledItem,
+  getLabeledItems,
+  sellItem,
+  updateLabeledItem,
+  type itemsFilters,
+} from "../services/api/labeledItems";
 
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
@@ -57,24 +68,33 @@ const Labels = () => {
     category_id: "",
     search: "",
   });
+  const [page, setPage] = useState(1);
 
   //TODO  faut limiter pour que y'ai que 1 foix la value et ensure que la value soit presente +type color
-  const conditionOptions: { value: LabeledItemModel["condition_state"], label: string, color: NonNullable<ChipProps['color']> }[] = [
-    { value: 'excellent', label: 'Excellent', color: 'success' },
-    { value: 'good', label: 'Bon état', color: 'primary' },
-    { value: 'fair', label: 'État correct', color: 'warning' },
-    { value: 'poor', label: 'Mauvais état', color: 'error' },
+  const conditionOptions: {
+    value: LabeledItemModel["condition_state"];
+    label: string;
+    color: NonNullable<ChipProps["color"]>;
+  }[] = [
+    { value: "excellent", label: "Excellent", color: "success" },
+    { value: "good", label: "Bon état", color: "primary" },
+    { value: "fair", label: "État correct", color: "warning" },
+    { value: "poor", label: "Mauvais état", color: "error" },
   ] as const;
 
-  const statusOptions: { value: LabeledItemModel["status"], label: string, color: NonNullable<ChipProps['color']> }[] = [
-    { value: 'available', label: 'Disponible', color: 'success' },
-    { value: 'reserved', label: 'Réservé', color: 'warning' },
-    { value: 'sold', label: 'Vendu', color: 'error' },
+  const statusOptions: {
+    value: LabeledItemModel["status"];
+    label: string;
+    color: NonNullable<ChipProps["color"]>;
+  }[] = [
+    { value: "available", label: "Disponible", color: "success" },
+    { value: "reserved", label: "Réservé", color: "warning" },
+    { value: "sold", label: "Vendu", color: "error" },
   ] as const;
 
   const queryClient = useQueryClient();
   const items = useQuery({
-    queryKey: ["items", { filters }],
+    queryKey: ["items", { filters }, page],
     queryFn: () => {
       const params = new URLSearchParams();
 
@@ -82,7 +102,8 @@ const Labels = () => {
       if (filters.category_id)
         params.append("category_id", filters.category_id);
       if (filters.search) params.append("search", filters.search);
-      return getLabeledItems(params).then((response) => response.data.items);
+      params.append("page", page.toString());
+      return getLabeledItems(params).then((response) => response.data);
     },
   });
   if (items.isError) toast.error("Erreur lors du chargement des articles");
@@ -109,8 +130,8 @@ const Labels = () => {
     mutationFn: (data: { id: number; data: Schema }) =>
       updateLabeledItem(data.id, data.data),
     onSuccess: (data, variables, context) => {
-      console.log(context,data,variables)
-      return saved(data, variables.data)
+      console.log(context, data, variables);
+      return saved(data, variables.data);
     },
     onError: () => toast.error("Erreur lors de la sauvegarde"),
   });
@@ -132,15 +153,26 @@ const Labels = () => {
     onError: () => toast.error("Erreur lors de la vente"),
   });
 
+  const saved = (
+    data: AxiosResponse<
+      {
+        success: true;
+        message: string;
+        item?: LabeledItemModel;
+      },
+      unknown,
+      object
+    >,
+    variables: Schema,
+  ) => {
+    if (variables.autoPrint && data.data.item)
+      triggerPrintLabel(data.data.item);
 
-  const saved = (data: AxiosResponse<{
-    success: true;
-    message: string;
-    item?: LabeledItemModel
-  }, unknown, object>, variables: Schema) => {
-    if (variables.autoPrint && data.data.item) triggerPrintLabel(data.data.item)
-
-    toast.success(data.config.method == "post" ? 'Article créé avec succès' : 'Article mis à jour avec succès');
+    toast.success(
+      data.config.method == "post"
+        ? "Article créé avec succès"
+        : "Article mis à jour avec succès",
+    );
     handleCloseDialog();
     queryClient.invalidateQueries({ queryKey: ["items"] });
   };
@@ -218,7 +250,7 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles disponibles"
             value={
-              items.data?.filter((item) => item.status === "available")
+              items.data?.items.filter((item) => item.status === "available")
                 .length || 0
             }
             color="primary"
@@ -228,7 +260,8 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles vendus"
             value={
-              items.data?.filter((item) => item.status === "sold").length || 0
+              items.data?.items.filter((item) => item.status === "sold")
+                .length || 0
             }
             color="success.main"
           />
@@ -237,8 +270,8 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles réservés"
             value={
-              items.data?.filter((item) => item.status === "reserved").length ||
-              0
+              items.data?.items.filter((item) => item.status === "reserved")
+                .length || 0
             }
             color="warning"
           />
@@ -246,7 +279,7 @@ const Labels = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCardNoIcon
             title="Valeur totale stock"
-            value={` ${items.data?.reduce((sum, item) => sum + item.price || 0, 0).toFixed(2)} €`}
+            value={` ${items.data?.items.reduce((sum, item) => sum + item.price || 0, 0).toFixed(2)} €`}
             color="info"
           />
         </Grid>
@@ -347,14 +380,14 @@ const Labels = () => {
                   Chargement...
                 </TableCell>
               </TableRow>
-            ) : items.data?.length === 0 ? (
+            ) : items.data?.items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   Aucun article trouvé
                 </TableCell>
               </TableRow>
             ) : (
-              items.data?.map((item) => (
+              items.data?.items.map((item) => (
                 <TableRow key={item.id} hover>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
@@ -414,7 +447,10 @@ const Labels = () => {
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <Tooltip title="Imprimer étiquette">
-                        <IconButton size="small" onClick={() => triggerPrintLabel(item)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => triggerPrintLabel(item)}
+                        >
                           <Print />
                         </IconButton>
                       </Tooltip>
@@ -454,6 +490,14 @@ const Labels = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
+        <Pagination
+          count={Math.trunc((items.data?.total || 0) / 50 || 10)+1}
+          color="primary"
+          page={page}
+          onChange={(e, val) => setPage(val)}
+        />
+      </Box>
       {/* Dialog de création/édition */}
       <Dialog
         open={dialogOpen}

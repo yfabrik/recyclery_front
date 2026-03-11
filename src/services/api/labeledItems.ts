@@ -8,9 +8,10 @@ export interface itemsFilters {
     status?: string
     category_id?: number
     search?: string
+    page?:number
 
 }
-export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[] }>> => axiosInstance.get("/api/labeled-items", { params: filters })
+export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[],total:number }>> => axiosInstance.get("/api/labeled-items", { params: filters })
 export const findItem = (id: string | number) => axiosInstance.get("/api/labeled-items/" + id)
 
 export const updateLabeledItem = (id: number, data: Schema): Promise<AxiosResponse<{ success: true, message: string }>> => axiosInstance.put(`/api/labeled-items/${id}`, data)

@@ -25,6 +25,7 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -68,17 +69,18 @@ interface refund {
   status: string;
 }
 
-
-
 export const SalesAnalyticsTab = () => {
+  const [page, setPage] = useState(1);
 
   const filterSchema = z.object({
     store_id: [idSchema(), nullString()],
-    date_from: z.coerce.date().transform(val => val.toISOString().slice(0, 10)),
-    date_to: z.coerce.date().transform(val => val.toISOString().slice(0, 10)),
-    transaction_number: [z.string().trim().nonempty(), nullString()]
-  })
-  type Filters = z.infer<typeof filterSchema>
+    date_from: z.coerce
+      .date()
+      .transform((val) => val.toISOString().slice(0, 10)),
+    date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
+    transaction_number: [z.string().trim().nonempty(), nullString()],
+  });
+  type Filters = z.infer<typeof filterSchema>;
 
   // const filters = useForm({
   //   defaultValues: {
@@ -145,18 +147,17 @@ export const SalesAnalyticsTab = () => {
     notes: "",
   });
 
-
   // useEffect(() => {
   //   fetchSalesData();
   // }, [filters]);
 
-
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
-    queryFn: () => fStore({ active: true }).then(response => response.data.stores)
-  })
+    queryFn: () =>
+      fStore({ active: true }).then((response) => response.data.stores),
+  });
   if (stores.isError) toast.error("Erreur lors du chargement des magasins");
   // const fetchStores = async () => {
   //   try {
@@ -176,12 +177,18 @@ export const SalesAnalyticsTab = () => {
   //   }
   // })
   const transactions = useQuery({
-    queryKey: ["transactions", filters],
-    queryFn: () => getTransactions(filters).then(response => response.data.transactions)
-  })
+    queryKey: ["transactions", filters, page],
+    queryFn: () =>
+      getTransactions({
+        ...filters,
+        store_id: filters.store_id ? +filters.store_id : undefined,
+        page,
+      }).then((response) => response.data),
+  });
   const statistics = useQuery({
     queryKey: ["transactionsStats", filters],
-    queryFn: () => getTranscationStats(filters).then(response => response.data.stats),
+    queryFn: () =>
+      getTranscationStats(filters).then((response) => response.data.stats),
     // placeholderData: {
     //   stats: {
     //     total_transactions: 0,
@@ -193,11 +200,14 @@ export const SalesAnalyticsTab = () => {
     //     payment_methods: []
     //   }
     // }
-  })
+  });
   const postalCodeStats = useQuery({
     queryKey: ["transactionsPostalStats", filters],
-    queryFn: () => getTranscationPostalStats(filters).then(response => response.data.postal_codes)
-  })
+    queryFn: () =>
+      getTranscationPostalStats(filters).then(
+        (response) => response.data.postal_codes,
+      ),
+  });
 
   // const fetchSalesData = async () => {
   //   try {
@@ -387,7 +397,9 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonction pour ouvrir les détails d'une transaction
-  const handleViewTransactionDetails = async (transaction: TransactionModel) => {
+  const handleViewTransactionDetails = async (
+    transaction: TransactionModel,
+  ) => {
     setSelectedTransaction(transaction);
     setTransactionDetailsDialog(true);
     await fetchTransactionRefunds(transaction.id);
@@ -467,42 +479,45 @@ export const SalesAnalyticsTab = () => {
   };
 
   // Fonction pour récupérer tous les remboursements des transactions
-  const fetchAllTransactionRefunds = async (transactions) => {
-    try {
-      const refundsPromises = transactions.map(async (transaction) => {
-        try {
-          const response = await getRefundForTransaction(transaction.id);
+  // const fetchAllTransactionRefunds = async (transactions) => {
+  //   try {
+  //     const refundsPromises = transactions.map(async (transaction) => {
+  //       try {
+  //         const response = await getRefundForTransaction(transaction.id);
 
-          return {
-            transactionId: transaction.id,
-            refunds: response.data.success ? response.data.refunds : [],
-          };
-        } catch (error) {
-          console.error(
-            `Erreur récupération remboursements transaction ${transaction.id}:`,
-            error,
-          );
-          return {
-            transactionId: transaction.id,
-            refunds: [],
-          };
-        }
-      });
+  //         return {
+  //           transactionId: transaction.id,
+  //           refunds: response.data.success ? response.data.refunds : [],
+  //         };
+  //       } catch (error) {
+  //         console.error(
+  //           `Erreur récupération remboursements transaction ${transaction.id}:`,
+  //           error,
+  //         );
+  //         return {
+  //           transactionId: transaction.id,
+  //           refunds: [],
+  //         };
+  //       }
+  //     });
 
-      const refundsResults = await Promise.all(refundsPromises);
-      const refundsMap = {};
-      refundsResults.forEach((result) => {
-        refundsMap[result.transactionId] = result.refunds;
-      });
+  //     const refundsResults = await Promise.all(refundsPromises);
+  //     const refundsMap = {};
+  //     refundsResults.forEach((result) => {
+  //       refundsMap[result.transactionId] = result.refunds;
+  //     });
 
-      setAllTransactionRefunds(refundsMap);
-    } catch (error) {
-      console.error("Erreur lors du chargement des remboursements:", error);
-    }
-  };
+  //     setAllTransactionRefunds(refundsMap);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des remboursements:", error);
+  //   }
+  // };
 
-
-  if (transactions.isLoading || statistics.isLoading || postalCodeStats.isLoading) {
+  if (
+    transactions.isLoading ||
+    statistics.isLoading ||
+    postalCodeStats.isLoading
+  ) {
     return (
       <Box
         sx={{
@@ -766,24 +781,27 @@ export const SalesAnalyticsTab = () => {
               <Typography variant="body2" color="textSecondary">
                 Chiffre d'affaires net
               </Typography>
-              {statistics.data?.total_refunded || 0 > 0 && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    display="block"
-                  >
-                    Brut:{" "}
-                    {formatCurrency(
-                      statistics.data?.total_sales_before_refunds ||
-                      statistics.data?.total_sales || 0
-                    )}
-                  </Typography>
-                  <Typography variant="caption" color="error" display="block">
-                    Remboursé: -{formatCurrency(statistics.data?.total_refunded || 0)}
-                  </Typography>
-                </Box>
-              )}
+              {statistics.data?.total_refunded ||
+                (0 > 0 && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      display="block"
+                    >
+                      Brut:{" "}
+                      {formatCurrency(
+                        statistics.data?.total_sales_before_refunds ||
+                          statistics.data?.total_sales ||
+                          0,
+                      )}
+                    </Typography>
+                    <Typography variant="caption" color="error" display="block">
+                      Remboursé: -
+                      {formatCurrency(statistics.data?.total_refunded || 0)}
+                    </Typography>
+                  </Box>
+                ))}
             </CardContent>
           </Card>
         </Grid>
@@ -840,7 +858,8 @@ export const SalesAnalyticsTab = () => {
                         <Typography variant="body2" fontWeight="bold">
                           {method.count} (
                           {(
-                            (method.count / statistics.data?.total_transactions) *
+                            (method.count /
+                              statistics.data?.total_transactions) *
                             100
                           ).toFixed(1)}
                           %)
@@ -942,8 +961,9 @@ export const SalesAnalyticsTab = () => {
             <Typography variant="h6">📋 Détail des transactions</Typography>
             {filters.transaction_number && (
               <Chip
-                label={`Filtré par: ${filters.transaction_number} (${transactions.data?.length
-                  } résultat${transactions.data?.length||0 > 1 ? "s" : ""})`}
+                label={`Filtré par: ${filters.transaction_number} (${
+                  transactions.data?.transactions?.length || 0
+                } résultat${transactions.data?.transactions?.length || 0 > 1 ? "s" : ""})`}
                 color="primary"
                 variant="outlined"
                 onDelete={() =>
@@ -954,7 +974,8 @@ export const SalesAnalyticsTab = () => {
             )}
           </Box>
 
-          {transactions.data?.length === 0 ? (
+          {!transactions.data?.transactions?.length ||
+          transactions.data?.transactions?.length === 0 ? (
             <Alert severity="info">
               Aucune transaction trouvée pour la période sélectionnée.
             </Alert>
@@ -974,7 +995,7 @@ export const SalesAnalyticsTab = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {transactions.data?.map((transaction) => (
+                  {transactions.data?.transactions?.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <Typography variant="body2" fontWeight="bold">
@@ -1167,6 +1188,17 @@ export const SalesAnalyticsTab = () => {
               </Table>
             </TableContainer>
           )}
+          <Box sx={{ display: "flex", justifyContent: "center", padding: 1 }}>
+            <Pagination
+              count={
+                Math.trunc((transactions.data?.pagination?.total || 0) / 50) +
+                  1 || 10
+              }
+              color="primary"
+              page={page}
+              onChange={(e, val) => setPage(val)}
+            />
+          </Box>
         </CardContent>
       </Card>
       {/* Pop-up de remboursement */}
@@ -1649,11 +1681,11 @@ export const SalesAnalyticsTab = () => {
                       <Typography variant="h6" color="primary">
                         {formatCurrency(
                           selectedTransaction.total_amount -
-                          transactionRefunds.reduce(
-                            (sum, refund) =>
-                              sum + parseFloat(refund.refund_amount),
-                            0,
-                          ),
+                            transactionRefunds.reduce(
+                              (sum, refund) =>
+                                sum + parseFloat(refund.refund_amount),
+                              0,
+                            ),
                         )}
                       </Typography>
                     </Grid>

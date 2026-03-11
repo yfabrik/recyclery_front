@@ -9,6 +9,7 @@ export interface transactionsFilters {
   date_to?: string;
   session?: number;
   payment_method?: TransactionModel["payment_method"];
+  page?: number;
 }
 interface Stats {
   total_transactions: number;
@@ -38,7 +39,11 @@ interface Stats {
 export const getTransactions = (
   filters: transactionsFilters | null = null,
 ): Promise<
-  AxiosResponse<{ success: true; transactions: TransactionModel[] }>
+  AxiosResponse<{
+    success: true;
+    transactions: TransactionModel[];
+    pagination: { limit: number; offset: number; total: number };
+  }>
 > => axiosInstance.get("/api/sales-transactions", { params: filters });
 
 export const getTranscationStats = (
