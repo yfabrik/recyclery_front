@@ -271,7 +271,7 @@ const Arrivals = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        {new Date(arrival.arrival_time).toLocaleTimeString()}
+                        {arrival.arrival_time}
                       </TableCell>
                       <TableCell>
                         <Box>

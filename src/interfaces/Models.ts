@@ -77,8 +77,8 @@ export interface CollectionPointModel extends BaseModel {
 
 export interface ArrivalModel extends BaseModel {
   weight: number;
-  arrival_date: Date;
-  arrival_time: Date;
+  arrival_date: string;
+  arrival_time: string;
   source_type: "point" | "apport" | "house_clearance";
   source_details: string;
   notes: string;
