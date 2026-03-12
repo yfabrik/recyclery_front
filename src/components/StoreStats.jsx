@@ -1,25 +1,21 @@
-import React from 'react';
 import {
+  Assessment,
+  Store,
+  TrendingDown,
+  TrendingUp
+} from '@mui/icons-material';
+import {
+  Avatar,
+  Box,
   Card,
   CardContent,
-  Typography,
-  Box,
-  Grid,
   Chip,
-  Avatar,
   Divider,
+  Grid,
   LinearProgress,
-  Tooltip
+  Tooltip,
+  Typography
 } from '@mui/material';
-import {
-  Store,
-  TrendingUp,
-  TrendingDown,
-  AttachMoney,
-  ShoppingCart,
-  Inventory,
-  Assessment
-} from '@mui/icons-material';
 
 const StoreStats = ({ stores, loading }) => {
   const formatCurrency = (amount) => {
@@ -59,9 +55,10 @@ const StoreStats = ({ stores, loading }) => {
   if (!stores || stores.length === 0) {
     return (
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          📊 Statistiques par Magasin
-        </Typography>
+             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Store />
+        Statistiques du mois, par Magasin
+      </Typography>
         <Card>
           <CardContent>
             <Typography color="textSecondary" align="center">
@@ -77,7 +74,7 @@ const StoreStats = ({ stores, loading }) => {
     <Box sx={{ mb: 3 }}>
       <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Store />
-        Statistiques par Magasin
+        Statistiques du mois, par Magasin
       </Typography>
       
       <Grid container spacing={3}>
