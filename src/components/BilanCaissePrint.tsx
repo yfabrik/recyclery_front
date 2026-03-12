@@ -109,7 +109,7 @@ export const BilanCaissePrint = ({
   const cashRegisterName = session.CashRegister?.name ?? "Caisse";
   const closedAt = session.closed_at
     ? new Date(session.closed_at).toLocaleString()
-    : "Non fermée";
+    : `${new Date().toLocaleString()} ,pas fermée`;
   const countedAmount = session.closing_amount ?? closingAmount ?? 0;
   const expected = session.expected_amount ?? expected_amount;
   const difference = session.difference_amount ?? expected_amount - countedAmount;
