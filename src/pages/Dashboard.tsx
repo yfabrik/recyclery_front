@@ -68,6 +68,8 @@ import {
   type transactionsFilters,
 } from "../services/api/transactions";
 import dayjs from "dayjs";
+import EcoOrganismStats from "../components/EcoOrganismStats";
+import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -215,6 +217,10 @@ const Dashboard = () => {
   const storesStats = useQuery({
     queryKey: ["storesStats"],
     queryFn: () => getStoreStats().then((response) => response.data.stores),
+  });
+  const ecoOrganismQuarterStats = useQuery({
+    queryKey: ["ecoOrganismQuarterStats"],
+    queryFn: () => fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
   });
 
   const salesStats = useQuery({
@@ -413,7 +419,7 @@ const Dashboard = () => {
       <Grid container spacing={3}>
         {/* Graphiques de performance */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <SimpleBarChart
+          {/* <SimpleBarChart
             pData={charts.data?.sales || mockSalesData}
             uData={charts.data?.revenue || mockRevenueData}
             label1="Ventes cette semaine"
@@ -429,7 +435,7 @@ const Dashboard = () => {
                 "Dim",
               ]
             }
-          />
+          /> */}
 
           {/* <SimpleChart
             data={charts.sales.length > 0 ? charts.sales : mockSalesData}
@@ -456,96 +462,130 @@ const Dashboard = () => {
         </Grid>
 
         <Box>
-          <ToggleButtonGroup
-            color="primary"
-            size="small"
-            value={view}
-            exclusive
-            onChange={handleViewChange}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 3,
+              mb: 2,
+            }}
           >
-            <ToggleButton value="week">semaine</ToggleButton>
-            <ToggleButton value="month">mois</ToggleButton>
-            <ToggleButton value="year">année</ToggleButton>
-          </ToggleButtonGroup>
+            <ToggleButtonGroup
+              color="primary"
+              size="small"
+              value={view}
+              exclusive
+              onChange={handleViewChange}
+            >
+              <ToggleButton value="week">semaine</ToggleButton>
+              <ToggleButton value="month">mois</ToggleButton>
+              <ToggleButton value="year">année</ToggleButton>
+            </ToggleButtonGroup>
 
-          <ToggleButtonGroup
-            color="primary"
-            size="small"
-            value={viewStore}
-            exclusive
-            onChange={handleViewStoreChange}
-          >
-            <ToggleButton value={null}>TOUT</ToggleButton>
-            {storesStats.data?.map((store) => (
-              <ToggleButton value={store.id}>{store.name}</ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+            <ToggleButtonGroup
+              color="primary"
+              size="small"
+              value={viewStore}
+              exclusive
+              onChange={handleViewStoreChange}
+            >
+              <ToggleButton value={null}>TOUT</ToggleButton>
+              {storesStats.data?.map((store) => (
+                <ToggleButton value={store.id}>{store.name}</ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
           {salesStats.isSuccess && (
-            <Box>
-              <BarChart
-                height={350}
-                series={[
-                  {
-                    data:
-                      salesStats.data?.data.stats.by_day.map(
-                        (cat) => cat.total_amount,
-                      ) ?? [],
-                    label: "Chiffre d'affaires",
-                    id: "money",
-                  },
-                  {
-                    data:
-                      salesStats.data?.data.stats.by_day.map(
-                        (cat) => cat.transaction_count,
-                      ) ?? [],
-                    label: "nombre de transactions",
-                    id: "quantity",
-                  },
-                ]}
-                xAxis={[
-                  {
-                    data: salesStats.data?.data.stats.by_day.map(
-                      (cat) => cat.date,
-                    ),
-                    height: 28,
-                  },
-                ]}
-                yAxis={[{ width: 50 }]}
-              />
-              <PieChart
-                series={[
-                  {
-                    data:
-                      salesStats.data?.data.stats.by_category.map(
-                        (cat, index) => ({
-                          id: index,
-                          label: cat.category_name,
-                          value: cat.total_quantity,
-                        }),
-                      ) || [],
-                  },
-                ]}
-                width={200}
-                height={200}
-              />
-              <PieChart
-                series={[
-                  {
-                    data:
-                      salesStats.data?.data.stats.by_category.map(
-                        (cat, index) => ({
-                          id: index,
-                          label: cat.category_name,
-                          value: cat.total_price_sum,
-                        }),
-                      ) || [],
-                  },
-                ]}
-                width={200}
-                height={200}
-              />
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "flex-start",
+                gap: 2,
+              }}
+            >
+              <Box sx={{ flex: "1 1 400px", minWidth: 0 }}>
+                <BarChart
+                  height={350}
+                  series={[
+                    {
+                      data:
+                        salesStats.data?.data.stats.by_day.map(
+                          (cat) => cat.total_amount,
+                        ) ?? [],
+                      label: "Chiffre d'affaires",
+                      id: "money",
+                    },
+                    {
+                      data:
+                        salesStats.data?.data.stats.by_day.map(
+                          (cat) => cat.transaction_count,
+                        ) ?? [],
+                      label: "nombre de transactions",
+                      id: "quantity",
+                    },
+                  ]}
+                  xAxis={[
+                    {
+                      data: salesStats.data?.data.stats.by_day.map(
+                        (cat) => cat.date,
+                      ),
+                      height: 28,
+                    },
+                  ]}
+                  yAxis={[{ width: 50 }]}
+                />
+              </Box>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Quantité par catégorie
+                </Typography>
+                <PieChart
+                  series={[
+                    {
+                      data:
+                        salesStats.data?.data.stats.by_category.map(
+                          (cat, index) => ({
+                            id: index,
+                            label: cat.category_name,
+                            value: cat.total_quantity,
+                          }),
+                        ) || [],
+                    },
+                  ]}
+                  width={200}
+                  height={200}
+                />
+              </Box>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Montant par catégorie
+                </Typography>
+                <PieChart
+                  series={[
+                    {
+                      data:
+                        salesStats.data?.data.stats.by_category.map(
+                          (cat, index) => ({
+                            id: index,
+                            label: cat.category_name,
+                            value: cat.total_price_sum,
+                          }),
+                        ) || [],
+                    },
+                  ]}
+                  width={200}
+                  height={200}
+                />
+              </Box>
             </Box>
           )}
+        </Box>
+        <Box>
+          <EcoOrganismStats 
+          stats={ecoOrganismQuarterStats.data || []}
+            loading={ecoOrganismQuarterStats.isLoading} />
         </Box>
 
         {/* Activités récentes améliorées */}
@@ -670,7 +710,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications onDismiss={() => {}} />
+            <DashboardNotifications onDismiss={() => { }} />
           </Stack>
         </Grid>
       </Grid>
