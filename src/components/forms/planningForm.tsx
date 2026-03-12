@@ -30,7 +30,7 @@ const schema = z.object({
   end_time: z.coerce.date("L'heure de fin est requise"),
   priority: z.string().trim().nonempty("La priorité est requise"),
   store_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  reccurence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
+  recurrence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
   // .transform((v) => (v == "" ? null : v)),
   notes: z.string().transform((v) => (v == "" ? null : v)),
 });
@@ -57,7 +57,7 @@ export const PlaningForm = ({
       end_time: new Date(new Date().setHours(17, 0)),
       notes: "",
       priority: "medium",
-      reccurence_pattern: "",
+      recurrence_pattern: "",
       scheduled_date: new Date(),
       store_id: "",
 
@@ -100,7 +100,7 @@ export const PlaningForm = ({
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect
             control={form.control}
-            name="reccurence_pattern"
+            name="recurrence_pattern"
             label="Récurrence"
           >
             <MenuItem value="">Aucune</MenuItem>
