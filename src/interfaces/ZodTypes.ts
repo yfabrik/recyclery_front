@@ -5,9 +5,9 @@ import z from "zod";
 //   .regex(/^[0-9+\-()\s]+$/, "Invalid phone");
 
 
-export const phoneSchema = (message?: string) => z.string({ message }).regex(/^(0|(\+[0-9]{2}[. -]?))[1-9]([. -]?[0-9][0-9]){4}$/, { message })
+export const phoneSchema = (message?: string) => z.string({ message }).trim().regex(/^(0|(\+[0-9]{2}[. -]?))[1-9]([. -]?[0-9][0-9]){4}$/, { message })
 
-export const postalSchema = (message?: string) => z.string({ message }).regex(/^(?:0[1-9]|[1-8]\d|9[0-8])\d{3}$/, { message })
+export const postalSchema = (message?: string) => z.string({ message }).trim().regex(/^(?:0[1-9]|[1-8]\d|9[0-8])\d{3}$/, { message })
 
 export const idSchema = (message?: string) => z.coerce.number({ message }).positive({ message })
 
