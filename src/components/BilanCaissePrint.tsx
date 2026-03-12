@@ -95,13 +95,16 @@ export const BilanCaissePrint = ({
           <Typography>Bilan Caisse: {session.CashRegister?.name}</Typography>
           <Typography> session n°: {session.id}</Typography>
 
-          <Typography> Ouverture: {session.createdAt}</Typography>
+          <Typography sx={{ fontWeight: "bold" }}>
+            {" "}
+            Ouverture: {new Date(session.createdAt).toLocaleString()}
+          </Typography>
 
           <Typography>
             Fermeture:
             {session.closed_at
-              ? new Date(session.closed_at).toLocaleString(undefined)
-              : "pas fermé" + new Date() + " ?"}
+              ? new Date(session.closed_at).toLocaleString()
+              : "pas fermé" + new Date().toLocaleString() + " ?"}
           </Typography>
           <Typography> fond de caisse :{session.opening_amount} €</Typography>
           <Typography>
