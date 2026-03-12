@@ -18,7 +18,7 @@ const createSchema = (totalCart: number) =>
       .min(totalCart, {
         message: `Le montant payé ne peut pas être inférieur au total du panier (${totalCart.toFixed(2)}€)`,
       }),
-    customer_postal_code: z.union([postalSchema(), nullString()])
+    customer_postal_code: z.union([postalSchema("format invalide"), nullString()])
     // customer_name: z.string().transform((val) => (val == "" ? null : val)),
     // customer_email: z.union([z.email(), z.literal("").transform(() => null)]),
   });
