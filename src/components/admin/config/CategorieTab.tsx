@@ -1,24 +1,13 @@
 import {
   Add,
   Cancel,
-  Category,
-  Delete,
-  Edit,
   Save
 } from "@mui/icons-material";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Chip,
-  FormControlLabel,
-  IconButton,
-  Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -37,9 +26,9 @@ import {
   patchCategory as patchCategoryApi,
   updateCategory,
 } from "../../../services/api/categories";
-import { IO } from "../../../services/categoriesMask";
+import { CategoryCard } from "../../CategoryCard";
 import { CategorieForm, type Schema } from "../../forms/CategorieForm";
-import { SelectedIcon } from "../../SelectedIcon";
+import { Loading } from "../../Loading";
 
 export const CategoriesTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -151,171 +140,9 @@ export const CategoriesTab = () => {
     }
   };
 
-  // const getIconComponent = (iconName: string): ReactNode => {
-  //   // Import dynamique des icônes Material-UI
-  //   const iconMap = {
-  //     Category: Category,
-  //     Inventory: Inventory,
-  //     Settings: Settings,
-  //     Palette: Palette,
-  //     AdminPanelSettings: AdminPanelSettings,
-  //   };
-
-  //   const IconComponent = iconMap[iconName] || Category;
-  //   return <IconComponent />;
-  // };
-
-  const renderCategoryCard = (
-    category: CategoryModel,
-    isSubcategory = false,
-  ) => (
-    <Card
-      key={category.id}
-      variant={isSubcategory ? "outlined" : "elevation"}
-      sx={{
-        mb: 1,
-        ml: isSubcategory ? 3 : 0,
-        backgroundColor: isSubcategory ? "grey.50" : "white",
-      }}
-    >
-      <CardContent>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr minmax(180px, auto) minmax(120px, auto)",
-            alignItems: "center",
-            gap: 3,
-          }}
-        >
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}
-          >
-            <Avatar sx={{ bgcolor: isSubcategory ? "secondary.main" : "primary.main", width: 40, height: 40 }}>
-              {category.icon ? <SelectedIcon iconName={category.icon} /> : <Category />}
-            </Avatar>
-            <Box>
-              <Typography
-                variant={isSubcategory ? "subtitle1" : "h6"}
-                fontWeight="bold"
-              >
-                {category.name}
-              </Typography>
-              {category.description && (
-                <Typography variant="body2" color="text.secondary">
-                  {category.description}
-                </Typography>
-              )}
-              <Chip
-                label={
-                  isSubcategory ? "Sous-catégorie" : "Catégorie principale"
-                }
-                size="small"
-                color={isSubcategory ? "secondary" : "primary"}
-                variant="outlined"
-                sx={{ mt: 0.5 }}
-              />
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "nowrap",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-              minWidth: 0,
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!!(category.IO & IO.IN)}
-                  name="in"
-                  onChange={(e) =>
-                    patchCategory.mutate({
-                      id: category.id,
-                      data: { in: e.target.checked },
-                    })
-                  }
-                />
-              }
-              labelPlacement="top"
-              label="Arrivage"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!!(category.IO & IO.SELL)}
-                  name="sell"
-                  onChange={(e) =>
-                    patchCategory.mutate({
-                      id: category.id,
-                      data: { sell: e.target.checked },
-                    })
-                  }
-                />
-              }
-              labelPlacement="top"
-              label="Vente"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!!(category.IO & IO.OUT)}
-                  name="out"
-                  onChange={(e) =>
-                    patchCategory.mutate({
-                      id: category.id,
-                      data: { out: e.target.checked },
-                    })
-                  }
-                />
-              }
-              labelPlacement="top"
-              label="Sortie"
-            />
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              minWidth: 0,
-              flexShrink: 0,
-              pl: 4,
-            }}
-          >
-            <Tooltip title="Modifier">
-              <IconButton
-                onClick={() => handleOpenDialog(category)}
-                color="primary"
-              >
-                <Edit />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Supprimer">
-              <IconButton onClick={() => handleDelete(category)} color="error">
-                <Delete />
-              </IconButton>
-            </Tooltip>
-            {!isSubcategory && (
-              <Tooltip title="Ajouter une sous-catégorie">
-                <IconButton
-                  onClick={() => handleOpenDialog(null, category.id)}
-                  color="success"
-                >
-                  <Add />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
 
   if (categories.isLoading || availableIcons.isLoading) {
-    return <Typography>Chargement...</Typography>;
+    return <Loading />
   }
 
   return (
@@ -348,13 +175,11 @@ export const CategoriesTab = () => {
         <Box>
           {categories.data?.map((category) => (
             <Box key={category.id} sx={{ mb: 2 }}>
-              {renderCategoryCard(category)}
+              <CategoryCard key={category.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} />
               {category.subcategories && category.subcategories.length > 0 && (
-                <Box sx={{ ml: 2, mt: 1 }}>
+                <Box sx={{ ml: 3, mt: 1 }}>
                   {category.subcategories.map((subcategory) => (
-                    <Box key={subcategory.id}>
-                      {renderCategoryCard(subcategory, true)}
-                    </Box>
+                    <CategoryCard key={subcategory.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} isSubcategory={true} />
                   ))}
                 </Box>
               )}
