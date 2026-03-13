@@ -2,6 +2,7 @@ import {
   Add,
   Block,
   CheckCircle,
+  Compost,
   Delete,
   Edit,
   Nature,
@@ -41,6 +42,7 @@ import {
 } from "../../../services/api/ecoOrganism";
 import { EcoOrganismForm, type Schema } from "../../forms/EcoOrganismForm";
 import { StatCard } from "../../StatCard";
+import { Loading } from "../../Loading";
 
 export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
@@ -143,19 +145,6 @@ export const EcoOrganismsTab = () => {
     removeEcoOrganism.mutate(id)
   };
 
-  if (ecoOrganisms.isLoading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box>
       <Box
@@ -164,7 +153,7 @@ export const EcoOrganismsTab = () => {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h5">🌱 Gestion des Éco-organismes</Typography>
+        <Typography variant="h5" fontWeight="bold"><Compost /> Gestion des Éco-organismes</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -220,75 +209,96 @@ export const EcoOrganismsTab = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {ecoOrganisms.data?.map((org) => (
-              <TableRow key={org.id}>
-                <TableCell>
-                  <Typography variant="body1" fontWeight="bold">
-                    {org.name}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {org.description || "Aucune description"}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Box>
-                    {org.contact_email && (
-                      <Typography variant="body2">
-                        📧 {org.contact_email}
-                      </Typography>
+            <Loading isLoading={ecoOrganisms.isLoading} alt={
+              <TableRow> <TableCell colSpan={6} align="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: 2,
+                    py: 2
+                  }}
+                >
+                  <CircularProgress size={60} />
+                  <Typography variant="body2" color="text.secondary" align="center" >Chargement...</Typography>
+                </Box>
+              </TableCell></TableRow>
+            }>
+
+              {ecoOrganisms.data?.map((org) => (
+                <TableRow key={org.id}>
+                  <TableCell>
+                    <Typography variant="body1" fontWeight="bold">
+                      {org.name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {org.description || "Aucune description"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      {org.contact_email && (
+                        <Typography variant="body2">
+                          📧 {org.contact_email}
+                        </Typography>
+                      )}
+                      {org.contact_phone && (
+                        <Typography variant="body2">
+                          📞 {org.contact_phone}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {org.website && (
+                      <Button
+                        size="small"
+                        href={org.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Visiter
+                      </Button>
                     )}
-                    {org.contact_phone && (
-                      <Typography variant="body2">
-                        📞 {org.contact_phone}
-                      </Typography>
-                    )}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  {org.website && (
-                    <Button
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={org.is_active ? "Actif" : "Inactif"}
+                      color={org.is_active ? "success" : "default"}
                       size="small"
-                      href={org.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visiter
-                    </Button>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={org.is_active ? "Actif" : "Inactif"}
-                    color={org.is_active ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Box display="flex" gap={1}>
-                    <Tooltip title="Modifier">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenEcoOrganismDialog(org)}
-                      >
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Supprimer">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteEcoOrganism(org.id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" gap={1}>
+                      <Tooltip title="Modifier">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenEcoOrganismDialog(org)}
+                        >
+                          <Edit />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Supprimer">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteEcoOrganism(org.id)}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Loading>
+
           </TableBody>
+
         </Table>
       </TableContainer>
 

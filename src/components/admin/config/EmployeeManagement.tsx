@@ -55,6 +55,7 @@ import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
 import { FormInput, FormSelect } from "../../forms/FormBase";
+import { Loading } from "../../Loading";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -242,23 +243,6 @@ const EmployeeManagement = () => {
       return matchesSearch && matchesStatus;
     }) || [];
 
-  if (employees.isLoading) {
-    return (
-      <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: 400,
-          }}
-        >
-          <Typography>Chargement des employés...</Typography>
-        </Box>
-      </Container>
-    );
-  }
-
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
@@ -272,7 +256,7 @@ const EmployeeManagement = () => {
         }}
       >
         <Box>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
             Gestion des Employés
           </Typography>
           <Typography variant="body1" color="textSecondary">
@@ -288,96 +272,97 @@ const EmployeeManagement = () => {
           Nouvel Employé
         </Button>
       </Box>
-      {/* Filtres et recherche */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 4 }}>
-            <FormInput control={form.control} name="search" label="" extra={{
-              placeholder: "Rechercher un employé...",
-              slotProps: {
-                input: {
-                  startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />
+      <Loading isLoading={employees.isLoading}>
+        {/* Filtres et recherche */}
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, md: 4 }}>
+              <FormInput control={form.control} name="search" label="" extra={{
+                placeholder: "Rechercher un employé...",
+                slotProps: {
+                  input: {
+                    startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />
+                  }
                 }
-              }
-            }} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormSelect label="Rôle" control={form.control} name="role">
-              <MenuItem key={"all"} value="">Tous les rôles</MenuItem>
-              {roleOptions.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
-                  {role.label}
-                </MenuItem>
-              ))}
+              }} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <FormSelect label="Rôle" control={form.control} name="role">
+                <MenuItem key={"all"} value="">Tous les rôles</MenuItem>
+                {roleOptions.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
 
-            </FormSelect>
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormSelect control={form.control} name="status" label="Statut">
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="active">Actif</MenuItem>
-              <MenuItem value="inactive">Inactif</MenuItem>
-            </FormSelect>
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              type="reset"
+              </FormSelect>
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <FormSelect control={form.control} name="status" label="Statut">
+                <MenuItem value="">Tous</MenuItem>
+                <MenuItem value="active">Actif</MenuItem>
+                <MenuItem value="inactive">Inactif</MenuItem>
+              </FormSelect>
+            </Grid>
+            <Grid size={{ xs: 12, md: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
+                type="reset"
 
-              onClick={() => form.reset() //queryClient.invalidateQueries({ queryKey: ["employees"] })
-              }
-              fullWidth
-            >
-              Reset
-            </Button>
+                onClick={() => form.reset() //queryClient.invalidateQueries({ queryKey: ["employees"] })
+                }
+                fullWidth
+              >
+                Reset
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
-      </Paper>
-      {/* Liste des employés */}
-      <Grid container spacing={3}>
-        {filteredEmployees.map((employee) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
-            <Card
-              sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-            >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
-                    <Person />
-                  </Avatar>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6" component="div" fontWeight="bold">
-                      {employee.nom} {employee.prenom}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {employee.email}
-                    </Typography>
+        </Paper>
+        {/* Liste des employés */}
+        <Grid container spacing={3}>
+          {filteredEmployees.map((employee) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
+              <Card
+                sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
+                      <Person />
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="h6" component="div" fontWeight="bold">
+                        {employee.nom} {employee.prenom}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {employee.email}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Tooltip title="Modifier">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenDialog(employee)}
+                          color="primary"
+                        >
+                          <Edit />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Supprimer">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDelete(employee.id)}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Box>
-                  <Box>
-                    <Tooltip title="Modifier">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(employee)}
-                        color="primary"
-                      >
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Supprimer">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(employee.id)}
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
 
-                <Stack spacing={1}>
-                  {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Stack spacing={1}>
+                    {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Work fontSize="small" color="action" />
                     <Chip
                       label={
@@ -389,144 +374,146 @@ const EmployeeManagement = () => {
                     />
                   </Box> */}
 
-                  {employee.phone && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Phone fontSize="small" color="action" />
-                      <Typography variant="body2">{employee.phone}</Typography>
-                    </Box>
-                  )}
-
-                  {employee.contract_hours && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <AccessTime fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        {employee.contract_hours}h/semaine
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {employee.address && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LocationOn fontSize="small" color="action" />
-                      <Typography variant="body2" noWrap>
-                        {employee.address}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {employee.availability && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CalendarToday fontSize="small" color="action" />
-                      <Chip
-                        label={
-                          availabilityOptions.find(
-                            (a) => a.value === employee.availability,
-                          )?.label || employee.availability
-                        }
-                        color={getAvailabilityColor(employee.availability)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
-                  )}
-
-                  {employee.skills && employee.skills.length > 0 && (
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Compétences:
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 0.5,
-                          mt: 0.5,
-                        }}
-                      >
-                        {employee.skills.slice(0, 3).map((skill, index) => (
-                          <Chip
-                            key={index}
-                            label={skill}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                        {employee.skills.length > 3 && (
-                          <Chip
-                            label={`+${employee.skills.length - 3}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
+                    {employee.phone && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Phone fontSize="small" color="action" />
+                        <Typography variant="body2">{employee.phone}</Typography>
                       </Box>
-                    </Box>
-                  )}
+                    )}
 
-                  {employee.hourly_rate && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="body2" fontWeight="bold">
-                        {employee.hourly_rate}€/h
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </CardContent>
-              {/* Boutons d'action supplémentaires */}
-              <CardActions>
-                <Tooltip title="Définir les compétences des employés">
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Quiz />}
-                    onClick={() => handleOpenSkills(employee)}
-                    sx={{ flex: 1 }}
-                  >
-                    Skills
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Gérer les affectations aux magasins">
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Store />}
-                    onClick={() => handleOpenStoreAssignment(employee)}
-                    sx={{ flex: 1 }}
-                  >
-                    Magasins
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Configurer les jours de travail">
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Schedule />}
-                    onClick={() => handleOpenWorkdays(employee)}
-                    sx={{ flex: 1 }}
-                  >
-                    Horaires
-                  </Button>
-                </Tooltip>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      {filteredEmployees.length === 0 && (
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography variant="h6" color="textSecondary">
-            Aucun employé trouvé
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            {filters.search || filters.role || filters.status
-              ? "Essayez de modifier vos critères de recherche"
-              : "Commencez par ajouter un employé"}
-          </Typography>
-        </Box>
-      )}
+                    {employee.contract_hours && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <AccessTime fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          {employee.contract_hours}h/semaine
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {employee.address && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <LocationOn fontSize="small" color="action" />
+                        <Typography variant="body2" noWrap>
+                          {employee.address}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {employee.availability && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <CalendarToday fontSize="small" color="action" />
+                        <Chip
+                          label={
+                            availabilityOptions.find(
+                              (a) => a.value === employee.availability,
+                            )?.label || employee.availability
+                          }
+                          color={getAvailabilityColor(employee.availability)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+                    )}
+
+                    {employee.skills && employee.skills.length > 0 && (
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          Compétences:
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mt: 0.5,
+                          }}
+                        >
+                          {employee.skills.slice(0, 3).map((skill, index) => (
+                            <Chip
+                              key={index}
+                              label={skill}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                          {employee.skills.length > 3 && (
+                            <Chip
+                              label={`+${employee.skills.length - 3}`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+
+                    {employee.hourly_rate && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Typography variant="body2" fontWeight="bold">
+                          {employee.hourly_rate}€/h
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
+                </CardContent>
+                {/* Boutons d'action supplémentaires */}
+                <CardActions>
+                  <Tooltip title="Définir les compétences des employés">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Quiz />}
+                      onClick={() => handleOpenSkills(employee)}
+                      sx={{ flex: 1 }}
+                    >
+                      Skills
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Gérer les affectations aux magasins">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Store />}
+                      onClick={() => handleOpenStoreAssignment(employee)}
+                      sx={{ flex: 1 }}
+                    >
+                      Magasins
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Configurer les jours de travail">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Schedule />}
+                      onClick={() => handleOpenWorkdays(employee)}
+                      sx={{ flex: 1 }}
+                    >
+                      Horaires
+                    </Button>
+                  </Tooltip>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+        {filteredEmployees.length === 0 && (
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <Typography variant="h6" color="textSecondary">
+              Aucun employé trouvé
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {filters.search || filters.role || filters.status
+                ? "Essayez de modifier vos critères de recherche"
+                : "Commencez par ajouter un employé"}
+            </Typography>
+          </Box>
+        )}
+      </Loading>
+
       {/* Dialog de création/édition */}
       <Dialog
         open={openDialog}

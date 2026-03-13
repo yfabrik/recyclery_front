@@ -140,11 +140,6 @@ export const CategoriesTab = () => {
     }
   };
 
-
-  if (categories.isLoading || availableIcons.isLoading) {
-    return <Loading />
-  }
-
   return (
     <Box>
       <Box
@@ -166,27 +161,31 @@ export const CategoriesTab = () => {
           Nouvelle Catégorie
         </Button>
       </Box>
-      {categories.data?.length === 0 ? (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          Aucune catégorie trouvée. Créez votre première catégorie pour
-          commencer.
-        </Alert>
-      ) : (
-        <Box>
-          {categories.data?.map((category) => (
-            <Box key={category.id} sx={{ mb: 2 }}>
-              <CategoryCard key={category.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} />
-              {category.subcategories && category.subcategories.length > 0 && (
-                <Box sx={{ ml: 3, mt: 1 }}>
-                  {category.subcategories.map((subcategory) => (
-                    <CategoryCard key={subcategory.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} isSubcategory={true} />
-                  ))}
-                </Box>
-              )}
-            </Box>
-          ))}
-        </Box>
-      )}
+      <Loading isLoading={categories.isLoading || availableIcons.isLoading}>
+
+        {categories.data?.length === 0 ? (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Aucune catégorie trouvée. Créez votre première catégorie pour
+            commencer.
+          </Alert>
+        ) : (
+          <Box>
+            {categories.data?.map((category) => (
+              <Box key={category.id} sx={{ mb: 2 }}>
+                <CategoryCard key={category.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} />
+                {category.subcategories && category.subcategories.length > 0 && (
+                  <Box sx={{ ml: 3, mt: 1 }}>
+                    {category.subcategories.map((subcategory) => (
+                      <CategoryCard key={subcategory.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} isSubcategory={true} />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </Box>
+        )}
+
+      </Loading>
 
       {/* Dialog pour créer/modifier une catégorie */}
       <Dialog

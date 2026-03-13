@@ -39,6 +39,7 @@ import {
 import type { Schema as PresenceSchema } from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
 import { emptyStringToNull } from "../../../services/zodTransform";
+import { Loading } from "../../Loading";
 
 const CollectionPointsTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -210,10 +211,6 @@ const CollectionPointsTab = () => {
     }
   };
 
-  if (collectionPoints.isLoading) {
-    return <Typography>Chargement...</Typography>;
-  }
-
   return (
     <Box>
       <Box
@@ -224,7 +221,7 @@ const CollectionPointsTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h6">
+        <Typography variant="h5" fontWeight="bold">
           Gestion des Points de Collecte ({collectionPoints.data?.length})
         </Typography>
         <Button
@@ -236,19 +233,20 @@ const CollectionPointsTab = () => {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {collectionPoints.data?.map((point) => (
-          <Grid size={{ xs: 12, md: 6 }} key={point.id}>
-            <CardCollectionPoint key={point.id}
-              point={point}
-              handleOpenDialog={handleOpenDialog}
-              handleDeletePoint={handleDelete}
-              handleDeleteHours={handleDeletePresence}
-              handleOpenHoursDialog={handleOpenPresenceDialog} />
-          </Grid>
-        ))}
-      </Grid>
-
+      <Loading isLoading={collectionPoints.isLoading}>
+        <Grid container spacing={3}>
+          {collectionPoints.data?.map((point) => (
+            <Grid size={{ xs: 12, md: 6 }} key={point.id}>
+              <CardCollectionPoint key={point.id}
+                point={point}
+                handleOpenDialog={handleOpenDialog}
+                handleDeletePoint={handleDelete}
+                handleDeleteHours={handleDeletePresence}
+                handleOpenHoursDialog={handleOpenPresenceDialog} />
+            </Grid>
+          ))}
+        </Grid>
+      </Loading>
 
       {/* Dialog de création/édition */}
       <Dialog

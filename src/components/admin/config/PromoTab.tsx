@@ -7,6 +7,7 @@ import type { CategoryModel, PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { PromoForm, type Schema } from "../../forms/PromoForm"
+import { Loading } from "../../Loading"
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
@@ -82,18 +83,6 @@ export const PromoTab = () => {
             subcategorie: subcategorie?.name || null
         }
     }
-    if (promotions.isLoading)
-        return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                minHeight="400px"
-            >
-                <CircularProgress />
-            </Box>
-        );
-
 
     return (
         <Box>
@@ -118,32 +107,33 @@ export const PromoTab = () => {
                 </Button>
             </Box>
 
-            <Grid container spacing={3}>
-                {promotions.data?.map((promo) => (
+            <Loading isLoading={promotions.isLoading}>
+                <Grid container spacing={3}>
+                    {promotions.data?.map((promo) => (
 
-                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={promo.id}>
-                        <Card
-                            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-                        >
-                            <CardContent sx={{ flexGrow: 1 }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={promo.id}>
+                            <Card
+                                sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+                            >
+                                <CardContent sx={{ flexGrow: 1 }}>
 
-                                <Typography>{getPromoCategories(promo).categorie}</Typography>
-                                <Typography>{getPromoCategories(promo).subcategorie}</Typography>
+                                    <Typography>{getPromoCategories(promo).categorie}</Typography>
+                                    <Typography>{getPromoCategories(promo).subcategorie}</Typography>
 
-                                <Typography>debut :{new Date(promo.startDate).toLocaleDateString()}</Typography>
-                                <Typography>fin :{promo.endDate ? new Date(promo.endDate).toLocaleDateString() : "jamais"}</Typography>
-                                <Typography>reduction {promo.promotionValue} %</Typography>
-                            </CardContent>
-                            <CardActions>
-                                <Button startIcon={<Edit />} variant="contained" onClick={() => handleOpenDialog(promo)}>
-                                    Edit
-                                </Button>
-                            </CardActions>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-
+                                    <Typography>debut :{new Date(promo.startDate).toLocaleDateString()}</Typography>
+                                    <Typography>fin :{promo.endDate ? new Date(promo.endDate).toLocaleDateString() : "jamais"}</Typography>
+                                    <Typography>reduction {promo.promotionValue} %</Typography>
+                                </CardContent>
+                                <CardActions>
+                                    <Button startIcon={<Edit />} variant="contained" onClick={() => handleOpenDialog(promo)}>
+                                        Edit
+                                    </Button>
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Loading>
 
 
             <Dialog

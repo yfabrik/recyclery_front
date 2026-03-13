@@ -38,6 +38,7 @@ import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
 import { emptyStringToNull } from "../../../services/zodTransform";
+import { Loading } from "../../Loading";
 
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -199,7 +200,7 @@ const StoresTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h6">Gestion des Magasins</Typography>
+        <Typography variant="h5" fontWeight='bold'>Gestion des Magasins</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -208,51 +209,54 @@ const StoresTab = () => {
           Nouveau Magasin
         </Button>
       </Box>
+      {/* Statistiques rapides */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StatCardNoIcon
+            title="Magasins total"
+            value={stores.data?.length || 0}
+            color="primary"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StatCardNoIcon
+            title="Magasins actifs"
+            value={stores.data?.filter((store) => store.is_active).length || 0}
+            color="success.main"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StatCardNoIcon
+            title="Caisses total"
+            value={stores.data?.reduce(
+              (sum, store) => sum + (store.caisses?.length || 0),
+              0,
+            ) || 0}
+            color="info.main"
+          />
+        </Grid>
+      </Grid>
 
-          {/* Statistiques rapides */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <StatCardNoIcon
-                title="Magasins total"
-                value={stores.data?.length || 0}
-                color="primary"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <StatCardNoIcon
-                title="Magasins actifs"
-                value={stores.data?.filter((store) => store.is_active).length || 0}
-                color="success.main"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <StatCardNoIcon
-                title="Caisses total"
-                value={stores.data?.reduce(
-                  (sum, store) => sum + (store.caisses?.length || 0),
-                  0,
-                ) || 0}
-                color="info.main"
-              />
-            </Grid>
-          </Grid>
 
-          {/* Table des magasins */}
-          <Grid container spacing={3}>
+      <Loading isLoading={stores.isLoading}>
+
+        {/* Table des magasins */}
+        <Grid container spacing={3}>
           {stores.data?.map((store) => (
             <Grid size={{ xs: 12, md: 6 }} key={store.id}>
-            <CardStore
-              store={store}
-              handleOpenCashRegisters={handleOpenCashRegisters}
-              handleOpenHoursDialog={handleOpenHoursDialog}
-              handleDeleteHours={handleDeleteHours}
-              handleOpenDialog={handleOpenDialog}
-              handleDeleteStore={handleDelete}
-            />
+              <CardStore
+                store={store}
+                handleOpenCashRegisters={handleOpenCashRegisters}
+                handleOpenHoursDialog={handleOpenHoursDialog}
+                handleDeleteHours={handleDeleteHours}
+                handleOpenDialog={handleOpenDialog}
+                handleDeleteStore={handleDelete}
+              />
             </Grid>
           ))}
-          </Grid>
-         
+        </Grid>
+      </Loading>
+
 
       {/* Dialog de gestion des caisses */}
       {editingStore &&

@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -31,6 +32,7 @@ import {
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
 import { CollecteForm, type Schema } from "../../forms/CollecteForm";
+import { Loading } from "../../Loading";
 
 export const CollectTab = () => {
   const queryClient = useQueryClient();
@@ -41,6 +43,7 @@ export const CollectTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const {
+    isLoading,
     isPending,
     error,
     data: collectes,
@@ -99,16 +102,7 @@ export const CollectTab = () => {
   });
 
   const handleOpenDialog = (collecte: ScheduleModel | null = null) => {
-    // if (collecte?.collection_point_id) {
-    //   collecte.location2 = `point.${collecte.collection_point_id}`;
-    // } else if (collecte?.store_id) {
-    //   collecte.location2 = `store.${collecte.store_id}`;
-    // }
-    const tmp = {...collecte,location: collecte?.location? collecte.location.split(","):[]}
-    // if (collecte)
-    //   tmp.location = tmp.location
-    //     ? collecte.location === "" ? [] : collecte.location.split(",")//TODO FIXME error si tu essai de reouvrir
-    //     : [];
+    const tmp = { ...collecte, location: collecte?.location ? collecte.location.split(",") : [] }
 
     setEditingCollecte(tmp);
     setDialogOpen(true);
@@ -177,7 +171,7 @@ export const CollectTab = () => {
             mb: 3,
           }}
         >
-          <Typography variant="h6">Gestion des logistiques</Typography>
+          <Typography variant="h5" fontWeight="bold">Gestion des logistiques</Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -200,72 +194,83 @@ export const CollectTab = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {isPending ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    Chargement...
-                  </TableCell>
-                </TableRow>
-              ) : collectes?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    Aucune Collecte
-                  </TableCell>
-                </TableRow>
-              ) : (
-                collectes?.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ textTransform: "capitalize", fontWeight: "bold" }}>
-                        {item.day_of_week}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={item.is_recurring ? "Actif" : "Inactif"}
-                        color={item.is_recurring ? "success" : "default"}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {`${new Date(item.start_time).toLocaleString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })} - ${new Date(item.end_time).toLocaleString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}`}
-                    </TableCell>
-                    <TableCell>
-                      {item.collection_point_id && collectionPoints.data?.find(point => point.id === item.collection_point_id)?.name}
-                      {item.store_id && stores.data?.find(store => store.id === item.store_id)?.name}
-                      {!item.collection_point_id && !item.store_id && "Aucun"}
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <Tooltip title="Modifier">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenDialog(item)}
-                          >
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Supprimer">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(item)}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
+              <Loading isLoading={isLoading} alt={<TableRow> <TableCell colSpan={6} align="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: 2,
+                    py: 2
+                  }}
+                >
+                  <CircularProgress size={60} />
+                  <Typography variant="body2" color="text.secondary" align="center" >Chargement...</Typography>
+                </Box>
+              </TableCell></TableRow>}>
+              
+                {collectes?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      Aucune Collecte
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ) : (
+                  collectes?.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ textTransform: "capitalize", fontWeight: "bold" }}>
+                          {item.day_of_week}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          label={item.is_recurring ? "Actif" : "Inactif"}
+                          color={item.is_recurring ? "success" : "default"}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {`${new Date(item.start_time).toLocaleString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(item.end_time).toLocaleString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`}
+                      </TableCell>
+                      <TableCell>
+                        {item.collection_point_id && collectionPoints.data?.find(point => point.id === item.collection_point_id)?.name}
+                        {item.store_id && stores.data?.find(store => store.id === item.store_id)?.name}
+                        {!item.collection_point_id && !item.store_id && "Aucun"}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Tooltip title="Modifier">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenDialog(item)}
+                            >
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Supprimer">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDelete(item)}
+                            >
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </Loading>
             </TableBody>
           </Table>
         </TableContainer>
@@ -290,7 +295,7 @@ export const CollectTab = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button type="submit" form="createLogistic" variant="contained" loading={addCollecte.isPending ||editCollecte.isPending}>
+          <Button type="submit" form="createLogistic" variant="contained" loading={addCollecte.isPending || editCollecte.isPending}>
             {editingCollecte ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
