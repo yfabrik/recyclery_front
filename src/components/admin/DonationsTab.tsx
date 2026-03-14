@@ -40,6 +40,7 @@ import {
 } from "../../services/api/donations";
 import { DonForm, type Schema } from "../forms/DonForm";
 import { StatCard } from "../StatCard";
+import { Loading } from "../Loading";
 
 export const DonationsTab = () => {
 
@@ -152,13 +153,7 @@ export const DonationsTab = () => {
     }).format(value || 0);
   };
 
-  if (donations.isLoading || donationStats.isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+
 
   return (
     <Box>
@@ -221,71 +216,73 @@ export const DonationsTab = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {donations.data?.map((donation) => (
-              <TableRow key={donation.id}>
-                <TableCell>
-                  {new Date(donation.createdAt).toLocaleDateString("fr-FR")}
-                </TableCell>
-                <TableCell>
-                  <Box>
-                    <Typography variant="subtitle2">
-                      {donation.donor_name}
-                    </Typography>
-                    {donation.donor_contact && (
-                      <Typography variant="caption" color="text.secondary">
-                        {donation.donor_contact}
+            <Loading isLoading={donations.isLoading} tableCols={8}>
+              {donations.data?.map((donation) => (
+                <TableRow key={donation.id}>
+                  <TableCell>
+                    {new Date(donation.createdAt).toLocaleDateString("fr-FR")}
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="subtitle2">
+                        {donation.donor_name}
                       </Typography>
-                    )}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {donation.item_description}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" fontWeight="bold">
-                    {formatCurrency(donation.estimated_value)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" fontWeight="bold">
-                    {donation.weight || 0} kg
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={getStatusLabel(donation.status)}
-                    color={getStatusColor(donation.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{donation.User?.username || "-"}</TableCell>
-                <TableCell>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenDonationDialog(donation)}
-                    title="Modifier"
-                  >
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenDonationDialog(donation)}
-                    title="Voir les détails"
-                  >
-                    <Visibility />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteDonation(donation)}
-                    title="Supprimer"
-                  >
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+                      {donation.donor_contact && (
+                        <Typography variant="caption" color="text.secondary">
+                          {donation.donor_contact}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {donation.item_description}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatCurrency(donation.estimated_value)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="bold">
+                      {donation.weight || 0} kg
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={getStatusLabel(donation.status)}
+                      color={getStatusColor(donation.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{donation.User?.username || "-"}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDonationDialog(donation)}
+                      title="Modifier"
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDonationDialog(donation)}
+                      title="Voir les détails"
+                    >
+                      <Visibility />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteDonation(donation)}
+                      title="Supprimer"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Loading>
           </TableBody>
         </Table>
       </Paper>

@@ -57,6 +57,7 @@ import {
   updateLabeledItem,
   type itemsFilters,
 } from "../services/api/labeledItems";
+import { Loading } from "../components/Loading";
 
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
@@ -374,125 +375,121 @@ const Labels = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {items.isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  Chargement...
-                </TableCell>
-              </TableRow>
-            ) : items.data?.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  Aucun article trouvé
-                </TableCell>
-              </TableRow>
-            ) : (
-              items.data?.items.map((item) => (
-                <TableRow key={item.id} hover>
-                  <TableCell>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {item.barcode}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      {item?.category?.name || "-"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="textSecondary">
-                      {item?.subcategory?.name || "-"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {item.weight ? `${item.weight} kg` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="primary"
-                    >
-                      {item.price.toFixed(2)} €
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={
-                        conditionOptions.find(
-                          (c) => c.value === item.condition_state,
-                        )?.label
-                      }
-                      color={
-                        conditionOptions.find(
-                          (c) => c.value === item.condition_state,
-                        )?.color
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={
-                        statusOptions.find((s) => s.value === item.status)
-                          ?.label
-                      }
-                      color={
-                        statusOptions.find((s) => s.value === item.status)
-                          ?.color
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Tooltip title="Imprimer étiquette">
-                        <IconButton
-                          size="small"
-                          onClick={() => triggerPrintLabel(item)}
-                        >
-                          <Print />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Modifier">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(item)}
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      {item.status === "available" && (
-                        <Tooltip title="Marquer comme vendu">
-                          <IconButton
-                            size="small"
-                            color="success"
-                            onClick={() => handleSell(item.id)}
-                          >
-                            <PointOfSale />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+            <Loading isLoading={items.isLoading} tableCols={8}>
+              {items.data?.items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    Aucun article trouvé
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              ) : (
+                items.data?.items.map((item) => (
+                  <TableRow key={item.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontFamily="monospace">
+                        {item.barcode}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {item?.category?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="textSecondary">
+                        {item?.subcategory?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {item.weight ? `${item.weight} kg` : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {item.price.toFixed(2)} €
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={
+                          conditionOptions.find(
+                            (c) => c.value === item.condition_state,
+                          )?.label
+                        }
+                        color={
+                          conditionOptions.find(
+                            (c) => c.value === item.condition_state,
+                          )?.color
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={
+                          statusOptions.find((s) => s.value === item.status)
+                            ?.label
+                        }
+                        color={
+                          statusOptions.find((s) => s.value === item.status)
+                            ?.color
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Tooltip title="Imprimer étiquette">
+                          <IconButton
+                            size="small"
+                            onClick={() => triggerPrintLabel(item)}
+                          >
+                            <Print />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Modifier">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenDialog(item)}
+                          >
+                            <Edit />
+                          </IconButton>
+                        </Tooltip>
+                        {item.status === "available" && (
+                          <Tooltip title="Marquer comme vendu">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={() => handleSell(item.id)}
+                            >
+                              <PointOfSale />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </Loading>
           </TableBody>
         </Table>
       </TableContainer>
       <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
         <Pagination
-          count={Math.trunc((items.data?.total || 0) / 50 || 10)+1}
+          count={Math.trunc((items.data?.total || 0) / 50 || 10) + 1}
           color="primary"
           page={page}
           onChange={(e, val) => setPage(val)}

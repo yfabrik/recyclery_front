@@ -209,23 +209,8 @@ export const EcoOrganismsTab = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            <Loading isLoading={ecoOrganisms.isLoading} alt={
-              <TableRow> <TableCell colSpan={6} align="center">
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flexDirection: "column",
-                    gap: 2,
-                    py: 2
-                  }}
-                >
-                  <CircularProgress size={60} />
-                  <Typography variant="body2" color="text.secondary" align="center" >Chargement...</Typography>
-                </Box>
-              </TableCell></TableRow>
-            }>
+            <Loading isLoading={ecoOrganisms.isLoading} tableCols={6}
+            >
 
               {ecoOrganisms.data?.map((org) => (
                 <TableRow key={org.id}>
