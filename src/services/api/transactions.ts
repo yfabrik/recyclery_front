@@ -72,7 +72,7 @@ export const getTranscationPostalStats = (
 export const createRefund = (data) =>
   axiosInstance.post(`/api/sales-transactions/refund`, data);
 
-export const getRefundForTransaction = (id: number) =>
+export const getRefundForTransaction = (id: number): Promise<AxiosResponse<{ success: true, refunds: TransactionModel[] }>> =>
   axiosInstance.get(`/api/sales-transactions/${id}/refunds`);
 
 export const createCreditNote = (data) =>

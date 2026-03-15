@@ -270,6 +270,19 @@ export interface TransactionModel extends BaseModel {
   sold_by?: number;
   User?: UserModel;
   LabeledItems?: LabeledItemModel[];
+  items?: (LabeledItemModel & { TransactionItem: TransactionItem })[];
+}
+
+export interface TransactionItem extends Omit<BaseModel, "id"> {
+  bundlePrice: number,
+  bundleQuantity: number
+  labeled_item_id: number,
+  name: string
+  price: number
+  promotionValue: number
+  quantity: number
+  total_price: number
+  transaction_id: number
 }
 
 export interface ScheduleModel extends TaskModel {
