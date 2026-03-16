@@ -18,33 +18,28 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
   MenuItem,
   Pagination,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
-  type TypographyOwnProps,
+  type TypographyOwnProps
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import type { TransactionModel } from "../../interfaces/Models";
+import type { StoreModel, TransactionModel } from "../../interfaces/Models";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import { fetchCategories } from "../../services/api/categories";
 import { fetchStores as fStore } from "../../services/api/store";
@@ -62,13 +57,14 @@ import { DetailTransaction } from "../DetailTransaction";
 import { FormDate, FormInput, FormSelect } from "../forms/FormBase";
 import { RefundForm, type Schema } from "../forms/RefundForm";
 import { Loading } from "../Loading";
+import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
 import { TransactionTableLine } from "../TransactionTableLine";
 
 export const SalesAnalyticsTab = () => {
   const [page, setPage] = useState(1);
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     store_id: "",
     period: "month", // 'week', 'month', 'custom'
     date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -111,16 +107,18 @@ export const SalesAnalyticsTab = () => {
     queryFn: () =>
       getTranscationStats(filters).then((response) => response.data.stats),
     placeholderData: {
-      stats: {
-        total_transactions: 0,
-        total_sales: 0,
-        total_sales_before_refunds: 0,
-        total_refunded: 0,
-        average_transaction: 0,
-        sessions_count: 0,
-        payment_methods: [],
-      },
-    },
+      total_transactions: 0,
+      total_sales: 0,
+      total_sales_before_refunds: 0,
+      total_refunded: 0,
+      average_transaction: 0,
+      sessions_count: 0,
+      payment_methods: [],
+      by_day: [],
+      by_category: [],
+    } as Awaited<
+      ReturnType<typeof getTranscationStats>
+    >["data"]["stats"],
   });
 
   const categories = useQuery({
@@ -167,35 +165,6 @@ export const SalesAnalyticsTab = () => {
     });
   };
 
-  const handlePeriodChange = (period: string) => {
-    const today = new Date();
-    let date_from, date_to;
-
-    switch (period) {
-      case "week":
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Lundi
-        date_from = startOfWeek.toISOString().split("T")[0];
-        date_to = today.toISOString().split("T")[0];
-        break;
-      case "month":
-        date_from = new Date(today.getFullYear(), today.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        date_to = today.toISOString().split("T")[0];
-        break;
-      default:
-        // Garder les dates actuelles pour 'custom'
-        return setFilters((prev) => ({ ...prev, period }));
-    }
-
-    setFilters((prev) => ({
-      ...prev,
-      period,
-      date_from,
-      date_to,
-    }));
-  };
 
   const handleReprintReceipt = (transactionId: number) => {
     // Fonction pour réimprimer le ticket de caisse
@@ -269,196 +238,16 @@ export const SalesAnalyticsTab = () => {
           Filtres
         </Typography>
 
-        <Grid container spacing={2} alignItems="center">
-          {/* Filtre par magasin */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            {/* <FormSelect control={filters.control} name="store_id" label="Magasin" >
-              <MenuItem key="all-stores" value="">
-                Tous les magasins
-              </MenuItem>
-              {stores.data?.map((store) => (
-                <MenuItem key={store.id} value={store.id}>
-                  {store.name}
-                </MenuItem>
-              ))}
-            </FormSelect> */}
-            <FormControl fullWidth>
-              <InputLabel>Magasin</InputLabel>
-              <Select
-                value={filters.store_id}
-                label="Magasin"
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, store_id: e.target.value }))
-                }
-              >
-                <MenuItem key="all-stores" value="">
-                  Tous les magasins
-                </MenuItem>
-                {stores.data?.map((store) => (
-                  <MenuItem key={store.id} value={store.id}>
-                    {store.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Filtre par période */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            {/* <FormSelect control={filters.control} name="period" label="Période">
-              <MenuItem key="week" value="week">
-                Cette semaine
-              </MenuItem>
-              <MenuItem key="month" value="month">
-                Ce mois
-              </MenuItem>
-              <MenuItem key="custom" value="custom">
-                Personnalisée
-              </MenuItem>
-            </FormSelect> */}
-            <FormControl fullWidth>
-              <InputLabel>Période</InputLabel>
-              <Select
-                value={filters.period}
-                label="Période"
-                onChange={(e) => handlePeriodChange(e.target.value)}
-              >
-                <MenuItem key="week" value="week">
-                  Cette semaine
-                </MenuItem>
-                <MenuItem key="month" value="month">
-                  Ce mois
-                </MenuItem>
-                <MenuItem key="custom" value="custom">
-                  Personnalisée
-                </MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Dates personnalisées */}
-          {filters.period === "custom" && (
-            <>
-              <Grid size={{ xs: 12, md: 3 }}>
-                {/* <FormDate control={filters.control} label="Date de début" name="date_from" /> */}
-
-                <TextField
-                  fullWidth
-                  label="Date de début"
-                  type="date"
-                  value={filters.date_from}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      date_from: e.target.value,
-                    }))
-                  }
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                {/* <FormDate control={filters.control} label="Date de fin" name="date_to" /> */}
-
-                <TextField
-                  fullWidth
-                  label="Date de fin"
-                  type="date"
-                  value={filters.date_to}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, date_to: e.target.value }))
-                  }
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
-              </Grid>
-            </>
-          )}
-
-          {/* Recherche par numéro de transaction */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            {/* <FormInput control={filters.control} name="transaction_number" label="N° de transaction" extra={{
-              placeholder: "Ex: 20231215-001",
-              slotProps: {
-                input: {
-                  endAdornment:
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        filters.resetField('transaction_number')
-                      }
-                      edge="end"
-                    >
-                      <Clear />
-                    </IconButton>
-                }
-              }
-            }} /> */}
-            <TextField
-              fullWidth
-              label="N° de transaction"
-              value={filters.transaction_number}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  transaction_number: e.target.value,
-                }))
-              }
-              placeholder="Ex: 20231215-001"
-              variant="outlined"
-              size="small"
-              slotProps={{
-                input: {
-                  endAdornment: filters.transaction_number && (
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          transaction_number: "",
-                        }))
-                      }
-                      edge="end"
-                    >
-                      <Clear />
-                    </IconButton>
-                  ),
-                },
-              }}
-            />
-          </Grid>
-
-          {/* Bouton pour effacer tous les filtres */}
-          <Grid size={{ xs: 12 }}>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-              {/* <Button
-                variant="outlined"
-                startIcon={<Clear />}
-                onClick={() => filters.reset()}
-              >Effacer tous les filtres</Button> */}
-              <Button
-                variant="outlined"
-                startIcon={<Clear />}
-                onClick={() =>
-                  setFilters({
-                    store_id: "",
-                    period: "month",
-                    date_from: new Date(
-                      new Date().getFullYear(),
-                      new Date().getMonth(),
-                      1,
-                    )
-                      .toISOString()
-                      .split("T")[0],
-                    date_to: new Date().toISOString().split("T")[0],
-                    transaction_number: "",
-                  })
-                }
-                size="small"
-              >
-                Effacer tous les filtres
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
+        <FilterForm
+          stores={stores.data || []}
+          defaultValues={filters}
+          onChange={(values) =>
+            setFilters((prev) => ({
+              ...prev,
+              ...values,
+            }))
+          }
+        />
       </Paper>
       {/* Statistiques principales */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -495,8 +284,8 @@ export const SalesAnalyticsTab = () => {
                       Brut:{" "}
                       {formatCurrency(
                         statistics.data?.total_sales_before_refunds ||
-                          statistics.data?.total_sales ||
-                          0,
+                        statistics.data?.total_sales ||
+                        0,
                       )}
                     </Typography>
                     <Typography variant="caption" color="error" display="block">
@@ -537,66 +326,19 @@ export const SalesAnalyticsTab = () => {
       </Grid>
       {/* Répartition par mode de paiement et codes postaux */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
+
         {/* Répartition par mode de paiement */}
         {statistics.data?.payment_methods &&
           statistics.data?.payment_methods.length > 0 && (
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    💳 Répartition par mode de paiement
-                  </Typography>
-                  {statistics.data?.payment_methods.map((method, index) => (
-                    <Box key={index} sx={{ mb: 2 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          mb: 0.5,
-                        }}
-                      >
-                        <Typography variant="body2">
-                          {getPaymentMethodLabel(method.payment_method)}
-                        </Typography>
-                        <Typography variant="body2" fontWeight="bold">
-                          {method.count} (
-                          {(
-                            (method.count /
-                              statistics.data?.total_transactions) *
-                            100
-                          ).toFixed(1)}
-                          %)
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography variant="body2" color="textSecondary">
-                          Montant total
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="success.main"
-                          fontWeight="bold"
-                        >
-                          {formatCurrency(method.total)}
-                        </Typography>
-                      </Box>
-                      <Divider sx={{ mt: 1 }} />
-                    </Box>
-                  ))}
-                </CardContent>
-              </Card>
+              <SalePaymentStats filters={filters} statistics={statistics.data} />
             </Grid>
           )}
 
         {/* Statistiques par code postal */}
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <SalePostalStats />
+          <SalePostalStats filters={filters} />
         </Grid>
       </Grid>
       {/* Liste des transactions */}
@@ -616,9 +358,8 @@ export const SalesAnalyticsTab = () => {
               </Typography>
               {filters.transaction_number && (
                 <Chip
-                  label={`Filtré par: ${filters.transaction_number} (${
-                    transactions.data?.transactions?.length || 0
-                  } résultat${transactions.data?.transactions?.length || 0 > 1 ? "s" : ""})`}
+                  label={`Filtré par: ${filters.transaction_number} (${transactions.data?.transactions?.length || 0
+                    } résultat${transactions.data?.transactions?.length || 0 > 1 ? "s" : ""})`}
                   color="primary"
                   variant="outlined"
                   onDelete={() =>
@@ -630,7 +371,7 @@ export const SalesAnalyticsTab = () => {
             </Box>
 
             {!transactions.data?.transactions?.length ||
-            transactions.data?.transactions?.length === 0 ? (
+              transactions.data?.transactions?.length === 0 ? (
               <Alert severity="info">
                 Aucune transaction trouvée pour la période sélectionnée.
               </Alert>
@@ -668,7 +409,7 @@ export const SalesAnalyticsTab = () => {
               <Pagination
                 count={
                   Math.trunc((transactions.data?.pagination?.total || 0) / 50) +
-                    1 || 10
+                  1 || 10
                 }
                 color="primary"
                 page={page}
@@ -824,8 +565,8 @@ const CardStat = ({ value, text, color }: CardStatProps) => {
                 Brut:{" "}
                 {formatCurrency(
                   statistics.data?.total_sales_before_refunds ||
-                    statistics.data?.total_sales ||
-                    0,
+                  statistics.data?.total_sales ||
+                  0,
                 )}
               </Typography>
               <Typography variant="caption" color="error" display="block">
@@ -839,34 +580,79 @@ const CardStat = ({ value, text, color }: CardStatProps) => {
   );
 };
 
+const filterSchema = z.object({
+  store_id: z.union([idSchema(), nullString()]),
+  period: z.enum(["week", "month", "custom"]),
+  date_from: z.coerce
+    .date()
+    .transform((val) => val.toISOString().slice(0, 10)),
+  date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
+  transaction_number: z.string().trim().optional(),
+});
+type Filters = z.infer<typeof filterSchema>;
+
 interface FilterFormProps {
   stores: StoreModel[];
+  defaultValues: Filters;
+  onChange: (values: Filters) => void;
 }
-const FilterForm = ({ stores }: FilterFormProps) => {
-  const filterSchema = z.object({
-    store_id: [idSchema(), nullString()],
-    date_from: z.coerce
-      .date()
-      .transform((val) => val.toISOString().slice(0, 10)),
-    date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
-    transaction_number: [z.string().trim().nonempty(), nullString()],
-  });
-  type Filters = z.infer<typeof filterSchema>;
-
+const FilterForm = ({ stores, defaultValues, onChange }: FilterFormProps) => {
   const filters = useForm({
-    defaultValues: {
-      store_id: "",
-      period: "month", // 'week', 'month', 'custom'
-      date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        .toISOString()
-        .split("T")[0],
-      date_to: new Date().toISOString().split("T")[0],
-      transaction_number: "", // Recherche par numéro de transaction
-    },
+    defaultValues,
     resolver: zodResolver(filterSchema),
   });
+  const onSubmit = (data: Filters) => {
+    onChange(data);
+    console.log(data);
+  };
+
+  const period = filters.watch("period");
+
+  useEffect(() => {
+    const today = new Date();
+
+    if (period === "week") {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+      const date_from = startOfWeek.toISOString().split("T")[0];
+      const date_to = today.toISOString().split("T")[0];
+
+      filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
+      filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
+    } else if (period === "month") {
+      const date_from = new Date(today.getFullYear(), today.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
+      const date_to = today.toISOString().split("T")[0];
+
+      filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
+      filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
+    }
+  }, [period, filters]);
+
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const subscription = filters.watch(() => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+
+      debounceTimeout.current = setTimeout(() => {
+        filters.handleSubmit(onSubmit)();
+      }, 500);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [filters]);
+
   return (
-    <form>
+    <form onSubmit={filters.handleSubmit(onSubmit)}>
       <Grid container spacing={2} alignItems="center">
         {/* Filtre par magasin */}
         <Grid size={{ xs: 12, md: 3 }}>
@@ -898,7 +684,7 @@ const FilterForm = ({ stores }: FilterFormProps) => {
         </Grid>
 
         {/* Dates personnalisées */}
-        {filters.period === "custom" && (
+        {period === "custom" && (
           <>
             <Grid size={{ xs: 12, md: 3 }}>
               <FormDate
