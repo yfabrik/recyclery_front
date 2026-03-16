@@ -15,11 +15,10 @@ export interface CategoryModel extends BaseModel {
   defaultWeight: number;
   defaultPrice: number;
   IO: number;
-  priceBasedOnWeight: boolean
-  bundlePrice: number
-  bundleQuantity: number
-  Promotions?: PromoModel[]
-
+  priceBasedOnWeight: boolean;
+  bundlePrice: number;
+  bundleQuantity: number;
+  Promotions?: PromoModel[];
 }
 
 export interface SkillModel extends BaseModel {
@@ -53,7 +52,13 @@ export interface CollectionPointModel extends BaseModel {
   contact_person: string | null;
   contact_phone: string | null;
   contact_email: string | null;
-  type: "standard" | "entreprise" | "association" | "school" | "hospital" | "other";
+  type:
+    | "standard"
+    | "entreprise"
+    | "association"
+    | "school"
+    | "hospital"
+    | "other";
   notes: string | null;
   is_active: boolean;
   recyclery_id?: number | null;
@@ -256,7 +261,7 @@ export interface CashSession extends BaseModel {
 export interface TransactionModel extends BaseModel {
   change_amount: number;
   total_amount: number;
-  payment_method: "cash" | "card" | "check";
+  payment_method: "cash" | "card" | "check" | "giftCard";
   transactionType: "sell" | "refund";
   payment_amount: number;
   // customer_name?: string;
@@ -271,18 +276,19 @@ export interface TransactionModel extends BaseModel {
   User?: UserModel;
   LabeledItems?: LabeledItemModel[];
   items?: (LabeledItemModel & { TransactionItem: TransactionItem })[];
+  refunds?: TransactionModel[];
 }
 
 export interface TransactionItem extends Omit<BaseModel, "id"> {
-  bundlePrice: number,
-  bundleQuantity: number
-  labeled_item_id: number,
-  name: string
-  price: number
-  promotionValue: number
-  quantity: number
-  total_price: number
-  transaction_id: number
+  bundlePrice: number;
+  bundleQuantity: number;
+  labeled_item_id: number;
+  name: string;
+  price: number;
+  promotionValue: number;
+  quantity: number;
+  total_price: number;
+  transaction_id: number;
 }
 
 export interface ScheduleModel extends TaskModel {
@@ -290,7 +296,6 @@ export interface ScheduleModel extends TaskModel {
   recurrence_pattern: "daily" | "weekly" | "monthly";
   Tasks?: TaskModel[];
 }
-
 
 export interface WasteModel extends BaseModel {
   disposal_date: Date;
@@ -311,12 +316,11 @@ export interface WasteModel extends BaseModel {
   User?: UserModel;
 }
 
-
 export interface PromoModel extends BaseModel {
-  category_id: number
-  promotionValue: number
-  startDate: string
-  endDate: string | null
-  isActive: boolean
-  Category?: CategoryModel
+  category_id: number;
+  promotionValue: number;
+  startDate: string;
+  endDate: string | null;
+  isActive: boolean;
+  Category?: CategoryModel;
 }

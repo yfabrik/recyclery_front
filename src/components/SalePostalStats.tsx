@@ -1,0 +1,70 @@
+import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
+import { formatCurrency } from "../services/cartService";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getTranscationPostalStats,
+  type transactionsFilters,
+} from "../services/api/transactions";
+import { Loading } from "./Loading";
+
+interface SalePostalStatsProps {
+  filters: transactionsFilters;
+}
+export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
+  const postalCodeStats = useQuery({
+    queryKey: ["transactionsPostalStats", filters],
+    queryFn: () =>
+      getTranscationPostalStats(filters).then(
+        (response) => response.data.postal_codes,
+      ),
+  });
+
+  return (
+    <Card>
+      <CardContent>
+        <Loading isLoading={postalCodeStats.isLoading}>
+          <Typography variant="h6" gutterBottom>
+            📍 Top des codes postaux
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Les 10 codes postaux générant le plus de chiffre d'affaires
+          </Typography>
+          {postalCodeStats.data?.slice(0, 10).map((postal, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 0.5,
+                }}
+              >
+                <Typography variant="body2" fontWeight="bold">
+                  📮 {postal.customer_postal_code}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="success.main"
+                  fontWeight="bold"
+                >
+                  {formatCurrency(postal.total_sales)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography variant="body2" color="textSecondary">
+                  {postal.transaction_count} transaction
+                  {postal.transaction_count > 1 ? "s" : ""}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Panier moyen: {formatCurrency(postal.average_transaction)}
+                </Typography>
+              </Box>
+              {index < postalCodeStats.data?.slice(0, 10).length - 1 && (
+                <Divider sx={{ mt: 1 }} />
+              )}
+            </Box>
+          ))}
+        </Loading>
+      </CardContent>
+    </Card>
+  );
+};

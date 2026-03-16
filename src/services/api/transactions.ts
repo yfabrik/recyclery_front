@@ -10,6 +10,7 @@ export interface transactionsFilters {
   session?: number;
   payment_method?: TransactionModel["payment_method"];
   page?: number;
+  include: ("refund" | "items")[];
 }
 interface Stats {
   total_transactions: number;
@@ -44,7 +45,10 @@ export const getTransactions = (
     transactions: TransactionModel[];
     pagination: { limit: number; offset: number; total: number };
   }>
-> => axiosInstance.get("/api/sales-transactions", { params: filters });
+> =>
+  axiosInstance.get("/api/sales-transactions", {
+    params: { ...filters, include: filters?.include.toString() },
+  });
 
 export const getTranscationStats = (
   filters: transactionsFilters | null = null,
@@ -69,10 +73,12 @@ export const getTranscationPostalStats = (
     params: filters,
   });
 
-export const createRefund = (data) =>
-  axiosInstance.post(`/api/sales-transactions/refund`, data);
+export const createRefund = (id, data) =>
+  axiosInstance.post(`/api/sales-transactions/${id}/refunds`, data);
 
-export const getRefundForTransaction = (id: number): Promise<AxiosResponse<{ success: true, refunds: TransactionModel[] }>> =>
+export const getRefundForTransaction = (
+  id: number,
+): Promise<AxiosResponse<{ success: true; refunds: TransactionModel[] }>> =>
   axiosInstance.get(`/api/sales-transactions/${id}/refunds`);
 
 export const createCreditNote = (data) =>
