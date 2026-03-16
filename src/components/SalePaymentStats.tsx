@@ -3,6 +3,7 @@ import { formatCurrency, getPaymentMethodLabel } from "../services/cartService"
 import { useQuery } from "@tanstack/react-query";
 import { getTranscationStats, type transactionsFilters } from "../services/api/transactions";
 import { Loading } from "./Loading";
+import { CreditCard } from "@mui/icons-material";
 
 interface SalePaymentStatsProps {
     filters: transactionsFilters;
@@ -31,7 +32,7 @@ export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
             <CardContent>
                 <Loading isLoading={statistics.isLoading}>
                     <Typography variant="h6" gutterBottom>
-                        💳 Répartition par mode de paiement
+                        <CreditCard/> Répartition par mode de paiement
                     </Typography>
                     {statistics.data?.payment_methods.map((method, index) => (
                         <Box key={index} sx={{ mb: 2 }}>
