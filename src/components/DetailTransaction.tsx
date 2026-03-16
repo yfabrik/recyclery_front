@@ -104,7 +104,9 @@ export const DetailTransaction = ({
               <Typography variant="body2" color="textSecondary">
                 Statut:{" "}
                 <strong>
-                  {selectedTransaction?.refunds && selectedTransaction?.refunds[0].createdAt ? (
+                  {selectedTransaction?.refunds &&
+                  selectedTransaction.refunds.length > 0 &&
+                  selectedTransaction?.refunds[0].createdAt ? (
                     <Chip label="Remboursé" color="error" size="small" />
                   ) : (
                     <Chip label="Actif" color="success" size="small" />

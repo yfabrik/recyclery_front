@@ -1,12 +1,12 @@
 import { Print, Undo, Visibility } from "@mui/icons-material";
 import {
-    Box,
-    Chip,
-    IconButton,
-    TableCell,
-    TableRow,
-    Tooltip,
-    Typography,
+  Box,
+  Chip,
+  IconButton,
+  TableCell,
+  TableRow,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import type { TransactionModel } from "../interfaces/Models";
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
@@ -108,7 +108,7 @@ interface RefundInfosProps {
   transaction: TransactionModel;
 }
 const RefundInfos = ({ transaction }: RefundInfosProps) => {
-  if (!transaction.refunds) {
+  if (!transaction.refunds || transaction.refunds.length === 0) {
     return (
       <Typography variant="body2" color="textSecondary">
         Aucun
