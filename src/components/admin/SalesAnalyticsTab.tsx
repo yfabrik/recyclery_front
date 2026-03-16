@@ -19,8 +19,6 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  IconButton,
-  MenuItem,
   Pagination,
   Paper,
   Table,
@@ -29,18 +27,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
-  type TypographyOwnProps
+  Typography
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import z from "zod";
-import type { StoreModel, TransactionModel } from "../../interfaces/Models";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import type { TransactionModel } from "../../interfaces/Models";
 import { fetchCategories } from "../../services/api/categories";
 import { fetchStores as fStore } from "../../services/api/store";
 import {
@@ -54,8 +47,8 @@ import {
   getPaymentMethodLabel,
 } from "../../services/cartService";
 import { DetailTransaction } from "../DetailTransaction";
-import { FormDate, FormInput, FormSelect } from "../forms/FormBase";
 import { RefundForm, type Schema } from "../forms/RefundForm";
+import { SaleFiltersForm, type Filters } from "../forms/saleFiltersForm";
 import { Loading } from "../Loading";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
@@ -238,7 +231,7 @@ export const SalesAnalyticsTab = () => {
           Filtres
         </Typography>
 
-        <FilterForm
+        <SaleFiltersForm
           stores={stores.data || []}
           defaultValues={filters}
           onChange={(values) =>
@@ -273,8 +266,7 @@ export const SalesAnalyticsTab = () => {
               <Typography variant="body2" color="textSecondary">
                 Chiffre d'affaires net
               </Typography>
-              {statistics.data?.total_refunded ||
-                (0 > 0 && (
+              {statistics.data?.total_refunded && (
                   <Box sx={{ mt: 1 }}>
                     <Typography
                       variant="caption"
@@ -293,7 +285,7 @@ export const SalesAnalyticsTab = () => {
                       {formatCurrency(statistics.data?.total_refunded || 0)}
                     </Typography>
                   </Box>
-                ))}
+                )}
             </CardContent>
           </Card>
         </Grid>
@@ -536,211 +528,5 @@ export const SalesAnalyticsTab = () => {
         </DialogActions>
       </Dialog>
     </Box>
-  );
-};
-
-interface CardStatProps {
-  value: string;
-  text: string;
-  color: TypographyOwnProps["color"];
-}
-const CardStat = ({ value, text, color }: CardStatProps) => {
-  return (
-    <Card>
-      <CardContent sx={{ textAlign: "center" }}>
-        <Typography variant="h4" color={color} fontWeight="bold">
-          {value}
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          {text}
-        </Typography>
-        {statistics.data?.total_refunded ||
-          (0 > 0 && (
-            <Box sx={{ mt: 1 }}>
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                display="block"
-              >
-                Brut:{" "}
-                {formatCurrency(
-                  statistics.data?.total_sales_before_refunds ||
-                  statistics.data?.total_sales ||
-                  0,
-                )}
-              </Typography>
-              <Typography variant="caption" color="error" display="block">
-                Remboursé: -
-                {formatCurrency(statistics.data?.total_refunded || 0)}
-              </Typography>
-            </Box>
-          ))}
-      </CardContent>
-    </Card>
-  );
-};
-
-const filterSchema = z.object({
-  store_id: z.union([idSchema(), nullString()]),
-  period: z.enum(["week", "month", "custom"]),
-  date_from: z.coerce
-    .date()
-    .transform((val) => val.toISOString().slice(0, 10)),
-  date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
-  transaction_number: z.string().trim().optional(),
-});
-type Filters = z.infer<typeof filterSchema>;
-
-interface FilterFormProps {
-  stores: StoreModel[];
-  defaultValues: Filters;
-  onChange: (values: Filters) => void;
-}
-const FilterForm = ({ stores, defaultValues, onChange }: FilterFormProps) => {
-  const filters = useForm({
-    defaultValues,
-    resolver: zodResolver(filterSchema),
-  });
-  const onSubmit = (data: Filters) => {
-    onChange(data);
-    console.log(data);
-  };
-
-  const period = filters.watch("period");
-
-  useEffect(() => {
-    const today = new Date();
-
-    if (period === "week") {
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-      const date_from = startOfWeek.toISOString().split("T")[0];
-      const date_to = today.toISOString().split("T")[0];
-
-      filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
-      filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
-    } else if (period === "month") {
-      const date_from = new Date(today.getFullYear(), today.getMonth(), 1)
-        .toISOString()
-        .split("T")[0];
-      const date_to = today.toISOString().split("T")[0];
-
-      filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
-      filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
-    }
-  }, [period, filters]);
-
-  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const subscription = filters.watch(() => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-
-      debounceTimeout.current = setTimeout(() => {
-        filters.handleSubmit(onSubmit)();
-      }, 500);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-  }, [filters]);
-
-  return (
-    <form onSubmit={filters.handleSubmit(onSubmit)}>
-      <Grid container spacing={2} alignItems="center">
-        {/* Filtre par magasin */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <FormSelect control={filters.control} name="store_id" label="Magasin">
-            <MenuItem key="all-stores" value="">
-              Tous les magasins
-            </MenuItem>
-            {stores.map((store) => (
-              <MenuItem key={store.id} value={store.id}>
-                {store.name}
-              </MenuItem>
-            ))}
-          </FormSelect>
-        </Grid>
-
-        {/* Filtre par période */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <FormSelect control={filters.control} name="period" label="Période">
-            <MenuItem key="week" value="week">
-              Cette semaine
-            </MenuItem>
-            <MenuItem key="month" value="month">
-              Ce mois
-            </MenuItem>
-            <MenuItem key="custom" value="custom">
-              Personnalisée
-            </MenuItem>
-          </FormSelect>
-        </Grid>
-
-        {/* Dates personnalisées */}
-        {period === "custom" && (
-          <>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <FormDate
-                control={filters.control}
-                label="Date de début"
-                name="date_from"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <FormDate
-                control={filters.control}
-                label="Date de fin"
-                name="date_to"
-              />
-            </Grid>
-          </>
-        )}
-
-        {/* Recherche par numéro de transaction */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <FormInput
-            control={filters.control}
-            name="transaction_number"
-            label="N° de transaction"
-            extra={{
-              placeholder: "Ex: 20231215-001",
-              slotProps: {
-                input: {
-                  endAdornment: (
-                    <IconButton
-                      size="small"
-                      onClick={() => filters.resetField("transaction_number")}
-                      edge="end"
-                    >
-                      <Clear />
-                    </IconButton>
-                  ),
-                },
-              },
-            }}
-          />
-        </Grid>
-
-        {/* Bouton pour effacer tous les filtres */}
-        <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Clear />}
-              onClick={() => filters.reset()}
-            >
-              Effacer tous les filtres
-            </Button>
-          </Box>
-        </Grid>
-      </Grid>
-    </form>
   );
 };
