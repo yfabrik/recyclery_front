@@ -1,9 +1,9 @@
-import { Add, Cancel, Edit, Loyalty, Save } from "@mui/icons-material"
-import { Box, Button, Card, CardActions, CardContent, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
+import { Add, Cancel, Category, CalendarMonth, Edit, Loyalty, Percent, Save, SubdirectoryArrowRight } from "@mui/icons-material"
+import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import type { CategoryModel, PromoModel } from "../../../interfaces/Models"
+import type { PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { PromoForm, type Schema } from "../../forms/PromoForm"
@@ -44,7 +44,7 @@ export const PromoTab = () => {
     })
     const editPromo = useMutation({
         mutationFn: (data: { id: number, data: Schema }) => updatePromo(data.id, data.data),
-        onSuccess: (data, variables) => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
             toast.success(data.data.message)
             handleCloseDialog()
@@ -65,8 +65,10 @@ export const PromoTab = () => {
 
     const handleOpenDialog = (promo: PromoModel) => {
         const categorie = promo.Category?.parent ?? promo.Category
-        const subcategorie = promo.Category?.parent ? promo.Category : null
-        setCurrentPromo({ ...promo, category_id: categorie?.id || promo.category_id, subcategory_id: subcategorie?.id })
+        setCurrentPromo({
+            ...promo,
+            category_id: categorie?.id || promo.category_id,
+        } as PromoModel | null)
         SetIsModaleOpen(true)
     }
 
@@ -110,23 +112,96 @@ export const PromoTab = () => {
             <Loading isLoading={promotions.isLoading}>
                 <Grid container spacing={3}>
                     {promotions.data?.map((promo) => (
-
                         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={promo.id}>
                             <Card
-                                sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+                                sx={{
+                                    height: "100%",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    borderRadius: 3,
+                                    boxShadow: 3,
+                                }}
                             >
-                                <CardContent sx={{ flexGrow: 1 }}>
+                                <CardContent
+                                    sx={{
+                                        flexGrow: 1,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 1.5,
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                        <Category fontSize="small" color="primary" />
+                                        <Box sx={{ ml: 1 }}>
+                                            <Typography variant="subtitle1" fontWeight={600}>
+                                                {getPromoCategories(promo).categorie}
+                                            </Typography>
+                                            {getPromoCategories(promo).subcategorie && (
+                                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                                    <SubdirectoryArrowRight
+                                                        fontSize="inherit"
+                                                        sx={{ mr: 0.5, opacity: 0.7 }}
+                                                    />
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {getPromoCategories(promo).subcategorie}
+                                                    </Typography>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </Box>
 
-                                    <Typography>{getPromoCategories(promo).categorie}</Typography>
-                                    <Typography>{getPromoCategories(promo).subcategorie}</Typography>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <CalendarMonth
+                                                fontSize="small"
+                                                sx={{ mr: 1, color: "text.secondary" }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                début : {new Date(promo.startDate).toLocaleDateString()}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <CalendarMonth
+                                                fontSize="small"
+                                                sx={{ mr: 1, color: "text.secondary" }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                fin :{" "}
+                                                {promo.endDate
+                                                    ? new Date(promo.endDate).toLocaleDateString()
+                                                    : "jamais"}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
 
-                                    <Typography>debut :{new Date(promo.startDate).toLocaleDateString()}</Typography>
-                                    <Typography>fin :{promo.endDate ? new Date(promo.endDate).toLocaleDateString() : "jamais"}</Typography>
-                                    <Typography>reduction {promo.promotionValue} %</Typography>
+                                    <Box
+                                        sx={{
+                                            mt: 1.5,
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            px: 1.5,
+                                            py: 0.5,
+                                            borderRadius: 999,
+                                            bgcolor: "success.light",
+                                            color: "success.dark",
+                                            width: "fit-content",
+                                            columnGap: 0.5,
+                                        }}
+                                    >
+                                        <Percent fontSize="small" />
+                                        <Typography variant="body2" fontWeight={600}>
+                                            Réduction {promo.promotionValue}%
+                                        </Typography>
+                                    </Box>
                                 </CardContent>
-                                <CardActions>
-                                    <Button startIcon={<Edit />} variant="contained" onClick={() => handleOpenDialog(promo)}>
-                                        Edit
+                                <CardActions sx={{ mt: "auto", justifyContent: "flex-end", px: 2, pb: 2 }}>
+                                    <Button
+                                        startIcon={<Edit />}
+                                        variant="contained"
+                                        size="small"
+                                        onClick={() => handleOpenDialog(promo)}
+                                    >
+                                        Modifier
                                     </Button>
                                 </CardActions>
                             </Card>
@@ -144,8 +219,22 @@ export const PromoTab = () => {
             >
                 <DialogTitle>{currentPromo ? "Modifier la promotion" : "Nouvelle Promotion"}</DialogTitle>
                 <DialogContent>
-                    <PromoForm formId="PromoForm" onSubmit={savePromo} defaultValues={currentPromo} categories={categories.data || []} />
-
+                    <PromoForm
+                        formId="PromoForm"
+                        onSubmit={savePromo}
+                        defaultValues={
+                            currentPromo
+                                ? {
+                                      ...currentPromo,
+                                      startDate: new Date(currentPromo.startDate),
+                                      endDate: currentPromo.endDate
+                                          ? new Date(currentPromo.endDate)
+                                          : null,
+                                  }
+                                : undefined
+                        }
+                        categories={categories.data || []}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog} startIcon={<Cancel />}>
