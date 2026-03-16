@@ -4,12 +4,12 @@ import {
   Add,
   Backpack,
   Close,
+  Euro,
   Loyalty,
   Payment,
-  PointOfSale as PosIcon,
   QrCodeScanner,
   Remove,
-  ShoppingCart,
+  ShoppingCart
 } from "@mui/icons-material";
 import {
   Alert,
@@ -24,6 +24,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -38,6 +39,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
 import {
   schema,
@@ -47,10 +49,7 @@ import {
 import {
   type Schema as CloseCaisseSchema
 } from "../components/forms/CloseCaisseForm";
-import {
-  EncaissementForm,
-  type Schema as EncaissementSchema,
-} from "../components/forms/EncaissementForm";
+import { FormInput, FormSelect } from "../components/forms/FormBase";
 import {
   ManualItemForm,
   type Schema as ManualItemSchema,
@@ -76,20 +75,18 @@ const PointOfSale = () => {
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
-  const [paymentDialog, setPaymentDialog] = useState(false);
+  // const [paymentDialog, setPaymentDialog] = useState(false);
   const [manualItemDialog, setManualItemDialog] = useState(false);
 
   const [scanInput, setScanInput] = useState("");
-  const [paymentData, setPaymentData] = useState({
-    payment_method: "cash",
-    payment_amount: "0",
-    customer_name: "",
-    customer_email: "",
-  });
+
 
   const form = useForm({
     defaultValues: {
       cart: [],
+      payment_method: "cash",
+      payment_amount: 0,
+      customer_postal_code: "",
     },
     resolver: zodResolver(schema),
   });
@@ -100,6 +97,7 @@ const PointOfSale = () => {
   });
 
   const cart = form.watch("cart");
+  const payment_amount = form.watch("payment_amount")
 
   const queryClient = useQueryClient();
 
@@ -169,13 +167,13 @@ const PointOfSale = () => {
     onSuccess: (data, variables) => {
       toast.success("Vente enregistrée avec succès");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      setPaymentDialog(false);
-      setPaymentData({
-        payment_method: "cash",
-        payment_amount: "0",
-        customer_name: "",
-        customer_email: "",
-      });
+      // setPaymentDialog(false);
+      // setPaymentData({
+      //   payment_method: "cash",
+      //   payment_amount: "0",
+      //   customer_name: "",
+      //   customer_email: "",
+      // });
       if (window.confirm("Imprimer le ticket de caisse ?")) {
         //TODO should be detached from the request
         if (activeSession.data)
@@ -331,13 +329,6 @@ const PointOfSale = () => {
 
 
   const handleValidateCart = async (data: CartSchema) => {
-    setPaymentData((prev) => ({
-      ...prev,
-      payment_amount: getCartTotal().toString(),
-    }));
-    setPaymentDialog(true);
-  };
-  const handleProcessPayment = async (data: EncaissementSchema) => {
     if (cart.length === 0) {
       toast.error("Le panier est vide");
       return;
@@ -351,41 +342,29 @@ const PointOfSale = () => {
       return;
     }
 
-    // try {
-    //   setLoading(true);
-
-    // Créer la transaction
     if (activeSession.data) {
       const transactionData = {
         cash_session_id: activeSession.data.id,
-        // cash_register_id: activeSession.data.cash_register_id,
         total_amount: total,
         payment_method: data.payment_method,
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
         customer_postal_code: data.customer_postal_code,
-        // customer_name: data.customer_name || undefined,
-        // customer_email: data.customer_email || undefined,
+
         items: cart.map((item) => ({
           ...item,
           total_price: item.quantity * item.price,
-          // // labeled_item_id: item.is_manual ? null : item.id,
-          // barcode: item.barcode,
-          // name: item.name,
-          // price: item.price,
-          // quantity: item.quantity,
-          // total_price: item.quantity * item.price,
-          // // is_manual: item.is_manual || false,
-          // category_id: item.category_id,
-          // subcategory_id: item.subcategory_id,
+
         })),
       } satisfies Omit<TransactionModel, "LabeledItems"> & {
         items: CartItem[];
       };
-      handleSell.mutate(transactionData);
-    }
-  };
+    handleSell.mutate(transactionData);
 
+    }
+
+  };
+  
   if (!activeSession.data) {
     return (
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -435,7 +414,8 @@ const PointOfSale = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
       {/* En-tête de session */}
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <ActiveSessionInfos activeSession={activeSession.data} setCloseSessionDialog={setCloseSessionDialog} />
+      {/* <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -447,7 +427,7 @@ const PointOfSale = () => {
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Session: {activeSession.data?.id} | Ouvert:{" "}
-                  {new Date(activeSession.data?.createdAt).toLocaleString()}
+                  {new Date(activeSession.data?.createdAt).toLocaleString()} | Fonds de caisse: {activeSession.data.opening_amount.toFixed(2)}€
                 </Typography>
               </Box>
             </Box>
@@ -463,53 +443,54 @@ const PointOfSale = () => {
             </Button>
           </Grid>
         </Grid>
-      </Paper>
-      <Grid container spacing={2}>
-        {/* Scanner et panier */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {/* Scanner */}
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Ajouter Article
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-              <TextField
-                fullWidth
-                placeholder="Scanner ou saisir le code-barres..."
-                value={scanInput}
-                onChange={(e) => setScanInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleScanProduct()}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
-                    ),
-                  },
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={handleScanProduct}
-                sx={{ minWidth: 100 }}
-                disabled={scanInput.length < 1}
-              >
-                Scanner
-              </Button>
-            </Box>
-            <Box sx={{ textAlign: "center" }}>
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                onClick={() => setManualItemDialog(true)}
-                sx={{ minWidth: 200 }}
-              >
-                Article Manuel
-              </Button>
-            </Box>
-          </Paper>
+      </Paper> */}
+      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}>
+        <Grid container spacing={2}>
+          {/* Scanner et panier */}
+          <Grid size={{ xs: 12, lg: 8 }}>
+            {/* Scanner */}
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Ajouter Article
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  placeholder="Scanner ou saisir le code-barres..."
+                  value={scanInput}
+                  onChange={(e) => setScanInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleScanProduct()}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                      ),
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleScanProduct}
+                  sx={{ minWidth: 100 }}
+                  disabled={scanInput.length < 1}
+                >
+                  Scanner
+                </Button>
+              </Box>
+              <Box sx={{ textAlign: "center" }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={() => setManualItemDialog(true)}
+                  sx={{ minWidth: 200 }}
+                >
+                  Article Manuel
+                </Button>
+              </Box>
+            </Paper>
 
-          {/* Panier */}
-          <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}>
+            {/* Panier */}
+            {/* <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}> */}
             <Paper sx={{ p: 2 }}>
               <Typography
                 variant="h6"
@@ -664,55 +645,55 @@ const PointOfSale = () => {
                 </TableContainer>
               )}
             </Paper>
-          </form>
-        </Grid>
+            {/* </form> */}
+          </Grid>
 
-        {/* Résumé et paiement */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Paper sx={{ p: 2, position: "sticky", top: 20 }}>
-            <Typography variant="h6" gutterBottom>
-              Résumé de la Commande
-            </Typography>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography>Types d'articles:</Typography>
-              <Typography>{cart.length}</Typography>
-            </Box>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography>Total d'articles:</Typography>
-              <Typography>
-                {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+          {/* Résumé et paiement */}
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Paper sx={{ p: 2,/* position: "sticky",*/ top: 20 }}>
+              <Typography variant="h6" gutterBottom>
+                Résumé de la Commande
               </Typography>
-            </Box>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography>Poids</Typography>
-              <Typography>
-                {cart.reduce(
-                  (prev, current) =>
-                    (prev += current.weight * current.quantity),
-                  0,
-                )}{" "}
-                Kg
-              </Typography>
-            </Box>
 
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
-            >
-              <Typography variant="h6">Total:</Typography>
-              <Typography variant="h6" color="primary">
-                {getCartTotal().toFixed(2)}€
-              </Typography>
-            </Box>
+              <Divider sx={{ my: 2 }} />
 
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
+                <Typography>Types d'articles:</Typography>
+                <Typography>{cart.length}</Typography>
+              </Box>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
+                <Typography>Total d'articles:</Typography>
+                <Typography>
+                  {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+                </Typography>
+              </Box>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
+                <Typography>Poids</Typography>
+                <Typography>
+                  {cart.reduce(
+                    (prev, current) =>
+                      (prev += current.weight * current.quantity),
+                    0,
+                  )}{" "}
+                  Kg
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+              >
+                <Typography variant="h6">Total:</Typography>
+                <Typography variant="h6" color="primary">
+                  {getCartTotal().toFixed(2)}€
+                </Typography>
+              </Box>
+              {/* 
             <Button
               fullWidth
               variant="contained"
@@ -731,19 +712,76 @@ const PointOfSale = () => {
               sx={{ mb: 2 }}
             >
               Encaisser
-            </Button>
+            </Button> */}
+            </Paper>
 
-            <Divider sx={{ my: 2 }} />
+            <Paper sx={{ p: 2, mt: 2 }}>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
 
-            <Typography variant="subtitle2" color="textSecondary">
-              Session en cours
-            </Typography>
-            <Typography variant="body2">
-              Fonds de caisse: {activeSession.data?.opening_amount?.toFixed(2)}€
-            </Typography>
-          </Paper>
+
+                <Grid size={{ xs: 12 }}>
+                  <FormSelect
+                    label="Mode de paiement"
+                    control={form.control}
+                    name="payment_method"
+                  >
+                    <MenuItem value="cash">Espèces</MenuItem>
+                    <MenuItem value="card">Carte bancaire</MenuItem>
+                    <MenuItem value="check">Chèque</MenuItem>
+                  </FormSelect>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <FormInput
+                    label="Montant payé (€)"
+                    control={form.control}
+                    name="payment_amount"
+                    extra={{
+                      type: "number",
+                      slotProps: {
+                        input: {
+                          startAdornment: (
+                            <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                          ),
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+
+                {+(payment_amount as string) > getCartTotal() && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="info">
+                      Rendu à donner: {(+(payment_amount as string) - getCartTotal()).toFixed(2)}€
+                    </Alert>
+                  </Grid>
+                )}
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />
+
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+
+                </Grid>
+
+              </Grid>
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                startIcon={<Payment />}
+                type="submit"
+
+                disabled={cart.length === 0}
+                sx={{ mb: 2 }}
+              >
+                Encaisser
+              </Button>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      </form>
       {/* Dialog d'article manuel */}
       <Dialog
         open={manualItemDialog}
@@ -809,7 +847,7 @@ const PointOfSale = () => {
         </DialogActions>
       </Dialog> */}
 
-      <Dialog
+      {/* <Dialog
         open={paymentDialog}
         onClose={() => setPaymentDialog(false)}
         maxWidth="sm"
@@ -836,7 +874,7 @@ const PointOfSale = () => {
             {handleSell.isPending ? "Traitement..." : "Valider le Paiement"}
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}   
     </Container>
   );
 };
