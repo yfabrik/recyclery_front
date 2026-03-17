@@ -48,7 +48,7 @@ import {
 } from "../../services/cartService";
 import { DetailTransaction } from "../DetailTransaction";
 import { RefundForm, type Schema } from "../forms/RefundForm";
-import { SaleFiltersForm, type Filters } from "../forms/saleFiltersForm";
+import { SaleFiltersForm, type Filters } from "../forms/SaleFiltersForm";
 import { Loading } from "../Loading";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
