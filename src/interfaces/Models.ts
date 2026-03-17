@@ -23,6 +23,10 @@ export interface CategoryModel extends BaseModel {
 
 export interface SkillModel extends BaseModel {
   name: string;
+  isActive: boolean;
+  description: string | null;
+  Employees?: EmployeeModel[];
+
 }
 
 export interface StoreModel extends BaseModel {
@@ -197,6 +201,11 @@ export interface EmployeeModel extends BaseModel {
   isActive: boolean;
   phone?: string;
   email?: string;
+  contract_hours?: number | null;
+  address?: string | null;
+  availability?: "full_time" | "part_time" | "weekend" | "evening" | "flexible" | string | null;
+  hourly_rate?: number | null;
+  skills?: string[];
   EmployeeWorkdays?: WorkdaysModel[];
   stores?: StoreModel[];
   EmployeeStore?: {
@@ -204,6 +213,7 @@ export interface EmployeeModel extends BaseModel {
   }[];
   Tasks?: TaskModel[];
   TaskSchedules?: ScheduleModel[];
+  Skills?: SkillModel[];
 }
 
 export interface WorkdaysModel extends BaseModel {

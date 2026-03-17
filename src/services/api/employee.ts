@@ -12,6 +12,9 @@ interface UserFilters {
 export const getEmployees = (filters?: UserFilters): Promise<AxiosResponse<{ message: string, data: EmployeeModel[] }>> =>
   axiosInstance.get("/api/employees", { params: filters });
 
+export const detailEmployee = (id: number): Promise<AxiosResponse<{ message: string, data: EmployeeModel }>> =>
+  axiosInstance.get(`/api/employees/${id}`);
+
 export const createEmployees = (data: Schema) =>
   axiosInstance.post("/api/employees", data);
 

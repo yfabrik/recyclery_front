@@ -204,6 +204,15 @@ export const SkillsTab = () => {
               onChange={(e) => setName(e.target.value)}
               required
             />
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Nom"
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Annuler</Button>

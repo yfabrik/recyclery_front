@@ -2,8 +2,10 @@ import {
   Box,
   Card,
   CardContent,
+  Checkbox,
   FormControl,
   FormControlLabel,
+  FormGroup,
   FormHelperText,
   FormLabel,
   InputLabel,
@@ -423,3 +425,59 @@ export const FormMultiSelect = <
     />
   )
 }
+
+export interface FormCheckboxGroupOption {
+  value: string | number;
+  label: string;
+}
+
+export const FormCheckboxGroup = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  name,
+  control,
+  label,
+  options,
+  extra,
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  options: FormCheckboxGroupOption[];
+  extra?: FormControlOwnProps;
+}) => {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => {
+        const value: (number | string)[] = Array.isArray(field.value) ? field.value : [];
+        const toggle = (optionValue: number | string) => {
+          const next = value.includes(optionValue)
+            ? value.filter((v) => v !== optionValue)
+            : [...value, optionValue];
+          field.onChange(next);
+        };
+        return (
+          <FormControl component="fieldset" variant="standard" fullWidth {...extra}>
+            <FormLabel component="legend">{label}</FormLabel>
+            <FormGroup>
+              {options.map((opt) => (
+                <FormControlLabel
+                  key={opt.value}
+                  control={
+                    <Checkbox
+                      checked={value.includes(opt.value)}
+                      onChange={() => toggle(opt.value)}
+                      name={opt.value.toString()}
+                    />
+                  }
+                  label={opt.label}
+                />
+              ))}
+            </FormGroup>
+          </FormControl>
+        );
+      }}
+    />
+  );
+};

@@ -8,9 +8,7 @@ import {
   Person,
   Phone,
   Quiz,
-  Refresh,
   Schedule,
-  Search,
   Store
 } from "@mui/icons-material";
 import {
@@ -20,20 +18,14 @@ import {
   Card,
   CardActions,
   CardContent,
-  Checkbox,
   Chip,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
   Grid,
   IconButton,
-  MenuItem,
   Paper,
   Stack,
   Tooltip,
@@ -41,7 +33,6 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { EmployeeModel } from "../../../interfaces/Models";
 import {
@@ -50,11 +41,17 @@ import {
   getEmployees,
   updateEmployee,
 } from "../../../services/api/employee";
+import { fetchSkills, updateEmployeeSkills } from "../../../services/api/skills";
 import { fetchStores } from "../../../services/api/store";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
+import {
+  EMPLOYEE_FILTER_DEFAULTS,
+  EmployeeFilterForm,
+  type EmployeeFilters,
+} from "../../forms/EmployeeFilterForm";
 import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
-import { FormInput, FormSelect } from "../../forms/FormBase";
+import { EmployeeSkillForm, type Schema as EmployeeSkillSchema } from "../../forms/EmployeeSkillForm";
 import { Loading } from "../../Loading";
 
 const EmployeeManagement = () => {
@@ -69,18 +66,12 @@ const EmployeeManagement = () => {
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
   const [openSkillsDialog, setOpenSkillsDialog] = useState(false);
 
+  const skills = useQuery({
+    queryKey: ["skills"],
+    queryFn: () => fetchSkills().then(response => response.data.skills || [])
+  });
+  if (skills.isError) toast.error("Erreur lors du chargement des compétences");
 
-  const skillsOptions = [
-    "Collecte",
-    "Tri",
-    "Vente",
-    "Maintenance",
-    "Conduite",
-    "Gestion",
-    "Informatique",
-    "Communication",
-    "Formation",
-  ];
 
   const availabilityOptions = [
     { value: "full_time", label: "Temps plein" },
@@ -98,15 +89,7 @@ const EmployeeManagement = () => {
     { value: "collector", label: "Collecteur" },
   ];
 
-
-  const form = useForm({
-    defaultValues: {
-      search: "",
-      role: "",
-      status: ""
-    }
-  })
-  const filters = form.watch()
+  const [filters, setFilters] = useState<EmployeeFilters>(EMPLOYEE_FILTER_DEFAULTS);
 
   const queryClient = useQueryClient()
 
@@ -232,17 +215,35 @@ const EmployeeManagement = () => {
   const filteredEmployees =
     employees.data?.filter((employee) => {
       const matchesSearch =
+        !filters.search?.trim() ||
         employee.nom?.toLowerCase().includes(filters.search.toLowerCase()) ||
         employee.email?.toLowerCase().includes(filters.search.toLowerCase());
-      // const matchesRole = filterRole === "all" || employee.role === filterRole;
+      const matchesRole =
+        !filters.role ||
+        (employee as { role?: string }).role === filters.role;
       const matchesStatus =
-        filters.status === "" ||
+        !filters.status ||
         (filters.status === "active" && employee.isActive !== false) ||
         (filters.status === "inactive" && employee.isActive === false);
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesRole && matchesStatus;
     }) || [];
 
+
+  const updateEmployeeSkillsMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: { skills: string[] } }) => updateEmployeeSkills(id, data),
+    onSuccess: () => {
+      handleCloseSkills()
+      toast.success("Compétences mises à jour avec succès");
+      // queryClient.invalidateQueries({ queryKey: ["employees"] })
+    },
+    onError: () => toast.error("Erreur lors de la mise à jour des compétences"),
+  })
+
+  const handleSaveSkills = (data: EmployeeSkillSchema) => {
+    console.log(data)
+    if (editingEmployee?.id) updateEmployeeSkillsMutation.mutate({ id: editingEmployee.id, data: data })
+  }
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
@@ -275,49 +276,13 @@ const EmployeeManagement = () => {
       <Loading isLoading={employees.isLoading}>
         {/* Filtres et recherche */}
         <Paper sx={{ p: 2, mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormInput control={form.control} name="search" label="" extra={{
-                placeholder: "Rechercher un employé...",
-                slotProps: {
-                  input: {
-                    startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />
-                  }
-                }
-              }} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <FormSelect label="Rôle" control={form.control} name="role">
-                <MenuItem key={"all"} value="">Tous les rôles</MenuItem>
-                {roleOptions.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-
-              </FormSelect>
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <FormSelect control={form.control} name="status" label="Statut">
-                <MenuItem value="">Tous</MenuItem>
-                <MenuItem value="active">Actif</MenuItem>
-                <MenuItem value="inactive">Inactif</MenuItem>
-              </FormSelect>
-            </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<Refresh />}
-                type="reset"
-
-                onClick={() => form.reset() //queryClient.invalidateQueries({ queryKey: ["employees"] })
-                }
-                fullWidth
-              >
-                Reset
-              </Button>
-            </Grid>
-          </Grid>
+          <EmployeeFilterForm
+            defaultValues={filters}
+            onChange={(values) =>
+              setFilters((prev) => ({ ...prev, ...values }))
+            }
+            roleOptions={roleOptions}
+          />
         </Paper>
         {/* Liste des employés */}
         <Grid container spacing={3}>
@@ -408,7 +373,9 @@ const EmployeeManagement = () => {
                               (a) => a.value === employee.availability,
                             )?.label || employee.availability
                           }
-                          color={getAvailabilityColor(employee.availability)}
+                          color={getAvailabilityColor(
+                            employee.availability as keyof typeof AVAILABILITY_COLORS,
+                          )}
                           size="small"
                           variant="outlined"
                         />
@@ -594,25 +561,20 @@ const EmployeeManagement = () => {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Competences MARCHE PAS</DialogTitle>
+        <DialogTitle>Compétences</DialogTitle>
         <DialogContent>
           {editingEmployee && (
-            <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
-              <FormLabel component="legend">Competences de l'employée</FormLabel>
-              <FormGroup>
-                {skillsOptions.map(skill => (
-                  <FormControlLabel
-                    control={
-                      <Checkbox name={skill} />
-                    }
-                    label={skill}
-                  />
-                ))}
-              </FormGroup>
-            </FormControl>
+            <Box sx={{ mt: 2 }}>
+              <EmployeeSkillForm formId="employeeSkillsForm" onSubmit={handleSaveSkills} employee={editingEmployee} defaultValues={editingEmployee?.skills || []} />
 
+            </Box>
           )}
         </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSkills}>Fermer</Button>
+          <Button type="submit" form="employeeSkillsForm" variant="contained">Enregistrer</Button>
+
+        </DialogActions>
       </Dialog>
     </Container>
   );
