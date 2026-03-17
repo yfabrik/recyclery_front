@@ -279,9 +279,9 @@ export interface TransactionModel extends BaseModel {
   customer_postal_code?: string | null;
   status: "pending" | "completed" | "cancelled";
 
-  cash_session_id: number;
+  cash_session_id?: number | null;
   CashSession?: CashSession;
-  created_by?: number;
+  created_by: number;
   sold_by?: number;
   User?: UserModel;
   LabeledItems?: LabeledItemModel[];

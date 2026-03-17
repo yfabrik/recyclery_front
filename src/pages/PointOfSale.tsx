@@ -70,6 +70,7 @@ import {
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
+import { getCartLinePrice, getCartTotal } from "../services/cartService";
 import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -99,8 +100,9 @@ const PointOfSale = () => {
     name: "cart",
   });
 
-  const cart = form.watch("cart");
-  const payment_amount = form.watch("payment_amount")
+  /** Typed as CartItem[] so item fields (e.g. subcategory_id) are not inferred as unknown from empty defaultValues. */
+  const cart = form.watch("cart") as CartSchema["cart"];
+  const payment_amount = form.watch("payment_amount") as number;
 
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
 
@@ -180,6 +182,7 @@ const PointOfSale = () => {
     mutationFn: (data: { id: number; data: { closing_amount: number } }) =>
       closeCaisse(data.id, data.data),
     onSuccess: (data) => {
+      console.log("closeSession success", data);
       const { expected_amount, difference_amount } = data.data;
 
       let message = "Session fermée avec succès";
@@ -193,7 +196,7 @@ const PointOfSale = () => {
       queryClient.invalidateQueries({ queryKey: ["activeSession"] });
     },
     onError: (error) => {
-      toast.error("Erreur lors de l'ouverture");
+      toast.error("Erreur lors de la fermeture de la session");
     },
   });
 
@@ -346,44 +349,10 @@ const PointOfSale = () => {
     toast.success(`${itemName} ajouté au panier`);
   };
 
-
-
-  const getCartLinePrice = (line: CartItem): number => {
-
-    let bundles = 0
-    let extraItems = line.quantity
-    if (line.bundleQuantity && line.bundleQuantity !== 0) {
-      bundles = Math.trunc(line.quantity / line.bundleQuantity)
-      extraItems = line.quantity % line.bundleQuantity
-    }
-    const sum = (price: number, quantity: number) => price * quantity * (1 - line.promotion / 100)
-    return (
-      sum(line.price, extraItems) + sum(line.bundlePrice || line.price, bundles)
-    )
-  }
-  const getCartTotal = () => {
-    return cart.reduce(
-      (prev, current) =>
-      (prev +=
-        getCartLinePrice(current)),
-      0,
-    );
-  };
-
-
   const handleValidateCart = async (data: CartSchema) => {
-    if (cart.length === 0) {
-      toast.error("Le panier est vide");
-      return;
-    }
 
-    const total = getCartTotal();
+    const total = getCartTotal(data.cart);
     const paymentAmount = data.payment_amount;
-
-    if (paymentAmount < total) {
-      toast.error("Le montant payé est insuffisant");
-      return;
-    }
 
     if (activeSession.data) {
       const transactionData = {
@@ -399,8 +368,11 @@ const PointOfSale = () => {
           total_price: item.quantity * item.price,
 
         })),
-      } satisfies Omit<TransactionModel, "LabeledItems"> & {
-        items: CartItem[];
+      } satisfies Omit<
+        TransactionModel,
+        "id" | "createdAt" | "updatedAt" | "transactionType" | "status" | "created_by" | "items"
+      > & {
+        items: (CartItem & { total_price: number })[];
       };
       handleSell.mutate(transactionData);
 
@@ -692,7 +664,7 @@ const PointOfSale = () => {
                           </TableCell>
                           <TableCell>
                             <Typography fontWeight="bold">
-                              {getCartLinePrice(item).toFixed(2)}
+                              {getCartLinePrice(item as CartItem).toFixed(2)/*FIXME  as cartItem devrait pas etre la */}
                               €
                             </Typography>
                           </TableCell>
@@ -757,7 +729,7 @@ const PointOfSale = () => {
               >
                 <Typography variant="h6">Total:</Typography>
                 <Typography variant="h6" color="primary">
-                  {getCartTotal().toFixed(2)}€
+                  {getCartTotal(cart).toFixed(2)}€
                 </Typography>
               </Box>
               {/* 
@@ -816,10 +788,10 @@ const PointOfSale = () => {
                   />
                 </Grid>
 
-                {+(payment_amount as string) > getCartTotal() && (
+                {payment_amount > getCartTotal(cart) && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="info">
-                      Rendu à donner: {(+(payment_amount as string) - getCartTotal()).toFixed(2)}€
+                      Rendu à donner: {(payment_amount - getCartTotal(cart)).toFixed(2)}€
                     </Alert>
                   </Grid>
                 )}

@@ -15,6 +15,15 @@ export const getCartLinePrice = (line: CartItem): number => {
   );
 };
 
+export const getCartTotal = (cart: CartItem[]) => {
+  return cart.reduce(
+    (prev, current) =>
+    (prev +=
+      getCartLinePrice(current)),
+    0,
+  );
+};
+
 export const getPaymentMethodLabel = (
   method: TransactionModel["payment_method"],
 ) => {

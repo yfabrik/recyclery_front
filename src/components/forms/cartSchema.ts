@@ -1,5 +1,6 @@
 import z from "zod";
 import { idSchema, nullString, postalSchema } from "../../interfaces/ZodTypes";
+import { getCartTotal } from "../../services/cartService";
 
 export const itemSchema = z.object({
   quantity: z.number().nonnegative(),
@@ -18,32 +19,15 @@ export const itemSchema = z.object({
 });
 
 export const schema = z.object({
-  cart: z.array(itemSchema),
+  cart: z.array(itemSchema).min(1, "le panier doit avoir au moins un article"),
   payment_method: z.enum(["cash", "card", "check"]),
   payment_amount: z
-    .coerce.number(),//min =>sum cart
-
+    .coerce.number(),
   customer_postal_code: z.union([postalSchema("format invalide"), nullString()])
 }).superRefine((data, ctx) => {
-  const getCartLinePrice = (line: CartItem): number => {
 
-    let bundles = 0
-    let extraItems = line.quantity
-    if (line.bundleQuantity && line.bundleQuantity !== 0) {
-      bundles = Math.trunc(line.quantity / line.bundleQuantity)
-      extraItems = line.quantity % line.bundleQuantity
-    }
-    const sum = (price: number, quantity: number) => price * quantity * (1 - line.promotion / 100)
-    return (
-      sum(line.price, extraItems) + sum(line.bundlePrice || line.price, bundles)
-    )
-  }
-  const totalCart = data.cart.reduce(
-    (prev, current) =>
-    (prev +=
-      getCartLinePrice(current)),
-    0,
-  )
+
+  const totalCart = getCartTotal(data.cart)
   if (data.payment_amount < totalCart) {
     ctx.addIssue({
       code: "too_small",
@@ -54,7 +38,7 @@ export const schema = z.object({
 
     });
   }
-});;
+});
 
 export type Schema = z.infer<typeof schema>;
 export type CartItem = z.infer<typeof itemSchema>

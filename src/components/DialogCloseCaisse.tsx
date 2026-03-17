@@ -14,6 +14,7 @@ import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import { BilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
+
 interface DialogCloseCaisseProps {
   closeSessionDialog: boolean;
   setCloseSessionDialog: (value: React.SetStateAction<boolean>) => void;
