@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { FormInput, FormSelect } from "./FormBase";
+import { useDebouncer } from "@tanstack/react-pacer";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -46,25 +47,40 @@ export const EmployeeFilterForm = ({
     onChange(data);
   };
 
-  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const watch = form.watch
+  const debouncer = useDebouncer(()=>{
+    console.log("debouncing")
+    form.handleSubmit(onSubmit, (e) => console.error(e))()
+  }, { wait: 1000 })
   useEffect(() => {
-    const subscription = form.watch(() => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-      debounceTimeout.current = setTimeout(() => {
-        form.handleSubmit(onSubmit)();
-      }, 500);
-    });
-
+    const subscription = watch((values, { name, type }) => {
+      console.log(values, name, type)
+      debouncer.maybeExecute()
+    })
     return () => {
-      subscription.unsubscribe();
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-  }, [form]);
+      debouncer.cancel()
+      subscription.unsubscribe()
+    }
+  }, [watch]) // watch all changes
+  // const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // useEffect(() => {
+  //   const subscription = form.watch(() => {
+  //     if (debounceTimeout.current) {
+  //       clearTimeout(debounceTimeout.current);
+  //     }
+  //     debounceTimeout.current = setTimeout(() => {
+  //       form.handleSubmit(onSubmit)();
+  //     }, 500);
+  //   });
+
+  //   return () => {
+  //     subscription.unsubscribe();
+  //     if (debounceTimeout.current) {
+  //       clearTimeout(debounceTimeout.current);
+  //     }
+  //   };
+  // }, [form]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>

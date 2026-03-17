@@ -7,6 +7,7 @@ import { FormDate, FormInput, FormSelect } from "./FormBase";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
+import { useDebouncedCallback, useDebouncer } from "@tanstack/react-pacer";
 
 const filterSchema = z.object({
     store_id: z.union([idSchema(), nullString()]),
@@ -33,7 +34,7 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
     });
     const onSubmit = (data: Filters) => {
         onChange(data);
-        console.log(data);
+        console.log("data");
     };
 
     const period = filters.watch("period");
@@ -60,26 +61,42 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
         }
     }, [period, filters]);
 
-    const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    const watch = filters.watch
+    const debouncer = useDebouncer(() => {
+        console.log("debouncing")
+        filters.handleSubmit(onSubmit, (e) => console.error(e))()
+    }, { wait: 1000 })
     useEffect(() => {
-        const subscription = filters.watch(() => {
-            if (debounceTimeout.current) {
-                clearTimeout(debounceTimeout.current);
-            }
-
-            debounceTimeout.current = setTimeout(() => {
-                filters.handleSubmit(onSubmit)();
-            }, 500);
-        });
-
+        const subscription = watch((values, { name, type }) => {
+            console.log(values, name, type)
+            debouncer.maybeExecute()
+        })
         return () => {
-            subscription.unsubscribe();
-            if (debounceTimeout.current) {
-                clearTimeout(debounceTimeout.current);
-            }
-        };
-    }, [filters]);
+            debouncer.cancel()
+            subscription.unsubscribe()
+        }
+    }, [watch]) // watch all changes
+
+    // const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // useEffect(() => {
+    //     const subscription = filters.watch(() => {
+    //         if (debounceTimeout.current) {
+    //             clearTimeout(debounceTimeout.current);
+    //         }
+
+    //         debounceTimeout.current = setTimeout(() => {
+    //             filters.handleSubmit(onSubmit)();
+    //         }, 500);
+    //     });
+
+    //     return () => {
+    //         subscription.unsubscribe();
+    //         if (debounceTimeout.current) {
+    //             clearTimeout(debounceTimeout.current);
+    //         }
+    //     };
+    // }, [filters]);
 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
