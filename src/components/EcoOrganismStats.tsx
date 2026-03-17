@@ -17,8 +17,8 @@ import type { EcoOrganismQuarterStat } from "../services/api/ecoOrganism";
 
 export type { EcoOrganismQuarterStat };
 
-/** Single quarter entry from API (quarter label + weight_kg) */
-type QuarterEntry = { quarter: string; weight_kg: number };
+/** Single quarter entry from API */
+type QuarterEntry = EcoOrganismQuarterStat["quarters"][number];
 
 export interface EcoOrganismStatsProps {
   /** Stats from fetchEcoOrganismQuarterStats() — one item per eco-organism with id, name, description, quarters */
@@ -69,7 +69,12 @@ const getLastFourQuarterLabels = (): string[] => {
 };
 
 const defaultQuarters = (): QuarterEntry[] =>
-  getLastFourQuarterLabels().map((quarter) => ({ quarter, weight_kg: 0 }));
+  getLastFourQuarterLabels().map((quarter) => ({
+    quarter,
+    label: formatQuarterRange(quarter),
+    total_weight_kg: 0,
+    categories: [],
+  }));
 
 export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   stats,
@@ -133,11 +138,52 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
           }}
         >
           <Typography variant="body2" color="textSecondary">
-            {formatQuarterRange(q.quarter)}
+            {q.label?.trim() ? q.label : formatQuarterRange(q.quarter)}
           </Typography>
-          <Typography variant="h6" color="primary.main" fontWeight="bold">
-            {formatValue(q.weight_kg)}
-          </Typography>
+
+          <Stack spacing={1} sx={{ mt: 1.25 }}>
+            {(q.categories ?? []).map((cat) => (
+              <Box
+                key={cat.id}
+                sx={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  maxWidth: 360,
+                  mx: "auto",
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {cat.name}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {formatValue(cat.weight_kg)} kg
+                </Typography>
+              </Box>
+            ))}
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 2,
+                maxWidth: 360,
+                mx: "auto",
+                pt: (q.categories?.length ?? 0) > 0 ? 0.75 : 0,
+                borderTop: (q.categories?.length ?? 0) > 0 ? "1px solid" : "none",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                Total
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                {formatValue(q.total_weight_kg)} kg
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
       ))}
     </Stack>
