@@ -1,11 +1,18 @@
-interface pagination {
+export interface Pagination  {
     page: number,
+    total_pages: number
+    total_items: number
+    items_per_page: number
+    has_next: boolean
+    has_previous: boolean
+    limit: number
+    offset: number
     total: number
 }
 
-interface APIResponse<T> {
+export interface APIResponse<T> {
     success: true,
     message: string,
     data: T,
-    pagination?: pagination
+    pagination?: Pagination
 }

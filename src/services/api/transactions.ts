@@ -1,6 +1,7 @@
 import type { AxiosResponse } from "axios";
 import type { TransactionModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
+import type { APIResponse } from "./types";
 
 export interface transactionsFilters {
   store_id?: number;
@@ -40,11 +41,7 @@ interface Stats {
 export const getTransactions = (
   filters: transactionsFilters | null = null,
 ): Promise<
-  AxiosResponse<{
-    success: true;
-    transactions: TransactionModel[];
-    pagination: { limit: number; offset: number; total: number };
-  }>
+  AxiosResponse<APIResponse<TransactionModel[]> & { transactions: TransactionModel[] }>
 > =>
   axiosInstance.get("/api/sales-transactions", {
     params: { ...filters, include: filters?.include?.toString() },
