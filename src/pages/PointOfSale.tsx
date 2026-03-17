@@ -26,12 +26,14 @@ import {
   IconButton,
   MenuItem,
   Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -71,7 +73,7 @@ import { createSell } from "../services/api/transactions";
 import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
-
+  const [tabValue, setTabValue] = useState(0);
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
@@ -79,6 +81,7 @@ const PointOfSale = () => {
   const [manualItemDialog, setManualItemDialog] = useState(false);
 
   const [scanInput, setScanInput] = useState("");
+
 
 
   const form = useForm({
@@ -99,6 +102,46 @@ const PointOfSale = () => {
   const cart = form.watch("cart");
   const payment_amount = form.watch("payment_amount")
 
+  const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
+
+  const addCart = () => {
+    setCarts((prev) => [...prev, [] as CartSchema["cart"]]);
+  };
+
+  const removeCart = (index: number) => {
+    if (carts.length <= 1) return;
+    const currentCart = form.getValues("cart") as CartSchema["cart"];
+    const nextCarts = carts
+      .map((c, i) => (i === tabValue ? currentCart : c))
+      .filter((_, i) => i !== index);
+    const newTabValue =
+      index === tabValue
+        ? Math.min(index, nextCarts.length - 1)
+        : index < tabValue
+          ? tabValue - 1
+          : tabValue;
+    setCarts(nextCarts);
+    setTabValue(newTabValue);
+    form.reset(
+      { ...form.getValues(), cart: nextCarts[newTabValue] },
+      { keepDefaultValues: true }
+    );
+  };
+
+  const changeCart = (newIndex: number) => {
+    if (newIndex === tabValue) return;
+    const currentCart = form.getValues("cart") as CartSchema["cart"];
+    setCarts((prev) => {
+      const next = [...prev];
+      next[tabValue] = currentCart;
+      return next;
+    });
+    setTabValue(newIndex);
+    form.reset(
+      { ...form.getValues(), cart: carts[newIndex] },
+      { keepDefaultValues: true }
+    );
+  }
   const queryClient = useQueryClient();
 
   const activeSession = useQuery({
@@ -359,12 +402,12 @@ const PointOfSale = () => {
       } satisfies Omit<TransactionModel, "LabeledItems"> & {
         items: CartItem[];
       };
-    handleSell.mutate(transactionData);
+      handleSell.mutate(transactionData);
 
     }
 
   };
-  
+
   if (!activeSession.data) {
     return (
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -488,7 +531,31 @@ const PointOfSale = () => {
                 </Button>
               </Box>
             </Paper>
-
+            <Tabs value={tabValue} onChange={(_, val) => changeCart(val as number)}>
+              {carts.map((_, index) => (
+                <Tab
+                  key={index}
+                  label={
+                    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+                      Panier {index + 1}
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCart(index);
+                        }}
+                        disabled={carts.length <= 1}
+                      >
+                        <Close fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  }
+                />
+              ))}
+              <IconButton onClick={() => addCart()}>
+                <Add />
+              </IconButton>
+            </Tabs>
             {/* Panier */}
             {/* <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}> */}
             <Paper sx={{ p: 2 }}>
@@ -874,7 +941,7 @@ const PointOfSale = () => {
             {handleSell.isPending ? "Traitement..." : "Valider le Paiement"}
           </Button>
         </DialogActions>
-      </Dialog> */}   
+      </Dialog> */}
     </Container>
   );
 };
