@@ -10,6 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { CashSession } from "../interfaces/Models";
+import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import { BilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
@@ -29,10 +30,13 @@ export const DialogCloseCaisse = ({
     queryKey: ["transactions", { session: currentSession.id }],
     queryFn: () =>
       getTransactions({
-        // payment_method: "cash",
         session: currentSession.id,
       }).then((response) => response.data),
-    placeholderData: { success: false, transactions: [] },
+    placeholderData: {
+      success: true as const,
+      transactions: [] as TransactionModel[],
+      pagination: { limit: 0, offset: 0, total: 0 },
+    },
   });
   //Recup total argent transaction type cash and session==sesion
   const [state, setState] = useState<"prepare" | "valid">("prepare");

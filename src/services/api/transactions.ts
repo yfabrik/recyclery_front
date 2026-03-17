@@ -10,7 +10,7 @@ export interface transactionsFilters {
   session?: number;
   payment_method?: TransactionModel["payment_method"];
   page?: number;
-  include: ("refund" | "items")[];
+  include?: ("refund" | "items")[];
 }
 interface Stats {
   total_transactions: number;
@@ -47,7 +47,7 @@ export const getTransactions = (
   }>
 > =>
   axiosInstance.get("/api/sales-transactions", {
-    params: { ...filters, include: filters?.include.toString() },
+    params: { ...filters, include: filters?.include?.toString() },
   });
 
 export const getTranscationStats = (
