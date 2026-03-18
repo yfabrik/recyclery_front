@@ -176,7 +176,7 @@ export const CategoriesTab = () => {
                 {category.subcategories && category.subcategories.length > 0 && (
                   <Box sx={{ ml: 3, mt: 1 }}>
                     {category.subcategories.map((subcategory) => (
-                      <CategoryCard key={subcategory.id} category={category} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} isSubcategory={true} />
+                      <CategoryCard key={subcategory.id} category={subcategory} handleDelete={handleDelete} handleOpenDialog={handleOpenDialog} patchCategory={patchCategory} isSubcategory={true} />
                     ))}
                   </Box>
                 )}
