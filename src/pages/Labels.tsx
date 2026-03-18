@@ -166,9 +166,22 @@ const Labels = () => {
     >,
     variables: Schema,
   ) => {
-    if (variables.autoPrint && data.data.item)
+    if (variables.autoPrint && data.data.item) {
+      const item = data.data.item;
+      if (!item.category && item.category_id && categories.data) {
+        const cat = categories.data.find((c) => c.id === item.category_id);
+        if (cat) item.category = cat;
+      }
+      if (
+        item.category &&
+        !item.subcategory &&
+        item.subcategory_id != null
+      ) {
+        const sub = item.category?.subcategories?.find((c) => c.id === item.subcategory_id);
+        if (sub) item.subcategory = sub;
+      }
       triggerPrintLabel(data.data.item);
-
+    }
     toast.success(
       data.config.method == "post"
         ? "Article créé avec succès"
