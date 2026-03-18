@@ -14,6 +14,7 @@ import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import { BilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
+import { formatCurrency } from "../services/cartService";
 
 interface DialogCloseCaisseProps {
   closeSessionDialog: boolean;
@@ -35,8 +36,9 @@ export const DialogCloseCaisse = ({
       }).then((response) => response.data),
     placeholderData: {
       success: true as const,
+      message: "",
+      data: [],
       transactions: [] as TransactionModel[],
-      pagination: { limit: 0, offset: 0, total: 0 },
     },
   });
   //Recup total argent transaction type cash and session==sesion
@@ -58,13 +60,13 @@ export const DialogCloseCaisse = ({
       <DialogContent>
         <Typography>
           total supposé:{" "}
-          {transactions.data?.transactions.reduce(
+          {formatCurrency(transactions.data?.transactions.reduce(
             (prev, current) =>
               current.payment_method == "cash"
                 ? (prev += current.total_amount)
                 : prev,
             currentSession.opening_amount,
-          )}
+          )||0)}
         </Typography>
         {state == "valid" && (
           <Alert severity="warning" sx={{ mb: 2 }}>
