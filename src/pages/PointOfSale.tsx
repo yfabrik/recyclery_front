@@ -70,7 +70,7 @@ import {
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
-import { getCartLinePrice, getCartTotal } from "../services/cartService";
+import { formatCurrency, getCartLinePrice, getCartTotal } from "../services/cartService";
 import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -187,7 +187,7 @@ const PointOfSale = () => {
 
       let message = "Session fermée avec succès";
       if (Math.abs(difference_amount) > 0.01) {
-        message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${difference_amount.toFixed(2)}€`;
+        message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${formatCurrency(difference_amount)}`;
       }
 
       toast.success(message);
@@ -442,7 +442,7 @@ const PointOfSale = () => {
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Session: {activeSession.data?.id} | Ouvert:{" "}
-                  {new Date(activeSession.data?.createdAt).toLocaleString()} | Fonds de caisse: {activeSession.data.opening_amount.toFixed(2)}€
+                  {new Date(activeSession.data?.createdAt).toLocaleString()} | Fonds de caisse: {formatCurrency(activeSession.data.opening_amount)}
                 </Typography>
               </Box>
             </Box>
@@ -599,7 +599,7 @@ const PointOfSale = () => {
                           </TableCell>
                           <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
                           <TableCell>
-                            {item.price.toFixed(2)}€
+                            {formatCurrency(item.price)}
                             {item.promotion != 0 && (
                               <Chip
                                 color="secondary"
@@ -664,8 +664,7 @@ const PointOfSale = () => {
                           </TableCell>
                           <TableCell>
                             <Typography fontWeight="bold">
-                              {getCartLinePrice(item as CartItem).toFixed(2)/*FIXME  as cartItem devrait pas etre la */}
-                              €
+                              {formatCurrency(getCartLinePrice(item as CartItem)) /*FIXME  as cartItem devrait pas etre la */}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -727,9 +726,9 @@ const PointOfSale = () => {
               <Box
                 sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
               >
-                <Typography variant="h6">Total:</Typography>
-                <Typography variant="h6" color="primary">
-                  {getCartTotal(cart).toFixed(2)}€
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total:</Typography>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                  {formatCurrency(getCartTotal(cart))}
                 </Typography>
               </Box>
               {/* 
@@ -791,7 +790,7 @@ const PointOfSale = () => {
                 {payment_amount > getCartTotal(cart) && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="info">
-                      Rendu à donner: {(payment_amount - getCartTotal(cart)).toFixed(2)}€
+                      Rendu à donner: {formatCurrency(payment_amount - getCartTotal(cart))}
                     </Alert>
                   </Grid>
                 )}

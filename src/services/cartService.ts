@@ -43,3 +43,10 @@ export const formatCurrency = (amount: number) => {
     currency: "EUR",
   }).format(amount || 0);
 };
+
+// export const formatWeight = (amount: number) => {
+//   return new Intl.NumberFormat("fr-FR", {
+//     style: "unit",
+//     unit: "kilogram",
+//   }).format(amount || 0);
+// };
