@@ -11,7 +11,9 @@ import { Loading } from "../../Loading"
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
-    const [currentPromo, setCurrentPromo] = useState<PromoModel | null>(null)
+    // PromoModel does not include `subcategory_id`, but PromoForm needs it to keep the
+    // user's subcategory selection when editing an existing promotion.
+    const [currentPromo, setCurrentPromo] = useState<(PromoModel & { subcategory_id?: number | null }) | null>(null)
     const queryClient = useQueryClient()
     const categories = useQuery({
         queryFn: () =>
@@ -64,11 +66,14 @@ export const PromoTab = () => {
     }
 
     const handleOpenDialog = (promo: PromoModel) => {
-        const categorie = promo.Category?.parent ?? promo.Category
+        const parentCategory = promo.Category?.parent ?? promo.Category
+        // If promo.Category has a parent, then promo.Category itself is a subcategory.
+        const subcategory_id = promo.Category?.parent ? promo.Category.id : null
         setCurrentPromo({
             ...promo,
-            category_id: categorie?.id || promo.category_id,
-        } as PromoModel | null)
+            category_id: parentCategory?.id || promo.category_id,
+            subcategory_id,
+        } as PromoModel & { subcategory_id?: number | null } | null)
         SetIsModaleOpen(true)
     }
 
