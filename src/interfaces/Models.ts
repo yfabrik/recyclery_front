@@ -138,7 +138,7 @@ export interface LabeledItemModel extends BaseModel {
   transaction_id: number | null;
 
   barcode: string;
-  description: string;
+  description: string|null;
   weight: number;
   price: number;
   cost: number | null;

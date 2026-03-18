@@ -11,7 +11,7 @@ export const itemSchema = z.object({
   barcode: z.string(),
   category_id: idSchema(),
   subcategory_id: idSchema().nullish(),
-  description: z.string(),
+  description: z.string().nullish(),
   weight: z.number(),
   promotion: z.number(),
   bundlePrice: z.number().nullish(),

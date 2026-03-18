@@ -287,7 +287,7 @@ const PointOfSale = () => {
           promotion: (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subCategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0),
           bundlePrice: source?.bundlePrice,
           bundleQuantity: source?.bundleQuantity
-        });
+        }satisfies CartItem);
       }
 
       setScanInput("");
@@ -459,7 +459,7 @@ const PointOfSale = () => {
           </Grid>
         </Grid>
       </Paper> */}
-      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}>
+      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart,(err)=>console.error(err))}>
         <Grid container spacing={2}>
           {/* Scanner et panier */}
           <Grid size={{ xs: 12, lg: 8 }}>
