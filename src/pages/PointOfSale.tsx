@@ -70,6 +70,7 @@ import {
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
+import { getGiftCardByCode } from "../services/api/giftCards";
 import { formatCurrency, getCartLinePrice, getCartTotal } from "../services/cartService";
 import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
@@ -82,27 +83,41 @@ const PointOfSale = () => {
   const [manualItemDialog, setManualItemDialog] = useState(false);
 
   const [scanInput, setScanInput] = useState("");
+  const [giftCardScanInput, setGiftCardScanInput] = useState("");
 
 
 
   const form = useForm({
     defaultValues: {
       cart: [],
-      payment_method: "cash",
-      payment_amount: 0,
+      payment_splits: [{ method: "cash", amount: 0 }],
       customer_postal_code: "",
     },
     resolver: zodResolver(schema),
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const {
+    fields: cartFields,
+    append,
+    remove,
+    update,
+  } = useFieldArray({
     control: form.control,
     name: "cart",
+  });
+  const {
+    fields: paymentFields,
+    append: appendPayment,
+    remove: removePayment,
+  } = useFieldArray({
+    control: form.control,
+    name: "payment_splits",
   });
 
   /** Typed as CartItem[] so item fields (e.g. subcategory_id) are not inferred as unknown from empty defaultValues. */
   const cart = form.watch("cart") as CartSchema["cart"];
-  const payment_amount = form.watch("payment_amount") as number;
+  const paymentSplits = form.watch("payment_splits") as CartSchema["payment_splits"];
+  const totalPaid = paymentSplits.reduce((sum, split) => sum + (Number(split.amount) || 0), 0);
 
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
 
@@ -192,7 +207,11 @@ const PointOfSale = () => {
 
       toast.success(message);
       setCloseSessionDialog(false);
-      form.reset({ cart: [] });
+      form.reset({
+        cart: [],
+        payment_splits: [{ method: "cash", amount: 0 }],
+        customer_postal_code: "",
+      });
       queryClient.invalidateQueries({ queryKey: ["activeSession"] });
     },
     onError: (error) => {
@@ -230,7 +249,11 @@ const PointOfSale = () => {
             user!,
           );
       }
-      form.reset({ cart: [] });
+      form.reset({
+        cart: [],
+        payment_splits: [{ method: "cash", amount: 0 }],
+        customer_postal_code: "",
+      });
     },
     onError: (error) => {
       toast.error("Erreur lors de l'enregistrement de la vente");
@@ -293,7 +316,8 @@ const PointOfSale = () => {
       setScanInput("");
       toast.success(`${item.barcode} ajouté au panier`);
     } catch (error) {
-      if (error.response?.status === 404) {
+      const requestError = error as { response?: { status?: number } };
+      if (requestError.response?.status === 404) {
         toast.error("Article non trouvé");
       } else {
         toast.error("Erreur lors du scan");
@@ -349,19 +373,87 @@ const PointOfSale = () => {
     toast.success(`${itemName} ajouté au panier`);
   };
 
+  const handleScanGiftCard = async () => {
+    const barcode = giftCardScanInput.trim();
+    if (!barcode) {
+      toast.error("Veuillez saisir un code-barres d'avoir");
+      return;
+    }
+
+    try {
+      const response = await getGiftCardByCode(barcode);
+      const payload = response.data;
+      if (!payload.success) {
+        toast.error(payload.message || "Avoir non trouvé");
+        return;
+      }
+      const giftCard = payload.data;
+
+      if (["redeemed", "expired", "cancelled"].includes(giftCard.status)) {
+        toast.error("Cet avoir n'est pas utilisable");
+        return;
+      }
+
+      const amountCandidate = giftCard.initial_value;
+      const amount = Number(amountCandidate ?? 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        toast.error("Aucun solde disponible sur cet avoir");
+        return;
+      }
+
+      const existingIndex = paymentSplits.findIndex(
+        (split) => split.gift_card_barcode === barcode,
+      );
+      if (existingIndex !== -1) {
+        toast.info("Cet avoir est déjà ajouté");
+        return;
+      }
+
+      appendPayment({
+        method: "giftCard",
+        amount,
+        gift_card_barcode: giftCard.code ?? barcode,
+        gift_card_id: giftCard.id,
+      });
+      setGiftCardScanInput("");
+      toast.success(`Avoir ajouté: ${formatCurrency(amount)}`);
+    } catch (error) {
+      const requestError = error as { response?: { status?: number } };
+      if (requestError.response?.status === 404) {
+        toast.error("Avoir non trouvé");
+        return;
+      }
+      toast.error("Erreur lors du scan de l'avoir");
+    }
+  };
+
   const handleValidateCart = async (data: CartSchema) => {
 
     const total = getCartTotal(data.cart);
-    const paymentAmount = data.payment_amount;
+    const paymentAmount = data.payment_splits.reduce(
+      (sum, split) => sum + (Number(split.amount) || 0),
+      0,
+    );
+    const nonZeroSplits = data.payment_splits.filter((split) => Number(split.amount) > 0);
+    const primaryPayment = nonZeroSplits[0] ?? data.payment_splits[0];
 
     if (activeSession.data) {
       const transactionData = {
         cash_session_id: activeSession.data.id,
         total_amount: total,
-        payment_method: data.payment_method,
+        payment_method: primaryPayment.method,
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
         customer_postal_code: data.customer_postal_code,
+        payments: nonZeroSplits.map((split) => ({
+          method: split.method,
+          amount: Number(split.amount) || 0,
+        })),
+        payment_splits: nonZeroSplits.map((split) => ({
+          method: split.method,
+          amount: Number(split.amount) || 0,
+        })),
 
         items: cart.map((item) => ({
           ...item,
@@ -372,9 +464,11 @@ const PointOfSale = () => {
         TransactionModel,
         "id" | "createdAt" | "updatedAt" | "transactionType" | "status" | "created_by" | "items"
       > & {
+        payments: { method: TransactionModel["payment_method"]; amount: number }[];
+        payment_splits: { method: TransactionModel["payment_method"]; amount: number }[];
         items: (CartItem & { total_price: number })[];
       };
-      handleSell.mutate(transactionData);
+      handleSell.mutate(transactionData as unknown as TransactionModel);
 
     }
 
@@ -537,10 +631,10 @@ const PointOfSale = () => {
                 sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
                 <ShoppingCart />
-                Panier ({fields.length} article{fields.length > 1 ? "s" : ""})
+                Panier ({cartFields.length} article{cartFields.length > 1 ? "s" : ""})
               </Typography>
 
-              {fields.length === 0 ? (
+              {cartFields.length === 0 ? (
                 <Alert severity="info">
                   Le panier est vide. Scannez des articles pour commencer.
                 </Alert>
@@ -558,7 +652,7 @@ const PointOfSale = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {fields.map((item, index) => (
+                      {cartFields.map((item, index) => (
                         <TableRow key={item.id}>
                           <TableCell>
                             <Box>
@@ -755,45 +849,132 @@ const PointOfSale = () => {
 
             <Paper sx={{ p: 2, mt: 2 }}>
               <Grid container spacing={2} sx={{ mt: 1 }}>
-
-
                 <Grid size={{ xs: 12 }}>
-                  <FormSelect
-                    label="Mode de paiement"
-                    control={form.control}
-                    name="payment_method"
-                  >
-                    <MenuItem value="cash">Espèces</MenuItem>
-                    <MenuItem value="card">Carte bancaire</MenuItem>
-                    <MenuItem value="check">Chèque</MenuItem>
-                  </FormSelect>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                  <FormInput
-                    label="Montant payé (€)"
-                    control={form.control}
-                    name="payment_amount"
-                    extra={{
-                      type: "number",
-                      slotProps: {
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Gift Card / Avoir
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Scanner ou saisir le code-barres de l'avoir..."
+                      value={giftCardScanInput}
+                      onChange={(e) => setGiftCardScanInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}
+                      slotProps={{
                         input: {
                           startAdornment: (
-                            <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                            <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
                           ),
                         },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleScanGiftCard}
+                      sx={{ minWidth: 96 }}
+                      disabled={giftCardScanInput.trim().length < 1}
+                    >
+                      Scanner
+                    </Button>
+                  </Box>
                 </Grid>
 
-                {payment_amount > getCartTotal(cart) && (
+                <Grid size={{ xs: 12 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="subtitle2">Paiements</Typography>
+                  </Box>
+                </Grid>
+
+                {paymentFields.map((payment, index) => (
+                  <Grid key={payment.id} size={{ xs: 12 }}>
+                    {paymentSplits[index]?.method === "giftCard" && (
+                      <Box sx={{ mb: 1 }}>
+                        <Chip
+                          size="small"
+                          color="secondary"
+                          label={`Avoir: ${paymentSplits[index]?.gift_card_barcode ?? "N/A"} - ${formatCurrency(Number(paymentSplits[index]?.amount || 0))}`}
+                        />
+                      </Box>
+                    )}
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <Box sx={{ width: "42%" }}>
+                        <FormSelect
+                          label={`Mode de paiement #${index + 1}`}
+                          control={form.control}
+                          name={`payment_splits.${index}.method`}
+                          extraSelect={{
+                            size: "small",
+                            disabled: paymentSplits[index]?.method === "giftCard",
+                          }}
+                        >
+                          <MenuItem value="cash">Espèces</MenuItem>
+                          <MenuItem value="card">Carte bancaire</MenuItem>
+                          <MenuItem value="check">Chèque</MenuItem>
+                        </FormSelect>
+                      </Box>
+                      <Box sx={{ width: "42%" }}>
+                        <FormInput
+                          label="Montant (€)"
+                          control={form.control}
+                          name={`payment_splits.${index}.amount`}
+                          extra={{
+                            type: "number",
+                            size: "small",
+                            disabled: paymentSplits[index]?.method === "giftCard",
+                            slotProps: {
+                              input: {
+                                startAdornment: (
+                                  <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                                ),
+                              },
+                            },
+                          }}
+                        />
+                      </Box>
+                      <IconButton
+                        color="error"
+                        onClick={() => removePayment(index)}
+                        disabled={paymentFields.length <= 1}
+                        sx={{ mt: 0.5 }}
+                        size="small"
+                      >
+                        <Close />
+                      </IconButton>
+                    </Box>
+                  </Grid>
+                ))}
+                <Grid size={{ xs: 12 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => appendPayment({ method: "cash", amount: 0, gift_card_barcode: undefined, gift_card_id: undefined })}
+                  >
+                    + payment
+                  </Button>
+                </Grid>
+
+                {totalPaid > getCartTotal(cart) && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="info">
-                      Rendu à donner: {formatCurrency(payment_amount - getCartTotal(cart))}
+                      Rendu à donner: {formatCurrency(totalPaid - getCartTotal(cart))}
                     </Alert>
                   </Grid>
                 )}
+                {totalPaid < getCartTotal(cart) && cart.length > 0 && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="warning">
+                      Reste à payer: {formatCurrency(getCartTotal(cart) - totalPaid)}
+                    </Alert>
+                  </Grid>
+                )}
+
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Total payé: {formatCurrency(totalPaid)}
+                  </Typography>
+                </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />

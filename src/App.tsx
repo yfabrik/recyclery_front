@@ -27,6 +27,7 @@ import CollectionReceipts from "./pages/CollectionReceipts";
 import Arrivals from "./pages/Arrivals";
 import Labels from "./pages/Labels";
 import PointOfSale from "./pages/PointOfSale";
+import GiftCard from "./pages/GiftCard";
 import WasteManagement from "./pages/WasteManagement";
 import EmployeeTools from "./pages/EmployeeTools";
 import EmployeeManagement from "./components/admin/config/EmployeeManagement";
@@ -282,6 +283,14 @@ function App() {
             element={
               <ProtectedRoute module="caisse">
                 <PointOfSale />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pos/gift-card"
+            element={
+              <ProtectedRoute module="caisse">
+                <GiftCard />
               </ProtectedRoute>
             }
           />

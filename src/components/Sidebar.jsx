@@ -26,6 +26,7 @@ import {
   Schedule,
   Receipt,
   CalendarToday,
+  CardGiftcard,
   Category,
   QrCode,
   DeleteSweep,
@@ -48,6 +49,7 @@ const Sidebar = ({ open, onClose }) => {
       items: [
         { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, roles: ['employee', 'manager', 'admin'] },
         { label: 'Logiciel de caisse', path: '/pos', icon: PointOfSale, roles: ['employee', 'manager', 'admin'] },
+        { label: 'Avoirs', path: '/pos/gift-card', icon: CardGiftcard, roles: ['employee', 'manager', 'admin'] },
         { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, roles: ['admin'] },
         { label: 'Arrivages', path: '/arrivals', icon: Inventory, roles: ['employee', 'manager', 'admin'] },
         { label: 'Outils Salariés', path: '/employee-tools', icon: Build, roles: ['employee', 'manager', 'admin'] },
