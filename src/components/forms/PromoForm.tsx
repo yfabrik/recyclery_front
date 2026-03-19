@@ -43,7 +43,7 @@ export const PromoForm = ({
         stores:
             defaultStores === null || (Array.isArray(defaultStores) && defaultStores.length === 0)
                 ? [""]
-                : (defaultStores ?? [""])
+                : (defaultStores.map((store: StoreModel) => store.id) ?? [""])
     } satisfies Partial<FormValues>
 
     const form = useForm<FormValues, unknown, Schema>({
@@ -60,7 +60,7 @@ export const PromoForm = ({
         control: form.control,
         name: "stores",
     })
-    const previousStores = useRef<(number|string)[]>([])
+    const previousStores = useRef<(number | string)[]>([])
 
     useEffect(() => {
         const currentStores = Array.isArray(selectedStores)

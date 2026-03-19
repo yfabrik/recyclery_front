@@ -333,4 +333,5 @@ export interface PromoModel extends BaseModel {
   endDate: string | null;
   isActive: boolean;
   Category?: CategoryModel;
+  stores?: StoreModel[];
 }
