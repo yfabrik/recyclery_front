@@ -1,9 +1,9 @@
-import { Add, Cancel, Category, CalendarMonth, Edit, Loyalty, Percent, Save, SubdirectoryArrowRight } from "@mui/icons-material"
+import { Add, Cancel, Category, CalendarMonth, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
 import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import type { PromoModel } from "../../../interfaces/Models"
+import type { PromoModel, StoreModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { PromoForm, type Schema } from "../../forms/PromoForm"
@@ -95,6 +95,10 @@ export const PromoTab = () => {
             subcategorie: subcategorie?.name || null
         }
     }
+    const getPromoStores = (promo: PromoModel): string => {
+        if (!promo.stores || promo.stores.length === 0) return "tous les magasins"
+        return promo.stores.map((store) => store.name).join(", ")
+    }
 
     return (
         <Box>
@@ -182,6 +186,15 @@ export const PromoTab = () => {
                                                     : "jamais"}
                                             </Typography>
                                         </Box>
+                                        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+                                            <Storefront
+                                                fontSize="small"
+                                                sx={{ mr: 1, mt: 0.2, color: "text.secondary" }}
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                magasins : {getPromoStores(promo)}
+                                            </Typography>
+                                        </Box>
                                     </Box>
 
                                     <Box
@@ -235,12 +248,13 @@ export const PromoTab = () => {
                         defaultValues={
                             currentPromo
                                 ? {
-                                      ...currentPromo,
-                                      startDate: new Date(currentPromo.startDate),
-                                      endDate: currentPromo.endDate
-                                          ? new Date(currentPromo.endDate)
-                                          : null,
-                                  }
+                                    ...currentPromo,
+                                    startDate: new Date(currentPromo.startDate),
+                                    endDate: currentPromo.endDate
+                                        ? new Date(currentPromo.endDate)
+                                        : null,
+                                    stores: currentPromo.stores?.map((store: StoreModel) => store.id) ?? []
+                                }
                                 : undefined
                         }
                         categories={categories.data || []}

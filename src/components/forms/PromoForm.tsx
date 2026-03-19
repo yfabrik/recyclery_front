@@ -43,7 +43,7 @@ export const PromoForm = ({
         stores:
             defaultStores === null || (Array.isArray(defaultStores) && defaultStores.length === 0)
                 ? [""]
-                : (defaultStores.map((store: StoreModel) => store.id) ?? [""])
+                : defaultStores ?? [""]
     } satisfies Partial<FormValues>
 
     const form = useForm<FormValues, unknown, Schema>({
