@@ -49,7 +49,7 @@ const schema = z.object({
     "raison requis",
   ),
   refund_method: z.enum(
-    ["cash", "card", "check", "giftCard"],
+      ["cash", "card", "check", "giftcard"],
     "methode requis",
   ),
   notes: z.string(),
@@ -304,7 +304,7 @@ export const RefundForm = ({
             <MenuItem value="cash">Espèces</MenuItem>
             <MenuItem value="card">Carte bancaire</MenuItem>
             <MenuItem value="check">Chèque</MenuItem>
-            <MenuItem value="giftCard">GiftCard</MenuItem>
+            <MenuItem value="giftcard">GiftCard</MenuItem>
           </FormSelect>
         </Grid>
 

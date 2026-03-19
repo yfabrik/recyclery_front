@@ -411,7 +411,7 @@ const PointOfSale = () => {
       }
 
       appendPayment({
-        method: "giftCard",
+        method: "giftcard",
         amount,
         gift_card_barcode: giftCard.code ?? barcode,
         gift_card_id: giftCard.id,
@@ -889,7 +889,7 @@ const PointOfSale = () => {
 
                 {paymentFields.map((payment, index) => (
                   <Grid key={payment.id} size={{ xs: 12 }}>
-                    {paymentSplits[index]?.method === "giftCard" && (
+                    {paymentSplits[index]?.method === "giftcard" && (
                       <Box sx={{ mb: 1 }}>
                         <Chip
                           size="small"
@@ -906,7 +906,7 @@ const PointOfSale = () => {
                           name={`payment_splits.${index}.method`}
                           extraSelect={{
                             size: "small",
-                            disabled: paymentSplits[index]?.method === "giftCard",
+                              disabled: paymentSplits[index]?.method === "giftcard",
                           }}
                         >
                           <MenuItem value="cash">Espèces</MenuItem>
@@ -922,7 +922,7 @@ const PointOfSale = () => {
                           extra={{
                             type: "number",
                             size: "small",
-                            disabled: paymentSplits[index]?.method === "giftCard",
+                            disabled: paymentSplits[index]?.method === "giftcard",
                             slotProps: {
                               input: {
                                 startAdornment: (

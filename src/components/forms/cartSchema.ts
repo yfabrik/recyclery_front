@@ -22,7 +22,7 @@ export const schema = z.object({
   cart: z.array(itemSchema).min(1, "le panier doit avoir au moins un article"),
   payment_splits: z.array(
     z.object({
-      method: z.enum(["cash", "card", "check", "giftCard"]),
+      method: z.enum(["cash", "card", "check", "giftcard"]),
       amount: z.coerce.number().nonnegative(),
       gift_card_barcode: z.string().optional(),
       gift_card_id: z.number().optional(),
