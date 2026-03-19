@@ -8,6 +8,7 @@ import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { PromoForm, type Schema } from "../../forms/PromoForm"
 import { Loading } from "../../Loading"
+import { fetchStores } from "../../../services/api/store"
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
@@ -15,6 +16,10 @@ export const PromoTab = () => {
     // user's subcategory selection when editing an existing promotion.
     const [currentPromo, setCurrentPromo] = useState<(PromoModel & { subcategory_id?: number | null }) | null>(null)
     const queryClient = useQueryClient()
+    const stores = useQuery({
+        queryKey: ["stores", { active: true }],
+        queryFn: () => fetchStores({ active: true }).then(response => response.data.stores),
+    });
     const categories = useQuery({
         queryFn: () =>
             fetchCategories({ only_category: true, include: "category", sell: true }).then(
@@ -239,6 +244,7 @@ export const PromoTab = () => {
                                 : undefined
                         }
                         categories={categories.data || []}
+                        stores={stores.data || []}
                     />
                 </DialogContent>
                 <DialogActions>

@@ -26,6 +26,7 @@ import {
   Controller,
   type ControllerProps,
   type FieldPath,
+  type FieldPathValue,
   type FieldValues,
   type SubmitHandler,
 } from "react-hook-form";
@@ -53,6 +54,28 @@ interface FormControlProps<
   label: string;
   children?: ReactNode;
 }
+
+const getFieldErrorMessage = (error: unknown): string | undefined => {
+  if (!error || typeof error !== "object") return undefined;
+
+  const maybeMessage = (error as { message?: unknown }).message;
+  if (typeof maybeMessage === "string" && maybeMessage.length > 0) return maybeMessage;
+
+  if (Array.isArray(error)) {
+    for (const item of error) {
+      const message = getFieldErrorMessage(item);
+      if (message) return message;
+    }
+    return undefined;
+  }
+
+  for (const value of Object.values(error as Record<string, unknown>)) {
+    const message = getFieldErrorMessage(value);
+    if (message) return message;
+  }
+
+  return undefined;
+};
 
 export const FormInput = <
   TFieldValues extends FieldValues = FieldValues,
@@ -394,34 +417,38 @@ export const FormMultiSelect = <
   renderValue
 }: FormControlProps<TFieldValues, TName, TTransformedValues> & {
   extra?: FormControlOwnProps;
-  renderValue?: (selected: PathValueImpl<TFieldValues, TName>) => any
+  renderValue?: (selected: FieldPathValue<TFieldValues, TName>) => ReactNode
 }) => {
   return (
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState }) => (
-        <FormControl fullWidth error={fieldState.invalid}>
-          <InputLabel id={name} shrink>
-            {label}
-          </InputLabel>
-          <Select
-            multiple
-            labelId={name}
-            label={label}
-            renderValue={renderValue}
-            {...field}
-            displayEmpty
-            error={fieldState.invalid}
-          >
-            {children}
+      render={({ field, fieldState }) => {
+        const errorMessage = getFieldErrorMessage(fieldState.error);
 
-          </Select>
-          {fieldState.invalid && (
-            <FormHelperText>{fieldState.error?.message}</FormHelperText>
-          )}
-        </FormControl>
-      )}
+        return (
+          <FormControl fullWidth error={fieldState.invalid} {...extra}>
+            <InputLabel id={name} shrink>
+              {label}
+            </InputLabel>
+            <Select
+              multiple
+              labelId={name}
+              label={label}
+              renderValue={renderValue}
+              {...field}
+              displayEmpty
+              error={fieldState.invalid}
+            >
+              {children}
+
+            </Select>
+            {fieldState.invalid && errorMessage && (
+              <FormHelperText>{errorMessage}</FormHelperText>
+            )}
+          </FormControl>
+        );
+      }}
     />
   )
 }
