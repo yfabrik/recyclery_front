@@ -18,6 +18,7 @@ import {
   useRadioGroup,
   useTheme,
   type FormControlOwnProps,
+  type SelectProps,
   type TextFieldProps
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -147,8 +148,10 @@ export const FormSelect = <
   label,
   children,
   extra,
+  extraSelect,
 }: FormControlProps<TFieldValues, TName, TTransformedValues> & {
   extra?: FormControlOwnProps;
+  extraSelect?: Omit<SelectProps, "value" | "onChange" | "label" | "labelId">;
 }) => {
   return (
     <Controller
@@ -163,6 +166,7 @@ export const FormSelect = <
             labelId={`${name}_label`}
             label={label}
             {...field}
+            {...extraSelect}
             displayEmpty
             error={fieldState.invalid}
           >
