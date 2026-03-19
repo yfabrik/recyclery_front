@@ -122,7 +122,7 @@ const RefundInfos = ({ transaction }: RefundInfosProps) => {
   );
   const isFullRefund = transaction.total_amount - totalRefunded === 0;
   const hasGiftCard = transaction.refunds?.some(
-    (r) => r.payment_method === "giftCard",
+    (r) => r.payment_method === "giftcard",
   );
   return (
     <Box

@@ -31,6 +31,8 @@ export const getPaymentMethodLabel = (
     cash: "Espèces",
     card: "Carte bancaire",
     check: "Chèque",
+    giftcard: "avoir",
+    // Backward-compatible in case some UI paths still send the old casing.
     giftCard: "avoir",
   };
   return labels[method] || method;
