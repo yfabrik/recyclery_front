@@ -49,7 +49,7 @@ const schema = z.object({
     "raison requis",
   ),
   refund_method: z.enum(
-      ["cash", "card", "check", "giftcard"],
+    ["cash", "card", "check", "giftcard"],
     "methode requis",
   ),
   notes: z.string(),
@@ -121,7 +121,7 @@ export const RefundForm = ({
   });
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+    <form id={formId} onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}>
       {/* TODO need list des items with checkbox to select witch one to refunds + 1 checkbox on top to select all 
       refund_method need "giftCard"?
       */}
