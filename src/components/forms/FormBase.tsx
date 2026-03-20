@@ -195,7 +195,6 @@ export const FormDate = <
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label={label}
-            {...extra}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -203,6 +202,7 @@ export const FormDate = <
                 helperText: fieldState.invalid && fieldState.error?.message,
               },
             }}
+            {...extra}
             {...field}
             value={field.value ? dayjs(field.value) : null}
             onChange={(value) => field.onChange(value ? value.toDate() : null)}

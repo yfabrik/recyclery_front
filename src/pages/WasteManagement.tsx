@@ -1,13 +1,11 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Add,
   Assessment,
   Delete,
   DeleteSweep,
   Edit,
-  FilterList,
   Nature,
-  TrendingUp,
+  TrendingUp
 } from "@mui/icons-material";
 import {
   Box,
@@ -15,7 +13,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -23,7 +20,6 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -37,10 +33,9 @@ import {
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import z from "zod";
-import { FormDate, FormSelect } from "../components/forms/FormBase";
+import { Loading } from "../components/Loading";
+import { WasteFilterForm, type Filters } from "../components/forms/WasteFilterForm";
 import { WasteForm, type Schema } from "../components/forms/WasteForm";
 import type { WasteModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
@@ -59,7 +54,7 @@ const WasteManagement = () => {
   // États pour les dialogues
   const [disposalDialog, setDisposalDialog] = useState(false);
   const [editingDisposal, setEditingDisposal] = useState<WasteModel | null>(null);
- 
+
 
   // // États pour la pagination
   // const [pagination, setPagination] = useState({
@@ -69,25 +64,12 @@ const WasteManagement = () => {
   //   totalPages: 0,
   // });
 
-  const fitlterSchema = z.object({
-    category_id: z.coerce.number(),
-    disposal_type: z.string(),
-    date_from: z.coerce.date(),
-    date_to: z.coerce.date()
+  const [filters, setFilters] = useState<Filters>({
+    category_id: "",
+    disposal_type: "",
+    date_from: new Date(new Date().setDate(new Date().getDate() - 7)),
+    date_to: new Date()
   })
-  type FitlerSchema = z.infer<typeof fitlterSchema>
-
-  const form = useForm({
-    defaultValues: {
-      category_id: "",
-      disposal_type: "",
-      date_from: new Date(),
-      date_to: new Date()
-    },
-    resolver: zodResolver(fitlterSchema)
-  })
-
-  const filters = form.watch()
 
 
   const queryClient = useQueryClient()
@@ -112,7 +94,7 @@ const WasteManagement = () => {
   const disposals = useQuery({
     queryKey: ["disposals", { filters }],
     queryFn: () => {
-      const o: FitlerSchema = Object.fromEntries(Object.entries(filters).filter(([_, v]) => !!v));
+      const o: wasteFilter = Object.fromEntries(Object.entries(filters).filter(([_, v]) => !!v));
       return getWastes(o).then(response => response.data.disposals)
     },
     placeholderData: keepPreviousData
@@ -160,7 +142,7 @@ const WasteManagement = () => {
     },
     onError: () => toast.error("Erreur lors de la suppression"),
   })
-  
+
   const handleOpenDisposalDialog = (disposal: WasteModel | null = null) => {
     setEditingDisposal(disposal);
     setDisposalDialog(true);
@@ -177,7 +159,7 @@ const WasteManagement = () => {
     } else {
       addWaste.mutate(data)
     }
-   
+
   };
 
   const handleDeleteDisposal = async (id: number) => {
@@ -192,21 +174,21 @@ const WasteManagement = () => {
   };
 
 
-  const getDisposalTypeLabel = (type:string) => {
+  const getDisposalTypeLabel = (type: string) => {
     const types = {
       eco_organism: "Éco-organisme",
       landfill: "Déchetterie",
       other: "Autre",
-    }as const;
+    } as const;
     return types[type as keyof typeof types] || type;
   };
 
-  const getDisposalTypeColor = (type:string) => {
+  const getDisposalTypeColor = (type: string) => {
     const colors = {
       eco_organism: "success",
       landfill: "warning",
       other: "default",
-    }as const ;
+    } as const;
     return colors[type as keyof typeof colors] || "default";
   };
 
@@ -218,26 +200,10 @@ const WasteManagement = () => {
   };
 
 
-
-  if (categories.isLoading || disposals.isLoading || stats.isLoading) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
-
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Typography variant="h4" gutterBottom>
-        🗑️ Gestion des Déchets
+        <DeleteSweep /> Gestion des Déchets
       </Typography>
       <Typography
         variant="body1"
@@ -252,93 +218,95 @@ const WasteManagement = () => {
       {/* Statistiques */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Total Sorties
-                    </Typography>
-                    <Typography variant="h4">
-                      {stats.data?.total_disposals || 0}
-                    </Typography>
+          <Loading isLoading={stats.isLoading}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Box>
+                      <Typography color="text.secondary" gutterBottom>
+                        Total Sorties
+                      </Typography>
+                      <Typography variant="h4">
+                        {stats.data?.total_disposals || 0}
+                      </Typography>
+                    </Box>
+                    <Assessment color="primary" sx={{ fontSize: 40 }} />
                   </Box>
-                  <Assessment color="primary" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Poids Total
-                    </Typography>
-                    <Typography variant="h4">
-                      {formatWeight(stats.data?.total_weight_kg || 0)}
-                    </Typography>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Box>
+                      <Typography color="text.secondary" gutterBottom>
+                        Poids Total
+                      </Typography>
+                      <Typography variant="h4">
+                        {formatWeight(stats.data?.total_weight_kg || 0)}
+                      </Typography>
+                    </Box>
+                    <TrendingUp color="success" sx={{ fontSize: 40 }} />
                   </Box>
-                  <TrendingUp color="success" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Éco-organismes
-                    </Typography>
-                    <Typography variant="h4">
-                      {stats.data?.eco_organism_disposals || 0}
-                    </Typography>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Box>
+                      <Typography color="text.secondary" gutterBottom>
+                        Éco-organismes
+                      </Typography>
+                      <Typography variant="h4">
+                        {stats.data?.eco_organism_disposals || 0}
+                      </Typography>
+                    </Box>
+                    <Nature color="success" sx={{ fontSize: 40 }} />
                   </Box>
-                  <Nature color="success" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <Typography color="text.secondary" gutterBottom>
-                      Déchetterie
-                    </Typography>
-                    <Typography variant="h4">
-                      {stats.data?.landfill_disposals || 0}
-                    </Typography>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Box>
+                      <Typography color="text.secondary" gutterBottom>
+                        Déchetterie
+                      </Typography>
+                      <Typography variant="h4">
+                        {stats.data?.landfill_disposals || 0}
+                      </Typography>
+                    </Box>
+                    <DeleteSweep color="warning" sx={{ fontSize: 40 }} />
                   </Box>
-                  <DeleteSweep color="warning" sx={{ fontSize: 40 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Loading>
         </Grid>
       )}
       {/* Actions et filtres */}
@@ -349,7 +317,7 @@ const WasteManagement = () => {
           alignItems="center"
           mb={3}
         >
-          <Typography variant="h6">📋 Liste des Sorties de Déchets</Typography>
+          <Typography variant="h6"> Liste des Sorties de Déchets</Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -359,130 +327,97 @@ const WasteManagement = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-
-            <FormSelect control={form.control} name="category_id" label="Catégorie" extra={{ size: "small" }}>
-              <MenuItem key="default" value="">Toutes</MenuItem>
-              {categories.data?.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </FormSelect>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormSelect control={form.control} name="disposal_type" label="Type" extra={{ size: "small" }}>
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="eco_organism">Éco-organisme</MenuItem>
-              <MenuItem value="landfill">Déchetterie</MenuItem>
-              <MenuItem value="other">Autre</MenuItem>
-            </FormSelect>
-          
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormDate control={form.control} name="date_from" label="Date début" extra={{ slotProps: { textField: { size: "small" } } }} />
-          
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormDate control={form.control} name="date_to" label="Date fin" extra={{ slotProps: { textField: { size: "small" } } }} />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <Button
-              variant="outlined"
-              type="reset"
-              startIcon={<FilterList />}
-              onClick={() => form.reset()}
-            >
-              Effacer
-            </Button>
-          </Grid>
-        </Grid>
+        <WasteFilterForm
+          categories={categories.data || []}
+          defaultValues={filters}
+          onChange={(values) => setFilters((prev) => ({
+            ...prev,
+            ...values,
+          }))}
+        />
       </Paper>
       {/* Table des sorties de déchets */}
       <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Numéro</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Catégorie</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Destination</TableCell>
-                <TableCell>Poids</TableCell>
-                <TableCell>Transport</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {disposals.data?.map((disposal) => (
-                <TableRow key={disposal.id}>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {disposal.id}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(disposal.disposal_date).toLocaleDateString(
-                      "fr-FR",
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {disposal.category?.name || "Non spécifié"}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getDisposalTypeLabel(disposal.disposal_type)}
-                      color={getDisposalTypeColor(disposal.disposal_type)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {disposal.eco_organism?.name || "Non spécifié"}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {formatWeight(disposal.weight_kg || 0)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {disposal.transport_company && (
-                      <Typography variant="body2">
-                        {disposal.transport_company}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" gap={1}>
-                      <Tooltip title="Modifier">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDisposalDialog(disposal)}
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteDisposal(disposal.id)}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
+        <Loading isLoading={disposals.isLoading}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Numéro</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Catégorie</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Destination</TableCell>
+                  <TableCell>Poids</TableCell>
+                  <TableCell>Transport</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {disposals.data?.map((disposal) => (
+                  <TableRow key={disposal.id}>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="bold">
+                        {disposal.id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(disposal.disposal_date).toLocaleDateString(
+                        "fr-FR",
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {disposal.category?.name || "Non spécifié"}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getDisposalTypeLabel(disposal.disposal_type)}
+                        color={getDisposalTypeColor(disposal.disposal_type)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {disposal.eco_organism?.name || "Non spécifié"}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="bold">
+                        {formatWeight(disposal.weight_kg || 0)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {disposal.transport_company && (
+                        <Typography variant="body2">
+                          {disposal.transport_company}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" gap={1}>
+                        <Tooltip title="Modifier">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenDisposalDialog(disposal)}
+                          >
+                            <Edit />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteDisposal(disposal.id)}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Loading>
       </Paper>
       {/* Dialogue de création/modification */}
       <Dialog
@@ -505,7 +440,7 @@ const WasteManagement = () => {
             ecoOrganisms={ecoOrganisms.data || []}
             onWeightFieldClick={() => { }}
           />
-         
+
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDisposalDialog}>Annuler</Button>
