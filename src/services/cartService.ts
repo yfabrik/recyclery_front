@@ -1,5 +1,5 @@
 import type { CartItem } from "../components/forms/cartSchema";
-import type { TransactionModel } from "../interfaces/Models";
+import type { CategoryModel, TransactionModel } from "../interfaces/Models";
 
 export const getCartLinePrice = (line: CartItem): number => {
   let bundles = 0;
@@ -45,6 +45,10 @@ export const formatCurrency = (amount: number) => {
     currency: "EUR",
   }).format(amount || 0);
 };
+
+export const sumPromoCategorie = (categorie?: CategoryModel) => {
+  return categorie?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
+}
 
 // export const formatWeight = (amount: number) => {
 //   return new Intl.NumberFormat("fr-FR", {

@@ -10,6 +10,7 @@ import type { CategoryModel } from "../../interfaces/Models";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
+import { sumPromoCategorie } from "../../services/cartService";
 
 const schema = z.object({
   category_id: idSchema("categorie requis"),
@@ -95,7 +96,7 @@ export const ManualItemForm = ({
     if (!weightState.isDirty) {
       form.setValue("weight", source.defaultWeight ?? 0);
     }
-    const promo = (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subcategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0)
+    const promo = sumPromoCategorie(category) + sumPromoCategorie(subcategory)
     if (!promoState.isDirty || promo > (promoValue)) {
       form.setValue("promotion", promo);
     }
