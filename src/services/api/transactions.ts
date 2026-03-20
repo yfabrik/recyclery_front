@@ -99,7 +99,6 @@ export type CreateRefundBody = {
 // - refund amount used for recredit is computed from refundable items
 
 // Reusable primitives
-type PaymentMethod = "cash" | "card" | "check" | "giftcard";
 type PaymentMethodStored = PaymentMethod | "mixed";
 
 type TransactionPaymentRow = {

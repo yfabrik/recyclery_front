@@ -57,12 +57,12 @@ export interface CollectionPointModel extends BaseModel {
   contact_phone: string | null;
   contact_email: string | null;
   type:
-    | "standard"
-    | "entreprise"
-    | "association"
-    | "school"
-    | "hospital"
-    | "other";
+  | "standard"
+  | "entreprise"
+  | "association"
+  | "school"
+  | "hospital"
+  | "other";
   notes: string | null;
   is_active: boolean;
   recyclery_id?: number | null;
@@ -135,10 +135,10 @@ export interface LabeledItemModel extends BaseModel {
   subcategory_id: number | null;
   soldBy: number | null;
   created_by: number;
-  transaction_id: number | null;
+  // transaction_id: number | null;
 
   barcode: string;
-  description: string|null;
+  description: string | null;
   weight: number;
   price: number;
   cost: number | null;
@@ -262,7 +262,7 @@ export interface CashSession extends BaseModel {
   cash_register_id: number;
   user_id: number;
 
-  CashRegister?: Pick<CaisseModel, "name">;
+  CashRegister?: Pick<CaisseModel, "name" | "recyclery_id">;
   User?: UserModel;
   Recyclery?: Pick<StoreModel, "name">;
   SalesTransactions?: TransactionModel[];

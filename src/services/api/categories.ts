@@ -11,6 +11,7 @@ interface filters {
   in?: boolean;
   out?: boolean;
   sell?: boolean;
+  store_id?: number
 }
 
 interface axiosReturn {
