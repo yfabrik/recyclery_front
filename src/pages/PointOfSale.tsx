@@ -481,24 +481,25 @@ const PointOfSale = () => {
       0,
     );
     const nonZeroSplits = data.payment_splits.filter((split) => Number(split.amount) > 0);
-    const primaryPayment = nonZeroSplits[0] ?? data.payment_splits[0];
+    // const primaryPayment = nonZeroSplits[0] ?? data.payment_splits[0];
 
     if (activeSession.data) {
       const transactionData = {
         cash_session_id: activeSession.data.id,
         total_amount: total,
-        payment_method: primaryPayment.method,//TODO remove
+        // payment_method: primaryPayment.method,//TODO remove
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
         customer_postal_code: data.customer_postal_code,
         payments: nonZeroSplits.map((split) => ({
           method: split.method,
           amount: Number(split.amount) || 0,
+          gift_card_code: split.gift_card_barcode
         })),
-        payment_splits: nonZeroSplits.map((split) => ({
-          method: split.method,
-          amount: Number(split.amount) || 0,
-        })),
+        // payment_splits: nonZeroSplits.map((split) => ({
+        //   method: split.method,
+        //   amount: Number(split.amount) || 0,
+        // })),
 
         items: cart.map((item) => ({
           ...item,
@@ -507,10 +508,10 @@ const PointOfSale = () => {
         })),
       } satisfies Omit<
         TransactionModel,
-        "id" | "createdAt" | "updatedAt" | "transactionType" | "status" | "created_by" | "items"
+        "id" | "createdAt" | "updatedAt" | "transactionType" | "status" | "created_by" | "items" | "payment_method"
       > & {
         payments: { method: TransactionModel["payment_method"]; amount: number }[];
-        payment_splits: { method: TransactionModel["payment_method"]; amount: number }[];
+        // payment_splits: { method: TransactionModel["payment_method"]; amount: number }[];
         items: (CartItem & { total_price: number })[];
       };
       handleSell.mutate(transactionData as unknown as TransactionModel);
