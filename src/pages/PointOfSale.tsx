@@ -170,10 +170,10 @@ const PointOfSale = () => {
   const categories = useQuery({
     queryKey: [
       "categories",
-      { include: ["category", "promo"], only_category: true, sell: true },
+      { include: ["category", "promo"], only_category: true, sell: true, store_id: activeSession.data?.CashRegister?.recyclery_id },
     ],
     queryFn: () =>
-      fcat({ include: ["category", "promo"], only_category: true, sell: true }).then(
+      fcat({ include: ["category", "promo"], only_category: true, sell: true , store_id: activeSession.data?.CashRegister?.recyclery_id}).then(
         (response) => response.data.categories,
       ),
   });
