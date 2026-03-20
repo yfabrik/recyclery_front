@@ -61,8 +61,9 @@ import {
   type Schema as OpenCaisseSchema,
 } from "../components/forms/OpenCaisseForm";
 import { useAuth } from "../contexts/AuthContext";
-import type { TransactionModel } from "../interfaces/Models";
+import type { LabeledItemModel, TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
+import { getGiftCardByCode } from "../services/api/giftCards";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import {
   OpenCaisse,
@@ -70,8 +71,7 @@ import {
   getActiveCaisses,
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
-import { getGiftCardByCode } from "../services/api/giftCards";
-import { formatCurrency, getCartLinePrice, getCartTotal } from "../services/cartService";
+import { formatCurrency, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
 import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -86,7 +86,8 @@ const PointOfSale = () => {
   const [giftCardScanInput, setGiftCardScanInput] = useState("");
 
 
-
+  //TODO ? set type here so no unknow and so no need to put as CartShema after ? ? but resolver dont like it 
+  // const form = useForm<CartSchema>({
   const form = useForm({
     defaultValues: {
       cart: [],
@@ -173,7 +174,7 @@ const PointOfSale = () => {
       { include: ["category", "promo"], only_category: true, sell: true, store_id: activeSession.data?.CashRegister?.recyclery_id },
     ],
     queryFn: () =>
-      fcat({ include: ["category", "promo"], only_category: true, sell: true , store_id: activeSession.data?.CashRegister?.recyclery_id}).then(
+      fcat({ include: ["category", "promo"], only_category: true, sell: true, store_id: activeSession.data?.CashRegister?.recyclery_id }).then(
         (response) => response.data.categories,
       ),
   });
@@ -247,7 +248,7 @@ const PointOfSale = () => {
             cart as CartItem[],
             activeSession.data,
             user!,
-          );
+          );//TODO REMAKE PRINT RECEIPT
       }
       form.reset({
         cart: [],
@@ -289,7 +290,7 @@ const PointOfSale = () => {
         const category = categories.data?.find(
           (cat) => cat.id === item.category_id,
         );
-        const subCategory = categories.data?.find(
+        const subCategory = category?.subcategories?.find(
           (cat) => cat.id === item.subcategory_id,
         );
         const source = subCategory ?? category;
@@ -310,7 +311,7 @@ const PointOfSale = () => {
           promotion: (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subCategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0),
           bundlePrice: source?.bundlePrice,
           bundleQuantity: source?.bundleQuantity
-        }satisfies CartItem);
+        } satisfies CartItem);
       }
 
       setScanInput("");
@@ -324,6 +325,50 @@ const PointOfSale = () => {
       }
     }
   };
+
+  const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
+    const barcode = item.barcode ?? `MANUAL${Date.now()}`;
+
+
+
+    const selectedCategory = categories.data?.find(
+      (cat) => cat.id == item.category_id,
+    );
+    const selectedSubcategory = selectedCategory?.subcategories?.find(
+      (cat) => cat.id == item.subcategory_id,
+    );
+
+    let itemName = selectedCategory?.name || "Article";
+    if (selectedSubcategory) {
+      itemName += `(${selectedSubcategory.name})`;
+    }
+
+    const source = selectedSubcategory ?? selectedCategory;
+    if (source?.priceBasedOnWeight) item.price = item.price * item.weight;
+
+
+    const promotion = item.promotion ?? sumPromoCategorie(selectedCategory) + sumPromoCategorie(selectedSubcategory)
+
+
+    return {
+      barcode,
+      category_id: item.category_id,
+      subcategory_id: item.subcategory_id,
+      name: itemName,
+      description: item.description || "",
+      category_name: selectedCategory?.name || "",
+      subcategory_name: selectedSubcategory?.name || "",
+      price: item.price,
+      weight: item.weight,
+      quantity: 1,
+      promotion,
+      bundlePrice: source?.bundlePrice,
+      bundleQuantity: source?.bundleQuantity,
+      priceBasedOnWeight: source?.priceBasedOnWeight ?? false
+
+    } satisfies CartItem & { priceBasedOnWeight: boolean };
+
+  }
 
   const handleAddManualItem = (data: ManualItemSchema) => {
     // Générer un code-barres temporaire pour l'article manuel
@@ -442,7 +487,7 @@ const PointOfSale = () => {
       const transactionData = {
         cash_session_id: activeSession.data.id,
         total_amount: total,
-        payment_method: primaryPayment.method,
+        payment_method: primaryPayment.method,//TODO remove
         payment_amount: paymentAmount,
         change_amount: paymentAmount - total,
         customer_postal_code: data.customer_postal_code,
@@ -553,7 +598,7 @@ const PointOfSale = () => {
           </Grid>
         </Grid>
       </Paper> */}
-      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart,(err)=>console.error(err))}>
+      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart, (err) => console.error(err))}>
         <Grid container spacing={2}>
           {/* Scanner et panier */}
           <Grid size={{ xs: 12, lg: 8 }}>
@@ -860,7 +905,7 @@ const PointOfSale = () => {
                       placeholder="Scanner ou saisir le code-barres de l'avoir..."
                       value={giftCardScanInput}
                       onChange={(e) => setGiftCardScanInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}
+                      onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}//FIXME y'a pas conflict avec scan item ?
                       slotProps={{
                         input: {
                           startAdornment: (
@@ -872,6 +917,7 @@ const PointOfSale = () => {
                     <Button
                       variant="contained"
                       size="small"
+                      type="button"
                       onClick={handleScanGiftCard}
                       sx={{ minWidth: 96 }}
                       disabled={giftCardScanInput.trim().length < 1}
@@ -906,7 +952,7 @@ const PointOfSale = () => {
                           name={`payment_splits.${index}.method`}
                           extraSelect={{
                             size: "small",
-                              disabled: paymentSplits[index]?.method === "giftcard",
+                            disabled: paymentSplits[index]?.method === "giftcard",
                           }}
                         >
                           <MenuItem value="cash">Espèces</MenuItem>
