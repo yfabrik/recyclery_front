@@ -13,6 +13,7 @@ import {
 } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { usePrompt } from "../Prompt";
+import { useEffect } from "react";
 
 interface LabeledFormProps extends BaseFormProps<Schema> {
   categories: CategoryModel[];
@@ -44,7 +45,7 @@ export const LabeledItemForm = ({
     { value: "good", label: "Bon état", color: "primary" },
     { value: "fair", label: "État correct", color: "warning" },
     { value: "poor", label: "Mauvais état", color: "error" },
-  ]as const ;
+  ] as const;
 
   const form = useForm({
     defaultValues: {
@@ -60,8 +61,30 @@ export const LabeledItemForm = ({
     },
     resolver: zodResolver(schema),
   });
-
   const categoryId = form.watch("category_id");
+  const subcategoryId = form.watch("subcategory_id");
+
+  useEffect(() => {
+    const priceState = form.getFieldState("price")
+    const weightState = form.getFieldState("weight")
+
+
+    const category = categories.find((c) => c.id == categoryId);
+    const subcategory = category?.subcategories?.find(
+      (c) => c.id == subcategoryId,
+    );
+    const source = subcategory ?? category;
+    if (!source) return;
+
+    if (!priceState.isDirty) {
+      form.setValue("price", source.defaultPrice ?? 0);
+    }
+    if (!weightState.isDirty) {
+      form.setValue("weight", source.defaultWeight ?? 0);
+    }
+
+  }, [categoryId, subcategoryId, categories]);
+
   const subcategories = () => {
     return categoryId
       ? categories.find((c) => c.id == categoryId)?.subcategories || []
@@ -117,8 +140,12 @@ export const LabeledItemForm = ({
                       form.getValues("weight")?.toString() || "",
                       {
                         unit: "Kg",
-                      },
-                    ),
+                      }),
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true
+                    }
+
                   ),
                 sx: {
                   "& .MuiInputBase-input": {
@@ -152,8 +179,11 @@ export const LabeledItemForm = ({
                     await prompt(
                       "",
                       form.getValues("price")?.toString() || "",
-                      { unit: "€" },
-                    ),
+                      { unit: "€" }),
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true
+                    }
                   ),
                 sx: {
                   "& .MuiInputBase-input": {
