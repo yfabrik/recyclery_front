@@ -12,7 +12,7 @@ import { FormCheckboxGroup, type BaseFormProps } from "./FormBase";
 const schema = z.object({
   skills: z.array(z.number()),
 });
-type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<typeof schema>;
 
 function toSkillIds(skills: SkillModel[] | undefined): number[] {
   return skills?.map((s) => s.id) ?? [];
