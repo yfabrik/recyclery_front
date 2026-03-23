@@ -2,6 +2,7 @@ import type { AxiosResponse } from "axios";
 import type { TransactionModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { APIResponse } from "./types";
+import type { GiftCardDto } from "./giftCards";
 
 export interface transactionsFilters {
   store_id?: number;
@@ -86,7 +87,7 @@ export type CreateTransactionBody = {
 // createRefund request body
 // -----------------------------
 export type CreateRefundBody = {
-  cash_session_id: number ;
+  cash_session_id: number;
   total_amount: number; // parsed but current logic recomputes from refundable lines
   payment_method?: PaymentMethod; // default "cash"
   gift_card_code?: string | null; // required when payment_method === "giftcard"
@@ -159,7 +160,7 @@ type SalesTransactionRow = {
   transactionId?: number | null; // parent txn for refunds
   createdAt: string;
   updatedAt: string;
-
+  
   // optional includes
   items?: LabeledItemRow[];
   refunds?: SalesTransactionRow[];
@@ -193,6 +194,13 @@ export type CreateRefundResponse = {
   success: true;
   message: string; // "Remboursement créé avec succès"
   refund: SalesTransactionRow;
+  giftCard?: {
+    id: number;
+    code: string;
+    status: GiftCardDto["status"];
+    type: "issued_new";
+    initial_value: number;
+  }
 };
 
 export const getTransactions = (
@@ -241,5 +249,5 @@ export const getRefundForTransaction = (
 export const createSell = (
   data: CreateTransactionBody,
 ): Promise<
-    AxiosResponse<CreateTransactionResponse>
+  AxiosResponse<CreateTransactionResponse>
 > => axiosInstance.post("/api/sales-transactions", data);
