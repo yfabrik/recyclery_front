@@ -1,11 +1,11 @@
 import { Description, Undo, Visibility } from "@mui/icons-material"
-import { Alert, Box, Button, Card, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
+import { Alert, Box, Button, Card, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
 import type { CashSession, TransactionModel } from "../../interfaces/Models"
 import { fetchCategories } from "../../services/api/categories"
-import { createRefund, getTransactions } from "../../services/api/transactions"
+import { createRefund, getTransactions, type CreateRefundBody } from "../../services/api/transactions"
 import { formatCurrency, getCartLinePrice, getPaymentMethodLabel } from "../../services/cartService"
 import { DetailTransaction } from "../DetailTransaction"
 import { RefundForm, type Schema } from "../forms/RefundForm"
@@ -17,6 +17,7 @@ export const SalesHistory = ({ activeSession }: { activeSession: CashSession }) 
     const [refundDialog, setRefundDialog] = useState(false);
     const [selectedTransaction, setSelectedTransaction] =
         useState<TransactionModel | null>(null);
+    const [page, setPage] = useState(1);
 
     // États pour la pop-up des détails de transaction
     const [transactionDetailsDialog, setTransactionDetailsDialog] =
@@ -28,22 +29,23 @@ export const SalesHistory = ({ activeSession }: { activeSession: CashSession }) 
     })
 
     const transactionsHistory = useQuery({
-        queryKey: ["transactionsHistory", { store_id: activeSession.CashRegister?.recyclery_id }],
+        queryKey: ["transactionsHistory", { store_id: activeSession.CashRegister?.recyclery_id, page }],
         queryFn: () => getTransactions({
             store_id: activeSession.CashRegister?.recyclery_id,
             include: ["refund", "items"],
-        }).then((response) => response.data.transactions || []),
+            page,
+        }).then((response) => response.data),
         enabled: !!activeSession.CashRegister?.recyclery_id,
     })
 
-    const cashRegisterTransactions = (transactionsHistory.data || []).filter(
+    const cashRegisterTransactions = (transactionsHistory.data?.transactions || []).filter(
         (transaction) =>
             transaction.CashSession?.cash_register_id === activeSession.cash_register_id ||
             transaction.cash_session_id === activeSession.id,
     );
 
     const addRefund = useMutation({
-        mutationFn: (v: { id: number; data: Schema }) => createRefund(v.id, v.data),
+        mutationFn: (v: { id: number; data: CreateRefundBody }) => createRefund(v.id, v.data),
         onSuccess: () => {
             handleCloseRefundDialog();
             toast.success("Remboursement effectué avec succès");
@@ -54,6 +56,7 @@ export const SalesHistory = ({ activeSession }: { activeSession: CashSession }) 
     });
 
     const handleSubmitRefund = async (data: Schema) => {
+        if (!selectedTransaction) return;
         const d = data.cart
             .map((item) => {
                 return {
@@ -141,6 +144,17 @@ export const SalesHistory = ({ activeSession }: { activeSession: CashSession }) 
                                     ))}
                                 </TableBody>
                             </Table>
+                            <Box sx={{ display: "flex", justifyContent: "center", padding: 1 }}>
+                                <Pagination
+                                    count={
+                                        Math.trunc((transactionsHistory.data?.pagination?.total || 0) / 50) +
+                                        1 || 10
+                                    }
+                                    color="primary"
+                                    page={page}
+                                    onChange={(e, val) => setPage(val)}
+                                />
+                            </Box>
                         </TableContainer>
                     )}
                 </Loading>
