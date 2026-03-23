@@ -86,7 +86,7 @@ export type CreateTransactionBody = {
 // createRefund request body
 // -----------------------------
 export type CreateRefundBody = {
-  cash_session_id?: number | null;
+  cash_session_id: number ;
   total_amount: number; // parsed but current logic recomputes from refundable lines
   payment_method?: PaymentMethod; // default "cash"
   gift_card_code?: string | null; // required when payment_method === "giftcard"

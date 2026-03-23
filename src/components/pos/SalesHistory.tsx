@@ -72,7 +72,7 @@ export const SalesHistory = ({ activeSession }: { activeSession: CashSession }) 
 
         addRefund.mutate({
             id: selectedTransaction.id,
-            data: { ...data, items: [...d], total_amount: refundValue },
+            data: { ...data, items: [...d], total_amount: refundValue, cash_session_id: activeSession.id },
         });
     };
 
