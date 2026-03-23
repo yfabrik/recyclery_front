@@ -26,6 +26,7 @@ export const schema = z.object({
       amount: z.coerce.number().nonnegative(),
       gift_card_barcode: z.string().optional(),
       gift_card_id: z.number().optional(),
+      gift_card_current_value: z.number().optional(),
     }),
   ).min(1, "au moins un mode de paiement est requis"),//TODO filter line with amount = 0 ? or just make amount positive ?
   customer_postal_code: z.union([postalSchema("format invalide"), nullString()])

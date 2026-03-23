@@ -28,6 +28,7 @@ export type GiftCardDto = {
   recipient_email: string | null;
   createdAt: string | Date;
   updatedAt: string | Date;
+  current_value: number;
 };
 
 export type GetGiftCardByCodeResponse = {

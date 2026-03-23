@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AccountBalance,
   Add,
   Backpack,
   Close,
@@ -38,8 +37,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
@@ -57,9 +56,10 @@ import {
   type Schema as ManualItemSchema,
 } from "../components/forms/ManualItemForm";
 import {
-  OpenCaisseForm,
-  type Schema as OpenCaisseSchema,
+  type Schema as OpenCaisseSchema
 } from "../components/forms/OpenCaisseForm";
+import { NoOpenedRegister } from "../components/pos/NoOpenedRegister";
+import { SalesHistory } from "../components/pos/SalesHistory";
 import { useAuth } from "../contexts/AuthContext";
 import type { LabeledItemModel, TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
@@ -79,6 +79,7 @@ const PointOfSale = () => {
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   // const [paymentDialog, setPaymentDialog] = useState(false);
   const [manualItemDialog, setManualItemDialog] = useState(false);
 
@@ -116,11 +117,77 @@ const PointOfSale = () => {
   });
 
   /** Typed as CartItem[] so item fields (e.g. subcategory_id) are not inferred as unknown from empty defaultValues. */
-  const cart = form.watch("cart") as CartSchema["cart"];
-  const paymentSplits = form.watch("payment_splits") as CartSchema["payment_splits"];
+  const cart = useWatch({
+    control: form.control,
+    name: "cart",
+    defaultValue: [],
+  }) as CartSchema["cart"];
+  const paymentSplits = useWatch({
+    control: form.control,
+    name: "payment_splits",
+    defaultValue: [{ method: "cash", amount: 0 }],
+  }) as CartSchema["payment_splits"];
+  const cartTotal = getCartTotal(cart);
   const totalPaid = paymentSplits.reduce((sum, split) => sum + (Number(split.amount) || 0), 0);
-
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
+
+  const recalculatePaymentSplits = (
+    currentSplits: CartSchema["payment_splits"],
+    total: number,
+  ): CartSchema["payment_splits"] => {
+    let remainingForGiftCards = total;
+    const nextSplits = currentSplits.map((split) => {
+      if (split.method !== "giftcard") {
+        return split;
+      }
+
+      const giftUsage = Math.max(Math.min(split.gift_card_current_value ?? 0, remainingForGiftCards), 0);
+      remainingForGiftCards = Math.max(remainingForGiftCards - giftUsage, 0);
+      return { ...split, amount: giftUsage };
+    });
+
+    // return nextSplits.map((split, index) => {
+    //   if (split.method !== "card" && split.method !== "check") {
+    //     return split;
+    //   }
+
+    //   const paidByOtherSplits = nextSplits.reduce((sum, current, currentIndex) => {
+    //     if (currentIndex === index) return sum;
+    //     return sum + (Number(current.amount) || 0);
+    //   }, 0);
+
+    //   return {
+    //     ...split,
+    //     amount: Math.max(total - paidByOtherSplits, 0),
+    //   };
+    // });
+    return nextSplits
+  };
+
+  const arePaymentSplitsEqual = (
+    left: CartSchema["payment_splits"],
+    right: CartSchema["payment_splits"],
+  ) => {
+    if (left.length !== right.length) return false;
+    return left.every((split, index) => {
+      const compared = right[index];
+      return (
+        split.method === compared.method
+        && (Number(split.amount) || 0) === (Number(compared.amount) || 0)
+        && split.gift_card_barcode === compared.gift_card_barcode
+        && split.gift_card_id === compared.gift_card_id
+      );
+    });
+  };
+
+  useEffect(() => {
+    const nextSplits = recalculatePaymentSplits(paymentSplits, cartTotal);
+    if (arePaymentSplitsEqual(paymentSplits, nextSplits)) return;
+    form.setValue("payment_splits", nextSplits, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [cartTotal, form, paymentSplits]);
 
   const addCart = () => {
     setCarts((prev) => [...prev, [] as CartSchema["cart"]]);
@@ -178,6 +245,7 @@ const PointOfSale = () => {
         (response) => response.data.categories,
       ),
   });
+
 
   const openSession = useMutation({
     mutationFn: (data: {
@@ -261,6 +329,49 @@ const PointOfSale = () => {
     },
   });
 
+  const isLabeledItem = (item: ManualItemSchema | LabeledItemModel): item is LabeledItemModel => {
+    return "barcode" in item;
+  }
+  const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
+    const barcode = isLabeledItem(item) ? item.barcode : `MANUAL${Date.now()}`;
+
+    const selectedCategory = categories.data?.find(
+      (cat) => cat.id == item.category_id,
+    );
+    const selectedSubcategory = selectedCategory?.subcategories?.find(
+      (cat) => cat.id == item.subcategory_id,
+    );
+
+    let itemName = selectedCategory?.name || "Article";
+    if (selectedSubcategory) {
+      itemName += `(${selectedSubcategory.name})`;
+    }
+
+    const source = selectedSubcategory ?? selectedCategory;
+    if (source?.priceBasedOnWeight) item.price = item.price * item.weight;
+
+    const promotion = !isLabeledItem(item) ? item.promotion : sumPromoCategorie(selectedCategory) + sumPromoCategorie(selectedSubcategory)
+
+    return {
+      barcode,
+      category_id: item.category_id,
+      subcategory_id: item.subcategory_id,
+      name: itemName,
+      description: item.description || "",
+      category_name: selectedCategory?.name || "",
+      subcategory_name: selectedSubcategory?.name || "",
+      price: item.price,
+      weight: item.weight,
+      quantity: 1,
+      promotion,
+      bundlePrice: source?.bundlePrice,
+      bundleQuantity: source?.bundleQuantity,
+      priceBasedOnWeight: source?.priceBasedOnWeight ?? false
+
+    } satisfies CartItem & { priceBasedOnWeight: boolean };
+
+  }
+
   const handleScanProduct = async () => {
     if (!scanInput.trim()) {
       toast.error("Veuillez saisir un code-barres");
@@ -287,31 +398,10 @@ const PointOfSale = () => {
           quantity: cart[existingItem].quantity + 1,
         });
       } else {
-        const category = categories.data?.find(
-          (cat) => cat.id === item.category_id,
-        );
-        const subCategory = category?.subcategories?.find(
-          (cat) => cat.id === item.subcategory_id,
-        );
-        const source = subCategory ?? category;
+        const currentItem = handleitem(item)
 
-        const category_name = category?.name ?? "";
-        const subcategory_name = subCategory?.name ?? "";
-        let itemName = category_name || "Article";
-        if (subcategory_name) {
-          itemName = `${category_name} (${subcategory_name})`;
-        }
+        append(currentItem)
 
-        append({
-          ...item,
-          quantity: 1,
-          name: itemName,
-          category_name,
-          subcategory_name,
-          promotion: (category?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0) + (subCategory?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0),
-          bundlePrice: source?.bundlePrice,
-          bundleQuantity: source?.bundleQuantity
-        } satisfies CartItem);
       }
 
       setScanInput("");
@@ -326,96 +416,15 @@ const PointOfSale = () => {
     }
   };
 
-  const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
-    const barcode = item.barcode ?? `MANUAL${Date.now()}`;
 
-
-
-    const selectedCategory = categories.data?.find(
-      (cat) => cat.id == item.category_id,
-    );
-    const selectedSubcategory = selectedCategory?.subcategories?.find(
-      (cat) => cat.id == item.subcategory_id,
-    );
-
-    let itemName = selectedCategory?.name || "Article";
-    if (selectedSubcategory) {
-      itemName += `(${selectedSubcategory.name})`;
-    }
-
-    const source = selectedSubcategory ?? selectedCategory;
-    if (source?.priceBasedOnWeight) item.price = item.price * item.weight;
-
-
-    const promotion = item.promotion ?? sumPromoCategorie(selectedCategory) + sumPromoCategorie(selectedSubcategory)
-
-
-    return {
-      barcode,
-      category_id: item.category_id,
-      subcategory_id: item.subcategory_id,
-      name: itemName,
-      description: item.description || "",
-      category_name: selectedCategory?.name || "",
-      subcategory_name: selectedSubcategory?.name || "",
-      price: item.price,
-      weight: item.weight,
-      quantity: 1,
-      promotion,
-      bundlePrice: source?.bundlePrice,
-      bundleQuantity: source?.bundleQuantity,
-      priceBasedOnWeight: source?.priceBasedOnWeight ?? false
-
-    } satisfies CartItem & { priceBasedOnWeight: boolean };
-
-  }
 
   const handleAddManualItem = (data: ManualItemSchema) => {
-    // Générer un code-barres temporaire pour l'article manuel
-    const tempBarcode = `MANUAL${Date.now()}`;
-    ////// ce bloc c'est le meme que add item with barcode///////////
-    const selectedCategory = categories.data?.find(
-      (cat) => cat.id == data.category_id,
-    );
-    const selectedSubcategory = selectedCategory?.subcategories?.find(
-      (cat) => cat.id == data.subcategory_id,
-    );
-
-    // Générer un nom basé sur la catégorie et sous-catégorie
-    let itemName = selectedCategory?.name || "Article";
-    if (selectedSubcategory) {
-      itemName = `${selectedSubcategory.name} (${selectedCategory?.name})`;
-    }
-    const source = selectedSubcategory ?? selectedCategory;
-    if (source?.priceBasedOnWeight) data.price = data.price * data.weight;
-
-    ////////////
-
-    const manualItem = {
-      // id: tempBarcode,
-      barcode: tempBarcode,
-      category_id: data.category_id,
-      subcategory_id: data.subcategory_id,
-      name: itemName,
-      description: data.description || "",
-      category_name: selectedCategory?.name || "",
-      subcategory_name: selectedSubcategory?.name || "",
-      price: data.price,
-      weight: data.weight,
-      quantity: 1,
-      promotion: data.promotion,
-      bundlePrice: source?.bundlePrice,
-      bundleQuantity: source?.bundleQuantity
-
-      // total_price: parseFloat(data.price),
-      // is_manual: true, // Flag pour identifier les articles manuels
-    } satisfies CartItem;
-
+    const manualItem = handleitem(data);
+   
     append(manualItem);
-    // setCart((prev) => [...prev, manualItem]);
 
     setManualItemDialog(false);
-    toast.success(`${itemName} ajouté au panier`);
+    toast.success(`${manualItem.name} ajouté au panier`);
   };
 
   const handleScanGiftCard = async () => {
@@ -439,7 +448,7 @@ const PointOfSale = () => {
         return;
       }
 
-      const amountCandidate = giftCard.initial_value;
+      const amountCandidate = giftCard.current_value;
       const amount = Number(amountCandidate ?? 0);
 
       if (!Number.isFinite(amount) || amount <= 0) {
@@ -460,6 +469,7 @@ const PointOfSale = () => {
         amount,
         gift_card_barcode: giftCard.code ?? barcode,
         gift_card_id: giftCard.id,
+        gift_card_current_value: giftCard.current_value,
       });
       setGiftCardScanInput("");
       toast.success(`Avoir ajouté: ${formatCurrency(amount)}`);
@@ -522,186 +532,177 @@ const PointOfSale = () => {
 
   if (!activeSession.data) {
     return (
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <AccountBalance sx={{ fontSize: 80, color: "primary.main", mb: 2 }} />
-          <Typography variant="h4" gutterBottom>
-            Point de Vente
-          </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            Aucune session de caisse active. Ouvrez une caisse pour commencer
-            les ventes.
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<AccountBalance />}
-            onClick={() => setOpenSessionDialog(true)}
-          >
-            Ouvrir une Caisse
-          </Button>
-        </Paper>
-        {/* Dialog d'ouverture de session */}
-        <Dialog
-          open={openSessionDialog}
-          onClose={() => setOpenSessionDialog(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Ouverture de Caisse</DialogTitle>
-          <DialogContent>
-            <OpenCaisseForm
-              formId="OpenCaisseForm"
-              onSubmit={handleOpenSession}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenSessionDialog(false)}>Annuler</Button>
-            <Button type="submit" form="OpenCaisseForm" variant="contained">
-              Ouvrir la Caisse
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+      <NoOpenedRegister setOpenSessionDialog={setOpenSessionDialog} openSessionDialog={openSessionDialog} handleOpenSession={handleOpenSession} />
     );
   }
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
       {/* En-tête de session */}
-      <ActiveSessionInfos activeSession={activeSession.data} setCloseSessionDialog={setCloseSessionDialog} />
-      {/* <Paper sx={{ p: 2, mb: 2 }}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <PosIcon color="primary" />
-              <Box>
-                <Typography variant="h6">
-                  {activeSession.data?.Recyclery?.name} -{" "}
-                  {activeSession.data?.CashRegister?.name}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Session: {activeSession.data?.id} | Ouvert:{" "}
-                  {new Date(activeSession.data?.createdAt).toLocaleString()} | Fonds de caisse: {formatCurrency(activeSession.data.opening_amount)}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-          <Grid>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<Close />}
-              onClick={() => setCloseSessionDialog(true)}
-            >
-              Fermer la Caisse
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper> */}
-      <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart, (err) => console.error(err))}>
-        <Grid container spacing={2}>
-          {/* Scanner et panier */}
-          <Grid size={{ xs: 12, lg: 8 }}>
-            {/* Scanner */}
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Ajouter Article
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Scanner ou saisir le code-barres..."
-                  value={scanInput}
-                  onChange={(e) => setScanInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleScanProduct()}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
-                      ),
-                    },
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleScanProduct}
-                  sx={{ minWidth: 100 }}
-                  disabled={scanInput.length < 1}
-                >
-                  Scanner
-                </Button>
-              </Box>
-              <Box sx={{ textAlign: "center" }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<Add />}
-                  onClick={() => setManualItemDialog(true)}
-                  sx={{ minWidth: 200 }}
-                >
-                  Article Manuel
-                </Button>
-              </Box>
-            </Paper>
-            <Tabs value={tabValue} onChange={(_, val) => changeCart(val as number)}>
-              {carts.map((_, index) => (
-                <Tab
-                  key={index}
-                  label={
-                    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                      Panier {index + 1}
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeCart(index);
-                        }}
-                        disabled={carts.length <= 1}
-                      >
-                        <Close fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  }
-                />
-              ))}
-              <IconButton onClick={() => addCart()}>
-                <Add />
-              </IconButton>
-            </Tabs>
-            {/* Panier */}
-            {/* <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}> */}
-            <Paper sx={{ p: 2 }}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <ShoppingCart />
-                Panier ({cartFields.length} article{cartFields.length > 1 ? "s" : ""})
-              </Typography>
+      <ActiveSessionInfos
+        activeSession={activeSession.data}
+        setCloseSessionDialog={setCloseSessionDialog}
+        showTransactionHistory={showTransactionHistory}
+        toggleTransactionHistory={() => setShowTransactionHistory((prev) => !prev)}
+      />
 
-              {cartFields.length === 0 ? (
-                <Alert severity="info">
-                  Le panier est vide. Scannez des articles pour commencer.
-                </Alert>
-              ) : (
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Article</TableCell>
-                        <TableCell>Poids unitaire</TableCell>
-                        <TableCell>Prix unitaire</TableCell>
-                        <TableCell>Quantité</TableCell>
-                        <TableCell>Total</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {cartFields.map((item, index) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <Box>
+      {showTransactionHistory ? (
+        <SalesHistory activeSession={activeSession.data} />
+      ) : (
+        <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart, (err) => console.error(err))}>
+          <Grid container spacing={2}>
+            {/* Scanner et panier */}
+            <Grid size={{ xs: 12, lg: 8 }}>
+              {/* Scanner */}
+              <Paper sx={{ p: 2, mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Ajouter Article
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    placeholder="Scanner ou saisir le code-barres..."
+                    value={scanInput}
+                    onChange={(e) => setScanInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleScanProduct()}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                        ),
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleScanProduct}
+                    sx={{ minWidth: 100 }}
+                    disabled={scanInput.length < 1}
+                  >
+                    Scanner
+                  </Button>
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Add />}
+                    onClick={() => setManualItemDialog(true)}
+                    sx={{ minWidth: 200 }}
+                  >
+                    Article Manuel
+                  </Button>
+                </Box>
+              </Paper>
+              <Tabs value={tabValue} onChange={(_, val) => changeCart(val as number)}>
+                {carts.map((_, index) => (
+                  <Tab
+                    key={index}
+                    label={
+                      <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+                        Panier {index + 1}
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeCart(index);
+                          }}
+                          disabled={carts.length <= 1}
+                        >
+                          <Close fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    }
+                  />
+                ))}
+                <IconButton onClick={() => addCart()}>
+                  <Add />
+                </IconButton>
+              </Tabs>
+              {/* Panier */}
+              {/* <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}> */}
+              <Paper sx={{ p: 2 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <ShoppingCart />
+                  Panier ({cartFields.length} article{cartFields.length > 1 ? "s" : ""})
+                </Typography>
+
+                {cartFields.length === 0 ? (
+                  <Alert severity="info">
+                    Le panier est vide. Scannez des articles pour commencer.
+                  </Alert>
+                ) : (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Article</TableCell>
+                          <TableCell>Poids unitaire</TableCell>
+                          <TableCell>Prix unitaire</TableCell>
+                          <TableCell>Quantité</TableCell>
+                          <TableCell>Total</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {cartFields.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography variant="body1" fontWeight="medium">
+                                    {item.name}
+                                  </Typography>
+                                  {isNaN(+item.barcode) && (
+                                    <Chip
+                                      size="small"
+                                      label="Manuel"
+                                      color="info"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                                <Typography variant="body2" color="textSecondary">
+                                  {item.barcode}
+                                </Typography>
+                                {(item.category_name ||
+                                  item.subcategory_name) && (
+                                    <Typography
+                                      variant="body2"
+                                      color="textSecondary"
+                                    >
+                                      {item.category_name}
+                                      {item.subcategory_name &&
+                                        ` > ${item.subcategory_name}`}
+                                    </Typography>
+                                  )}
+                              </Box>
+                            </TableCell>
+                            <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
+                            <TableCell>
+                              {formatCurrency(item.price)}
+                              {item.promotion != 0 && (
+                                <Chip
+                                  color="secondary"
+                                  icon={<Loyalty />}
+                                  sx={{
+                                    marginLeft: 1,
+                                  }}
+                                  label={`-${item.promotion}%`}
+                                  size="small"
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell>
                               <Box
                                 sx={{
                                   display: "flex",
@@ -709,169 +710,118 @@ const PointOfSale = () => {
                                   gap: 1,
                                 }}
                               >
-                                <Typography variant="body1" fontWeight="medium">
-                                  {item.name}
-                                </Typography>
-                                {isNaN(+item.barcode) && (
-                                  <Chip
-                                    size="small"
-                                    label="Manuel"
-                                    color="info"
-                                    variant="outlined"
-                                  />
-                                )}
-                              </Box>
-                              <Typography variant="body2" color="textSecondary">
-                                {item.barcode}
-                              </Typography>
-                              {(item.category_name ||
-                                item.subcategory_name) && (
-                                  <Typography
-                                    variant="body2"
-                                    color="textSecondary"
-                                  >
-                                    {item.category_name}
-                                    {item.subcategory_name &&
-                                      ` > ${item.subcategory_name}`}
-                                  </Typography>
-                                )}
-                            </Box>
-                          </TableCell>
-                          <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
-                          <TableCell>
-                            {formatCurrency(item.price)}
-                            {item.promotion != 0 && (
-                              <Chip
-                                color="secondary"
-                                icon={<Loyalty />}
-                                sx={{
-                                  marginLeft: 1,
-                                }}
-                                label={`-${item.promotion}%`}
-                                size="small"
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  return item.quantity - 1 <= 0
-                                    ? remove(index)
-                                    : update(index, {
-                                      ...item,
-                                      quantity: item.quantity - 1,
-                                    });
-                                }}
-                              >
-                                <Remove />
-                              </IconButton>
-                              <Typography
-                                sx={{ minWidth: 30, textAlign: "center" }}
-                              >
-                                {item.quantity}
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  update(index, {
-                                    ...item,
-                                    quantity: item.quantity + 1,
-                                  })
-                                }
-                              >
-                                <Add />
-                              </IconButton>
-                              {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity >= item.bundleQuantity &&
-                                <Chip
-                                  color="secondary"
-                                  icon={<Backpack />}
-                                  sx={{
-                                    marginLeft: 1,
-                                  }}
-                                  label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
+                                <IconButton
                                   size="small"
-                                />
-                              }
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography fontWeight="bold">
-                              {formatCurrency(getCartLinePrice(item as CartItem)) /*FIXME  as cartItem devrait pas etre la */}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => remove(index)}
-                            >
-                              <Close />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </Paper>
-            {/* </form> */}
-          </Grid>
+                                  onClick={() => {
+                                    return item.quantity - 1 <= 0
+                                      ? remove(index)
+                                      : update(index, {
+                                        ...item,
+                                        quantity: item.quantity - 1,
+                                      });
+                                  }}
+                                >
+                                  <Remove />
+                                </IconButton>
+                                <Typography
+                                  sx={{ minWidth: 30, textAlign: "center" }}
+                                >
+                                  {item.quantity}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    update(index, {
+                                      ...item,
+                                      quantity: item.quantity + 1,
+                                    })
+                                  }
+                                >
+                                  <Add />
+                                </IconButton>
+                                {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity >= item.bundleQuantity &&
+                                  <Chip
+                                    color="secondary"
+                                    icon={<Backpack />}
+                                    sx={{
+                                      marginLeft: 1,
+                                    }}
+                                    label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
+                                    size="small"
+                                  />
+                                }
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography fontWeight="bold">
+                                {formatCurrency(getCartLinePrice(item as CartItem)) /*FIXME  as cartItem devrait pas etre la */}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => remove(index)}
+                              >
+                                <Close />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </Paper>
+              {/* </form> */}
+            </Grid>
 
-          {/* Résumé et paiement */}
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <Paper sx={{ p: 2,/* position: "sticky",*/ top: 20 }}>
-              <Typography variant="h6" gutterBottom>
-                Résumé de la Commande
-              </Typography>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography>Types d'articles:</Typography>
-                <Typography>{cart.length}</Typography>
-              </Box>
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography>Total d'articles:</Typography>
-                <Typography>
-                  {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+            {/* Résumé et paiement */}
+            <Grid size={{ xs: 12, lg: 4 }}>
+              <Paper sx={{ p: 2,/* position: "sticky",*/ top: 20 }}>
+                <Typography variant="h6" gutterBottom>
+                  Résumé de la Commande
                 </Typography>
-              </Box>
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography>Poids</Typography>
-                <Typography>
-                  {cart.reduce(
-                    (prev, current) =>
-                      (prev += current.weight * current.quantity),
-                    0,
-                  )}{" "}
-                  Kg
-                </Typography>
-              </Box>
 
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total:</Typography>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                  {formatCurrency(getCartTotal(cart))}
-                </Typography>
-              </Box>
-              {/* 
+                <Divider sx={{ my: 2 }} />
+
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                >
+                  <Typography>Types d'articles:</Typography>
+                  <Typography>{cart.length}</Typography>
+                </Box>
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                >
+                  <Typography>Total d'articles:</Typography>
+                  <Typography>
+                    {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                >
+                  <Typography>Poids</Typography>
+                  <Typography>
+                    {cart.reduce(
+                      (prev, current) =>
+                        (prev += current.weight * current.quantity),
+                      0,
+                    )}{" "}
+                    Kg
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total:</Typography>
+                  <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                    {formatCurrency(cartTotal)}
+                  </Typography>
+                </Box>
+                {/* 
             <Button
               fullWidth
               variant="contained"
@@ -891,163 +841,166 @@ const PointOfSale = () => {
             >
               Encaisser
             </Button> */}
-            </Paper>
+              </Paper>
 
-            <Paper sx={{ p: 2, mt: 2 }}>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Gift Card / Avoir
-                  </Typography>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Scanner ou saisir le code-barres de l'avoir..."
-                      value={giftCardScanInput}
-                      onChange={(e) => setGiftCardScanInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}//FIXME y'a pas conflict avec scan item ?
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
-                          ),
-                        },
-                      }}
-                    />
-                    <Button
-                      variant="contained"
-                      size="small"
-                      type="button"
-                      onClick={handleScanGiftCard}
-                      sx={{ minWidth: 96 }}
-                      disabled={giftCardScanInput.trim().length < 1}
-                    >
-                      Scanner
-                    </Button>
-                  </Box>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Typography variant="subtitle2">Paiements</Typography>
-                  </Box>
-                </Grid>
-
-                {paymentFields.map((payment, index) => (
-                  <Grid key={payment.id} size={{ xs: 12 }}>
-                    {paymentSplits[index]?.method === "giftcard" && (
-                      <Box sx={{ mb: 1 }}>
-                        <Chip
-                          size="small"
-                          color="secondary"
-                          label={`Avoir: ${paymentSplits[index]?.gift_card_barcode ?? "N/A"} - ${formatCurrency(Number(paymentSplits[index]?.amount || 0))}`}
-                        />
-                      </Box>
-                    )}
-                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                      <Box sx={{ width: "42%" }}>
-                        <FormSelect
-                          label={`Mode de paiement #${index + 1}`}
-                          control={form.control}
-                          name={`payment_splits.${index}.method`}
-                          extraSelect={{
-                            size: "small",
-                            disabled: paymentSplits[index]?.method === "giftcard",
-                          }}
-                        >
-                          <MenuItem value="cash">Espèces</MenuItem>
-                          <MenuItem value="card">Carte bancaire</MenuItem>
-                          <MenuItem value="check">Chèque</MenuItem>
-                        </FormSelect>
-                      </Box>
-                      <Box sx={{ width: "42%" }}>
-                        <FormInput
-                          label="Montant (€)"
-                          control={form.control}
-                          name={`payment_splits.${index}.amount`}
-                          extra={{
-                            type: "number",
-                            size: "small",
-                            disabled: paymentSplits[index]?.method === "giftcard",
-                            slotProps: {
-                              input: {
-                                startAdornment: (
-                                  <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                                ),
-                              },
-                            },
-                          }}
-                        />
-                      </Box>
-                      <IconButton
-                        color="error"
-                        onClick={() => removePayment(index)}
-                        disabled={paymentFields.length <= 1}
-                        sx={{ mt: 0.5 }}
+              <Paper sx={{ p: 2, mt: 2 }}>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Gift Card / Avoir
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <TextField
+                        fullWidth
                         size="small"
+                        placeholder="Scanner ou saisir le code-barres de l'avoir..."
+                        value={giftCardScanInput}
+                        onChange={(e) => setGiftCardScanInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}//FIXME y'a pas conflict avec scan item ?
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                            ),
+                          },
+                        }}
+                      />
+                      <Button
+                        variant="contained"
+                        size="small"
+                        type="button"
+                        onClick={handleScanGiftCard}
+                        sx={{ minWidth: 96 }}
+                        disabled={giftCardScanInput.trim().length < 1}
                       >
-                        <Close />
-                      </IconButton>
+                        Scanner
+                      </Button>
                     </Box>
                   </Grid>
-                ))}
-                <Grid size={{ xs: 12 }}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => appendPayment({ method: "cash", amount: 0, gift_card_barcode: undefined, gift_card_id: undefined })}
-                  >
-                    + payment
-                  </Button>
-                </Grid>
 
-                {totalPaid > getCartTotal(cart) && (
                   <Grid size={{ xs: 12 }}>
-                    <Alert severity="info">
-                      Rendu à donner: {formatCurrency(totalPaid - getCartTotal(cart))}
-                    </Alert>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Typography variant="subtitle2">Paiements</Typography>
+                    </Box>
                   </Grid>
-                )}
-                {totalPaid < getCartTotal(cart) && cart.length > 0 && (
+
+                  {paymentFields.map((payment, index) => (
+                    <Grid key={payment.id} size={{ xs: 12 }}>
+                      {paymentSplits[index]?.method === "giftcard" && (
+                        <Box sx={{ mb: 1 }}>
+                          <Chip
+                            size="small"
+                            color="secondary"
+                            label={`Avoir: ${paymentSplits[index]?.gift_card_barcode ?? "N/A"} - ${formatCurrency(Number(paymentSplits[index]?.gift_card_current_value || 0))}`}
+                          />
+                        </Box>
+                      )}
+                      <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                        <Box sx={{ width: "42%" }}>
+                          <FormSelect
+                            label={`Mode de paiement #${index + 1}`}
+                            control={form.control}
+                            name={`payment_splits.${index}.method`}
+                            extraSelect={{
+                              size: "small",
+                              disabled: paymentSplits[index]?.method === "giftcard",
+                            }}
+                          >
+                            <MenuItem value="cash">Espèces</MenuItem>
+                            <MenuItem value="card">Carte bancaire</MenuItem>
+                            <MenuItem value="check">Chèque</MenuItem>
+                            <MenuItem value="giftcard" disabled>Avoir</MenuItem>
+
+                          </FormSelect>
+                        </Box>
+                        <Box sx={{ width: "42%" }}>
+                          <FormInput
+                            label="Montant (€)"
+                            control={form.control}
+                            name={`payment_splits.${index}.amount`}
+                            extra={{
+                              type: "number",
+                              size: "small",
+                              disabled: paymentSplits[index]?.method === "giftcard",
+                              slotProps: {
+                                input: {
+                                  startAdornment: (
+                                    <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                                  ),
+                                },
+                              },
+                            }}
+                          />
+                        </Box>
+                        <IconButton
+                          color="error"
+                          onClick={() => removePayment(index)}
+                          disabled={paymentFields.length <= 1}
+                          sx={{ mt: 0.5 }}
+                          size="small"
+                        >
+                          <Close />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  ))}
                   <Grid size={{ xs: 12 }}>
-                    <Alert severity="warning">
-                      Reste à payer: {formatCurrency(getCartTotal(cart) - totalPaid)}
-                    </Alert>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => appendPayment({ method: "cash", amount: 0, gift_card_barcode: undefined, gift_card_id: undefined })}
+                    >
+                      + payment
+                    </Button>
                   </Grid>
-                )}
 
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Total payé: {formatCurrency(totalPaid)}
-                  </Typography>
+                  {totalPaid > cartTotal && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="info">
+                        Rendu à donner: {formatCurrency(totalPaid - cartTotal)}
+                      </Alert>
+                    </Grid>
+                  )}
+                  {totalPaid < cartTotal && cart.length > 0 && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="warning">
+                        Reste à payer: {formatCurrency(cartTotal - totalPaid)}
+                      </Alert>
+                    </Grid>
+                  )}
+
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Total payé: {formatCurrency(totalPaid)}
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />
+
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+
+                  </Grid>
+
                 </Grid>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  startIcon={<Payment />}
+                  type="submit"
 
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />
-
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-
-                </Grid>
-
-              </Grid>
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                startIcon={<Payment />}
-                type="submit"
-
-                disabled={cart.length === 0}
-                sx={{ mb: 2 }}
-              >
-                Encaisser
-              </Button>
-            </Paper>
+                  disabled={cart.length === 0 || totalPaid < cartTotal}
+                  sx={{ mb: 2 }}
+                >
+                  Encaisser
+                </Button>
+              </Paper>
+            </Grid>
           </Grid>
-        </Grid>
-      </form>
+        </form>
+      )}
       {/* Dialog d'article manuel */}
       <Dialog
         open={manualItemDialog}
@@ -1083,64 +1036,7 @@ const PointOfSale = () => {
         currentSession={activeSession.data}
         handleCloseSession={handleCloseSession}
       />
-      {/* <Dialog
-        open={closeSessionDialog}
-        onClose={() => setCloseSessionDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Fermeture de Caisse</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Attention: Cette action fermera définitivement votre session de
-            caisse.
-          </Alert>
-          <CloseCaisseForm
-            formId="closeCaisseForm"
-            onSubmit={handleCloseSession}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCloseSessionDialog(false)}>Annuler</Button>
-          <Button
-            type="submit"
-            form="closeCaisseForm"
-            variant="contained"
-            color="error"
-          >
-            Fermer la Caisse
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
-      {/* <Dialog
-        open={paymentDialog}
-        onClose={() => setPaymentDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Encaissement</DialogTitle>
-        <DialogContent>
-          <EncaissementForm
-            formId="encaissementForm"
-            onSubmit={handleProcessPayment}
-            totalCart={getCartTotal()}
-            defaultValues={paymentData}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPaymentDialog(false)}>Annuler</Button>
-          <Button
-            type="submit"
-            form="encaissementForm"
-            variant="contained"
-            loading={handleSell.isPending}
-            disabled={parseFloat(paymentData.payment_amount) < getCartTotal()}
-          >
-            {handleSell.isPending ? "Traitement..." : "Valider le Paiement"}
-          </Button>
-        </DialogActions>
-      </Dialog> */}
+  
     </Container>
   );
 };
