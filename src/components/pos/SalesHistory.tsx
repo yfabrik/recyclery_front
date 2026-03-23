@@ -99,7 +99,7 @@ const handleSubmitRefund = async (data: Schema) => {
             cash_session_id: activeSession.id,
             payment_method: data.refund_method,
             refund_reason: data.refund_reason,
-            gift_card_code: undefined,
+            gift_card_code: data.gift_card_code,
         },
     });
 };

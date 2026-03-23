@@ -52,6 +52,7 @@ const schema = z.object({
     ["cash", "card", "check", "giftcard"],
     "methode requis",
   ),
+  gift_card_code: z.string().transform(v => v == "" ? null : v).optional(),
   notes: z.string(),
 });
 export type Schema = z.infer<typeof schema>;
@@ -110,6 +111,7 @@ export const RefundForm = ({
       cart: cartItems || [],
       refund_reason: "",
       refund_method: "",
+      gift_card_code: "",
       notes: "",
     },
     resolver: zodResolver(schema),
@@ -119,6 +121,7 @@ export const RefundForm = ({
     control: form.control,
     name: "cart",
   });
+  const giftCardCode = form.watch("refund_method");
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}>
@@ -307,7 +310,11 @@ export const RefundForm = ({
             <MenuItem value="giftcard">GiftCard</MenuItem>
           </FormSelect>
         </Grid>
-
+        {giftCardCode === "giftcard" && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormInput control={form.control} name="gift_card_code" label="Code du GiftCard" />
+          </Grid>
+        )}
         {/* Notes */}
         <Grid size={{ xs: 12 }}>
           <FormInput
