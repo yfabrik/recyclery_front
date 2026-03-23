@@ -600,23 +600,50 @@ const PointOfSale = () => {
                     label={
                       <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
                         Panier {index + 1}
-                        <IconButton
-                          size="small"
+                        <Box
+                          component="span"
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
                             removeCart(index);
                           }}
-                          disabled={carts.length <= 1}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              removeCart(index);
+                            }
+                          }}
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            color: carts.length <= 1 ? "action.disabled" : "inherit",
+                            cursor: carts.length <= 1 ? "default" : "pointer",
+                            "&:hover": {
+                              bgcolor: carts.length <= 1 ? "transparent" : "action.hover",
+                            },
+                          }}
+                          aria-disabled={carts.length <= 1}
                         >
                           <Close fontSize="small" />
-                        </IconButton>
+                        </Box>
                       </Box>
                     }
                   />
                 ))}
-                <IconButton onClick={() => addCart()}>
-                  <Add />
-                </IconButton>
+                <Tab
+                  icon={<Add />}
+                  aria-label="Ajouter un panier"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    addCart();
+                  }}
+                />
               </Tabs>
               {/* Panier */}
               {/* <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart)}> */}
