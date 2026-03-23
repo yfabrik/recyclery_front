@@ -42,6 +42,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
+import { useReceiptPrint } from "../components/ReceiptPrint";
 import {
   schema,
   type CartItem,
@@ -72,9 +73,9 @@ import {
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 import { formatCurrency, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
-import { printReceipt } from "../services/printService";
 const PointOfSale = () => {
   const { user } = useAuth();
+  const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
   const [tabValue, setTabValue] = useState(0);
   // Dialogs
   const [openSessionDialog, setOpenSessionDialog] = useState(false);
@@ -309,14 +310,13 @@ const PointOfSale = () => {
       //   customer_email: "",
       // });
       if (window.confirm("Imprimer le ticket de caisse ?")) {
-        //TODO should be detached from the request
         if (activeSession.data)
-          printReceipt(
-            data.data.data.sale,
-            cart as CartItem[],
-            activeSession.data,
-            user!,
-          );//TODO REMAKE PRINT RECEIPT
+          triggerPrintReceipt({
+            sale: data.data.data.sale,
+            items: cart as CartItem[],
+            cashSession: activeSession.data,
+            user: user!,
+          });
       }
       form.reset({
         cart: [],
@@ -1036,7 +1036,7 @@ const PointOfSale = () => {
         currentSession={activeSession.data}
         handleCloseSession={handleCloseSession}
       />
-  
+      {receiptPrintNode}
     </Container>
   );
 };
