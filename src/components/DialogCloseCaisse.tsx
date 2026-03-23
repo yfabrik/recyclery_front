@@ -14,7 +14,7 @@ import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import { BilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
-import { formatCurrency } from "../services/cartService";
+import { formatCurrency, sumCashInPayments } from "../services/cartService";
 
 interface DialogCloseCaisseProps {
   closeSessionDialog: boolean;
@@ -29,10 +29,11 @@ export const DialogCloseCaisse = ({
   handleCloseSession,
 }: DialogCloseCaisseProps) => {
   const transactions = useQuery({
-    queryKey: ["transactions", { session: currentSession.id }],
+    queryKey: ["transactions", { session: currentSession.id, include: ["payments"] }],
     queryFn: () =>
       getTransactions({
         session: currentSession.id,
+        include: ["payments"],
       }).then((response) => response.data),
     placeholderData: {
       success: true as const,
@@ -60,13 +61,27 @@ export const DialogCloseCaisse = ({
       <DialogContent>
         <Typography>
           total supposé:{" "}
-          {formatCurrency(transactions.data?.transactions.reduce(
-            (prev, current) =>
-              current.payment_method == "cash"
-                ? (prev += current.total_amount)
-                : prev,
-            currentSession.opening_amount,
-          )||0)}
+          {formatCurrency(sumCashInPayments(transactions.data?.transactions || [], currentSession.opening_amount)
+            // (transactions.data?.transactions || []).reduce((prev: number, current) => {
+            //   // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
+            //   if (Array.isArray(current.payments) && current.payments.length > 0) {
+            //     const totalCashInPayments = current.payments.reduce((p, c) =>
+            //       c.method === "cash" ? p + c.amount : p,
+            //       0
+            //     );
+            //     // Only add to prev if actual cash present in payments
+            //     if (totalCashInPayments !== 0) {
+            //       return prev + totalCashInPayments;
+            //     }
+            //   }
+            //   // Otherwise, if the transaction's payment_method is "cash", add its total_amount
+            //   if (current.payment_method === "cash") {
+            //     return prev + current.total_amount;
+            //   }
+            //   // Otherwise, leave accumulator unchanged
+            //   return prev;
+            // }, currentSession.opening_amount)
+          )}
         </Typography>
         {state == "valid" && (
           <Alert severity="warning" sx={{ mb: 2 }}>

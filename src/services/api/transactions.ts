@@ -12,7 +12,7 @@ export interface transactionsFilters {
   session?: number;
   payment_method?: TransactionModel["payment_method"];
   page?: number;
-  include?: ("refund" | "items")[];
+  include?: ("refund" | "items"|"payments")[];
 }
 interface Stats {
   total_transactions: number;

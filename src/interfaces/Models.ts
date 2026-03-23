@@ -271,7 +271,7 @@ export interface CashSession extends BaseModel {
 export interface TransactionModel extends BaseModel {
   change_amount: number;
   total_amount: number;
-  payment_method: "cash" | "card" | "check" | "giftcard";
+  payment_method: "cash" | "card" | "check" | "giftcard" | "mixed";
   transactionType: "sell" | "refund";
   payment_amount: number;
   // customer_name?: string;
@@ -287,6 +287,7 @@ export interface TransactionModel extends BaseModel {
   LabeledItems?: LabeledItemModel[];
   items?: (LabeledItemModel & { TransactionItem: TransactionItem })[];
   refunds?: TransactionModel[];
+  payments?: { method: TransactionModel["payment_method"]; amount: number }[];
 }
 
 export interface TransactionItem extends Omit<BaseModel, "id"> {

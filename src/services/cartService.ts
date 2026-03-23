@@ -56,3 +56,26 @@ export const sumPromoCategorie = (categorie?: CategoryModel) => {
 //     unit: "kilogram",
 //   }).format(amount || 0);
 // };
+
+
+export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
+  return transactions.reduce((prev: number, current) => {
+    // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
+    if (Array.isArray(current.payments) && current.payments.length > 0) {
+      const totalCashInPayments = current.payments.reduce((p, c) =>
+        c.method === "cash" ? p + c.amount : p,
+        0
+      );
+      // Only add to prev if actual cash present in payments
+      if (totalCashInPayments !== 0) {
+        return prev + totalCashInPayments;
+      }
+    }
+    // Otherwise, if the transaction's payment_method is "cash", add its total_amount
+    if (current.payment_method === "cash") {
+      return prev + current.total_amount;
+    }
+    // Otherwise, leave accumulator unchanged
+    return prev;
+  }, openingAmount)
+}

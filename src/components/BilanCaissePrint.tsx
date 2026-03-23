@@ -3,6 +3,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, TransactionModel } from "../interfaces/Models";
+import { sumCashInPayments } from "../services/cartService";
 
 interface BilanCaisseProps {
   session: CashSession;
@@ -29,15 +30,18 @@ export const BilanCaissePrint = ({
   transactions,
   closingAmount,
 }: BilanCaisseProps) => {
+
+
   const expected_amount = useMemo(
     () =>
-      transactions.reduce(
-        (prev, current) =>
-          current.payment_method == "cash"
-            ? (prev += current.total_amount)
-            : prev,
-        session.opening_amount,
-      ),
+      sumCashInPayments(transactions, session.opening_amount),
+    // transactions.reduce(
+    //   (prev, current) =>
+    //     current.payment_method == "cash"
+    //       ? (prev += current.total_amount)
+    //       : prev,
+    //   session.opening_amount,
+    // ),
     [transactions, session.opening_amount],
   );
 
@@ -48,16 +52,17 @@ export const BilanCaissePrint = ({
   });
 
   type transacStats = Record<
-    TransactionModel["payment_method"],
+    TransactionModel["payment_method"] | "mixed",
     {
       amount: number;
       count: number;
     }
   >;
 
-  const transactionDatas: transacStats = useMemo(() => {
+  const saleDatas: transacStats = useMemo(() => {
     return transactions.reduce(
       (prev: transacStats, current) => {
+        if (current.transactionType !== "sell") return prev;
         switch (current.payment_method) {
           case "card":
             prev["card"].amount += current.total_amount;
@@ -70,6 +75,14 @@ export const BilanCaissePrint = ({
           case "cash":
             prev["cash"].amount += current.total_amount;
             prev["cash"].count++;
+            break;
+          case "giftcard":
+            prev["giftcard"].amount += current.total_amount;
+            prev["giftcard"].count++;
+            break;
+          case "mixed":
+            prev["mixed"].amount += current.total_amount;
+            prev["mixed"].count++;
             break;
           default:
             break;
@@ -89,9 +102,90 @@ export const BilanCaissePrint = ({
           amount: 0,
           count: 0,
         },
+        giftcard: {
+          amount: 0,
+          count: 0,
+        }, mixed: {
+          amount: 0,
+          count: 0,
+        },
       },
     );
   }, [transactions]);
+
+  const refundDatas: transacStats = useMemo(() => {
+    return transactions.reduce(
+      (prev: transacStats, current) => {
+        if (current.transactionType !== "refund") return prev;
+        switch (current.payment_method) {
+          case "card":
+            prev["card"].amount += current.total_amount;
+            prev["card"].count++;
+            break;
+          case "check":
+            prev["check"].amount += current.total_amount;
+            prev["check"].count++;
+            break;
+          case "cash":
+            prev["cash"].amount += current.total_amount;
+            prev["cash"].count++;
+            break;
+          case "giftcard":
+            prev["giftcard"].amount += current.total_amount;
+            prev["giftcard"].count++;
+            break;
+          default: {
+            break;
+          }
+        }
+        return prev;
+      },
+      {
+        card: {
+          amount: 0,
+          count: 0,
+        },
+        cash: {
+          amount: 0,
+          count: 0,
+        },
+        check: {
+          amount: 0,
+          count: 0,
+        },
+        giftcard: {
+          amount: 0,
+          count: 0,
+        },
+        mixed: {
+          amount: 0,
+          count: 0,
+        },
+      },
+    );
+  }, [transactions]);
+
+  const salesTotal = useMemo(
+    () =>
+      transactions.reduce(
+        (prev, current) =>
+          current.transactionType === "sell" ? prev + current.total_amount : prev,
+        0,
+      ),
+    [transactions],
+  );
+
+  const refundsTotal = useMemo(
+    () =>
+      transactions.reduce(
+        (prev, current) =>
+          current.transactionType === "refund"
+            ? prev + current.total_amount
+            : prev,
+        0,
+      ),
+    [transactions],
+  );
 
   const totalAmount = useMemo(
     () =>
@@ -111,8 +205,8 @@ export const BilanCaissePrint = ({
     ? new Date(session.closed_at).toLocaleString()
     : `${new Date().toLocaleString()} ,pas fermée`;
   const countedAmount = session.closing_amount ?? closingAmount ?? 0;
-  const expected = session.expected_amount ?? expected_amount;
-  const difference = session.difference_amount ?? expected_amount - countedAmount;
+  const expected =  expected_amount;
+  const difference = expected_amount - countedAmount;
 
   return (
     <>
@@ -217,7 +311,7 @@ export const BilanCaissePrint = ({
             </Box>
           </Box>
 
-          {/* Block: Transaction summary */}
+          {/* Block: Sales summary */}
           <Box sx={printBlockSx}>
             <Typography
               component="h2"
@@ -231,23 +325,33 @@ export const BilanCaissePrint = ({
                 pb: 0.5,
               }}
             >
-              Récapitulatif des transactions
+              Récapitulatif des ventes
             </Typography>
             <Stack spacing={0.25} sx={{ fontSize: "0.7rem" }}>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Carte : {transactionDatas.card.count} règlement
-                {transactionDatas.card.count !== 1 ? "s" : ""}, total{" "}
-                {transactionDatas.card.amount} €
+                Carte : {saleDatas.card.count} règlement
+                {saleDatas.card.count !== 1 ? "s" : ""}, total{" "}
+                {saleDatas.card.amount} €
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Espèces : {transactionDatas.cash.count} règlement
-                {transactionDatas.cash.count !== 1 ? "s" : ""}, total{" "}
-                {transactionDatas.cash.amount} €
+                Espèces : {saleDatas.cash.count} règlement
+                {saleDatas.cash.count !== 1 ? "s" : ""}, total{" "}
+                {saleDatas.cash.amount} €
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Chèque : {transactionDatas.check.count} règlement
-                {transactionDatas.check.count !== 1 ? "s" : ""}, total{" "}
-                {transactionDatas.check.amount} €
+                Chèque : {saleDatas.check.count} règlement
+                {saleDatas.check.count !== 1 ? "s" : ""}, total{" "}
+                {saleDatas.check.amount} €
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Avoir : {saleDatas.giftcard.count} règlement
+                {saleDatas.giftcard.count !== 1 ? "s" : ""}, total{" "}
+                {saleDatas.giftcard.amount} €
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                mixed : {saleDatas.mixed.count} règlement
+                {saleDatas.mixed.count !== 1 ? "s" : ""}, total{" "}
+                {saleDatas.mixed.amount} €
               </Typography>
             </Stack>
             <Typography
@@ -259,8 +363,83 @@ export const BilanCaissePrint = ({
                 borderTop: "1px solid #333",
               }}
             >
-              {transactions.length} transaction
-              {transactions.length !== 1 ? "s" : ""} — Total : {totalAmount} €
+              Total ventes : {salesTotal} €
+            </Typography>
+          </Box>
+
+          {/* Block: Refund summary */}
+          <Box sx={printBlockSx}>
+            <Typography
+              component="h2"
+              sx={{
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                mb: 1,
+                borderBottom: "1px solid #333",
+                pb: 0.5,
+              }}
+            >
+              Récapitulatif des remboursements
+            </Typography>
+            <Stack spacing={0.25} sx={{ fontSize: "0.7rem" }}>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Carte : {refundDatas.card.count} remboursement
+                {refundDatas.card.count !== 1 ? "s" : ""}, total{" "}
+                {refundDatas.card.amount} €
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Espèces : {refundDatas.cash.count} remboursement
+                {refundDatas.cash.count !== 1 ? "s" : ""}, total{" "}
+                {refundDatas.cash.amount} €
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Chèque : {refundDatas.check.count} remboursement
+                {refundDatas.check.count !== 1 ? "s" : ""}, total{" "}
+                {refundDatas.check.amount} €
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Avoir : {refundDatas.giftcard.count} remboursement
+                {refundDatas.giftcard.count !== 1 ? "s" : ""}, total{" "}
+                {refundDatas.giftcard.amount} €
+              </Typography>
+            </Stack>
+            <Typography
+              sx={{
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                mt: 1,
+                pt: 1,
+                borderTop: "1px solid #333",
+              }}
+            >
+              Total remboursements : {refundsTotal} €
+            </Typography>
+          </Box>
+
+          {/* Block: Global total */}
+          <Box sx={printBlockSx}>
+            <Typography
+              sx={{
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                mb: 0.5,
+              }}
+            >
+              Total global
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                pt: 0.5,
+                borderTop: "1px solid #333",
+              }}
+            >
+              Net (ventes - remboursements) : {totalAmount} €
             </Typography>
           </Box>
         </Stack>
