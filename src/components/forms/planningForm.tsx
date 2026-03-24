@@ -30,7 +30,9 @@ const schema = z.object({
   end_time: z.coerce.date("L'heure de fin est requise"),
   priority: z.string().trim().nonempty("La priorité est requise"),
   store_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  recurrence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
+  recurrence_pattern: z
+    .enum(["", "daily", "weekly", "monthly"])
+    .transform((v) => (v === "" ? null : v)),
   // .transform((v) => (v == "" ? null : v)),
   notes: z.string().transform((v) => (v == "" ? null : v)),
 });
@@ -176,7 +178,7 @@ export const PlaningForm = ({
             {priorities.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <SelectedIcon iconName={priority.icon || "Flag" } />
+                  <SelectedIcon iconName={priority.icon || "Flag"} />
                   {priority.label}
                 </Box>
               </MenuItem>
