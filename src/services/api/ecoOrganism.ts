@@ -5,6 +5,7 @@ import type { Schema } from "../../components/forms/EcoOrganismForm";
 
 interface EcoOrgFilters {
   active?: boolean;
+  include?: ("waste" | "inCategories" | "sellCategories")[];
 }
 
 /** Quarter stat for eco-organism: label (e.g. "Q4 2024") and value (e.g. weight_kg or count) */
@@ -16,7 +17,15 @@ export interface EcoOrganismQuarterStat extends Pick<
     quarter: string;
     total_weight_kg: number;
     label: string;
-    categories: { id: number; name: string; weight_kg: number }[];
+    categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
+    quarterIn: {
+      total_weight_kg: number;
+      categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
+    }
+    quarterSell: {
+      total_weight_kg: number;
+      categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
+    }
   }[];
 }
 
@@ -26,7 +35,7 @@ export type EcoOrganismQuarterStatsResponse = EcoOrganismQuarterStat[];
 export const getEcoOrganisms = (
   filters?: EcoOrgFilters,
 ): Promise<AxiosResponse<{ message: string; eco_organisms: EcoOrgModel[] }>> =>
-  axiosInstance.get("/api/eco-organisms", { params: filters });
+  axiosInstance.get("/api/eco-organisms", { params: { ...filters, include: filters?.include?.toString() } });
 
 export const fetchEcoOrganismsStats = (): Promise<
   AxiosResponse<{

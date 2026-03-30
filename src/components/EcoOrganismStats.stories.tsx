@@ -11,7 +11,42 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const mockStats: EcoOrganismQuarterStat[] = [
+type QuarterStat = EcoOrganismQuarterStat["quarters"][number];
+type CategoryStat = QuarterStat["categories"][number];
+type RawCategoryStat = Omit<CategoryStat, "subcategories"> & {
+  subcategories?: CategoryStat["subcategories"];
+};
+type RawQuarterStat = Omit<QuarterStat, "categories" | "quarterIn" | "quarterSell"> & {
+  categories: RawCategoryStat[];
+};
+
+const buildQuarterFlow = (categories: CategoryStat[]) =>
+  categories.map((category) => ({
+    ...category,
+    subcategories: [...(category.subcategories ?? [])],
+  }));
+
+const normalizeQuarter = (quarter: RawQuarterStat): QuarterStat => {
+  const categories: CategoryStat[] = quarter.categories.map((category) => ({
+    ...category,
+    subcategories: category.subcategories ?? [],
+  }));
+
+  return {
+    ...quarter,
+    categories,
+    quarterIn: {
+      total_weight_kg: quarter.total_weight_kg,
+      categories: buildQuarterFlow(categories),
+    },
+    quarterSell: {
+      total_weight_kg: quarter.total_weight_kg,
+      categories: buildQuarterFlow(categories),
+    },
+  };
+};
+
+const rawMockStats = [
   {
     id: 1,
     name: "Eco-mobilier",
@@ -23,8 +58,24 @@ const mockStats: EcoOrganismQuarterStat[] = [
         label: "01/2025 - 03/2025",
         total_weight_kg: 1250,
         categories: [
-          { id: 1, name: "Mobilier", weight_kg: 820 },
-          { id: 2, name: "Literie", weight_kg: 430 },
+          {
+            id: 1,
+            name: "Mobilier",
+            weight_kg: 820,
+            subcategories: [
+              { id: 1001, name: "Chaises", weight_kg: 310 },
+              { id: 1002, name: "Tables", weight_kg: 510 },
+            ],
+          },
+          {
+            id: 2,
+            name: "Literie",
+            weight_kg: 430,
+            subcategories: [
+              { id: 1003, name: "Matelas", weight_kg: 260 },
+              { id: 1004, name: "Sommiers", weight_kg: 170 },
+            ],
+          },
         ],
       },
       {
@@ -67,8 +118,24 @@ const mockStats: EcoOrganismQuarterStat[] = [
         label: "01/2025 - 03/2025",
         total_weight_kg: 3420,
         categories: [
-          { id: 10, name: "Petits appareils", weight_kg: 1620 },
-          { id: 11, name: "Gros appareils", weight_kg: 1800 },
+          {
+            id: 10,
+            name: "Petits appareils",
+            weight_kg: 1620,
+            subcategories: [
+              { id: 1101, name: "Téléphones", weight_kg: 620 },
+              { id: 1102, name: "Petit électroménager", weight_kg: 1000 },
+            ],
+          },
+          {
+            id: 11,
+            name: "Gros appareils",
+            weight_kg: 1800,
+            subcategories: [
+              { id: 1103, name: "Lave-linge", weight_kg: 900 },
+              { id: 1104, name: "Réfrigérateurs", weight_kg: 900 },
+            ],
+          },
         ],
       },
       {
@@ -111,8 +178,24 @@ const mockStats: EcoOrganismQuarterStat[] = [
         label: "01/2025 - 03/2025",
         total_weight_kg: 580,
         categories: [
-          { id: 20, name: "Textiles", weight_kg: 320 },
-          { id: 21, name: "Chaussures", weight_kg: 260 },
+          {
+            id: 20,
+            name: "Textiles",
+            weight_kg: 320,
+            subcategories: [
+              { id: 1201, name: "Vêtements", weight_kg: 210 },
+              { id: 1202, name: "Linge de maison", weight_kg: 110 },
+            ],
+          },
+          {
+            id: 21,
+            name: "Chaussures",
+            weight_kg: 260,
+            subcategories: [
+              { id: 1203, name: "Chaussures ville", weight_kg: 140 },
+              { id: 1204, name: "Chaussures sport", weight_kg: 120 },
+            ],
+          },
         ],
       },
       {
@@ -145,6 +228,11 @@ const mockStats: EcoOrganismQuarterStat[] = [
     ],
   },
 ];
+
+const mockStats: EcoOrganismQuarterStat[] = rawMockStats.map((stat) => ({
+  ...stat,
+  quarters: stat.quarters.map(normalizeQuarter),
+}));
 
 export const Default: Story = {
   args: {

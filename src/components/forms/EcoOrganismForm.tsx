@@ -1,11 +1,14 @@
-import { Grid } from "@mui/material";
+import { Grid, MenuItem } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { FormInput, FormSwitch, type BaseFormProps } from "./FormBase";
+import { FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./FormBase";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
+import type { CategoryModel } from "../../interfaces/Models";
+import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
+import { fetchCategories } from "../../services/api/categories";
 import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
@@ -21,6 +24,7 @@ const schema = z.object({
     z.url(),
     nullString()
   ]),
+  inCategories: z.array(idSchema()).default([]),
   is_active: z.boolean(),
 });
 
@@ -32,6 +36,14 @@ export const EcoOrganismForm = ({
   defaultValues,
 }: BaseFormProps<Schema>) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+
+  const categoriesQuery = useQuery({
+    queryKey: ["categories", { in: true, only_category: true }],
+    queryFn: () => fetchCategories({ in: true, only_category: true }).then((response) => response.data.categories),
+  });
+
+  const categories = categoriesQuery.data ?? [];
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -42,7 +54,8 @@ export const EcoOrganismForm = ({
       address: "",
       website: "",
       is_active: true,
-      ...data
+      ...data,
+      inCategories: data?.inCategories?.map((cat: CategoryModel) => cat.id) ?? [],
     },
   });
   return (
@@ -88,6 +101,20 @@ export const EcoOrganismForm = ({
 
         <Grid size={{ xs: 12 }}>
           <FormInput control={form.control} label="Site Web" name="website" />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <FormMultiSelect
+            control={form.control}
+            label="Catégories (Entrants)"
+            name="inCategories"
+          >
+            {categories.map((category: CategoryModel) => (
+              <MenuItem key={category.id} value={category.id}>
+                {category.name}
+              </MenuItem>
+            ))}
+          </FormMultiSelect>
         </Grid>
 
         <Grid size={{ xs: 12 }}>

@@ -583,9 +583,26 @@ const Dashboard = () => {
           )}
         </Box>
         <Box>
-          <EcoOrganismStats 
-          stats={ecoOrganismQuarterStats.data || []}
-            loading={ecoOrganismQuarterStats.isLoading} />
+        <EcoOrganismStats
+            title="Statistiques sortant par éco-organisme"
+            stats={ecoOrganismQuarterStats.data || []}
+            loading={ecoOrganismQuarterStats.isLoading}
+            valueLabel="Tonnage sortant (kg)"
+          />
+                    <EcoOrganismStats
+            title="Statistiques entrant par éco-organisme"
+            stats={ecoOrganismQuarterStats.data || []}
+            loading={ecoOrganismQuarterStats.isLoading}
+            valueLabel="Tonnage entrant (kg)"
+            metricSource="quarterIn"
+          />
+          <EcoOrganismStats
+            title="Statistiques vente par éco-organisme"
+            stats={ecoOrganismQuarterStats.data || []}
+            loading={ecoOrganismQuarterStats.isLoading}
+            valueLabel="Tonnage vendu (kg)"
+            metricSource="quarterSell"
+          />
         </Box>
 
         {/* Activités récentes améliorées */}

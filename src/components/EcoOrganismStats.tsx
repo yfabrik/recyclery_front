@@ -19,13 +19,17 @@ export type { EcoOrganismQuarterStat };
 
 /** Single quarter entry from API */
 type QuarterEntry = EcoOrganismQuarterStat["quarters"][number];
+type QuarterCategory = QuarterEntry["categories"][number];
+type QuarterMetricSource = "total" | "quarterIn" | "quarterSell";
 
 export interface EcoOrganismStatsProps {
   /** Stats from fetchEcoOrganismQuarterStats() — one item per eco-organism with id, name, description, quarters */
   stats: EcoOrganismQuarterStat[];
   loading?: boolean;
+  title?: string;
   /** Label for the metric (e.g. "Poids collecté (kg)") */
   valueLabel?: string;
+  metricSource?: QuarterMetricSource;
 }
 
 const formatQuarterRange = (quarter: string): string => {
@@ -74,12 +78,22 @@ const defaultQuarters = (): QuarterEntry[] =>
     label: formatQuarterRange(quarter),
     total_weight_kg: 0,
     categories: [],
+    quarterIn: {
+      total_weight_kg: 0,
+      categories: [],
+    },
+    quarterSell: {
+      total_weight_kg: 0,
+      categories: [],
+    },
   }));
 
 export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   stats,
   loading = false,
+  title = "Statistiques par éco-organisme",
   valueLabel = "Tonnage Sortant (kg)",
+  metricSource = "total",
 }) => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
@@ -97,7 +111,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Recycling />
-          Statistiques par éco-organisme
+          {title}
         </Typography>
         <LinearProgress />
       </Box>
@@ -109,7 +123,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Recycling />
-          Statistiques par éco-organisme
+          {title}
         </Typography>
         <Card>
           <CardContent>
@@ -125,26 +139,82 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   const currentStat = stats[tab];
   const quarters = currentStat?.quarters?.length ? currentStat.quarters : defaultQuarters();
 
+  const getQuarterMetric = (quarter: QuarterEntry) => {
+    if (metricSource === "quarterIn") return quarter.quarterIn;
+    if (metricSource === "quarterSell") return quarter.quarterSell;
+    return {
+      total_weight_kg: quarter.total_weight_kg,
+      categories: quarter.categories,
+    };
+  };
+
+  const renderCategoryRows = (categories: QuarterCategory[]) => (
+    <>
+      {categories.map((cat) => (
+        <Box key={cat.id} sx={{ maxWidth: 360, mx: "auto" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {cat.name}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {formatValue(cat.weight_kg)} kg
+            </Typography>
+          </Box>
+
+          {(cat.subcategories ?? []).map((subcat) => (
+            <Box
+              key={subcat.id}
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 2,
+                pl: 2,
+                mt: 0.25,
+              }}
+            >
+              <Typography variant="caption" color="textSecondary">
+                - {subcat.name}
+              </Typography>
+              <Typography variant="caption" color="textSecondary">
+                {formatValue(subcat.weight_kg)} kg
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      ))}
+    </>
+  );
+
   const renderQuarterBlocks = (qList: QuarterEntry[]) => (
     <Stack spacing={1.5}>
-      {qList.map((q) => (
-        <Box
-          key={q.quarter}
-          sx={{
-            p: 1.5,
-            bgcolor: "action.hover",
-            borderRadius: 1,
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="body2" color="textSecondary">
-            {q.quarter?.trim() ? q.quarter : formatQuarterRange(q.quarter)}
-          </Typography>
+      {qList.map((q) => {
+        const quarterMetric = getQuarterMetric(q);
+        return (
+          <Box
+            key={q.quarter}
+            sx={{
+              p: 1.5,
+              bgcolor: "action.hover",
+              borderRadius: 1,
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="body2" color="textSecondary">
+              {q.quarter?.trim() ? q.quarter : formatQuarterRange(q.quarter)}
+            </Typography>
 
-          <Stack spacing={1} sx={{ mt: 1.25 }}>
-            {(q.categories ?? []).map((cat) => (
+            <Stack spacing={1} sx={{ mt: 1.25 }}>
+              {renderCategoryRows(quarterMetric.categories ?? [])}
+
               <Box
-                key={cat.id}
                 sx={{
                   display: "flex",
                   alignItems: "baseline",
@@ -152,40 +222,23 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
                   gap: 2,
                   maxWidth: 360,
                   mx: "auto",
+                  pt: (quarterMetric.categories?.length ?? 0) > 0 ? 0.75 : 0,
+                  borderTop:
+                    (quarterMetric.categories?.length ?? 0) > 0 ? "1px solid" : "none",
+                  borderColor: "divider",
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {cat.name}
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  Total
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {formatValue(cat.weight_kg)} kg
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  {formatValue(quarterMetric.total_weight_kg)} kg
                 </Typography>
               </Box>
-            ))}
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: 2,
-                maxWidth: 360,
-                mx: "auto",
-                pt: (q.categories?.length ?? 0) > 0 ? 0.75 : 0,
-                borderTop: (q.categories?.length ?? 0) > 0 ? "1px solid" : "none",
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                Total
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {formatValue(q.total_weight_kg)} kg
-              </Typography>
-            </Box>
-          </Stack>
-        </Box>
-      ))}
+            </Stack>
+          </Box>
+        );
+      })}
     </Stack>
   );
 
@@ -193,7 +246,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
     <Box sx={{ mb: 3 }}>
       <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Recycling />
-        Statistiques par éco-organisme
+        {title}
       </Typography>
 
       {isDesktop ? (
