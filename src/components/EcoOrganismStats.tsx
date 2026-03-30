@@ -79,7 +79,7 @@ const defaultQuarters = (): QuarterEntry[] =>
 export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   stats,
   loading = false,
-  valueLabel = "Poids collecté (kg)",
+  valueLabel = "Tonnage Sortant (kg)",
 }) => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
@@ -138,7 +138,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
           }}
         >
           <Typography variant="body2" color="textSecondary">
-            {q.label?.trim() ? q.label : formatQuarterRange(q.quarter)}
+            {q.quarter?.trim() ? q.quarter : formatQuarterRange(q.quarter)}
           </Typography>
 
           <Stack spacing={1} sx={{ mt: 1.25 }}>
