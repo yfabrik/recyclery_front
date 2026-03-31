@@ -387,7 +387,7 @@ export const SalesAnalyticsTab = () => {
                       <TransactionTableLine
                         key={transaction.id}
                         transaction={transaction}
-                        handleRefund={handleRefund}
+                        // handleRefund={handleRefund}
                         handleReprintReceipt={handleReprintReceipt}
                         handleShowDetail={handleViewTransactionDetails}
                       />

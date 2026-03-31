@@ -13,7 +13,7 @@ import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
 interface TransactionTableLineProps {
   transaction: TransactionModel;
   handleReprintReceipt: (id: number) => void;
-  handleRefund: (t: TransactionModel) => void;
+  handleRefund?: (t: TransactionModel) => void;
   handleShowDetail: (t: TransactionModel) => void;
 }
 export const TransactionTableLine = ({
@@ -89,15 +89,17 @@ export const TransactionTableLine = ({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Remboursement">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => handleRefund(transaction)}
-            >
-              <Undo />
-            </IconButton>
-          </Tooltip>
+          {handleRefund && transaction.transactionType === "sell" && (
+
+            <Tooltip title="Remboursement">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleRefund(transaction)}
+              >
+                <Undo />
+              </IconButton>
+            </Tooltip>)}
         </Box>
       </TableCell>
     </TableRow>
