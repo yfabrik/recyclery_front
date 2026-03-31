@@ -1,5 +1,11 @@
 import axios from "axios";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { toast } from "react-toastify";
 import type { UserModel } from "../interfaces/Models";
 
@@ -17,7 +23,6 @@ const PERMISSIONS = {
     dons: ["read", "write"],
     planning: ["read", "write"],
     users: ["read", "write"],
-
   },
   employee: {
     dashboard: ["read", "write"],
@@ -31,7 +36,6 @@ const PERMISSIONS = {
     dons: [],
     planning: [],
     users: [],
-
   },
   manager: {
     dashboard: ["read", "write"],
@@ -45,21 +49,31 @@ const PERMISSIONS = {
     dons: ["read", "write"],
     planning: ["read", "write"],
     users: ["read", "write"],
-
-  }
+  },
 } as const;
 
 export type PermissionRole = keyof typeof PERMISSIONS;
 export type PermissionModule = keyof (typeof PERMISSIONS)[PermissionRole];
-export type PermissionAction = (typeof PERMISSIONS)[PermissionRole][PermissionModule][number];
+export type PermissionAction =
+  (typeof PERMISSIONS)[PermissionRole][PermissionModule][number];
 
 interface AuthContextValue {
   user: UserModel | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (userData: { username: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: {
+    username: string;
+    email: string;
+    password: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   loading: boolean;
-  hasModuleAccess: (module: PermissionModule, action?: PermissionAction) => boolean;
+  hasModuleAccess: (
+    module: PermissionModule,
+    action?: PermissionAction,
+  ) => boolean;
   isAuthenticated: boolean;
 }
 
@@ -74,7 +88,7 @@ export const useAuth = () => {
 };
 
 interface AuthProps {
-  children: ReactNode
+  children: ReactNode;
 }
 export const AuthProvider = ({ children }: AuthProps) => {
   const [user, setUser] = useState<UserModel | null>(null);
@@ -137,6 +151,24 @@ export const AuthProvider = ({ children }: AuthProps) => {
     }
   }, []);
 
+  //check every minute if token is expired
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = localStorage.getItem("token");
+      if (!token && user) logout();
+      if (!token) return;
+      const info = JSON.parse(atob(token.split(".")[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = info.exp - currentTime;
+      if (timeUntilExpiry < 0) logout();
+    };
+    // Check every minute
+    const intervalId = setInterval(checkToken, 60000);
+    // Initial check
+    checkToken();
+    return () => clearInterval(intervalId);
+  }, [user]);
+
   const verifyToken = async (token: string) => {
     try {
       const response = await axios.get("/api/auth/profile", {
@@ -147,8 +179,9 @@ export const AuthProvider = ({ children }: AuthProps) => {
       setPermissionsByModule(response.data.permissionsByModule || {});
     } catch (error) {
       console.error("Token invalide:", error);
-      localStorage.removeItem("token");
-      setupAxiosInterceptors(null);
+      logout();
+      // localStorage.removeItem("token");
+      // setupAxiosInterceptors(null);
     } finally {
       setLoading(false);
     }
@@ -156,7 +189,11 @@ export const AuthProvider = ({ children }: AuthProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post("/api/auth/login", { email, password });
+      const response = await axios.post(
+        "/api/auth/login",
+        { email, password },
+        { withCredentials: true },
+      );
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       setupAxiosInterceptors(token);
@@ -186,7 +223,11 @@ export const AuthProvider = ({ children }: AuthProps) => {
     }
   };
 
-  const register = async (userData: { username: string, email: string, password: string }) => {
+  const register = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+  }) => {
     try {
       const response = await axios.post("/api/auth/register", userData);
       const { token, user } = response.data;
@@ -220,10 +261,13 @@ export const AuthProvider = ({ children }: AuthProps) => {
   // };
 
   // Fonction pour vérifier si l'utilisateur a accès à un module
-  const hasModuleAccess = (module: PermissionModule, action: PermissionAction = "read") => {
-    if (!user?.role) return false
-    const role = user.role as PermissionRole
-    return (PERMISSIONS[role][module] as readonly string[]).includes(action)
+  const hasModuleAccess = (
+    module: PermissionModule,
+    action: PermissionAction = "read",
+  ) => {
+    if (!user?.role) return false;
+    const role = user.role as PermissionRole;
+    return (PERMISSIONS[role][module] as readonly string[]).includes(action);
     // if (permissionsByModule[module])
     //   return permissionsByModule[module].includes(action)
     // return hasPermission(`${module}.${action}`);
