@@ -25,6 +25,7 @@ const schema = z.object({
     nullString()
   ]),
   inCategories: z.array(idSchema()).default([]),
+  sellCategories: z.array(idSchema()).default([]),
   is_active: z.boolean(),
 });
 
@@ -41,9 +42,13 @@ export const EcoOrganismForm = ({
     queryKey: ["categories", { in: true, only_category: true }],
     queryFn: () => fetchCategories({ in: true, only_category: true }).then((response) => response.data.categories),
   });
+  const categoriesSellQuery = useQuery({
+    queryKey: ["categories", { sell: true, only_category: true }],
+    queryFn: () => fetchCategories({ sell: true, only_category: true }).then((response) => response.data.categories),
+  });
 
-  const categories = categoriesQuery.data ?? [];
-
+  const categoriesIn = categoriesQuery.data ?? [];
+  const categoriesSell = categoriesSellQuery.data ?? [];
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -56,6 +61,7 @@ export const EcoOrganismForm = ({
       is_active: true,
       ...data,
       inCategories: data?.inCategories?.map((cat: CategoryModel) => cat.id) ?? [],
+      sellCategories: data?.sellCategories?.map((cat: CategoryModel) => cat.id) ?? [],
     },
   });
   return (
@@ -109,7 +115,20 @@ export const EcoOrganismForm = ({
             label="Catégories (Entrants)"
             name="inCategories"
           >
-            {categories.map((category: CategoryModel) => (
+            {categoriesIn.map((category: CategoryModel) => (
+              <MenuItem key={category.id} value={category.id}>
+                {category.name}
+              </MenuItem>
+            ))}
+          </FormMultiSelect>
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <FormMultiSelect
+            control={form.control}
+            label="Catégories (Ventes)"
+            name="sellCategories"
+          >
+            {categoriesSell.map((category: CategoryModel) => (
               <MenuItem key={category.id} value={category.id}>
                 {category.name}
               </MenuItem>

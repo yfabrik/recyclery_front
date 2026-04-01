@@ -51,8 +51,8 @@ export const EcoOrganismsTab = () => {
 
   const queryClient = useQueryClient()
   const ecoOrganisms = useQuery({
-    queryKey: ["ecoOrganism", { include: ["inCategories"] }],
-    queryFn: () => getEcoOrganisms({ include: ["inCategories"] }).then(response => response.data.eco_organisms)
+    queryKey: ["ecoOrganism", { include: ["inCategories","sellCategories"] }],
+    queryFn: () => getEcoOrganisms({ include: ["inCategories","sellCategories"] }).then(response => response.data.eco_organisms)
   })
   if (ecoOrganisms.isError) toast.error("Erreur lors du chargement des éco-organismes");
 
