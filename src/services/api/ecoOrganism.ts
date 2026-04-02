@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { EcoOrgModel } from "../../interfaces/Models";
+import type { ArrivalModel, EcoOrgModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/EcoOrganismForm";
 
@@ -8,25 +8,35 @@ interface EcoOrgFilters {
   include?: ("waste" | "inCategories" | "sellCategories")[];
 }
 
+type cat = {
+  id: number;
+  name: string;
+  weight_kg: number,
+}
+type quarterStat = {
+  total_weight_kg: number;
+  categories: (cat & { subcategories: cat[] })[]
+}
+type quarterInBySourceType = Record<ArrivalModel["source_type"], quarterStat>;
 /** Quarter stat for eco-organism: label (e.g. "Q4 2024") and value (e.g. weight_kg or count) */
+
 export interface EcoOrganismQuarterStat extends Pick<
   EcoOrgModel,
   "id" | "name" | "description" | "is_active"
 > {
-  quarters: {
+  quarters: (quarterStat & {
     quarter: string;
-    total_weight_kg: number;
     label: string;
-    categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
-    quarterIn: {
-      total_weight_kg: number;
-      categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
+    quarterIn: quarterStat & {
+      // Backend currently returns an object; keep array support for backward compatibility.
+      by_source_type: quarterInBySourceType | quarterInBySourceType[]
     }
-    quarterSell: {
-      total_weight_kg: number;
-      categories: { id: number; name: string; weight_kg: number, subcategories: { id: number; name: string; weight_kg: number }[] }[];
-    }
-  }[];
+
+    quarterSell: Omit<quarterStat, 'categories'> & {
+      categories: (cat & { quantity: number, subcategories: (cat & { quantity: number })[] })[];
+    },
+    quarterOut: quarterStat
+  })[];
 }
 
 /** Stats array: one item per eco-organism with its quarter data */

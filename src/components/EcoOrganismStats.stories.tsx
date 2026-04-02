@@ -12,36 +12,77 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 type QuarterStat = EcoOrganismQuarterStat["quarters"][number];
-type CategoryStat = QuarterStat["categories"][number];
-type RawCategoryStat = Omit<CategoryStat, "subcategories"> & {
-  subcategories?: CategoryStat["subcategories"];
-};
-type RawQuarterStat = Omit<QuarterStat, "categories" | "quarterIn" | "quarterSell"> & {
-  categories: RawCategoryStat[];
+type WeightCategoryStat = QuarterStat["categories"][number];
+type RawWeightCategoryStat = Omit<WeightCategoryStat, "subcategories"> & {
+  subcategories?: WeightCategoryStat["subcategories"];
 };
 
-const buildQuarterFlow = (categories: CategoryStat[]) =>
+type RawQuarterStat = Omit<
+  QuarterStat,
+  "categories" | "quarterIn" | "quarterSell" | "quarterOut"
+> & {
+  categories: RawWeightCategoryStat[];
+};
+
+const buildWeightCategories = (categories: RawWeightCategoryStat[]): WeightCategoryStat[] =>
   categories.map((category) => ({
     ...category,
     subcategories: [...(category.subcategories ?? [])],
   }));
 
-const normalizeQuarter = (quarter: RawQuarterStat): QuarterStat => {
-  const categories: CategoryStat[] = quarter.categories.map((category) => ({
+const quantityFromWeight = (weightKg: number) => Math.max(0, Math.round(weightKg / 10));
+
+const buildSellCategories = (categories: WeightCategoryStat[]) =>
+  categories.map((category) => ({
     ...category,
-    subcategories: category.subcategories ?? [],
+    quantity: quantityFromWeight(category.weight_kg),
+    subcategories: (category.subcategories ?? []).map((subcat) => ({
+      ...subcat,
+      quantity: quantityFromWeight(subcat.weight_kg),
+    })),
   }));
+
+const scaleWeightCategories = (categories: WeightCategoryStat[], factor: number) =>
+  categories.map((category) => ({
+    ...category,
+    weight_kg: Math.round(category.weight_kg * factor),
+    subcategories: (category.subcategories ?? []).map((subcat) => ({
+      ...subcat,
+      weight_kg: Math.round(subcat.weight_kg * factor),
+    })),
+  }));
+
+const buildQuarterStatForSource = (categories: WeightCategoryStat[], factor: number) => {
+  const scaledCategories = scaleWeightCategories(categories, factor);
+  const total_weight_kg = scaledCategories.reduce((sum, cat) => sum + cat.weight_kg, 0);
+  return {
+    total_weight_kg,
+    categories: scaledCategories,
+  };
+};
+
+const normalizeQuarter = (quarter: RawQuarterStat): QuarterStat => {
+  const categories = buildWeightCategories(quarter.categories);
 
   return {
     ...quarter,
     categories,
     quarterIn: {
       total_weight_kg: quarter.total_weight_kg,
-      categories: buildQuarterFlow(categories),
+      categories,
+      by_source_type: {
+        point: buildQuarterStatForSource(categories, 0.5),
+        apport: buildQuarterStatForSource(categories, 0.3),
+        house_clearance: buildQuarterStatForSource(categories, 0.2),
+      },
     },
     quarterSell: {
       total_weight_kg: quarter.total_weight_kg,
-      categories: buildQuarterFlow(categories),
+      categories: buildSellCategories(categories),
+    },
+    quarterOut: {
+      total_weight_kg: quarter.total_weight_kg,
+      categories,
     },
   };
 };
@@ -265,5 +306,21 @@ export const CustomValueLabel: Story = {
   args: {
     stats: mockStats,
     valueLabel: "Poids collecté (kg)",
+  },
+};
+
+export const QuarterInArrivalSources: Story = {
+  args: {
+    stats: mockStats,
+    valueLabel: "Tonnage entrant (kg)",
+    metricSource: "quarterIn",
+  },
+};
+
+export const QuarterSellQuantities: Story = {
+  args: {
+    stats: mockStats,
+    valueLabel: "Tonnage vendu (kg)",
+    metricSource: "quarterSell",
   },
 };

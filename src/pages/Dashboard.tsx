@@ -583,13 +583,14 @@ const Dashboard = () => {
           )}
         </Box>
         <Box>
-        <EcoOrganismStats
+          <EcoOrganismStats
             title="Statistiques sortant par éco-organisme"
             stats={ecoOrganismQuarterStats.data || []}
             loading={ecoOrganismQuarterStats.isLoading}
             valueLabel="Tonnage sortant (kg)"
+            metricSource="quarterOut"
           />
-                    <EcoOrganismStats
+          <EcoOrganismStats
             title="Statistiques entrant par éco-organisme"
             stats={ecoOrganismQuarterStats.data || []}
             loading={ecoOrganismQuarterStats.isLoading}

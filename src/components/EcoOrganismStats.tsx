@@ -14,13 +14,15 @@ import {
 import React, { useState } from "react";
 import { useMediaQuery, useTheme } from "@mui/material";
 import type { EcoOrganismQuarterStat } from "../services/api/ecoOrganism";
+import type { ArrivalModel } from "../interfaces/Models";
 
 export type { EcoOrganismQuarterStat };
 
 /** Single quarter entry from API */
 type QuarterEntry = EcoOrganismQuarterStat["quarters"][number];
 type QuarterCategory = QuarterEntry["categories"][number];
-type QuarterMetricSource = "total" | "quarterIn" | "quarterSell";
+type QuarterSellCategory = QuarterEntry["quarterSell"]["categories"][number];
+type QuarterMetricSource = "total" | "quarterIn" | "quarterSell"|"quarterOut";
 
 export interface EcoOrganismStatsProps {
   /** Stats from fetchEcoOrganismQuarterStats() — one item per eco-organism with id, name, description, quarters */
@@ -78,7 +80,28 @@ const defaultQuarters = (): QuarterEntry[] =>
     label: formatQuarterRange(quarter),
     total_weight_kg: 0,
     categories: [],
+    // Minimal but type-correct mocks so the component can render even without real API data.
     quarterIn: {
+      total_weight_kg: 0,
+      categories: [],
+      by_source_type: [
+        {
+          point: {
+            total_weight_kg: 0,
+            categories: [] as QuarterEntry["quarterIn"]["categories"],
+          },
+          apport: {
+            total_weight_kg: 0,
+            categories: [] as QuarterEntry["quarterIn"]["categories"],
+          },
+          house_clearance: {
+            total_weight_kg: 0,
+            categories: [] as QuarterEntry["quarterIn"]["categories"],
+          },
+        },
+      ],
+    },
+    quarterOut: {
       total_weight_kg: 0,
       categories: [],
     },
@@ -139,23 +162,34 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   const currentStat = stats[tab];
   const quarters = currentStat?.quarters?.length ? currentStat.quarters : defaultQuarters();
 
+  const arrivalSourceLabels: Record<ArrivalModel["source_type"], string> = {
+    point: "Point de Collecte",
+    apport: "Apport Volontaire",
+    house_clearance: "Vide Maison",
+  };
+
+  const getArrivalSourceLabel = (sourceType: ArrivalModel["source_type"]) =>
+    arrivalSourceLabels[sourceType] || sourceType;
+
   const getQuarterMetric = (quarter: QuarterEntry) => {
     if (metricSource === "quarterIn") return quarter.quarterIn;
     if (metricSource === "quarterSell") return quarter.quarterSell;
+    if (metricSource === "quarterOut") return quarter.quarterOut;
     return {
       total_weight_kg: quarter.total_weight_kg,
       categories: quarter.categories,
     };
   };
 
-  const renderCategoryRows = (categories: QuarterCategory[]) => (
+  const renderCategoryRows = (categories: Array<QuarterCategory | QuarterSellCategory>) => (
     <>
       {categories.map((cat) => (
+      
         <Box key={cat.id} sx={{ maxWidth: 360, mx: "auto" }}>
           <Box
             sx={{
               display: "flex",
-              alignItems: "baseline",
+              alignItems: metricSource === "quarterSell" ? "flex-start" : "baseline",
               justifyContent: "space-between",
               gap: 2,
             }}
@@ -163,9 +197,20 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {cat.name}
             </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {formatValue(cat.weight_kg)} kg
-            </Typography>
+            {metricSource === "quarterSell" ? (
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
+                <Typography variant="body2" color="textSecondary">
+                  {formatValue((cat as QuarterSellCategory).quantity)} qté
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {formatValue(cat.weight_kg)} kg
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="textSecondary">
+                {formatValue(cat.weight_kg)} kg
+              </Typography>
+            )}
           </Box>
 
           {(cat.subcategories ?? []).map((subcat) => (
@@ -183,9 +228,23 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
               <Typography variant="caption" color="textSecondary">
                 - {subcat.name}
               </Typography>
-              <Typography variant="caption" color="textSecondary">
-                {formatValue(subcat.weight_kg)} kg
-              </Typography>
+              {metricSource === "quarterSell" ? (
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
+                  <Typography variant="caption" color="textSecondary">
+                    {formatValue(
+                      (subcat as QuarterSellCategory["subcategories"][number]).quantity,
+                    )}{" "}
+                    qté
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    {formatValue(subcat.weight_kg)} kg
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="caption" color="textSecondary">
+                  {formatValue(subcat.weight_kg)} kg
+                </Typography>
+              )}
             </Box>
           ))}
         </Box>
@@ -193,10 +252,72 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
     </>
   );
 
+  const renderQuarterInArrivalSources = (
+    quarterIn: QuarterEntry["quarterIn"],
+  ) => {
+    type QuarterInBySourceType = Extract<
+      QuarterEntry["quarterIn"]["by_source_type"],
+      Record<ArrivalModel["source_type"], unknown>
+    >;
+    type QuarterStatForSource = QuarterInBySourceType["point"];
+
+    // API can provide either an object or an array (legacy payload).
+    const bySourceType = Array.isArray(quarterIn.by_source_type)
+      ? quarterIn.by_source_type[0]
+      : quarterIn.by_source_type;
+    const sourceEntries = bySourceType
+      ? (Object.entries(bySourceType) as Array<[ArrivalModel["source_type"], QuarterStatForSource]>)
+      : [];
+
+    if (!sourceEntries.length) return renderCategoryRows(quarterIn.categories ?? []);
+
+    return (
+      <Stack spacing={1.25}>
+        {sourceEntries.map(([sourceType, qStat]) => (
+          <Box
+            key={sourceType}
+            sx={{
+              maxWidth: 360,
+              mx: "auto",
+              p: 1,
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 2,
+                mb: 0.75,
+              }}
+            >
+              <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
+                {getArrivalSourceLabel(sourceType)}
+              </Typography>
+              <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
+                {formatValue(qStat?.total_weight_kg ?? 0)} kg
+              </Typography>
+            </Box>
+
+            {renderCategoryRows((qStat?.categories ?? []) as Array<QuarterCategory | QuarterSellCategory>)}
+          </Box>
+        ))}
+      </Stack>
+    );
+  };
+
   const renderQuarterBlocks = (qList: QuarterEntry[]) => (
     <Stack spacing={1.5}>
       {qList.map((q) => {
         const quarterMetric = getQuarterMetric(q);
+        const quarterSellTotalQuantity = q.quarterSell.categories.reduce(
+          (sum, cat) => sum + (cat.quantity ?? 0),
+          0,
+        );
+        const totalWeightKg = quarterMetric.total_weight_kg;
         return (
           <Box
             key={q.quarter}
@@ -212,7 +333,9 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
             </Typography>
 
             <Stack spacing={1} sx={{ mt: 1.25 }}>
-              {renderCategoryRows(quarterMetric.categories ?? [])}
+              {metricSource === "quarterIn"
+                ? renderQuarterInArrivalSources(q.quarterIn)
+                : renderCategoryRows(quarterMetric.categories ?? [])}
 
               <Box
                 sx={{
@@ -231,9 +354,27 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
                   Total
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                  {formatValue(quarterMetric.total_weight_kg)} kg
-                </Typography>
+                {metricSource === "quarterSell" ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      {formatValue(quarterSellTotalQuantity)} qté
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      {formatValue(totalWeightKg)} kg
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {formatValue(totalWeightKg)} kg
+                  </Typography>
+                )}
               </Box>
             </Stack>
           </Box>
