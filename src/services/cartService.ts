@@ -59,6 +59,14 @@ export const sumPromoCategorie = (categorie?: CategoryModel) => {
 
 
 export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
+  //TODO handle mixed
+  return transactions.reduce((prev, current) =>
+    current.payment_method === "cash" ?
+      current.transactionType == "sell" ?
+        prev + current.total_amount :
+        prev - current.total_amount :
+      prev, openingAmount)
+
   return transactions.reduce((prev: number, current) => {
     // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
     if (Array.isArray(current.payments) && current.payments.length > 0) {
