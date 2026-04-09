@@ -2,47 +2,42 @@ import {
   Add,
   Delete,
   Edit,
-  FilterList,
   PointOfSale,
   Print,
-  QrCode,
-  Search,
+  QrCode
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Chip,
-  type ChipProps,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
-  MenuItem,
   Pagination,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
+  type ChipProps
 } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { useLabelPrint } from "../components/LabelPrint";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
+import { useLabelPrint } from "../components/LabelPrint";
+import { Loading } from "../components/Loading";
 import { StatCardNoIcon } from "../components/StatCard";
+import { LabelFiltersForm, type Filters } from "../components/forms/LabelFiltersForm";
 import {
   LabeledItemForm,
   type Schema,
@@ -54,17 +49,16 @@ import {
   deleteLabeledItem,
   getLabeledItems,
   sellItem,
-  updateLabeledItem,
-  type itemsFilters,
+  updateLabeledItem
 } from "../services/api/labeledItems";
-import { Loading } from "../components/Loading";
 
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LabeledItemModel | null>(null);
 
-  const [filters, setFilters] = useState<itemsFilters>({
+
+  const [filters, setFilters] = useState<Filters>({
     status: "",
     category_id: "",
     search: "",
@@ -191,16 +185,6 @@ const Labels = () => {
     queryClient.invalidateQueries({ queryKey: ["items"] });
   };
 
-  //TODO can do better
-  const handleFilterChange = (
-    field: keyof itemsFilters,
-    value: itemsFilters[keyof itemsFilters],
-  ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
 
   const handleOpenDialog = (item: LabeledItemModel | null = null) => {
     setEditingItem(item);
@@ -299,79 +283,16 @@ const Labels = () => {
         </Grid>
       </Grid>
       {/* Filtres */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              placeholder="Rechercher par nom, description ou code-barres..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <Search sx={{ mr: 1, color: "text.secondary" }} />
-                  ),
-                },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={filters.status}
-                label="Statut"
-                onChange={(e) => handleFilterChange("status", e.target.value)}
-              >
-                <MenuItem value={""}>Tous</MenuItem>
-                {statusOptions.map((status) => (
-                  <MenuItem key={status.value} value={status.value}>
-                    {status.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel>Catégorie</InputLabel>
-              <Select
-                value={filters.category_id}
-                label="Catégorie"
-                onChange={(e) =>
-                  handleFilterChange("category_id", e.target.value)
-                }
-              >
-                <MenuItem value={""}>Toutes</MenuItem>
-                {categories.data
-                  ?.filter((cat) => !cat.parent_id)
-                  .map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<FilterList />}
-              onClick={() =>
-                setFilters({
-                  status: undefined,
-                  category_id: undefined,
-                  search: undefined,
-                })
-              }
-            >
-              Réinitialiser
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      <LabelFiltersForm
+        statusOptions={statusOptions}
+        defaultValues={filters}
+        onChange={(values) =>
+          setFilters((prev) => ({
+            ...prev,
+            ...values,
+          }))}
+          categories={categories.data ?? []}
+       />
       {/* Table des articles */}
       <TableContainer component={Paper}>
         <Table>
