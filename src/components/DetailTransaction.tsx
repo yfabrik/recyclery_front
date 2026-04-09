@@ -101,7 +101,7 @@ export const DetailTransaction = ({
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <Typography variant="body2" color="textSecondary">
+              <Typography variant="body2" color="textSecondary" component="div">
                 Statut:{" "}
                 <strong>
                   {selectedTransaction?.refunds &&
