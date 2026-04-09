@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, UserModel } from "../interfaces/Models";
 import type { CartItem } from "./forms/cartSchema";
-import { formatWeight, formatCurrency, getCartLinePrice, getCartTotal, getPaymentMethodLabel, formatPercentage } from "../services/cartService";
+import { formatWeight, formatCurrency, getCartLinePrice, getCartTotal, getPaymentMethodLabel } from "../services/cartService";
 import type { CreateTransactionResponse } from "../services/api/transactions";
 
 type ReceiptSale = CreateTransactionResponse["data"]["sale"];

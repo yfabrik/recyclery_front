@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { TransactionModel } from "../../interfaces/Models";
+import type { CashSession, TransactionItem, TransactionModel, UserModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { APIResponse } from "./types";
 import type { GiftCardDto } from "./giftCards";
@@ -12,7 +12,7 @@ export interface transactionsFilters {
   session?: number;
   payment_method?: TransactionModel["payment_method"];
   page?: number;
-  include?: ("refund" | "items"|"payments")[];
+  include?: ("refund" | "items" | "payments")[];
 }
 interface Stats {
   total_transactions: number;
@@ -40,7 +40,7 @@ interface Stats {
 }
 
 // Shared
-type PaymentMethod = "cash" | "card" | "check" | "giftcard";
+type PaymentMethod =  TransactionModel["payment_method"];
 
 type CartItemInput = {
   name: string;
@@ -160,7 +160,7 @@ type SalesTransactionRow = {
   transactionId?: number | null; // parent txn for refunds
   createdAt: string;
   updatedAt: string;
-  
+
   // optional includes
   items?: LabeledItemRow[];
   refunds?: SalesTransactionRow[];
@@ -201,6 +201,14 @@ export type CreateRefundResponse = {
     type: "issued_new";
     initial_value: number;
   }
+};
+
+export type TransactionDetailsModel = TransactionModel & {
+  CashSession: CashSession | null;
+  User: UserModel | null;
+  items: NonNullable<TransactionModel["items"]>;
+  payments: NonNullable<TransactionModel["payments"]>;
+  giftCard: GiftCardDto | null;
 };
 
 export const getTransactions = (
@@ -251,3 +259,7 @@ export const createSell = (
 ): Promise<
   AxiosResponse<CreateTransactionResponse>
 > => axiosInstance.post("/api/sales-transactions", data);
+
+
+export const getTransactionDetails = (id: number): Promise<AxiosResponse<{ success: true; transaction: TransactionDetailsModel }>> =>
+  axiosInstance.get(`/api/sales-transactions/${id}`);

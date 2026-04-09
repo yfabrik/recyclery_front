@@ -149,6 +149,7 @@ export interface LabeledItemModel extends BaseModel {
   createdBy?: Pick<UserModel, "username">;
   recyclery?: StoreModel;
   SalesTransaction?: TransactionModel;
+  transactionItem?: TransactionItem;
 }
 
 export interface UserModel extends BaseModel {
@@ -284,10 +285,27 @@ export interface TransactionModel extends BaseModel {
   created_by: number;
   sold_by?: number;
   User?: UserModel;
-  LabeledItems?: LabeledItemModel[];
   items?: (LabeledItemModel & { TransactionItem: TransactionItem })[];
   refunds?: TransactionModel[];
-  payments?: { method: TransactionModel["payment_method"]; amount: number }[];
+  payments?: TransactionPayment[];
+}
+
+export interface TransactionPayment extends BaseModel {
+  method: TransactionModel["payment_method"];
+  amount: number;
+  metadata?: Record<string, unknown> | null;
+  gift_card_id: GiftCard['id'] | null;
+  sales_transaction_id: TransactionModel["id"];
+}
+
+export interface GiftCard extends BaseModel {
+  code: string;
+  status: "active" | "inactive";
+  initial_value: number;
+  remaining_value: number;
+  used_value: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface TransactionItem extends Omit<BaseModel, "id"> {

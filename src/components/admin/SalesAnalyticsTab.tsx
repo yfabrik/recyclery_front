@@ -33,11 +33,13 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { TransactionModel } from "../../interfaces/Models";
+import type { TransactionModel, TransactionPayment } from "../../interfaces/Models";
 import { fetchCategories } from "../../services/api/categories";
 import { fetchStores as fStore } from "../../services/api/store";
 import {
   createRefund,
+  type CreateTransactionResponse,
+  getTransactionDetails,
   getTransactions,
   getTranscationStats,
 } from "../../services/api/transactions";
@@ -47,12 +49,16 @@ import {
   getPaymentMethodLabel,
 } from "../../services/cartService";
 import { DetailTransaction } from "../DetailTransaction";
+import type { CartItem } from "../forms/cartSchema";
 import { RefundForm, type Schema } from "../forms/RefundForm";
 import { SaleFiltersForm, type Filters } from "../forms/SaleFiltersForm";
 import { Loading } from "../Loading";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
 import { TransactionTableLine } from "../TransactionTableLine";
+import { useReceiptPrint } from "../ReceiptPrint";
+
+type ReceiptSale = CreateTransactionResponse["data"]["sale"];
 
 export const SalesAnalyticsTab = () => {
   const [page, setPage] = useState(1);
@@ -158,12 +164,61 @@ export const SalesAnalyticsTab = () => {
     });
   };
 
-
+  const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
   const handleReprintReceipt = (transactionId: number) => {
     // Fonction pour réimprimer le ticket de caisse
     toast.success(
       `Réimpression du ticket de caisse ${transactionId} en cours...`,
     );
+    getTransactionDetails(transactionId).then((response) => {
+      const transaction = response.data.transaction;
+      if (!transaction.CashSession || !transaction.CashSession.User) {
+        toast.error("Impossible de reimprimer: informations de session ou utilisateur manquantes.");
+        return;
+      }
+
+      const saleForPrint: ReceiptSale = {
+        id: transaction.id,
+        total_amount: transaction.total_amount ?? 0,
+        payment_method: transaction.payment_method,
+        payment_amount: transaction.payment_amount ?? 0,
+        transactionType: transaction.transactionType,
+        customer_postal_code: transaction.customer_postal_code ?? null,
+        status: transaction.status,
+        cash_session_id: transaction.cash_session_id ?? null,
+        created_by: transaction.created_by ?? null,
+        createdAt: transaction.createdAt,
+        updatedAt: transaction.updatedAt ?? transaction.createdAt,
+        payments: transaction.payments as (TransactionPayment & { createdAt: string, updatedAt: string })[],
+      };
+      const itemsForPrint: CartItem[] = transaction.items.map((item) => {
+        const txItem = item.TransactionItem;
+        return {
+          name: txItem?.name ?? item.description ?? "",
+          price: Number(txItem?.price ?? item.price ?? 0),
+          quantity: Number(txItem?.quantity ?? 1),
+          category_name: item.category?.name ?? "",
+          subcategory_name: item.subcategory?.name ?? "",
+          barcode: item.barcode ?? "",
+          category_id: item.category_id ?? 0,
+          subcategory_id: item.subcategory_id ?? null,
+          description: item.description ?? null,
+          weight: Number(item.weight ?? 0),
+          promotion: Number(txItem?.promotionValue ?? 0),
+          bundlePrice: txItem?.bundlePrice != null ? Number(txItem.bundlePrice) : null,
+          bundleQuantity: txItem?.bundleQuantity ?? null,
+        };
+      });
+
+      triggerPrintReceipt({
+        cashSession: transaction.CashSession,
+        items: itemsForPrint,
+        user: transaction.CashSession.User!,
+        sale: saleForPrint
+
+      })
+    })
+    // triggerPrintReceipt({})
     // Ici on pourrait ajouter la logique d'impression réelle
   };
 
@@ -267,25 +322,25 @@ export const SalesAnalyticsTab = () => {
                 Chiffre d'affaires net
               </Typography>
               {statistics.data?.total_refunded && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      display="block"
-                    >
-                      Brut:{" "}
-                      {formatCurrency(
-                        statistics.data?.total_sales_before_refunds ||
-                        statistics.data?.total_sales ||
-                        0,
-                      )}
-                    </Typography>
-                    <Typography variant="caption" color="error" display="block">
-                      Remboursé: -
-                      {formatCurrency(statistics.data?.total_refunded || 0)}
-                    </Typography>
-                  </Box>
-                )}
+                <Box sx={{ mt: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    display="block"
+                  >
+                    Brut:{" "}
+                    {formatCurrency(
+                      statistics.data?.total_sales_before_refunds ||
+                      statistics.data?.total_sales ||
+                      0,
+                    )}
+                  </Typography>
+                  <Typography variant="caption" color="error" display="block">
+                    Remboursé: -
+                    {formatCurrency(statistics.data?.total_refunded || 0)}
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>
@@ -527,6 +582,7 @@ export const SalesAnalyticsTab = () => {
           <Button onClick={handleCloseTransactionDetailsDialog}>Fermer</Button>
         </DialogActions>
       </Dialog>
+      {receiptPrintNode}
     </Box>
   );
 };
