@@ -47,3 +47,9 @@ export const OpenCaisse = (data: { store_id: number, opening_amount: number, cas
 export const closeCaisse = (id: number, data: { closing_amount: number }): Promise<AxiosResponse<{ message: string, expected_amount: number, difference_amount: number }>> =>
   axiosInstance.put(`/api/cash-sessions/${id}/close`, data);
 
+
+export const getCaisseDetails = (registerId: number): Promise<AxiosResponse<{ message: string, data: { store_name: string, total_sessions: number, last_session: Date, sessions: CashSession[] } }>> =>
+  axiosInstance.get(`/api/cash-registers/${registerId}`);
+
+export const getSessionDetails = (sessionId: number): Promise<AxiosResponse<{ message: string, session: CashSession }>> =>
+  axiosInstance.get(`/api/cash-sessions/${sessionId}`);

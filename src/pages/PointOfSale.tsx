@@ -42,7 +42,6 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
-import { useReceiptPrint } from "../components/ReceiptPrint";
 import {
   schema,
   type CartItem,
@@ -56,20 +55,17 @@ import {
   ManualItemForm,
   type Schema as ManualItemSchema,
 } from "../components/forms/ManualItemForm";
-import {
-  type Schema as OpenCaisseSchema
-} from "../components/forms/OpenCaisseForm";
 import { NoOpenedRegister } from "../components/pos/NoOpenedRegister";
 import { SalesHistory } from "../components/pos/SalesHistory";
+import { useReceiptPrint } from "../components/ReceiptPrint";
 import { useAuth } from "../contexts/AuthContext";
 import type { LabeledItemModel, TransactionModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getGiftCardByCode } from "../services/api/giftCards";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import {
-  OpenCaisse,
   closeCaisse,
-  getActiveCaisses,
+  getActiveCaisses
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
 import { formatCurrency, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
@@ -78,7 +74,7 @@ const PointOfSale = () => {
   const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
   const [tabValue, setTabValue] = useState(0);
   // Dialogs
-  const [openSessionDialog, setOpenSessionDialog] = useState(false);
+  // const [openSessionDialog, setOpenSessionDialog] = useState(false);
   const [closeSessionDialog, setCloseSessionDialog] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   // const [paymentDialog, setPaymentDialog] = useState(false);
@@ -248,21 +244,21 @@ const PointOfSale = () => {
   });
 
 
-  const openSession = useMutation({
-    mutationFn: (data: {
-      store_id: number;
-      opening_amount: number;
-      cash_register_id: number;
-    }) => OpenCaisse(data),
-    onSuccess: (data) => {
-      toast.success("Session ouverte avec succès");
-      setOpenSessionDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["activeSession"] });
-    },
-    onError: (error) => {
-      toast.error("Erreur lors de l'ouverture");
-    },
-  });
+  // const openSession = useMutation({
+  //   mutationFn: (data: {
+  //     store_id: number;
+  //     opening_amount: number;
+  //     cash_register_id: number;
+  //   }) => OpenCaisse(data),
+  //   onSuccess: (data) => {
+  //     toast.success("Session ouverte avec succès");
+  //     setOpenSessionDialog(false);
+  //     queryClient.invalidateQueries({ queryKey: ["activeSession"] });
+  //   },
+  //   onError: (error) => {
+  //     toast.error("Erreur lors de l'ouverture");
+  //   },
+  // });
   const closeSession = useMutation({
     mutationFn: (data: { id: number; data: { closing_amount: number } }) =>
       closeCaisse(data.id, data.data),
@@ -289,9 +285,9 @@ const PointOfSale = () => {
     },
   });
 
-  const handleOpenSession = (data: OpenCaisseSchema) => {
-    openSession.mutate(data);
-  };
+  // const handleOpenSession = (data: OpenCaisseSchema) => {
+  //   openSession.mutate(data);
+  // };
   const handleCloseSession = (data: CloseCaisseSchema) => {
     if (activeSession.data)
       //TODO faire sans ou raise error ??? use type never ?
@@ -532,8 +528,8 @@ const PointOfSale = () => {
 
   if (!activeSession.data) {
     return (
-      <NoOpenedRegister setOpenSessionDialog={setOpenSessionDialog} openSessionDialog={openSessionDialog} handleOpenSession={handleOpenSession} />
-    );
+        <NoOpenedRegister />
+  );
   }
 
   return (

@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AttachMoney, Euro } from "@mui/icons-material";
 import { Button, Grid, InputAdornment, MenuItem } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { idSchema } from "../../interfaces/ZodTypes";
@@ -13,6 +14,9 @@ import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 interface OpenCaisseFormProps extends BaseFormProps<Schema> {
   // stores: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
+  defaultStoreId?: number;
+  defaultCashRegisterId?: number;
+  lockStoreAndRegister?: boolean;
 }
 
 const schema = z.object({
@@ -28,6 +32,9 @@ export const OpenCaisseForm = ({
   formId,
   onSubmit,
   defaultValues,
+  defaultStoreId,
+  defaultCashRegisterId,
+  lockStoreAndRegister = false,
   // stores,
 }: OpenCaisseFormProps) => {
 
@@ -43,13 +50,23 @@ export const OpenCaisseForm = ({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      store_id: "",
-      cash_register_id: "",
+      store_id: defaultStoreId ?? "",
+      cash_register_id: defaultCashRegisterId ?? "",
       opening_amount: "",
       notes: "",
       ...data,
     },
   });
+
+  // useEffect(() => {
+  //   if (!defaultStoreId) return;
+  //   form.setValue("store_id", defaultStoreId, { shouldValidate: true });
+  // }, [defaultStoreId, form]);
+
+  // useEffect(() => {
+  //   if (!defaultCashRegisterId) return;
+  //   form.setValue("cash_register_id", defaultCashRegisterId, { shouldValidate: true });
+  // }, [defaultCashRegisterId, form]);
 
   const store = form.watch("store_id") as number;
   // const [cashRegisters, setCashRegisters] = useState([]);
@@ -75,7 +92,7 @@ export const OpenCaisseForm = ({
       <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
-            <FormSelect name="store_id" control={form.control} label="Magasin">
+            <FormSelect name="store_id" control={form.control} label="Magasin" extra={{ disabled: lockStoreAndRegister }}>
               {stores.data?.map((store) => (
                 <MenuItem key={store.id} value={store.id}>
                   {store.name}
@@ -89,6 +106,7 @@ export const OpenCaisseForm = ({
               name="cash_register_id"
               control={form.control}
               label="Caisse"
+              extra={{ disabled: lockStoreAndRegister }}
             >
               {cashRegisters.data?.map((register) => (
                 <MenuItem key={register.id} value={register.id}>
