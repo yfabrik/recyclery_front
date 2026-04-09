@@ -27,6 +27,7 @@ import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Mode
 import { fetchStores, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
 import { BilanCaissePrint } from "../BilanCaissePrint";
 import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
+import { Loading } from "../Loading";
 
 interface NoOpenedRegisterProps {
     // setOpenSessionDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -99,24 +100,21 @@ export const NoOpenedRegister = () => {
                     Aucune session de caisse active. Ouvrez une caisse depuis un magasin pour commencer les ventes.
                 </Typography>
             </Box>
-
-            {stores.isLoading ? (
-                <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Chargement des magasins...
-                </Typography>
-            ) : availableStores.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Aucun magasin actif disponible.
-                </Typography>
-            ) : (
-                <Grid container spacing={2}>
-                    {availableStores.map((store) => (
-                        <Grid size={{ xs: 12, md: 6 }} key={store.id}>
-                            <StoreCard store={store} handleOpenClick={handleOpenClick} handleShowHistory={handleShowHistory} />
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
+            <Loading isLoading={stores.isLoading}>
+                {availableStores.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                        Aucun magasin actif disponible.
+                    </Typography>
+                ) : (
+                    <Grid container spacing={2}>
+                        {availableStores.map((store) => (
+                            <Grid size={{ xs: 12, md: 6 }} key={store.id}>
+                                <StoreCard store={store} handleOpenClick={handleOpenClick} handleShowHistory={handleShowHistory} />
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
+            </Loading>
 
             <Dialog
                 open={openSessionDialog}
@@ -251,29 +249,31 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
         >
             <DialogTitle>Historique des sessions - {register.name}</DialogTitle>
             <DialogContent>
-                {sessions.data?.data.sessions.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                        Aucune session trouvée pour cette caisse.
-                    </Typography>
-                ) : (
-                    <List dense>
-                        {sessions.data?.data?.sessions?.map((session) => (
-                            <ListItem key={session.id} divider>
-                                <ListItemText
-                                    primary={`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")}`}
-                                    secondary={`Ouverture: ${session.opening_amount}€ | Fermeture: ${session.closing_amount ?? "-"}€`}
-                                />
-                                <Button
-                                    size="small"
-                                    startIcon={<Print />}
-                                    onClick={() => handleReprintSummary(session)}
-                                >
-                                    Réimprimer bilan
-                                </Button>
-                            </ListItem>
-                        ))}
-                    </List>
-                )}
+                <Loading isLoading={sessions.isLoading}>
+                    {sessions.data?.data.sessions.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                            Aucune session trouvée pour cette caisse.
+                        </Typography>
+                    ) : (
+                        <List dense>
+                            {sessions.data?.data?.sessions?.map((session) => (
+                                <ListItem key={session.id} divider>
+                                    <ListItemText
+                                        primary={`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")} -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}
+                                        secondary={`Ouverture: ${session.opening_amount}€ | Fermeture: ${session.closing_amount ?? "-"}€`}
+                                    />
+                                    <Button
+                                        size="small"
+                                        startIcon={<Print />}
+                                        onClick={() => handleReprintSummary(session)}
+                                    >
+                                        Réimprimer bilan
+                                    </Button>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </Loading>
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Fermer</Button>
