@@ -3,7 +3,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, TransactionModel } from "../interfaces/Models";
-import { sumCashInPayments } from "../services/cartService";
+import { formatCurrency, sumCashInPayments } from "../services/cartService";
 
 interface BilanCaisseProps {
   session: CashSession;
@@ -205,8 +205,8 @@ export const BilanCaissePrint = ({
     ? new Date(session.closed_at).toLocaleString()
     : `${new Date().toLocaleString()} ,pas fermée`;
   const countedAmount = session.closing_amount ?? closingAmount ?? 0;
-  const expected =  expected_amount;
-  const difference = expected_amount - countedAmount;
+  const expected = session.expected_amount ?? expected_amount;
+  const difference = session.difference_amount ?? expected_amount - countedAmount;
 
   return (
     <>
@@ -279,7 +279,7 @@ export const BilanCaissePrint = ({
                 {new Date(session.createdAt).toLocaleString()}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Fond de caisse : {session.opening_amount} €
+                Fond de caisse : {formatCurrency(session.opening_amount)}
               </Typography>
             </Box>
 
@@ -294,10 +294,10 @@ export const BilanCaissePrint = ({
                 {closedAt}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Comptage : {countedAmount} €
+                Comptage : {formatCurrency(countedAmount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Attendu : {expected} €
+                Attendu : {formatCurrency(expected)}
               </Typography>
               <Typography
                 sx={{
@@ -306,7 +306,7 @@ export const BilanCaissePrint = ({
                   color: difference === 0 ? "inherit" : "#b00",
                 }}
               >
-                Écart : {difference} €
+                Écart : {formatCurrency(difference)}
               </Typography>
             </Box>
           </Box>
@@ -331,27 +331,27 @@ export const BilanCaissePrint = ({
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Carte : {saleDatas.card.count} règlement
                 {saleDatas.card.count !== 1 ? "s" : ""}, total{" "}
-                {saleDatas.card.amount} €
+                {formatCurrency(saleDatas.card.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Espèces : {saleDatas.cash.count} règlement
                 {saleDatas.cash.count !== 1 ? "s" : ""}, total{" "}
-                {saleDatas.cash.amount} €
+                {formatCurrency(saleDatas.cash.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Chèque : {saleDatas.check.count} règlement
                 {saleDatas.check.count !== 1 ? "s" : ""}, total{" "}
-                {saleDatas.check.amount} €
+                {formatCurrency(saleDatas.check.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Avoir : {saleDatas.giftcard.count} règlement
                 {saleDatas.giftcard.count !== 1 ? "s" : ""}, total{" "}
-                {saleDatas.giftcard.amount} €
+                {formatCurrency(saleDatas.giftcard.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 mixed : {saleDatas.mixed.count} règlement
                 {saleDatas.mixed.count !== 1 ? "s" : ""}, total{" "}
-                {saleDatas.mixed.amount} €
+                {formatCurrency(saleDatas.mixed.amount)}
               </Typography>
             </Stack>
             <Typography
@@ -363,7 +363,7 @@ export const BilanCaissePrint = ({
                 borderTop: "1px solid #333",
               }}
             >
-              Total ventes : {salesTotal} €
+              Total ventes : {formatCurrency(salesTotal)}
             </Typography>
           </Box>
 
@@ -387,22 +387,22 @@ export const BilanCaissePrint = ({
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Carte : {refundDatas.card.count} remboursement
                 {refundDatas.card.count !== 1 ? "s" : ""}, total{" "}
-                {refundDatas.card.amount} €
+                {formatCurrency(refundDatas.card.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Espèces : {refundDatas.cash.count} remboursement
                 {refundDatas.cash.count !== 1 ? "s" : ""}, total{" "}
-                {refundDatas.cash.amount} €
+                {formatCurrency(refundDatas.cash.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Chèque : {refundDatas.check.count} remboursement
                 {refundDatas.check.count !== 1 ? "s" : ""}, total{" "}
-                {refundDatas.check.amount} €
+                {formatCurrency(refundDatas.check.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Avoir : {refundDatas.giftcard.count} remboursement
                 {refundDatas.giftcard.count !== 1 ? "s" : ""}, total{" "}
-                {refundDatas.giftcard.amount} €
+                {formatCurrency(refundDatas.giftcard.amount)}
               </Typography>
             </Stack>
             <Typography
@@ -414,7 +414,7 @@ export const BilanCaissePrint = ({
                 borderTop: "1px solid #333",
               }}
             >
-              Total remboursements : {refundsTotal} €
+              Total remboursements : {formatCurrency(refundsTotal)}
             </Typography>
           </Box>
 
@@ -439,7 +439,7 @@ export const BilanCaissePrint = ({
                 borderTop: "1px solid #333",
               }}
             >
-              Net (ventes - remboursements) : {totalAmount} €
+              Net (ventes - remboursements) : {formatCurrency(totalAmount)}
             </Typography>
           </Box>
         </Stack>
