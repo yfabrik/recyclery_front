@@ -186,13 +186,26 @@ const PointOfSale = () => {
     });
   }, [cartTotal, form, paymentSplits]);
 
+
+  const getCurrentCartSnapshot = () => (cart ?? []).map((item) => ({ ...item }));
+
   const addCart = () => {
-    setCarts((prev) => [...prev, [] as CartSchema["cart"]]);
+    const currentCart = getCurrentCartSnapshot();
+    const newTabIndex = carts.length;
+    const nextCarts = [...carts];
+    nextCarts[tabValue] = currentCart;
+    nextCarts.push([] as CartSchema["cart"]);
+    setCarts(nextCarts);
+    setTabValue(newTabIndex);
+    form.reset(
+      { ...form.getValues(), cart: [] },
+      { keepDefaultValues: true }
+    );
   };
 
   const removeCart = (index: number) => {
     if (carts.length <= 1) return;
-    const currentCart = form.getValues("cart") as CartSchema["cart"];
+    const currentCart = getCurrentCartSnapshot();
     const nextCarts = carts
       .map((c, i) => (i === tabValue ? currentCart : c))
       .filter((_, i) => i !== index);
@@ -205,22 +218,20 @@ const PointOfSale = () => {
     setCarts(nextCarts);
     setTabValue(newTabValue);
     form.reset(
-      { ...form.getValues(), cart: nextCarts[newTabValue] },
+      { ...form.getValues(), cart: (nextCarts[newTabValue] ?? []).map((item) => ({ ...item })) },
       { keepDefaultValues: true }
     );
   };
 
   const changeCart = (newIndex: number) => {
     if (newIndex === tabValue) return;
-    const currentCart = form.getValues("cart") as CartSchema["cart"];
-    setCarts((prev) => {
-      const next = [...prev];
-      next[tabValue] = currentCart;
-      return next;
-    });
+    const currentCart = getCurrentCartSnapshot();
+    const nextCarts = [...carts];
+    nextCarts[tabValue] = currentCart;
+    setCarts(nextCarts);
     setTabValue(newIndex);
     form.reset(
-      { ...form.getValues(), cart: carts[newIndex] },
+      { ...form.getValues(), cart: (nextCarts[newIndex] ?? []).map((item) => ({ ...item })) },
       { keepDefaultValues: true }
     );
   }
