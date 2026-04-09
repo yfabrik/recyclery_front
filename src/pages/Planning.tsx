@@ -959,6 +959,10 @@ const Planning = () => {
                       </Box>
                     </Box>
                   }
+                  slotProps={{
+                    primary: { component: "div" },
+                    secondary: { component: "div" },
+                  }}
                 />
               </ListItem>
             ))}

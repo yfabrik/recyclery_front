@@ -127,7 +127,7 @@ export const CardStore = ({
                                 )
                             }
                             slotProps={{
-                                primary: { variant: "body2" }
+                                primary: { variant: "body2", component: "div" }
                             }}
                         />
                     </ListItem>
