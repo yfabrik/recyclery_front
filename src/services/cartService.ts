@@ -32,9 +32,10 @@ export const getPaymentMethodLabel = (
     card: "Carte bancaire",
     check: "Chèque",
     giftcard: "avoir",
+    mixed: "Mixte",
     // Backward-compatible in case some UI paths still send the old casing.
-    giftCard: "avoir",
-  };
+    // giftCard: "avoir",
+  } as const satisfies Record<TransactionModel["payment_method"], string>;
   return labels[method] || method;
 };
 
@@ -44,6 +45,21 @@ export const formatCurrency = (amount: number) => {
     style: "currency",
     currency: "EUR",
   }).format(amount || 0);
+};
+
+export const formatWeight = (amount: number) => {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "unit",
+    unit: "kilogram",
+  }).format(amount || 0);
+};
+
+export const formatPercentage = (value: number) => {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(value || 0);
 };
 
 export const sumPromoCategorie = (categorie?: CategoryModel) => {

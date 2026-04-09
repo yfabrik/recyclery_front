@@ -35,6 +35,7 @@ import type { ArrivalModel } from "../interfaces/Models";
 import { createArrival, getArrivals } from "../services/api/arrival";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { fetchCollectionPoints as fCollP } from "../services/api/collectionPoint";
+import { formatWeight } from "../services/cartService";
 
 const todayKey = () => new Date().toISOString().split("T")[0];
 
@@ -192,9 +193,8 @@ const Arrivals = () => {
               >
                 <Typography>Poids total:</Typography>
                 <Chip
-                  label={`${arrivals
-                    .reduce((sum, arr) => sum + (arr.weight || 0), 0)
-                    .toFixed(1)} kg`}
+                  label={formatWeight(arrivals
+                    .reduce((sum, arr) => sum + (arr.weight || 0), 0))}
                   color="secondary"
                 />
               </Box>

@@ -51,6 +51,7 @@ import {
   sellItem,
   updateLabeledItem
 } from "../services/api/labeledItems";
+import { formatCurrency, formatWeight } from "../services/cartService";
 
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
@@ -277,7 +278,7 @@ const Labels = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCardNoIcon
             title="Valeur totale stock"
-            value={` ${items.data?.items.reduce((sum, item) => sum + item.price || 0, 0).toFixed(2)} €`}
+            value={` ${formatCurrency(items.data?.items.reduce((sum, item) => sum + item.price || 0, 0) || 0)}`}
             color="info"
           />
         </Grid>
@@ -291,8 +292,8 @@ const Labels = () => {
             ...prev,
             ...values,
           }))}
-          categories={categories.data ?? []}
-       />
+        categories={categories.data ?? []}
+      />
       {/* Table des articles */}
       <TableContainer component={Paper}>
         <Table>
@@ -335,7 +336,7 @@ const Labels = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {item.weight ? `${item.weight} kg` : "-"}
+                      {item.weight ? formatWeight(item.weight) : "-"}
                     </TableCell>
                     <TableCell>
                       <Typography
@@ -343,7 +344,7 @@ const Labels = () => {
                         fontWeight="bold"
                         color="primary"
                       >
-                        {item.price.toFixed(2)} €
+                        {formatCurrency(item.price)}
                       </Typography>
                     </TableCell>
                     <TableCell>

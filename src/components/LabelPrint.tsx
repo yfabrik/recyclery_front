@@ -3,6 +3,7 @@ import JsBarcode from "jsbarcode";
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { LabeledItemModel } from "../interfaces/Models";
+import { formatCurrency, formatWeight } from "../services/cartService";
 
 const barcodeOptions = {
   format: "CODE128" as const,
@@ -12,7 +13,11 @@ const barcodeOptions = {
   fontSize: 14,
 };
 
-const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
+type LabeledItemForPrint = LabeledItemModel 
+// & Required<Pick<LabeledItemModel, "category" | "subcategory">>;
+
+
+const LabelPrintContent = ({ item }: { item: LabeledItemForPrint }) => {
   const canvasRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -40,7 +45,7 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
           <svg ref={canvasRef} />
         </Grid>
         <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>
-          <Typography fontWeight="bold"> {item.price.toFixed(2)} €</Typography>
+          <Typography fontWeight="bold"> {formatCurrency(item.price)}</Typography>
         </Grid>
         <Grid size={8} sx={{ display: "flex", justifyContent: "center" }}>
           {" "}
@@ -51,7 +56,7 @@ const LabelPrintContent = ({ item }: { item: LabeledItemModel }) => {
           })}
         </Grid>
         <Grid size={4} sx={{ display: "flex", justifyContent: "center" }}>
-          {item.weight ? `${item.weight} kg` : ""}
+          {item.weight ? formatWeight(item.weight) : ""}
         </Grid>
         <Grid size={8} sx={{ display: "flex", justifyContent: "center" }}>
           <Typography
@@ -80,7 +85,7 @@ const printPageStyle = `
 `;
 
 export function useLabelPrint() {
-  const [itemToPrint, setItemToPrint] = useState<LabeledItemModel | null>(null);
+  const [itemToPrint, setItemToPrint] = useState<LabeledItemForPrint | null>(null);
   const labelPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
@@ -99,7 +104,7 @@ export function useLabelPrint() {
     // return () => clearTimeout(t);
   }, [itemToPrint, handlePrint]);
 
-  const triggerPrintLabel = (item: LabeledItemModel) => setItemToPrint(item);
+  const triggerPrintLabel = (item: LabeledItemForPrint) => setItemToPrint(item);
 
   const labelPrintNode = (
     <Box sx={{ display: "none", displayPrint: "block" }} ref={labelPrintRef}>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, UserModel } from "../interfaces/Models";
 import type { CartItem } from "./forms/cartSchema";
-import { getCartLinePrice, getCartTotal, getPaymentMethodLabel } from "../services/cartService";
+import { formatWeight, formatCurrency, getCartLinePrice, getCartTotal, getPaymentMethodLabel, formatPercentage } from "../services/cartService";
 import type { CreateTransactionResponse } from "../services/api/transactions";
 
 type ReceiptSale = CreateTransactionResponse["data"]["sale"];
@@ -50,11 +50,11 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
               {item.name}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: "nowrap", fontFamily: "monospace", textAlign: "right", minWidth: 50 }}>
-              {getCartLinePrice(item).toFixed(2)}€
+              {formatCurrency(getCartLinePrice(item))}
             </Typography>
           </Box>
           <Typography variant="caption" sx={{ display: "block", fontFamily: "monospace" }}>
-            Qt: {item.quantity} x {item.price.toFixed(2)}€ {item.weight > 0 ? `| Poids: ${item.weight.toFixed(3)} kg` : ""}
+            Qt: {item.quantity} x {formatCurrency(item.price)} {item.weight > 0 ? `| Poids: ${formatWeight(item.weight)}` : ""}
           </Typography>
           {item.promotion > 0 && (
             <Typography variant="caption" sx={{ display: "block", fontFamily: "monospace" }}>
@@ -63,7 +63,7 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
           )}
           {!!item.bundleQuantity && !!item.bundlePrice && item.bundleQuantity > 0 && (
             <Typography variant="caption" sx={{ display: "block", fontFamily: "monospace" }}>
-              Bundle: {item.bundleQuantity} pour {item.bundlePrice.toFixed(2)}€
+              Bundle: {item.bundleQuantity} pour {formatCurrency(item.bundlePrice)}
             </Typography>
           )}
         </Box>
@@ -81,7 +81,7 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
               {getPaymentMethodLabel(payment.method)}
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-              {(+payment.amount).toFixed(2)}€
+              {formatCurrency(+payment.amount)}
             </Typography>
           </Box>
         ))
@@ -91,7 +91,7 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
             {getPaymentLabel(sale.payment_method)}
           </Typography>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-            {Number(sale.payment_amount ?? 0).toFixed(2)}€
+            {formatCurrency(Number(sale.payment_amount ?? 0))}
           </Typography>
         </Box>
       )}
@@ -99,15 +99,15 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
       <Box sx={{ fontWeight: 700 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>TOTAL:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{totalAmount.toFixed(2)}€</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatCurrency(totalAmount)}</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Paye:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{paidAmount.toFixed(2)}€</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(paidAmount)}</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Rendu:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{changeAmount.toFixed(2)}€</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(changeAmount)}</Typography>
         </Box>
       </Box>
 

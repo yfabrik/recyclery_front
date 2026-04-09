@@ -70,6 +70,7 @@ import {
 import dayjs from "dayjs";
 import EcoOrganismStats from "../components/EcoOrganismStats";
 import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
+import { formatCurrency, formatPercentage } from "../services/cartService";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -351,7 +352,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title="Chiffre d'affaires"
-            value={`${stats.data?.totalRevenue?.toLocaleString() || "0"}€`}
+            value={formatCurrency(stats.data?.totalRevenue ?? 0)}
             subtitle="ce mois"
             icon={<TrendingUp />}
             color="info"
@@ -573,6 +574,8 @@ const Dashboard = () => {
                             value: cat.total_price_sum,
                           }),
                         ) || [],
+                      valueFormatter: (item) =>
+                        `${item.label} ${formatCurrency(item.value as number)}`,
                     },
                   ]}
                   width={200}

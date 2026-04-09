@@ -68,7 +68,7 @@ import {
   getActiveCaisses
 } from "../services/api/store";
 import { createSell } from "../services/api/transactions";
-import { formatCurrency, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
+import { formatCurrency, formatPercentage, formatWeight, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
 const PointOfSale = () => {
   const { user } = useAuth();
   const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
@@ -721,7 +721,7 @@ const PointOfSale = () => {
                                   )}
                               </Box>
                             </TableCell>
-                            <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
+                            <TableCell>{formatWeight(item.weight)}</TableCell>
                             <TableCell>
                               {formatCurrency(item.price)}
                               {item.promotion != 0 && (

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Add, Close, Payment, Remove, ShoppingCart } from "@mui/icons-material"
 import { DevTool } from "@hookform/devtools"
 import { idSchema } from "../../interfaces/ZodTypes"
+import { formatCurrency } from "../../services/cartService"
 
 const itemSchema = z.object({
 
@@ -163,7 +164,7 @@ export const CartForm = ({ formId, onSubmit }: BaseFormProps<Schema>) => {
                                             </TableCell>
                                             <TableCell>
                                                 <Typography fontWeight="bold">
-                                                    {(item.price * item.quantity).toFixed(2)}€
+                                                    {formatCurrency(item.price * item.quantity)}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>
@@ -232,7 +233,7 @@ const CartSum = (control: Control<Schema, unknown, Schema>) => {
                 >
                     <Typography variant="h6">Total:</Typography>
                     <Typography variant="h6" color="primary">
-                        {total.toFixed(2)}€
+                        {formatCurrency(total)}
                     </Typography>
                 </Box>
 

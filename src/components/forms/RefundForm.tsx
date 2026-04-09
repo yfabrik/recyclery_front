@@ -19,6 +19,8 @@ import z from "zod";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import { fetchCategories } from "../../services/api/categories";
 import {
+  formatCurrency,
+  formatWeight,
   getCartLinePrice,
   getPaymentMethodLabel,
 } from "../../services/cartService";
@@ -178,9 +180,9 @@ export const RefundForm = ({
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell>{item.weight.toFixed(2)}Kg</TableCell>
+                  <TableCell>{formatWeight(item.weight)}</TableCell>
                   <TableCell>
-                    {item.price.toFixed(2)}€
+                    {formatCurrency(item.price)}
                     {item.promotion != 0 && (
                       <Chip
                         color="secondary"
