@@ -8,10 +8,19 @@ export interface itemsFilters {
     status?: string
     category_id?: number
     search?: string
-    page?:number
+    page?: number
 
 }
-export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[],total:number }>> => axiosInstance.get("/api/labeled-items", { params: filters })
+
+interface ItemStats {
+    total_items: number
+    available_items: number
+    sold_items: number
+    reserved_items: number
+    total_value: number
+}
+
+export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[], total: number }>> => axiosInstance.get("/api/labeled-items", { params: filters })
 export const findItem = (id: string | number) => axiosInstance.get("/api/labeled-items/" + id)
 
 export const updateLabeledItem = (id: number, data: Schema): Promise<AxiosResponse<{ success: true, message: string }>> => axiosInstance.put(`/api/labeled-items/${id}`, data)
@@ -23,3 +32,5 @@ export const deleteLabeledItem = (id: number) => axiosInstance.delete(`/api/labe
 export const sellItem = (id: number) => axiosInstance.post(`/api/labeled-items/${id}/sell`)
 
 export const getItemFromBarcode = (barcode: string): Promise<AxiosResponse<{ success: boolean, item: LabeledItemModel }>> => axiosInstance.get(`/api/labeled-items/barcode/${barcode}`)
+
+export const getItemStats = (filters?: itemsFilters): Promise<AxiosResponse<{ success: boolean, stats: ItemStats }>> => axiosInstance.get(`/api/labeled-items/stats`, { params: filters })

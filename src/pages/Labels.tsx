@@ -47,6 +47,7 @@ import { fetchCategories as fcat } from "../services/api/categories";
 import {
   createLabeledItem,
   deleteLabeledItem,
+  getItemStats,
   getLabeledItems,
   sellItem,
   updateLabeledItem
@@ -103,6 +104,20 @@ const Labels = () => {
     },
   });
   if (items.isError) toast.error("Erreur lors du chargement des articles");
+
+  const itemStats = useQuery({
+    queryKey: ["itemStats", "items", { filters }],
+    queryFn: () => {
+      const params = new URLSearchParams();
+
+      if (filters.status) params.append("status", filters.status);
+      if (filters.category_id)
+        params.append("category_id", filters.category_id);
+      if (filters.search) params.append("search", filters.search);
+      params.append("page", page.toString());
+      return getItemStats(params).then((response) => response.data.stats)
+    },
+  })
 
   const categories = useQuery({
     queryKey: [
@@ -249,8 +264,7 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles disponibles"
             value={
-              items.data?.items.filter((item) => item.status === "available")
-                .length || 0
+              itemStats.data?.available_items || 0
             }
             color="primary"
           />
@@ -259,8 +273,7 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles vendus"
             value={
-              items.data?.items.filter((item) => item.status === "sold")
-                .length || 0
+              itemStats.data?.sold_items || 0
             }
             color="success.main"
           />
@@ -269,8 +282,7 @@ const Labels = () => {
           <StatCardNoIcon
             title="Articles réservés"
             value={
-              items.data?.items.filter((item) => item.status === "reserved")
-                .length || 0
+              itemStats.data?.reserved_items || 0
             }
             color="warning"
           />
@@ -278,7 +290,7 @@ const Labels = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCardNoIcon
             title="Valeur totale stock"
-            value={` ${formatCurrency(items.data?.items.reduce((sum, item) => sum + item.price || 0, 0) || 0)}`}
+            value={formatCurrency(itemStats.data?.total_value || 0)}
             color="info"
           />
         </Grid>
