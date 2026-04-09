@@ -240,10 +240,10 @@ const Dashboard = () => {
 
   const calculateTrend = (current: number = 0, previous: number = 0) => {
     if (!previous) return null;
-    const percentage = ((current - previous) / previous) * 100;
+    const percentage =formatPercentage( ((current - previous) / previous));
     return {
       direction: current > previous ? "up" : "down",
-      value: `${Math.abs(percentage)}%`,
+      value: percentage,
     };
   };
 
