@@ -156,13 +156,17 @@ const CollectionPointsTab = () => {
     presence: ScheduleModel | null = null,
     pointId: number | null = null,
   ) => {
+    const edit = {
+      ...presence,
+      is_present: presence?.is_recurring
+    }
     if (pointId) {
       setEditingPresence({
-        ...presence,
-        ...(pointId && { collection_point_id: pointId })
+        ...edit,
+        ...(pointId && { collection_point_id: pointId }),
       });
     } else
-      setEditingPresence(presence);
+      setEditingPresence(edit);
     setPresenceDialogOpen(true);
   };
 
