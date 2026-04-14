@@ -8,7 +8,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import type { WorkdaysModel } from "../interfaces/Models";
@@ -53,7 +53,7 @@ const EmployeeWorkdays = ({
     },
   ] as const;
 
-
+  const queryClient = useQueryClient()
   const workdaysQuery = useQuery({
     queryKey: ["workdays", employeeId],
     queryFn: () => getUserWorkdays(employeeId).then(res => res.data.workdays),
@@ -70,6 +70,7 @@ const EmployeeWorkdays = ({
     mutationFn: (data: WorkdaysFormPayload) => addWorkdaysToUser(employeeId, data),
     onSuccess: () => {
       toast.success("Jours de travail mis à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ["workdays", employeeId] })
       onSave?.();
       onClose();
     },
