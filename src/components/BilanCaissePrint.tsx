@@ -204,9 +204,9 @@ export const BilanCaissePrint = ({
   const closedAt = session.closed_at
     ? new Date(session.closed_at).toLocaleString()
     : `${new Date().toLocaleString()} ,pas fermée`;
-  const countedAmount = session.closing_amount ?? closingAmount ?? 0;
-  const expected = session.expected_amount ?? expected_amount;
-  const difference = session.difference_amount ?? expected_amount - countedAmount;
+  const countedAmount = closingAmount ?? session.closing_amount ??  0;
+  const expected =  expected_amount;
+  const difference =  expected_amount - countedAmount;
 
   return (
     <>
