@@ -872,7 +872,7 @@ const Planning = () => {
           }}
         >
           <Warning sx={{ fontSize: 28 }} />
-          <Typography variant="h6" fontWeight="bold">
+          <Typography component="span" variant="h6" fontWeight="bold">
             Employés Non Configurés
           </Typography>
         </DialogTitle>
