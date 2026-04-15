@@ -34,6 +34,7 @@ import EmployeeManagement from "./components/admin/config/EmployeeManagement";
 import TaskManagement from "./components/admin/config/TaskManagement";
 import Planning from "./pages/Planning";
 import { TestPage } from "./pages/TestPage";
+import EcoOrganismStatsPage from "./pages/EcoOrganismStatsPage";
 
 // Route protégée
 const ProtectedRoute = ({ children, module }: { children: ReactNode, module?: PermissionModule }) => {
@@ -325,6 +326,16 @@ function App() {
             element={
               <ProtectedRoute module="planning">
                 <Planning />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/eco-organism-stats"
+            element={
+              <ProtectedRoute module="administration">
+                <Container maxWidth="xl" sx={{ py: 3 }}>
+                  <EcoOrganismStatsPage />
+                </Container>
               </ProtectedRoute>
             }
           />

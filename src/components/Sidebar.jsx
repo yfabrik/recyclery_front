@@ -74,6 +74,7 @@ const Sidebar = ({ open, onClose }) => {
         { label: 'Employés', path: '/employee-management', icon: People, roles: ['manager', 'admin'] },
         { label: 'Tâches', path: '/task-management', icon: Assignment, roles: ['admin'] },
         { label: 'Planning', path: '/planning', icon: CalendarToday, roles: ['manager', 'admin'] },
+        { label: 'Stats éco-organismes', path: '/admin/eco-organism-stats', icon: Category, roles: ['manager', 'admin'] },
         // { label: 'Utilisateurs', path: '/users', icon: People, roles: ['admin'] },
         { label: 'Administration', path: '/admin', icon: AdminPanelSettings, roles: ['admin'] },
         { label: 'Ventes', path: '/admin/sales', icon: Assessment, roles: ['manager', 'admin'] },
