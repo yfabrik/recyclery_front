@@ -22,7 +22,7 @@ export type { EcoOrganismQuarterStat };
 type QuarterEntry = EcoOrganismQuarterStat["quarters"][number];
 type QuarterCategory = QuarterEntry["categories"][number];
 type QuarterSellCategory = QuarterEntry["quarterSell"]["categories"][number];
-type QuarterMetricSource = "total" | "quarterIn" | "quarterSell"|"quarterOut";
+type QuarterMetricSource = "total" | "quarterIn" | "quarterSell" | "quarterOut";
 
 export interface EcoOrganismStatsProps {
   /** Stats from fetchEcoOrganismQuarterStats() — one item per eco-organism with id, name, description, quarters */
@@ -184,7 +184,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   const renderCategoryRows = (categories: Array<QuarterCategory | QuarterSellCategory>) => (
     <>
       {categories.map((cat) => (
-      
+
         <Box key={cat.id} sx={{ maxWidth: 360, mx: "auto" }}>
           <Box
             sx={{
@@ -213,6 +213,40 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
             )}
           </Box>
 
+          {cat.subcategories && cat.subcategories.length > 0 && (
+            <Box
+              key={"no-sub"}
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 2,
+                pl: 2,
+                mt: 0.25,
+              }}
+            >
+              <Typography variant="caption" color="textSecondary">
+                -----
+              </Typography>
+              {metricSource === "quarterSell" ? (
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
+                  <Typography variant="caption" color="textSecondary">
+                    {formatValue(
+                      (cat as QuarterSellCategory).subcategories.reduce((p, v) => p - v.quantity, (cat as QuarterSellCategory).quantity),
+                    )}{" "}
+                    qté
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    {formatValue((cat).subcategories.reduce((p, v) => p - v.weight_kg, (cat).weight_kg))} kg
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="caption" color="textSecondary">
+                  {formatValue(cat.subcategories.reduce((p, v) => p - v.weight_kg, cat.weight_kg))} kg
+                </Typography>
+              )}
+            </Box>
+          )}
           {(cat.subcategories ?? []).map((subcat) => (
             <Box
               key={subcat.id}
