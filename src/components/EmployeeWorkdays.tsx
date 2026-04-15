@@ -4,20 +4,19 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
   Grid,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-import type { WorkdaysModel } from "../interfaces/Models";
 import {
   addWorkdaysToUser,
   getUserWorkdays,
-  type WorkdaysFormPayload
+  type WorkdaysFormPayload,
 } from "../services/api/users";
 import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
+import { Loading } from "./Loading";
 
 interface EmployeeWorkdaysProps {
   employeeId: number;
@@ -31,8 +30,6 @@ const EmployeeWorkdays = ({
   onClose,
   onSave,
 }: EmployeeWorkdaysProps) => {
-
-
   const daysOfWeek = [
     { key: "monday", label: "Lundi", short: "Lun" },
     { key: "tuesday", label: "Mardi", short: "Mar" },
@@ -53,10 +50,10 @@ const EmployeeWorkdays = ({
     },
   ] as const;
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const workdaysQuery = useQuery({
     queryKey: ["workdays", employeeId],
-    queryFn: () => getUserWorkdays(employeeId).then(res => res.data.workdays),
+    queryFn: () => getUserWorkdays(employeeId).then((res) => res.data.workdays),
   });
   useEffect(() => {
     if (workdaysQuery.isError) {
@@ -67,107 +64,94 @@ const EmployeeWorkdays = ({
   const workdays = workdaysQuery.data ?? [];
 
   const addWorkdays = useMutation({
-    mutationFn: (data: WorkdaysFormPayload) => addWorkdaysToUser(employeeId, data),
+    mutationFn: (data: WorkdaysFormPayload) =>
+      addWorkdaysToUser(employeeId, data),
     onSuccess: () => {
       toast.success("Jours de travail mis à jour avec succès");
-      queryClient.invalidateQueries({ queryKey: ["workdays", employeeId] })
+      queryClient.invalidateQueries({ queryKey: ["workdays", employeeId] });
       onSave?.();
       onClose();
     },
     onError: () => {
       toast.error("Erreur lors de la sauvegarde des jours de travail");
     },
-  })
-
-
+  });
 
   const handleSave = async (data: WorkdaysFormPayload) => {
-    addWorkdays.mutate(data)
+    addWorkdays.mutate(data);
   };
 
-
-  if (workdaysQuery.isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          p: 4,
-        }}
-      >
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>
-          Chargement des jours de travail...
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
-    <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-        >
-          <CalendarToday />
-          Jours de travail de {employeeName}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Configurez les jours et créneaux horaires de travail de cet employé
-        </Typography>
-      </Box>
+    <Loading isLoading={workdaysQuery.isLoading}>
+      <Box>
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <CalendarToday />
+            Jours de travail de {employeeName}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Configurez les jours et créneaux horaires de travail de cet employé
+          </Typography>
+        </Box>
 
-      {/* En-tête avec les créneaux horaires */}
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 3 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Jour
-              </Typography>
-            </Grid>
-            {timeSlots.map((slot) => (
-              <Grid size={{ xs: 4.5 }} key={slot.key}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {slot.icon}
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight="bold"
-                    sx={{ color: slot.color }}
-                  >
-                    {slot.label}
-                  </Typography>
-                </Box>
+        {/* En-tête avec les créneaux horaires */}
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid size={{ xs: 3 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Jour
+                </Typography>
               </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-      <EmployeeWorkdaysForm
-        formId="WorkdaysForm"
-        onSubmit={handleSave}
-        defaults={workdays as unknown as WorkdaysModel[]}//TODO: fix this BEURK
-      />
+              {timeSlots.map((slot) => (
+                <Grid size={{ xs: 4.5 }} key={slot.key}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {slot.icon}
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      sx={{ color: slot.color }}
+                    >
+                      {slot.label}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+        <EmployeeWorkdaysForm
+          formId="WorkdaysForm"
+          onSubmit={handleSave}
+          defaults={workdays} //TODO: fix this BEURK
+        />
 
-      <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
-        <Button variant="outlined" onClick={onClose} loading={addWorkdays.isPending}>
-          Annuler
-
-        </Button>
-        <Button
-          type="submit"
-          form="WorkdaysForm"
-          variant="contained"
-          loading={addWorkdays.isPending}
-          startIcon={<Save />}
+        <Box
+          sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}
         >
-          {addWorkdays.isPending ? "Sauvegarde..." : "Sauvegarder"}
-        </Button>
+          <Button
+            variant="outlined"
+            onClick={onClose}
+            loading={addWorkdays.isPending}
+          >
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            form="WorkdaysForm"
+            variant="contained"
+            loading={addWorkdays.isPending}
+            startIcon={<Save />}
+          >
+            {addWorkdays.isPending ? "Sauvegarde..." : "Sauvegarder"}
+          </Button>
+        </Box>
       </Box>
-    </Box>
+    </Loading>
   );
 };
 
