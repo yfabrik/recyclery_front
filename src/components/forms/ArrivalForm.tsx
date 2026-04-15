@@ -35,7 +35,7 @@ import { SelectedIcon } from "../SelectedIcon";
 import { emptyStringToNull } from "../../services/zodTransform";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
-const schema = z
+const schema =(categories: CategoryModel[])=> z
   .object({
     category_id: idSchema("La catégorie est requise"),
     subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
@@ -50,20 +50,27 @@ const schema = z
     source_details: z.string().transform((v) => (v == "" ? null : v)),
     notes: z.string().transform((v) => (v == "" ? null : v)),
   })
-  .refine(
-    (data) => {
-      if (data.source_type === "point") {
-        return !!data.collection_point_id;
+  .superRefine(
+    (data, ctx) => {
+      if (data.source_type === "point" && !data.collection_point_id)
+        ctx.addIssue({
+          code: "custom",
+          path: ["collection_point_id"],
+          message: "Veuillez sélectionner un point de collecte",
+        });
+        const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
+        const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
+        if (hasSubcategories && !data.subcategory_id) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["subcategory_id"],
+            message: "Sous-categorie requise",
+          });
+        }
       }
-      return true;
-    },
-    {
-      message: "Veuillez sélectionner un point de collecte",
-      path: ["collection_point_id"],
-    },
   );
 
-export type ArrivalFormSchema = z.infer<typeof schema>;
+export type ArrivalFormSchema = z.infer<ReturnType<typeof schema>>;
 
 type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
@@ -81,7 +88,7 @@ export const ArrivalForm = ({
 }: ArrivalFormProps) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(categories)),
     defaultValues: {
       category_id: "",
       subcategory_id: "",
