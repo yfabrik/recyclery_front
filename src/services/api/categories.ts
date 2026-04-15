@@ -29,11 +29,6 @@ export const fetchCategories = (
   });
 }
 
-/**
- * @deprecated use fetch categorie with filters
- */
-export const getSubcategories = () => axiosInstance.get("/api/subcategories");
-
 export const createCategory = (
   data: Schema,
 ): Promise<
