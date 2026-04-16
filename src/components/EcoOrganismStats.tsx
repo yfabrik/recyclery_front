@@ -176,7 +176,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
     if (metricSource === "quarterSell") return quarter.quarterSell;
     if (metricSource === "quarterOut") return quarter.quarterOut;
     return {
-      total_weight_kg: quarter?.total_weight_kg??-10000,
+      total_weight_kg: quarter.total_weight_kg,
       categories: quarter.categories,
     };
   };
@@ -351,7 +351,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
           (sum, cat) => sum + (cat.quantity ?? 0),
           0,
         );
-        const totalWeightKg = quarterMetric?.total_weight_kg?? -100000;
+        const totalWeightKg = quarterMetric.total_weight_kg;
         return (
           <Box
             key={q.quarter}
