@@ -13,7 +13,7 @@ import {
 } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import type {
@@ -35,11 +35,11 @@ import { SelectedIcon } from "../SelectedIcon";
 import { emptyStringToNull } from "../../services/zodTransform";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
-const schema =(categories: CategoryModel[])=> z
+const schema = (categories: CategoryModel[]) => z
   .object({
     category_id: idSchema("La catégorie est requise"),
     subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-    weight: z.coerce.number().nonnegative("Le poids est requis"),
+    weight: z.coerce.number().positive("Le poids est requis"),
     arrival_date: z.coerce.date("La date est requise"),
     arrival_time: z.coerce.date("La date est requise"),
     source_type: sourceTypeEnum,
@@ -58,16 +58,16 @@ const schema =(categories: CategoryModel[])=> z
           path: ["collection_point_id"],
           message: "Veuillez sélectionner un point de collecte",
         });
-        const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
-        const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
-        if (hasSubcategories && !data.subcategory_id) {
-          ctx.addIssue({
-            code: "custom",
-            path: ["subcategory_id"],
-            message: "Sous-categorie requise",
-          });
-        }
+      const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
+      const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
+      if (hasSubcategories && !data.subcategory_id) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["subcategory_id"],
+          message: "Sous-categorie requise",
+        });
       }
+    }
   );
 
 export type ArrivalFormSchema = z.infer<ReturnType<typeof schema>>;
@@ -103,23 +103,59 @@ export const ArrivalForm = ({
     },
   });
 
+  const SubCategories = ({ control }: { control: typeof form.control }) => {
+    const category = useWatch({
+      control: control,
+      name: "category_id",
+    });
+    const subcats =
+      categories.find((c) => c.id == category)?.subcategories ?? [];
+    if (subcats.length === 0) return
+    return (
+      <FormSelect
+        control={control}
+        name="subcategory_id"
+        label="Sous-catégorie"
+        extra={{ disabled: subcats.length < 1 }}
+      >
+        <MenuItem value="">Aucune</MenuItem>
+        {subcats.map((cat) => (
+          <MenuItem key={cat.id} value={cat.id}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              {cat.icon ? <SelectedIcon iconName={cat.icon || "Category"} /> : <Category />}
+              {cat.name}
+            </Box>
+          </MenuItem>
+        ))}
+      </FormSelect>
+    );
+  };
+
+
   const categoryId = form.watch("category_id");
   const sourceType = form.watch("source_type");
   const weight = form.watch("weight");
+  const collectionPointId = form.watch("collection_point_id");
+
   const { prompt, PromptDialog } = usePrompt();
 
-  const collectionPointId = form.watch("collection_point_id");
 
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
       form.reset();
     }
-  }, [form.formState.isSubmitSuccessful]);
+  }, [form.formState.isSubmitSuccessful, form]);
 
   // Reset subcategory when category changes
-  useEffect(() => {
-    form.setValue("subcategory_id", "");
-  }, [categoryId, form]);
+  // useEffect(() => {
+  //   form.setValue("subcategory_id", "");
+  // }, [categoryId, form]);
 
   // Auto-fill collection point details when selected
   useEffect(() => {
@@ -134,9 +170,9 @@ export const ArrivalForm = ({
     }
   }, [collectionPointId, sourceType, collectionPoints]);
 
-  const getSubcategories = () => {
-    return categories.find((c) => c.id == categoryId)?.subcategories || [];
-  };
+  // const getSubcategories = () => {
+  //   return categories.find((c) => c.id == categoryId)?.subcategories || [];
+  // };
 
   const sourceTypeOptions = [
     {
@@ -186,7 +222,7 @@ export const ArrivalForm = ({
                           gap: 1,
                         }}
                       >
-                        {category.icon ? <SelectedIcon iconName={category.icon || "Category" } /> : <Category />}
+                        {category.icon ? <SelectedIcon iconName={category.icon || "Category"} /> : <Category />}
                         {category.name}
                       </Box>
                     </MenuItem>
@@ -196,7 +232,8 @@ export const ArrivalForm = ({
 
               {/* Sous-catégorie */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormSelect
+                <SubCategories control={form.control} />
+                {/* <FormSelect
                   name="subcategory_id"
                   control={form.control}
                   label="Sous-catégorie"
@@ -208,7 +245,7 @@ export const ArrivalForm = ({
                       {subcategory.name}
                     </MenuItem>
                   ))}
-                </FormSelect>
+                </FormSelect> */}
               </Grid>
 
               {/* Poids */}
@@ -386,9 +423,10 @@ export const ArrivalForm = ({
                 size="large"
                 type="submit"
                 form={formId}
-                disabled={loading || !categoryId || !weight || !sourceType}
+                // disabled={loading || !categoryId || !weight || !sourceType}
                 startIcon={<Save />}
                 sx={{ minWidth: 200, fontSize: "1.1rem" }}
+                loading={loading}
               >
                 {loading ? "Enregistrement..." : "Enregistrer"}
               </Button>
