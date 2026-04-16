@@ -17,7 +17,7 @@ import { emptyStringToNull } from "../../services/zodTransform";
 
 const disposalTypeEnum = z.enum(["eco_organism", "landfill", "other"]);
 
-const schema = z.object({
+const schema =(categories: CategoryModel[]) => z.object({
   disposal_date: z.coerce.date("La date de sortie est requise"),
   disposal_type: disposalTypeEnum,
   category_id: idSchema("categorie requis"),
@@ -29,20 +29,20 @@ const schema = z.object({
   transport_company: z.string().transform(v => v == "" ? null : v),
   transport_cost: z.coerce.number().nonnegative().default(0),
   notes: z.string().transform(v => v == "" ? null : v),
-}).refine(
-  (data) => {
-    if (data.disposal_type === "eco_organism") {
-      return !!data.eco_organism_id;
+}).superRefine(
+  (data, ctx) => {
+    const selectedCategory = categories.find((c) => c.id === data.category_id);
+    const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
+    if (hasSubcategories && !data.subcategory_id) {
+      ctx.addIssue({ code: "custom", path: ["subcategory_id"], message: "Sous-catégorie requise" });
     }
-    return true;
-  },
-  {
-    message: "Veuillez sélectionner un eco_orgnism",
-    path: ["eco_organism_id"],
-  },
+
+    if (data.disposal_type === "eco_organism" && !data.eco_organism_id)
+      ctx.addIssue({ code: "custom", path: ["eco_organism_id"], message: "Veuillez sélectionner un eco_orgnism" });
+  }
 );
 
-export type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<ReturnType<typeof schema>>;
 
 type WasteFormProps = BaseFormProps<Schema> & {
   categories: CategoryModel[];
@@ -60,7 +60,7 @@ export const WasteForm = ({
 }: WasteFormProps) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(categories)),
     defaultValues: {
       disposal_date: new Date(),
       disposal_type: "eco_organism",

@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Euro, Print, Scale } from "@mui/icons-material";
+import { Category, Euro, Print, Scale } from "@mui/icons-material";
 import { Box, Grid, MenuItem, Typography } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
@@ -14,11 +14,12 @@ import {
 import { idSchema } from "../../interfaces/ZodTypes";
 import { usePrompt } from "../Prompt";
 import { useEffect } from "react";
+import { SelectedIcon } from "../SelectedIcon";
 
 interface LabeledFormProps extends BaseFormProps<Schema> {
   categories: CategoryModel[];
 }
-const schema = z.object({
+const schema = (categories: CategoryModel[]) => z.object({
   category_id: idSchema("category requis"),
   subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   weight: z.coerce.number().positive(),
@@ -27,9 +28,19 @@ const schema = z.object({
   location: z.string().transform((v) => (v == "" ? null : v)),
   description: z.string().transform((v) => (v == "" ? null : v)),
   autoPrint: z.boolean().default(true),
+}).superRefine((data, ctx) => {
+  const selectedCategory = categories.find((c) => c.id === data.category_id);
+  const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
+  if (hasSubcategories && !data.subcategory_id) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["subcategory_id"],
+      message: "Sous-categorie requise",
+    });
+  }
 });
 
-export type Schema = z.infer<typeof schema>;
+export type Schema = z.infer<ReturnType<typeof schema>>;
 
 export const LabeledItemForm = ({
   formId,
@@ -59,7 +70,7 @@ export const LabeledItemForm = ({
       autoPrint: true,
       ...data,
     },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(categories)),
   });
   const categoryId = form.watch("category_id");
   const subcategoryId = form.watch("subcategory_id");
@@ -85,11 +96,45 @@ export const LabeledItemForm = ({
 
   }, [categoryId, subcategoryId, categories]);
 
-  const subcategories = () => {
-    return categoryId
-      ? categories.find((c) => c.id == categoryId)?.subcategories || []
-      : [];
+  const SubCategories = ({ control }: { control: typeof form.control }) => {
+    const category = useWatch({
+      control: control,
+      name: "category_id",
+    });
+    const subcats =
+      categories.find((c) => c.id == category)?.subcategories ?? [];
+    if (subcats.length === 0) return
+    return (
+      <FormSelect
+        control={control}
+        name="subcategory_id"
+        label="Sous-catégorie"
+        extra={{ disabled: subcats.length < 1 }}
+      >
+        <MenuItem value="">Aucune</MenuItem>
+        {subcats.map((cat) => (
+          <MenuItem key={cat.id} value={cat.id}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              {cat.icon ? <SelectedIcon iconName={cat.icon || "Category"} /> : <Category />}
+              {cat.name}
+            </Box>
+          </MenuItem>
+        ))}
+      </FormSelect>
+    );
   };
+
+  // const subcategories = () => {
+  //   return categoryId
+  //     ? categories.find((c) => c.id == categoryId)?.subcategories || []
+  //     : [];
+  // };
 
   return (
     <>
@@ -111,7 +156,8 @@ export const LabeledItemForm = ({
             </FormSelect>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormSelect
+            <SubCategories control={form.control} />
+            {/* <FormSelect
               control={form.control}
               label="Sous-catégories"
               name="subcategory_id"
@@ -122,7 +168,7 @@ export const LabeledItemForm = ({
                   {category.name}
                 </MenuItem>
               ))}
-            </FormSelect>
+            </FormSelect> */}
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
