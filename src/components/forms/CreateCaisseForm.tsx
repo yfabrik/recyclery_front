@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Button } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReset } from "react-hook-form";
 import * as z from "zod";
 import { noEmptyStr } from "../../interfaces/ZodTypes";
 import { FormInput, type BaseFormProps } from "./FormBase";
@@ -15,7 +15,10 @@ export type Schema = z.infer<typeof schema>;
 export const CreateCaisseForm = ({
   formId,
   onSubmit,
-}: BaseFormProps<Schema>) => {
+  onReady,
+}: BaseFormProps<Schema> & {
+  onReady?: (methods: { reset: UseFormReset<Schema> }) => void;
+}) => {
   const form = useForm({
     defaultValues: {
       name: "",
@@ -23,10 +26,18 @@ export const CreateCaisseForm = ({
     resolver: zodResolver(schema),
   });
 
-  const name = form.watch("name");
+  const reset = form.reset;
+  // give parent access to reset
   useEffect(() => {
-    form.reset();
-  }, [form.formState.isSubmitSuccessful]);
+    if (onReady) {
+      onReady({ reset });
+    }
+  }, [onReady, reset]);
+
+  const name = form.watch("name");
+  // useEffect(() => {
+  //   form.reset();
+  // }, [form.formState.isSubmitSuccessful]);
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>

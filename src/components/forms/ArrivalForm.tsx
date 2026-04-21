@@ -13,7 +13,7 @@ import {
 } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type UseFormReset } from "react-hook-form";
 import * as z from "zod";
 
 import type {
@@ -35,31 +35,37 @@ import { SelectedIcon } from "../SelectedIcon";
 import { emptyStringToNull } from "../../services/zodTransform";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
-const schema = (categories: CategoryModel[]) => z
-  .object({
-    category_id: idSchema("La catégorie est requise"),
-    subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-    weight: z.coerce.number().positive("Le poids est requis"),
-    arrival_date: z.coerce.date("La date est requise"),
-    arrival_time: z.coerce.date("La date est requise"),
-    source_type: sourceTypeEnum,
-    collection_point_id: z.union([
-      idSchema(),
-      z.literal("").transform(() => null),
-    ]),
-    source_details: z.string().transform((v) => (v == "" ? null : v)),
-    notes: z.string().transform((v) => (v == "" ? null : v)),
-  })
-  .superRefine(
-    (data, ctx) => {
+const schema = (categories: CategoryModel[]) =>
+  z
+    .object({
+      category_id: idSchema("La catégorie est requise"),
+      subcategory_id: z.union([
+        idSchema(),
+        z.literal("").transform(() => null),
+      ]),
+      weight: z.coerce.number().positive("Le poids est requis"),
+      arrival_date: z.coerce.date("La date est requise"),
+      arrival_time: z.coerce.date("La date est requise"),
+      source_type: sourceTypeEnum,
+      collection_point_id: z.union([
+        idSchema(),
+        z.literal("").transform(() => null),
+      ]),
+      source_details: z.string().transform((v) => (v == "" ? null : v)),
+      notes: z.string().transform((v) => (v == "" ? null : v)),
+    })
+    .superRefine((data, ctx) => {
       if (data.source_type === "point" && !data.collection_point_id)
         ctx.addIssue({
           code: "custom",
           path: ["collection_point_id"],
           message: "Veuillez sélectionner un point de collecte",
         });
-      const selectedCategory = categories.find((c) => c.id === Number(data.category_id));
-      const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
+      const selectedCategory = categories.find(
+        (c) => c.id === Number(data.category_id),
+      );
+      const hasSubcategories =
+        (selectedCategory?.subcategories?.length ?? 0) > 0;
       if (hasSubcategories && !data.subcategory_id) {
         ctx.addIssue({
           code: "custom",
@@ -67,8 +73,7 @@ const schema = (categories: CategoryModel[]) => z
           message: "Sous-categorie requise",
         });
       }
-    }
-  );
+    });
 
 export type ArrivalFormSchema = z.infer<ReturnType<typeof schema>>;
 
@@ -76,6 +81,7 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormSchema> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -85,6 +91,7 @@ export const ArrivalForm = ({
   categories,
   collectionPoints,
   loading = false,
+  onReady,
 }: ArrivalFormProps) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
@@ -110,7 +117,7 @@ export const ArrivalForm = ({
     });
     const subcats =
       categories.find((c) => c.id == category)?.subcategories ?? [];
-    if (subcats.length === 0) return
+    if (subcats.length === 0) return;
     return (
       <FormSelect
         control={control}
@@ -128,7 +135,11 @@ export const ArrivalForm = ({
                 gap: 1,
               }}
             >
-              {cat.icon ? <SelectedIcon iconName={cat.icon || "Category"} /> : <Category />}
+              {cat.icon ? (
+                <SelectedIcon iconName={cat.icon || "Category"} />
+              ) : (
+                <Category />
+              )}
               {cat.name}
             </Box>
           </MenuItem>
@@ -137,7 +148,6 @@ export const ArrivalForm = ({
     );
   };
 
-
   const categoryId = form.watch("category_id");
   const sourceType = form.watch("source_type");
   const weight = form.watch("weight");
@@ -145,12 +155,16 @@ export const ArrivalForm = ({
 
   const { prompt, PromptDialog } = usePrompt();
 
-
+  const reset = form.reset;
   useEffect(() => {
-    if (form.formState.isSubmitSuccessful) {
-      form.reset();
-    }
-  }, [form.formState.isSubmitSuccessful, form]);
+    onReady?.({ reset });
+  }, [onReady, reset]);
+
+  // useEffect(() => {
+  //   if (form.formState.isSubmitSuccessful) {
+  //     form.reset();
+  //   }
+  // }, [form.formState.isSubmitSuccessful, form]);
 
   // Reset subcategory when category changes
   // useEffect(() => {
@@ -222,7 +236,13 @@ export const ArrivalForm = ({
                           gap: 1,
                         }}
                       >
-                        {category.icon ? <SelectedIcon iconName={category.icon || "Category"} /> : <Category />}
+                        {category.icon ? (
+                          <SelectedIcon
+                            iconName={category.icon || "Category"}
+                          />
+                        ) : (
+                          <Category />
+                        )}
                         {category.name}
                       </Box>
                     </MenuItem>
@@ -370,23 +390,23 @@ export const ArrivalForm = ({
 
               {(sourceType === "apport" ||
                 sourceType === "house_clearance") && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormInput
-                      control={form.control}
-                      name="source_details"
-                      label="Détails supplémentaires"
-                      extra={{
-                        multiline: true,
-                        rows: 2,
-                        placeholder:
-                          "Informations complémentaires sur la provenance...",
-                        sx: {
-                          "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
+                <Grid size={{ xs: 12 }}>
+                  <FormInput
+                    control={form.control}
+                    name="source_details"
+                    label="Détails supplémentaires"
+                    extra={{
+                      multiline: true,
+                      rows: 2,
+                      placeholder:
+                        "Informations complémentaires sur la provenance...",
+                      sx: {
+                        "& .MuiInputBase-input": { fontSize: "1.1rem" },
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
 
               {/* Notes */}
               <Grid size={{ xs: 12 }}>
