@@ -34,7 +34,9 @@ const schema = z.object(
 
 export type Schema = z.infer<typeof schema>
 export type CartItem = Schema["cart"][number];
-
+/***
+ * @deprecated
+*/
 export const CartForm = ({ formId, onSubmit }: BaseFormProps<Schema>) => {
     const form = useForm({
         defaultValues: {
