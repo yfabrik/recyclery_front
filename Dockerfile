@@ -4,6 +4,7 @@ WORKDIR  /usr/src/app
 
 ARG REACT_APP_API_URL="http://recyclerie.adapemont.fr"
 ARG API_BASE_URL="http://recyclerie.adapemont.fr"
+ARG VITE_BANNER_TEXT
 
 COPY package.json ./
 
