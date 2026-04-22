@@ -31,7 +31,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 // Fonction pour obtenir l'icône par nom
 // const getIconByName = (iconName) => {
@@ -46,10 +46,11 @@ import React, { useEffect, useState } from "react";
 // };
 import { BarChart, PieChart } from "@mui/x-charts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
-import SimpleBarChart from "../components/dashboard/SimpleBarChart";
 import { StatCard } from "../components/dashboard/StatCard";
 import DashboardNotifications from "../components/DashboardNotifications";
+import EcoOrganismStats from "../components/EcoOrganismStats";
 import QuickStats from "../components/QuickStats";
 import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
@@ -63,13 +64,11 @@ import {
   type Activity,
   type Stats,
 } from "../services/api/dashboard";
+import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
 import {
   getTranscationStats,
   type transactionsFilters,
 } from "../services/api/transactions";
-import dayjs from "dayjs";
-import EcoOrganismStats from "../components/EcoOrganismStats";
-import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
 import { formatCurrency, formatPercentage } from "../services/cartService";
 
 const Dashboard = () => {

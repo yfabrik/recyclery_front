@@ -17,6 +17,9 @@ interface AddItemsToCartProps {
     update: (item: CartItem) => void
 
 }
+/**
+ * @deprecated
+*/
 export const AddItemsToCart = ({ handleAddToCart, categories }: AddItemsToCartProps) => {
     const [scanInput, setScanInput] = useState("");
     const [manualItemDialog, setManualItemDialog] = useState(false);

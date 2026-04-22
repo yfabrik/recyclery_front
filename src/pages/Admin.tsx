@@ -21,7 +21,6 @@ import PlanningPrint from "./PlanningPrint";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router";
 import { ConfigurationTab } from "../components/admin/ConfigurationTab";
 import { DonationsTab } from "../components/admin/DonationsTab";
-import { LogisticsTab } from "../components/admin/LogisticsTab";
 import { SalesAnalyticsTab } from "../components/admin/SalesAnalyticsTab";
 import { UsersTab } from "../components/admin/UsersTab";
 
@@ -160,7 +159,6 @@ const Admin = () => {
             <Route path="config/*" element={<ConfigurationTab />} />
             <Route path="sales" element={<SalesAnalyticsTab />} />
             <Route path="don" element={<DonationsTab />} />
-            <Route path="logistic" element={<LogisticsTab />} />
             <Route path="planning/print" element={<PlanningPrint />} />
             <Route path="planning" element={<Planning />} />
             <Route path="users" element={<UsersTab />} />

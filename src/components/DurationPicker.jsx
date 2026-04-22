@@ -21,6 +21,11 @@ import {
   AccessTime,
 } from '@mui/icons-material';
 
+/**
+ * @deprecated
+ * @param {*} param0 
+ * @returns 
+ */
 const DurationPicker = ({ open, onClose, onSelect, initialValue = 60 }) => {
   const [selectedDuration, setSelectedDuration] = useState(initialValue);
 

@@ -75,6 +75,11 @@ const NotificationItem = ({ notification }) => {
   );
 };
 
+/**
+ * @deprecated
+ * @param {*} param0 
+ * @returns 
+ */
 const DashboardNotifications = ({ notifications = [], onDismiss }) => {
   // Notifications simulées pour la démo
   const defaultNotifications = [

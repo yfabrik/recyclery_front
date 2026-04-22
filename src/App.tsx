@@ -12,17 +12,10 @@ import Banner from "./components/Banner";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Recycleries from "./pages/Recycleries";
-import Stores from "./pages/Stores";
-import Items from "./pages/Items";
-import Donations from "./pages/Donations";
-import Collections from "./pages/Collections";
-import Sales from "./pages/Sales";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
-import CollectionSchedule from "./pages/CollectionSchedule";
 import CollectionReceipts from "./pages/CollectionReceipts";
 import Arrivals from "./pages/Arrivals";
 import Labels from "./pages/Labels";
@@ -33,7 +26,6 @@ import EmployeeTools from "./pages/EmployeeTools";
 import EmployeeManagement from "./components/admin/config/EmployeeManagement";
 import TaskManagement from "./components/admin/config/TaskManagement";
 import Planning from "./pages/Planning";
-import { TestPage } from "./pages/TestPage";
 import EcoOrganismStatsPage from "./pages/EcoOrganismStatsPage";
 
 // Route protégée
@@ -139,66 +131,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/recycleries"
-            element={
-              <ProtectedRoute module="config">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Recycleries />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stores"
-            element={
-              <ProtectedRoute module="config">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Stores />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/items"
-            element={
-              <ProtectedRoute module="config">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Items />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/donations"
-            element={
-              <ProtectedRoute module="dons">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Donations />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/collections"
-            element={
-              <ProtectedRoute module="arrival">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Collections />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sales"
-            element={
-              <ProtectedRoute module="sales">
-                <Container maxWidth="xl" sx={{ py: 3 }}>
-                  <Sales />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
+
+       
           <Route
             path="/users"
             element={
@@ -247,14 +181,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/collection-schedule"
-            element={
-              <ProtectedRoute module="planning">
-                <CollectionSchedule />
-              </ProtectedRoute>
-            }
-          />
+         
           <Route
             path="/collection-receipts"
             element={
@@ -339,8 +266,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {import.meta.env.DEV && (
-            <Route path="/test" element={<TestPage />} />
+          {import.meta.env.DEV && (<></>
           )}
 
           {/* Redirection par défaut */}
