@@ -76,12 +76,13 @@ const schema = (categories: CategoryModel[]) =>
     });
 
 export type ArrivalFormSchema = z.infer<ReturnType<typeof schema>>;
+type ArrivalFormInput = z.input<ReturnType<typeof schema>>;
 
 type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
-  onReady?: (method: { reset: UseFormReset<ArrivalFormSchema> }) => void;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormInput> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -94,7 +95,7 @@ export const ArrivalForm = ({
   onReady,
 }: ArrivalFormProps) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm({
+  const form = useForm<ArrivalFormInput, unknown, ArrivalFormSchema>({
     resolver: zodResolver(schema(categories)),
     defaultValues: {
       category_id: "",
@@ -115,9 +116,25 @@ export const ArrivalForm = ({
       control: control,
       name: "category_id",
     });
+    const subcategoryId = useWatch({
+      control: control,
+      name: "subcategory_id",
+    });
     const subcats =
       categories.find((c) => c.id == category)?.subcategories ?? [];
-    if (subcats.length === 0) return;
+
+    const hasValidSubcategory =
+      subcategoryId === "" ||
+      subcats.some((cat) => String(cat.id) === String(subcategoryId));
+
+    useEffect(() => {
+      if (!hasValidSubcategory) {
+        form.setValue("subcategory_id", "");
+      }
+    }, [hasValidSubcategory]);
+
+    if (subcats.length === 0 || !hasValidSubcategory) return null;
+
     return (
       <FormSelect
         control={control}
@@ -148,10 +165,63 @@ export const ArrivalForm = ({
     );
   };
 
+  const CollectionPoint = ({ control }: { control: typeof form.control }) => {
+    const sourceType = useWatch({
+      control: control,
+      name: "source_type",
+    });
+    if (sourceType !== "point") return (
+      <FormInput
+        control={form.control}
+        name="source_details"
+        label="Détails supplémentaires"
+        extra={{
+          multiline: true,
+          rows: 2,
+          placeholder:
+            "Informations complémentaires sur la provenance...",
+          sx: {
+            "& .MuiInputBase-input": { fontSize: "1.1rem" },
+          },
+        }}
+      />
+    )
+    return (
+      <FormSelect
+        control={form.control}
+        name="collection_point_id"
+        label="Point de Collecte"
+      >
+        {collectionPoints.map((point) => (
+          <MenuItem key={point.id} value={point.id}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <LocationOn />
+              <Box>
+                <Typography variant="body1">
+                  {point.name}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  {point.city}
+                </Typography>
+              </Box>
+            </Box>
+          </MenuItem>
+        ))}
+      </FormSelect>
+    )
+  };
+
+
   const categoryId = form.watch("category_id");
-  const sourceType = form.watch("source_type");
-  const weight = form.watch("weight");
-  const collectionPointId = form.watch("collection_point_id");
+  // const sourceType = form.watch("source_type");
+  // const weight = form.watch("weight");
+  // const collectionPointId = form.watch("collection_point_id");
 
   const { prompt, PromptDialog } = usePrompt();
 
@@ -166,23 +236,23 @@ export const ArrivalForm = ({
   //   }
   // }, [form.formState.isSubmitSuccessful, form]);
 
-  // Reset subcategory when category changes
-  // useEffect(() => {
-  //   form.setValue("subcategory_id", "");
-  // }, [categoryId, form]);
+  // Reset subcategory when category changes to avoid out-of-range select values.
+  useEffect(() => {
+    form.setValue("subcategory_id", "");
+  }, [categoryId, form]);
 
   // Auto-fill collection point details when selected
-  useEffect(() => {
-    if (collectionPointId && sourceType === "point") {
-      const selectedPoint = collectionPoints.find(
-        (p) => p.id == collectionPointId,
-      );
-      if (selectedPoint) {
-        // You can add these fields to the schema if needed
-        // For now, we just track the selection
-      }
-    }
-  }, [collectionPointId, sourceType, collectionPoints]);
+  // useEffect(() => {
+  //   if (collectionPointId && sourceType === "point") {
+  //     const selectedPoint = collectionPoints.find(
+  //       (p) => p.id == collectionPointId,
+  //     );
+  //     if (selectedPoint) {
+  //       // You can add these fields to the schema if needed
+  //       // For now, we just track the selection
+  //     }
+  //   }
+  // }, [collectionPointId, sourceType, collectionPoints]);
 
   // const getSubcategories = () => {
   //   return categories.find((c) => c.id == categoryId)?.subcategories || [];
@@ -356,57 +426,30 @@ export const ArrivalForm = ({
               </Grid>
 
               {/* Détails selon le type de source */}
-              {sourceType === "point" && (
-                <Grid size={{ xs: 12 }}>
-                  <FormSelect
-                    control={form.control}
-                    name="collection_point_id"
-                    label="Point de Collecte"
-                  >
-                    {collectionPoints.map((point) => (
-                      <MenuItem key={point.id} value={point.id}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <LocationOn />
-                          <Box>
-                            <Typography variant="body1">
-                              {point.name}
-                            </Typography>
-                            <Typography variant="caption" color="textSecondary">
-                              {point.city}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </FormSelect>
-                </Grid>
-              )}
+              <Grid size={{ xs: 12 }}>
+                <CollectionPoint control={form.control} />
+              </Grid>
 
-              {(sourceType === "apport" ||
+
+              {/* {(sourceType === "apport" ||
                 sourceType === "house_clearance") && (
-                <Grid size={{ xs: 12 }}>
-                  <FormInput
-                    control={form.control}
-                    name="source_details"
-                    label="Détails supplémentaires"
-                    extra={{
-                      multiline: true,
-                      rows: 2,
-                      placeholder:
-                        "Informations complémentaires sur la provenance...",
-                      sx: {
-                        "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                      },
-                    }}
-                  />
-                </Grid>
-              )}
+                  <Grid size={{ xs: 12 }}>
+                    <FormInput
+                      control={form.control}
+                      name="source_details"
+                      label="Détails supplémentaires"
+                      extra={{
+                        multiline: true,
+                        rows: 2,
+                        placeholder:
+                          "Informations complémentaires sur la provenance...",
+                        sx: {
+                          "& .MuiInputBase-input": { fontSize: "1.1rem" },
+                        },
+                      }}
+                    />
+                  </Grid>
+                )} */}
 
               {/* Notes */}
               <Grid size={{ xs: 12 }}>
