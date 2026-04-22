@@ -42,6 +42,11 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { createCollectionReceipt, getCollectionReceipt } from '../services/api/collectionSchedules';
 
+/**
+ * @deprecated
+ * @param {*} param0 
+ * @returns 
+ */
 const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(false);

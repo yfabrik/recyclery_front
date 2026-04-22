@@ -38,6 +38,11 @@ interface CartsFormProps {
 }
 //FIXME faut que je fasse remonter le append du cart actuel
 //FIXME il faut que je delete le selected cart quand on fait une vente(+ le recreer si lenght =1)
+/**
+ * @deprecated
+ * @param param0 
+ * @returns 
+ */
 export const CartsForm = ({ form }: CartsFormProps) => {
     const [tabValue, setTabValue] = useState(0)
     const carts = useFieldArray({

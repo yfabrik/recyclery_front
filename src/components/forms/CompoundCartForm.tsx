@@ -41,13 +41,17 @@ interface CompoundCartFormProps {
     handleSale: (d: Schema) => void
     categories: CategoryModel[]
 }
+/**
+ * @deprecated
+ * @param param0 
+ * @returns 
+ */
 export const CompoundCartForm = ({ handleSale, categories }: CompoundCartFormProps) => {
 
     const form = useForm({
         defaultValues: {
             cart: [],
-            payment_method: "cash",
-            payment_amount: 0,
+            payment_splits: [{ method: "cash", amount: 0 }],
             customer_postal_code: "",
         },
         resolver: zodResolver(schema),
@@ -511,46 +515,50 @@ interface EncaissementProps {
     cart: CartItem[]
 }
 const Encaissement = ({ form, cart }: EncaissementProps) => {
-    const payment_amount = form.watch("payment_amount")
+    const paymentSplits = form.watch("payment_splits")
+    const totalPaid = paymentSplits.reduce((sum, split) => sum + (Number(split.amount) || 0), 0)
     return (
         <Paper sx={{ p: 2, mt: 2 }}>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-
-
-                <Grid size={{ xs: 12 }}>
-                    <FormSelect
-                        label="Mode de paiement"
-                        control={form.control}
-                        name="payment_method"
-                    >
-                        <MenuItem value="cash">Espèces</MenuItem>
-                        <MenuItem value="card">Carte bancaire</MenuItem>
-                        <MenuItem value="check">Chèque</MenuItem>
-                    </FormSelect>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                    <FormInput
-                        label="Montant payé (€)"
-                        control={form.control}
-                        name="payment_amount"
-                        extra={{
-                            type: "number",
-                            slotProps: {
-                                input: {
-                                    startAdornment: (
-                                        <Euro sx={{ mr: 1, color: "text.secondary" }} />
-                                    ),
-                                },
-                            },
-                        }}
-                    />
-                </Grid>
-
-                {+(payment_amount) > getCartTotal(cart) && (
+                {paymentSplits.map((_, index) => (
+                    <Grid key={index} size={{ xs: 12 }}>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <Box sx={{ flex: 1 }}>
+                                <FormSelect
+                                    label={`Mode de paiement #${index + 1}`}
+                                    control={form.control}
+                                    name={`payment_splits.${index}.method`}
+                                >
+                                    <MenuItem value="cash">Espèces</MenuItem>
+                                    <MenuItem value="card">Carte bancaire</MenuItem>
+                                    <MenuItem value="check">Chèque</MenuItem>
+                                    <MenuItem value="giftcard">Gift Card / Avoir</MenuItem>
+                                </FormSelect>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                                <FormInput
+                                    label="Montant (€)"
+                                    control={form.control}
+                                    name={`payment_splits.${index}.amount`}
+                                    extra={{
+                                        type: "number",
+                                        slotProps: {
+                                            input: {
+                                                startAdornment: (
+                                                    <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                                                ),
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                        </Box>
+                    </Grid>
+                ))}
+                {totalPaid > getCartTotal(cart) && (
                     <Grid size={{ xs: 12 }}>
                         <Alert severity="info">
-                            Rendu à donner: {(+(payment_amount) - getCartTotal(cart)).toFixed(2)}€
+                            Rendu à donner: {(totalPaid - getCartTotal(cart)).toFixed(2)}€
                         </Alert>
                     </Grid>
                 )}

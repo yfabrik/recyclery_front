@@ -32,7 +32,10 @@ interface CalendarDay {
 }
 
 type DayTaskProps = Omit<CalendarProps, "filteredSchedules">;
-
+/**
+ * @deprecated ?? maybe
+ * @returns 
+ */
 export const Calendar = ({
   filteredSchedules,
   handleOpenDialog,
