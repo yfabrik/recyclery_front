@@ -58,7 +58,7 @@ import { SalePostalStats } from "../SalePostalStats";
 import { TransactionTableLine } from "../TransactionTableLine";
 import { useReceiptPrint } from "../ReceiptPrint";
 
-type ReceiptSale = CreateTransactionResponse["data"]["sale"];
+export type ReceiptSale = CreateTransactionResponse["data"]["sale"];
 
 export const SalesAnalyticsTab = () => {
   const [page, setPage] = useState(1);

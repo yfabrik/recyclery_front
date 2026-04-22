@@ -67,8 +67,7 @@ import {
   closeCaisse,
   getActiveCaisses
 } from "../services/api/store";
-import { createSell } from "../services/api/transactions";
-import { formatCurrency, formatPercentage, formatWeight, getCartLinePrice, getCartTotal, sumPromoCategorie } from "../services/cartService";
+import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
 const PointOfSale = () => {
   const { user } = useAuth();
   const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
@@ -317,13 +316,18 @@ const PointOfSale = () => {
       //   customer_email: "",
       // });
       if (window.confirm("Imprimer le ticket de caisse ?")) {
-        if (activeSession.data)
+        if (activeSession.data) {
+          const saleWithSplitPayments = {
+            ...data.data.data.sale,
+            payments: data.data.data.payments,
+          } as ReceiptSale;
           triggerPrintReceipt({
-            sale: data.data.data.sale,
+            sale: saleWithSplitPayments,
             items: cart as CartItem[],
             cashSession: activeSession.data,
             user: user!,
           });
+        }
       }
       form.reset({
         cart: [],
