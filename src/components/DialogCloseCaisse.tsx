@@ -12,9 +12,10 @@ import { useState } from "react";
 import type { CashSession } from "../interfaces/Models";
 import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
-import { BilanCaissePrint } from "./BilanCaissePrint";
+import { useBilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
 import { formatCurrency, sumCashInPayments } from "../services/cartService";
+import { Print } from "@mui/icons-material";
 
 interface DialogCloseCaisseProps {
   closeSessionDialog: boolean;
@@ -45,7 +46,7 @@ export const DialogCloseCaisse = ({
   //Recup total argent transaction type cash and session==sesion
   const [state, setState] = useState<"prepare" | "valid">("prepare");
   const [closingAmount, setClosingAmount] = useState(0);
-
+  const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
   return (
     <Dialog
       open={closeSessionDialog}
@@ -98,11 +99,22 @@ export const DialogCloseCaisse = ({
           setClosingAmount={setClosingAmount}
         />
         {state == "valid" && (
-          <BilanCaissePrint
-            session={currentSession}
-            transactions={transactions.data?.transactions || []}
-            closingAmount={closingAmount}
-          />
+          <>
+            <Button
+              size="small"
+              startIcon={<Print />}
+              onClick={() =>
+                triggerPrintBilanCaisse({
+                  session: currentSession,
+                  transactions: transactions.data?.transactions || [],
+                  closingAmount,
+                })
+              }
+            >
+              Imprimer
+            </Button>
+            {bilanCaissePrintNode}
+          </>
         )}
       </DialogContent>
       <DialogActions>

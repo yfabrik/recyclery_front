@@ -1,11 +1,16 @@
-import { Print } from "@mui/icons-material";
-import { Box, Button, Stack, Typography } from "@mui/material";
-import { useMemo, useRef } from "react";
+import { Box, Stack, Typography } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, TransactionModel } from "../interfaces/Models";
 import { formatCurrency, sumCashInPayments } from "../services/cartService";
 
 interface BilanCaisseProps {
+  session: CashSession;
+  transactions: TransactionModel[];
+  closingAmount?: number;
+}
+
+interface BilanCaissePrintPayload {
   session: CashSession;
   transactions: TransactionModel[];
   closingAmount?: number;
@@ -24,14 +29,11 @@ const printSubblockSx = {
   mb: 1,
   "&:last-of-type": { mb: 0 },
 };
-
 export const BilanCaissePrint = ({
   session,
   transactions,
   closingAmount,
 }: BilanCaisseProps) => {
-
-
   const expected_amount = useMemo(
     () =>
       sumCashInPayments(transactions, session.opening_amount),
@@ -44,12 +46,6 @@ export const BilanCaissePrint = ({
     // ),
     [transactions, session.opening_amount],
   );
-
-  const contentRef = useRef<HTMLDivElement>(null);
-  const reactToPrintFn = useReactToPrint({
-    contentRef,
-    pageStyle: `@page{size:80mm auto; margin: 8mm}`,
-  });
 
   type transacStats = Record<
     TransactionModel["payment_method"] | "mixed",
@@ -210,14 +206,8 @@ export const BilanCaissePrint = ({
 
   return (
     <>
-      <Button startIcon={<Print />} onClick={reactToPrintFn}>
-        Imprimer bilan
-      </Button>
       <Box
-        ref={contentRef}
         sx={{
-          display: "none",
-          displayPrint: "block",
           width: "100%",
           fontFamily: "inherit",
           "& *": { color: "black" },
@@ -447,3 +437,43 @@ export const BilanCaissePrint = ({
     </>
   );
 };
+
+export function useBilanCaissePrint() {
+  const [payload, setPayload] = useState<BilanCaissePrintPayload | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const documentTitle = useMemo(() => {
+    if (!payload) return "Bilan-caisse";
+    return `Bilan-caisse-${payload.session.id}`;
+  }, [payload]);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    pageStyle: `@page{size:80mm auto; margin: 8mm}`,
+    documentTitle,
+    onAfterPrint: () => setPayload(null),
+  });
+
+  useEffect(() => {
+    if (!payload) return;
+    handlePrint();
+  }, [payload, handlePrint]);
+
+  const triggerPrintBilanCaisse = (nextPayload: BilanCaissePrintPayload) => {
+    setPayload(nextPayload);
+  };
+
+  const bilanCaissePrintNode = (
+    <Box sx={{ display: "none", displayPrint: "block" }} ref={printRef}>
+      {payload && (
+        <BilanCaissePrint
+          session={payload.session}
+          transactions={payload.transactions}
+          closingAmount={payload.closingAmount}
+        />
+      )}
+    </Box>
+  );
+
+  return { triggerPrintBilanCaisse, bilanCaissePrintNode };
+}

@@ -25,17 +25,9 @@ import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import { fetchStores, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
-import { BilanCaissePrint } from "../BilanCaissePrint";
+import { useBilanCaissePrint } from "../BilanCaissePrint";
 import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
 import { Loading } from "../Loading";
-
-interface NoOpenedRegisterProps {
-    // setOpenSessionDialog: React.Dispatch<React.SetStateAction<boolean>>;
-    // openSessionDialog: boolean;
-    // handleOpenSession: (data: OpenCaisseSchema) => void;
-    // storesData?: StoreModel[];
-    // mockSessionsByRegister?: Record<number, CashSession[]>;
-}
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
@@ -63,12 +55,12 @@ export const NoOpenedRegister = () => {
 
     const openSession = useMutation({
         mutationFn: (data: OpenCaisseSchema) => OpenCaisse(data),
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success("Session ouverte avec succès");
             setOpenSessionDialog(false);
             queryClient.invalidateQueries({ queryKey: ["activeSession"] });
         },
-        onError: (error) => {
+        onError: () => {
             toast.error("Erreur lors de l'ouverture");
         },
     });
@@ -223,8 +215,8 @@ interface historyDialogProps {
     register: CaisseModel;
 }
 const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
-    const [selectedSession, setSelectedSession] = useState<CashSession | null>(null);
-    const [printDialogOpen, setPrintDialogOpen] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+    const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
     const sessions = useQuery({
         queryKey: ["sessions", { registerId: register.id }],
         queryFn: () => getCaisseDetails(register.id).then((response) => response.data),
@@ -232,12 +224,20 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
     });
 
     const handleReprintSummary = async (session: CashSession) => {
-        setPrintDialogOpen(true);
-        const detail = await getSessionDetails(session.id).then((response) => response.data.session);
-        console.log(detail);
-        setSelectedSession(detail);
-
-        toast.info(`Reimpression du bilan de la session #${session.id}`);
+        try {
+            setIsPrinting(true);
+            const detail = await getSessionDetails(session.id).then((response) => response.data.session);
+            triggerPrintBilanCaisse({
+                session: detail,
+                transactions: detail.SalesTransactions ?? [],
+                closingAmount: detail.closing_amount ?? 0,
+            });
+            toast.info(`Reimpression du bilan de la session #${session.id}`);
+        } catch {
+            toast.error(`Impossible de reimprimer la session #${session.id}`);
+        } finally {
+            setIsPrinting(false);
+        }
     };
 
     return (<>
@@ -265,9 +265,10 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                                     <Button
                                         size="small"
                                         startIcon={<Print />}
+                                        disabled={isPrinting}
                                         onClick={() => handleReprintSummary(session)}
                                     >
-                                        Réimprimer bilan
+                                        {isPrinting ? "Impression..." : "Réimprimer bilan"}
                                     </Button>
                                 </ListItem>
                             ))}
@@ -279,20 +280,7 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                 <Button onClick={onClose}>Fermer</Button>
             </DialogActions>
         </Dialog>
-        {selectedSession && (
-            <Dialog
-                open={printDialogOpen}
-                onClose={() => setPrintDialogOpen(false)}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>Réimpression du bilan de la session #{selectedSession?.id}</DialogTitle>
-                <BilanCaissePrint
-                    session={selectedSession}
-                    transactions={selectedSession.SalesTransactions ?? []}
-                    closingAmount={selectedSession?.closing_amount ?? 0}
-                />
-            </Dialog>)}
+        {bilanCaissePrintNode}
     </>
     )
 }
