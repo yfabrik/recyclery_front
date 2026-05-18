@@ -67,6 +67,9 @@ type PaymentLineInput = {
 export type CreateTransactionBody = {
   cash_session_id: number;
   total_amount: number;
+  change_amount?: number;
+  global_promotion?: number;
+  global_promotion_type?: "percent" | "fixed";
   customer_postal_code?: string | null;
   items: CartItemInput[];
 

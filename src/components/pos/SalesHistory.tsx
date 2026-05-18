@@ -218,6 +218,10 @@ export const SalesHistory = ({
         items: itemsForPrint,
         user: transaction.CashSession.User!,
         sale: saleForPrint,
+        global_promotion: {
+          type: transaction.global_promotion_type ?? "percent",
+          value: Number(transaction.global_promotion ?? 0),
+        },
       });
     });
   };

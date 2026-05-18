@@ -32,6 +32,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Switch,
   Tabs,
   TextField,
   Typography,
@@ -59,7 +60,7 @@ import { NoOpenedRegister } from "../components/pos/NoOpenedRegister";
 import { SalesHistory } from "../components/pos/SalesHistory";
 import { useReceiptPrint } from "../components/ReceiptPrint";
 import { useAuth } from "../contexts/AuthContext";
-import type { LabeledItemModel, TransactionModel } from "../interfaces/Models";
+import type { LabeledItemModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getGiftCardByCode } from "../services/api/giftCards";
 import { getItemFromBarcode } from "../services/api/labeledItems";
@@ -67,6 +68,8 @@ import {
   closeCaisse,
   getActiveCaisses
 } from "../services/api/store";
+import { createSell, type CreateTransactionBody } from "../services/api/transactions";
+import { formatCurrency, formatWeight, getCartLinePrice, getCartTotal, getCartTotalWithGlobalPromotion, getGlobalPromotionDiscount, sumPromoCategorie } from "../services/cartService";
 import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -88,6 +91,7 @@ const PointOfSale = () => {
   const form = useForm({
     defaultValues: {
       cart: [],
+      global_promotion: { type: "percent", value: 0 },
       payment_splits: [{ method: "cash", amount: 0 }],
       customer_postal_code: "",
     },
@@ -123,7 +127,14 @@ const PointOfSale = () => {
     name: "payment_splits",
     defaultValue: [{ method: "cash", amount: 0 }],
   }) as CartSchema["payment_splits"];
-  const cartTotal = getCartTotal(cart);
+  const globalPromotion = useWatch({
+    control: form.control,
+    name: "global_promotion",
+    defaultValue: { type: "percent", value: 0 },
+  }) as CartSchema["global_promotion"];
+  const cartSubtotal = getCartTotal(cart);
+  const globalPromotionDiscount = getGlobalPromotionDiscount(cartSubtotal, globalPromotion);
+  const cartTotal = getCartTotalWithGlobalPromotion(cart, globalPromotion);
   const totalPaid = paymentSplits.reduce((sum, split) => sum + (Number(split.amount) || 0), 0);
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
 
@@ -274,7 +285,7 @@ const PointOfSale = () => {
       closeCaisse(data.id, data.data),
     onSuccess: (data) => {
       console.log("closeSession success", data);
-      const { expected_amount, difference_amount } = data.data;
+      const { difference_amount } = data.data;
 
       let message = "Session fermée avec succès";
       if (Math.abs(difference_amount) > 0.01) {
@@ -285,12 +296,13 @@ const PointOfSale = () => {
       setCloseSessionDialog(false);
       form.reset({
         cart: [],
+        global_promotion: { type: "percent", value: 0 },
         payment_splits: [{ method: "cash", amount: 0 }],
         customer_postal_code: "",
       });
       queryClient.invalidateQueries({ queryKey: ["activeSession"] });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Erreur lors de la fermeture de la session");
     },
   });
@@ -304,8 +316,8 @@ const PointOfSale = () => {
       closeSession.mutate({ id: activeSession.data.id, data: data });
   };
   const handleSell = useMutation({
-    mutationFn: (data: TransactionModel) => createSell(data),
-    onSuccess: (data, variables) => {
+    mutationFn: (data: CreateTransactionBody) => createSell(data),
+    onSuccess: (data) => {
       toast.success("Vente enregistrée avec succès");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       // setPaymentDialog(false);
@@ -326,16 +338,18 @@ const PointOfSale = () => {
             items: cart as CartItem[],
             cashSession: activeSession.data,
             user: user!,
+            global_promotion: globalPromotion,
           });
         }
       }
       form.reset({
         cart: [],
+        global_promotion: { type: "percent", value: 0 },
         payment_splits: [{ method: "cash", amount: 0 }],
         customer_postal_code: "",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Erreur lors de l'enregistrement de la vente");
     },
   });
@@ -496,7 +510,7 @@ const PointOfSale = () => {
 
   const handleValidateCart = async (data: CartSchema) => {
 
-    const total = getCartTotal(data.cart);
+    const total = getCartTotalWithGlobalPromotion(data.cart, data.global_promotion);
     const paymentAmount = data.payment_splits.reduce(
       (sum, split) => sum + (Number(split.amount) || 0),
       0,
@@ -508,9 +522,10 @@ const PointOfSale = () => {
       const transactionData = {
         cash_session_id: activeSession.data.id,
         total_amount: total,
+        global_promotion: Number(data.global_promotion.value) || 0,
+        global_promotion_type: data.global_promotion.type,
         // payment_method: primaryPayment.method,//TODO remove
         payment_amount: paymentAmount,
-        change_amount: paymentAmount - total,
         customer_postal_code: data.customer_postal_code,
         payments: nonZeroSplits.map((split) => ({
           method: split.method,
@@ -522,20 +537,13 @@ const PointOfSale = () => {
         //   amount: Number(split.amount) || 0,
         // })),
 
-        items: cart.map((item) => ({
+        items: data.cart.map((item) => ({
           ...item,
           total_price: item.quantity * item.price,
 
         })),
-      } satisfies Omit<
-        TransactionModel,
-        "id" | "createdAt" | "updatedAt" | "transactionType" | "status" | "created_by" | "items" | "payment_method"
-      > & {
-        payments: { method: TransactionModel["payment_method"]; amount: number }[];
-        // payment_splits: { method: TransactionModel["payment_method"]; amount: number }[];
-        items: (CartItem & { total_price: number })[];
-      };
-      handleSell.mutate(transactionData as unknown as TransactionModel);
+      } satisfies CreateTransactionBody;
+      handleSell.mutate(transactionData);
 
     }
 
@@ -854,7 +862,21 @@ const PointOfSale = () => {
                 <Box
                   sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total:</Typography>
+                  <Typography>Sous-total:</Typography>
+                  <Typography>{formatCurrency(cartSubtotal)}</Typography>
+                </Box>
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                >
+                  <Typography>Promotion globale:</Typography>
+                  <Typography color={globalPromotionDiscount > 0 ? "success.main" : "text.primary"}>
+                    -{formatCurrency(globalPromotionDiscount)}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total à payer:</Typography>
                   <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
                     {formatCurrency(cartTotal)}
                   </Typography>
@@ -921,6 +943,7 @@ const PointOfSale = () => {
                       <Typography variant="subtitle2">Paiements</Typography>
                     </Box>
                   </Grid>
+                  
 
                   {paymentFields.map((payment, index) => (
                     <Grid key={payment.id} size={{ xs: 12 }}>
@@ -991,7 +1014,40 @@ const PointOfSale = () => {
                       + payment
                     </Button>
                   </Grid>
-
+                  <Grid size={{ xs: 10 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Promotion globale panier
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Box sx={{ width: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
+                          <Typography variant="body2">% </Typography>
+                          <Switch
+                            checked={globalPromotion.type === "fixed"}
+                            onChange={(_, checked) =>
+                              form.setValue(
+                                "global_promotion.type",
+                                checked ? "fixed" : "percent",
+                                { shouldDirty: true, shouldValidate: true },
+                              )}
+                            size="small"
+                          />
+                          <Typography variant="body2">€</Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ width: "50%" }}>
+                        <FormInput
+                          label="Valeur"
+                          control={form.control}
+                          name="global_promotion.value"
+                          extra={{
+                            type: "number",
+                            size: "small",
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
                   {totalPaid > cartTotal && (
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="info">
@@ -1009,7 +1065,7 @@ const PointOfSale = () => {
 
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Total payé: {formatCurrency(totalPaid)}
+                      Total payé: {formatCurrency(totalPaid)} / {formatCurrency(cartTotal)}
                     </Typography>
                   </Grid>
 

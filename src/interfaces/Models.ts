@@ -288,6 +288,9 @@ export interface TransactionModel extends BaseModel {
   items?: (LabeledItemModel & { TransactionItem: TransactionItem })[];
   refunds?: TransactionModel[];
   payments?: TransactionPayment[];
+  global_promotion?: number|null;
+  global_promotion_type?: "percent" | "fixed"|null;
+  total_amount_with_promotion?: number|null;
 }
 
 export interface TransactionPayment extends BaseModel {

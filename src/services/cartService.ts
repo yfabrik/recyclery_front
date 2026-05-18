@@ -1,6 +1,13 @@
 import type { CartItem } from "../components/forms/cartSchema";
 import type { CategoryModel, TransactionModel } from "../interfaces/Models";
 
+export type GlobalPromotionType = "percent" | "fixed";
+
+export interface GlobalPromotionInput {
+  type: GlobalPromotionType;
+  value: number;
+}
+
 export const getCartLinePrice = (line: CartItem): number => {
   let bundles = 0;
   let extraItems = line.quantity;
@@ -22,6 +29,28 @@ export const getCartTotal = (cart: CartItem[]) => {
       getCartLinePrice(current)),
     0,
   );
+};
+
+export const getGlobalPromotionDiscount = (
+  subtotal: number,
+  promotion?: GlobalPromotionInput | null,
+) => {
+  if (!promotion) return 0;
+  const normalizedValue = Math.max(Number(promotion.value) || 0, 0);
+  const discount =
+    promotion.type === "percent"
+      ? subtotal * (Math.min(normalizedValue, 100) / 100)
+      : normalizedValue;
+  return Math.min(discount, subtotal);
+};
+
+export const getCartTotalWithGlobalPromotion = (
+  cart: CartItem[],
+  promotion?: GlobalPromotionInput | null,
+) => {
+  const subtotal = getCartTotal(cart);
+  const discount = getGlobalPromotionDiscount(subtotal, promotion);
+  return Math.max(subtotal - discount, 0);
 };
 
 export const getPaymentMethodLabel = (

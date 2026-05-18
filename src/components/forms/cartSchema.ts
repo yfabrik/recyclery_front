@@ -1,6 +1,6 @@
 import z from "zod";
 import { idSchema, nullString, postalSchema } from "../../interfaces/ZodTypes";
-import { getCartTotal } from "../../services/cartService";
+import { getCartTotalWithGlobalPromotion } from "../../services/cartService";
 
 export const itemSchema = z.object({
   quantity: z.number().nonnegative(),
@@ -20,6 +20,10 @@ export const itemSchema = z.object({
 
 export const schema = z.object({
   cart: z.array(itemSchema).min(1, "le panier doit avoir au moins un article"),
+  global_promotion: z.object({
+    type: z.enum(["percent", "fixed"]),
+    value: z.coerce.number().nonnegative(),
+  }),
   payment_splits: z.array(
     z.object({
       method: z.enum(["cash", "card", "check", "giftcard"]),
@@ -33,7 +37,7 @@ export const schema = z.object({
 }).superRefine((data, ctx) => {
 
 
-  const totalCart = getCartTotal(data.cart)
+  const totalCart = getCartTotalWithGlobalPromotion(data.cart, data.global_promotion);
   const totalPaid = data.payment_splits.reduce((sum, split) => sum + split.amount, 0);
   if (totalPaid < totalCart) {
     ctx.addIssue({

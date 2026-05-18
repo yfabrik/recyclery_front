@@ -4,7 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, UserModel } from "../interfaces/Models";
 import type { CartItem } from "./forms/cartSchema";
-import { formatWeight, formatCurrency, getCartLinePrice, getCartTotal, getPaymentMethodLabel } from "../services/cartService";
+import {
+  formatWeight,
+  formatCurrency,
+  getCartLinePrice,
+  getCartTotal,
+  getCartTotalWithGlobalPromotion,
+  getGlobalPromotionDiscount,
+  getPaymentMethodLabel,
+  type GlobalPromotionInput,
+} from "../services/cartService";
 import type { CreateTransactionResponse } from "../services/api/transactions";
 
 type ReceiptSale = CreateTransactionResponse["data"]["sale"];
@@ -14,6 +23,7 @@ interface ReceiptPrintPayload {
   items: CartItem[];
   cashSession: CashSession;
   user: UserModel;
+  global_promotion?: GlobalPromotionInput | null;
 }
 
 const getPaymentLabel = (method: ReceiptSale["payment_method"]) => {
@@ -22,10 +32,12 @@ const getPaymentLabel = (method: ReceiptSale["payment_method"]) => {
 };
 
 const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
-  const { sale, items, cashSession, user } = payload;
+  const { sale, items, cashSession, user, global_promotion } = payload;
   const paymentLines = sale.payments ?? [];
   const paidAmount = paymentLines.reduce((prev, current) => prev + +current.amount, 0);
-  const totalAmount = getCartTotal(items);
+  const subtotal = getCartTotal(items);
+  const globalPromotionDiscount = getGlobalPromotionDiscount(subtotal, global_promotion);
+  const totalAmount = getCartTotalWithGlobalPromotion(items, global_promotion);
   const changeAmount = +(sale.payment_amount || 0) - +(sale.total_amount || 0);
 
   return (
@@ -97,6 +109,24 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
       )}
 
       <Box sx={{ fontWeight: 700 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Sous-total:</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(subtotal)}</Typography>
+        </Box>
+        {globalPromotionDiscount > 0 && (
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+              Promotion globale
+              {global_promotion?.type === "percent"
+                ? ` (${global_promotion.value}%)`
+                : ""}
+              :
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+              -{formatCurrency(globalPromotionDiscount)}
+            </Typography>
+          </Box>
+        )}
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>TOTAL:</Typography>
           <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatCurrency(totalAmount)}</Typography>
