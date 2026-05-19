@@ -15,7 +15,13 @@ import {
   Typography,
 } from "@mui/material";
 import { Description } from "@mui/icons-material";
-import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
+import {
+  formatCurrency,
+  getPaymentMethodLabel,
+  getTransactionGlobalPromotion,
+  getTransactionGlobalPromotionDiscount,
+  getTransactionSubtotal,
+} from "../services/cartService";
 import { Loading } from "./Loading";
 
 interface DetailTransactionProps {
@@ -24,6 +30,12 @@ interface DetailTransactionProps {
 export const DetailTransaction = ({
   selectedTransaction,
 }: DetailTransactionProps) => {
+  const globalPromotion = getTransactionGlobalPromotion(selectedTransaction);
+  const globalPromotionDiscount = getTransactionGlobalPromotionDiscount(
+    selectedTransaction,
+  );
+  const subtotal = getTransactionSubtotal(selectedTransaction);
+
   const refunds = useQuery({
     queryKey: ["refunds", { id: selectedTransaction.id }],
     queryFn: () =>
@@ -47,6 +59,26 @@ export const DetailTransaction = ({
                 Numéro: <strong>#{selectedTransaction.id}</strong>
               </Typography>
             </Grid>
+            {globalPromotionDiscount > 0 && (
+              <>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Sous-total:{" "}
+                    <strong>{formatCurrency(subtotal)}</strong>
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Promotion globale
+                    {globalPromotion.type === "percent"
+                      ? ` (${globalPromotion.value}%)`
+                      : ""}
+                    :{" "}
+                    <strong>-{formatCurrency(globalPromotionDiscount)}</strong>
+                  </Typography>
+                </Grid>
+              </>
+            )}
             <Grid size={{ xs: 6, md: 3 }}>
               <Typography variant="body2" color="textSecondary">
                 Montant:{" "}
@@ -236,9 +268,27 @@ export const DetailTransaction = ({
             💼 Résumé financier
           </Typography>
           <Grid container spacing={2}>
+            {globalPromotionDiscount > 0 && (
+              <>
+                <Grid size={{ xs: 4 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Sous-total:
+                  </Typography>
+                  <Typography variant="h6">{formatCurrency(subtotal)}</Typography>
+                </Grid>
+                <Grid size={{ xs: 4 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Promotion globale:
+                  </Typography>
+                  <Typography variant="h6" color="success.main">
+                    -{formatCurrency(globalPromotionDiscount)}
+                  </Typography>
+                </Grid>
+              </>
+            )}
             <Grid size={{ xs: 4 }}>
               <Typography variant="body2" color="textSecondary">
-                Montant initial:
+                Montant vendu:
               </Typography>
               <Typography variant="h6" color="success.main">
                 {formatCurrency(selectedTransaction.total_amount)}

@@ -53,6 +53,21 @@ export const getCartTotalWithGlobalPromotion = (
   return Math.max(subtotal - discount, 0);
 };
 
+export const getTransactionGlobalPromotion = (
+  transaction: Pick<TransactionModel, "global_promotion" | "global_promotion_type">,
+): GlobalPromotionInput => ({
+  type: transaction.global_promotion_type ?? "percent",
+  value: Number(transaction.global_promotion ?? 0),
+});
+
+export const getTransactionSubtotal = (
+  transaction: Pick<TransactionModel, "total_amount" | "total_amount_before_promotion">,
+) => Number(transaction.total_amount_before_promotion ?? transaction.total_amount);
+
+export const getTransactionGlobalPromotionDiscount = (
+  transaction: Pick<TransactionModel, "total_amount" | "total_amount_before_promotion">,
+) => Math.max(getTransactionSubtotal(transaction) - Number(transaction.total_amount), 0);
+
 export const getPaymentMethodLabel = (
   method: TransactionModel["payment_method"],
 ) => {

@@ -35,9 +35,19 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
   const { sale, items, cashSession, user, global_promotion } = payload;
   const paymentLines = sale.payments ?? [];
   const paidAmount = paymentLines.reduce((prev, current) => prev + +current.amount, 0);
-  const subtotal = getCartTotal(items);
-  const globalPromotionDiscount = getGlobalPromotionDiscount(subtotal, global_promotion);
-  const totalAmount = getCartTotalWithGlobalPromotion(items, global_promotion);
+  const subtotalFromSale =
+    sale.total_amount_before_promotion != null
+      ? Number(sale.total_amount_before_promotion)
+      : null;
+  const subtotal = subtotalFromSale ?? getCartTotal(items);
+  const totalFromSale =
+    sale.total_amount != null ? Number(sale.total_amount) : null;
+  const totalAmount =
+    totalFromSale ?? getCartTotalWithGlobalPromotion(items, global_promotion);
+  const globalPromotionDiscount =
+    subtotalFromSale != null && totalFromSale != null
+      ? Math.max(subtotal - totalAmount, 0)
+      : getGlobalPromotionDiscount(subtotal, global_promotion);
   const changeAmount = +(sale.payment_amount || 0) - +(sale.total_amount || 0);
 
   return (
@@ -107,7 +117,7 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
           </Typography>
         </Box>
       )}
-
+      <Box sx={{ borderBottom: "1px dashed #000", mt: 1 }} />
       <Box sx={{ fontWeight: 700 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Sous-total:</Typography>

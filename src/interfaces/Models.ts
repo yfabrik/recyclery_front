@@ -290,7 +290,7 @@ export interface TransactionModel extends BaseModel {
   payments?: TransactionPayment[];
   global_promotion?: number|null;
   global_promotion_type?: "percent" | "fixed"|null;
-  total_amount_with_promotion?: number|null;
+  total_amount_before_promotion: number;
 }
 
 export interface TransactionPayment extends BaseModel {

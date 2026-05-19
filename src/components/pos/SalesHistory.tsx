@@ -39,6 +39,7 @@ import {
   formatCurrency,
   getCartLinePrice,
   getPaymentMethodLabel,
+  getTransactionGlobalPromotion,
 } from "../../services/cartService";
 import { DetailTransaction } from "../DetailTransaction";
 import { RefundForm, type Schema } from "../forms/RefundForm";
@@ -179,6 +180,7 @@ export const SalesHistory = ({
       const saleForPrint: ReceiptSale = {
         id: transaction.id,
         total_amount: transaction.total_amount ?? 0,
+        total_amount_before_promotion: transaction.total_amount_before_promotion ?? transaction.total_amount ?? 0,
         payment_method: transaction.payment_method,
         payment_amount: transaction.payment_amount ?? 0,
         transactionType: transaction.transactionType,
@@ -218,10 +220,7 @@ export const SalesHistory = ({
         items: itemsForPrint,
         user: transaction.CashSession.User!,
         sale: saleForPrint,
-        global_promotion: {
-          type: transaction.global_promotion_type ?? "percent",
-          value: Number(transaction.global_promotion ?? 0),
-        },
+        global_promotion: getTransactionGlobalPromotion(transaction),
       });
     });
   };

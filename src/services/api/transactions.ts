@@ -67,6 +67,7 @@ type PaymentLineInput = {
 export type CreateTransactionBody = {
   cash_session_id: number;
   total_amount: number;
+  total_amount_before_promotion?: number;
   change_amount?: number;
   global_promotion?: number;
   global_promotion_type?: "percent" | "fixed";
@@ -151,6 +152,9 @@ type LabeledItemRow = {
 type SalesTransactionRow = {
   id: number;
   total_amount: number | string | null;
+  total_amount_before_promotion?: number | string | null;
+  global_promotion?: number | string | null;
+  global_promotion_type?: "percent" | "fixed" | null;
   payment_method: PaymentMethodStored;
   payment_amount: number | string | null;
   transactionType: "sell" | "refund";

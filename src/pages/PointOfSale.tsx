@@ -510,6 +510,7 @@ const PointOfSale = () => {
 
   const handleValidateCart = async (data: CartSchema) => {
 
+    const subtotal = getCartTotal(data.cart);
     const total = getCartTotalWithGlobalPromotion(data.cart, data.global_promotion);
     const paymentAmount = data.payment_splits.reduce(
       (sum, split) => sum + (Number(split.amount) || 0),
@@ -522,6 +523,7 @@ const PointOfSale = () => {
       const transactionData = {
         cash_session_id: activeSession.data.id,
         total_amount: total,
+        total_amount_before_promotion: subtotal,
         global_promotion: Number(data.global_promotion.value) || 0,
         global_promotion_type: data.global_promotion.type,
         // payment_method: primaryPayment.method,//TODO remove
