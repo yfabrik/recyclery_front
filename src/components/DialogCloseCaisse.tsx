@@ -14,7 +14,7 @@ import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import { useBilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
-import { formatCurrency, sumCashInPayments } from "../services/cartService";
+import { formatCurrency, roundCurrency, sumCashInPayments } from "../services/cartService";
 import { Print } from "@mui/icons-material";
 
 interface DialogCloseCaisseProps {
@@ -47,6 +47,10 @@ export const DialogCloseCaisse = ({
   const [state, setState] = useState<"prepare" | "valid">("prepare");
   const [closingAmount, setClosingAmount] = useState(0);
   const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
+  const expectedCashAmount = sumCashInPayments(
+    transactions.data?.transactions || [],
+    currentSession.opening_amount,
+  );
   return (
     <Dialog
       open={closeSessionDialog}
@@ -61,28 +65,7 @@ export const DialogCloseCaisse = ({
 
       <DialogContent>
         <Typography>
-          total supposé:{" "}
-          {formatCurrency(sumCashInPayments(transactions.data?.transactions || [], currentSession.opening_amount)
-            // (transactions.data?.transactions || []).reduce((prev: number, current) => {
-            //   // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
-            //   if (Array.isArray(current.payments) && current.payments.length > 0) {
-            //     const totalCashInPayments = current.payments.reduce((p, c) =>
-            //       c.method === "cash" ? p + c.amount : p,
-            //       0
-            //     );
-            //     // Only add to prev if actual cash present in payments
-            //     if (totalCashInPayments !== 0) {
-            //       return prev + totalCashInPayments;
-            //     }
-            //   }
-            //   // Otherwise, if the transaction's payment_method is "cash", add its total_amount
-            //   if (current.payment_method === "cash") {
-            //     return prev + current.total_amount;
-            //   }
-            //   // Otherwise, leave accumulator unchanged
-            //   return prev;
-            // }, currentSession.opening_amount)
-          )}
+          Total supposé : {formatCurrency(roundCurrency(expectedCashAmount))}
         </Typography>
         {state == "valid" && (
           <Alert severity="warning" sx={{ mb: 2 }}>

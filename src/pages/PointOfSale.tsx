@@ -66,7 +66,19 @@ import { getItemFromBarcode } from "../services/api/labeledItems";
 import { closeCaisse, getActiveCaisses } from "../services/api/store";
 
 import { createSell, type CreateTransactionBody } from "../services/api/transactions";
-import { formatCurrency, formatWeight, getCartLinePrice, getCartTotal, getCartTotalWithGlobalPromotion, getGlobalPromotionDiscount, sumPromoCategorie } from "../services/cartService";
+import {
+  formatCurrency,
+  formatWeight,
+  getCartLinePrice,
+  getCartTotal,
+  getCartTotalWithGlobalPromotion,
+  getGlobalPromotionDiscount,
+  getPaymentBalance,
+  hasSignificantCashDifference,
+  isPaymentInsufficient,
+  roundCurrency,
+  sumPromoCategorie,
+} from "../services/cartService";
 
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -132,6 +144,7 @@ const PointOfSale = () => {
   const globalPromotionDiscount = getGlobalPromotionDiscount(cartSubtotal, globalPromotion);
   const cartTotal = getCartTotalWithGlobalPromotion(cart, globalPromotion);
   const totalPaid = paymentSplits.reduce((sum, split) => sum + (Number(split.amount) || 0), 0);
+  const paymentBalance = getPaymentBalance(totalPaid, cartTotal);
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
 
   const recalculatePaymentSplits = (
@@ -297,8 +310,8 @@ const PointOfSale = () => {
       const { difference_amount } = data.data;
 
       let message = "Session fermée avec succès";
-      if (Math.abs(difference_amount) > 0.01) {
-        message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${formatCurrency(difference_amount)}`;
+      if (hasSignificantCashDifference(difference_amount)) {
+        message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${formatCurrency(roundCurrency(difference_amount))}`;
       }
 
       toast.success(message);
@@ -533,12 +546,13 @@ const PointOfSale = () => {
     if (activeSession.data) {
       const transactionData = {
         cash_session_id: activeSession.data.id,
-        total_amount: total,
-        total_amount_before_promotion: subtotal,
+        //TODO drop the rounded & make the api handle the rounding
+        total_amount: roundCurrency(total),
+        total_amount_before_promotion: roundCurrency(subtotal),
         global_promotion: Number(data.global_promotion.value) || 0,
         global_promotion_type: data.global_promotion.type,
         // payment_method: primaryPayment.method,//TODO remove
-        payment_amount: paymentAmount,
+        payment_amount: roundCurrency(paymentAmount),
         customer_postal_code: data.customer_postal_code,
         payments: nonZeroSplits.map((split) => ({
           method: split.method,
@@ -911,12 +925,13 @@ const PointOfSale = () => {
                 >
                   <Typography>Poids</Typography>
                   <Typography>
-                    {cart.reduce(
+                    {
+                    formatWeight(cart.reduce(
                       (prev, current) =>
                         (prev += current.weight * current.quantity),
-                      0,
+                        0,
+                      )
                     )}{" "}
-                    Kg
                   </Typography>
                 </Box>
 
@@ -943,7 +958,7 @@ const PointOfSale = () => {
                 >
                   <Typography variant="h6" sx={{ fontWeight: "bold" }}>Total à payer:</Typography>
                   <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                    {formatCurrency(cartTotal)}
+                    {formatCurrency(paymentBalance.due)}
                   </Typography>
                 </Box>
                 {/* 
@@ -1141,24 +1156,25 @@ const PointOfSale = () => {
                       </Box>
                     </Box>
                   </Grid>
-                  {totalPaid > cartTotal && (
+                  {paymentBalance.change > 0 && (
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="info">
-                        Rendu à donner: {formatCurrency(totalPaid - cartTotal)}
+                        Rendu à donner: {formatCurrency(paymentBalance.change)}
                       </Alert>
                     </Grid>
                   )}
-                  {totalPaid < cartTotal && cart.length > 0 && (
+                  {paymentBalance.remaining > 0 && cart.length > 0 && (
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="warning">
-                        Reste à payer: {formatCurrency(cartTotal - totalPaid)}
+                        Reste à payer: {formatCurrency(paymentBalance.remaining)}
                       </Alert>
                     </Grid>
                   )}
 
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Total payé: {formatCurrency(totalPaid)} / {formatCurrency(cartTotal)}
+                      Total payé: {formatCurrency(paymentBalance.paid)} /{" "}
+                      {formatCurrency(paymentBalance.due)}
                     </Typography>
                   </Grid>
 
@@ -1177,7 +1193,10 @@ const PointOfSale = () => {
                   size="large"
                   startIcon={<Payment />}
                   type="submit"
-                  disabled={cart.length === 0 || totalPaid < cartTotal}
+                  disabled={
+                    cart.length === 0 ||
+                    isPaymentInsufficient(totalPaid, cartTotal)
+                  }
                   sx={{ mb: 2 }}
                 >
                   Encaisser

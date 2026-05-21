@@ -1,6 +1,11 @@
 import z from "zod";
 import { idSchema, nullString, postalSchema } from "../../interfaces/ZodTypes";
-import { getCartTotalWithGlobalPromotion } from "../../services/cartService";
+import {
+  formatCurrency,
+  getCartTotalWithGlobalPromotion,
+  isPaymentInsufficient,
+  roundCurrency,
+} from "../../services/cartService";
 
 export const itemSchema = z.object({
   quantity: z.number().nonnegative(),
@@ -39,14 +44,13 @@ export const schema = z.object({
 
   const totalCart = getCartTotalWithGlobalPromotion(data.cart, data.global_promotion);
   const totalPaid = data.payment_splits.reduce((sum, split) => sum + split.amount, 0);
-  if (totalPaid < totalCart) {
+  if (isPaymentInsufficient(totalPaid, totalCart)) {
     ctx.addIssue({
       code: "too_small",
-      minimum: totalCart,
+      minimum: roundCurrency(totalCart),
       origin: "number",
       path: ["payment_splits"],
-      message: `Le montant payé ne peut pas être inférieur au total du panier (${totalCart.toFixed(2)}€)`,
-
+      message: `Le montant payé ne peut pas être inférieur au total du panier (${formatCurrency(roundCurrency(totalCart))})`,
     });
   }
 });
