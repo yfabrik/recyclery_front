@@ -13,11 +13,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
-import { fetchCategories } from "../../services/api/categories";
 import {
   formatCurrency,
   formatWeight,
@@ -32,32 +30,52 @@ import { useFieldArray } from "react-hook-form";
 import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
 import { type CartItem } from "../forms/cartSchema";
 
-const refundItemSchema = z.object({
-  ...itemSchema.shape,
+const sumRefundPrice=(cart:Schema["cart"],transaction:TransactionModel,alreadyRefunded:ItemToRefund[])=>{
+  const totalPromo = transaction.total_amount_before_promotion-transaction.total_amount ;
+  const totalItems = transaction.items?.reduce((prev, current) => prev+=current.TransactionItem.quantity,0) || 0;
+  const totalPromoPerItem = totalPromo / totalItems;
+return cart.reduce((prev, current) => {
+  const alreadyRefundedQuantity = alreadyRefunded.find((item) => item.barcode === current.barcode)?.refundQuantity || 0;
+  const currentPrice = getCartLinePrice(current as CartItem)
+  const refundPrice = (currentPrice/current.quantity-totalPromoPerItem)*(current.refundQuantity-alreadyRefundedQuantity)
+  prev += refundPrice
+  return prev
+},0)
+}
+const refundItemSchema = itemSchema.extend({
   refundQuantity: z.number(),
 });
 type ItemToRefund = z.infer<typeof refundItemSchema>;
+
+const REFUND_REASONS = [
+  "customer_request",
+  "product_defect",
+  "wrong_product",
+  "overcharge",
+  "return_policy",
+  "other",
+] as const;
+
+const REFUND_METHODS = ["cash", "card", "check", "giftcard"] as const;
+
+const requiredSelect = <const T extends readonly [string, ...string[]]>(
+  values: T,
+  message: string,
+) =>
+  z
+    .union([z.literal(""), z.enum(values)])
+    .refine((v) => v !== "", { message })
+    .pipe(z.enum(values, message));
+
 const schema = z.object({
   cart: z.array(refundItemSchema),
-  refund_reason: z.enum(
-    [
-      "customer_request",
-      "product_defect",
-      "wrong_product",
-      "overcharge",
-      "return_policy",
-      "other",
-    ],
-    "raison requis",
-  ),
-  refund_method: z.enum(
-    ["cash", "card", "check", "giftcard"],
-    "methode requis",
-  ),
+  refund_reason: requiredSelect(REFUND_REASONS, "raison requis"),
+  refund_method: requiredSelect(REFUND_METHODS, "methode requis"),
   gift_card_code: z.string().transform(v => v == "" ? null : v).optional(),
   notes: z.string(),
 });
 export type Schema = z.infer<typeof schema>;
+type FormValues = z.input<typeof schema>;
 
 export const RefundForm = ({
   selectedTransaction,
@@ -87,9 +105,7 @@ export const RefundForm = ({
     );
     const alreadyRefunded = selectedTransaction.refunds?.reduce(
       (prev, current) => {
-        // console.log(current)
         const items = current.items?.filter((i) => i.barcode == item.barcode);
-        console.log(items);
         prev +=
           items?.reduce((p, v) => (p += v.TransactionItem.quantity), 0) || 0;
         return prev;
@@ -108,17 +124,17 @@ export const RefundForm = ({
       description: "",
     } satisfies ItemToRefund;
   });
-  const form = useForm({
+  const form = useForm<FormValues, unknown, Schema>({
     defaultValues: {
       cart: cartItems || [],
       refund_reason: "",
       refund_method: "",
       gift_card_code: "",
       notes: "",
-    },
+    } satisfies Partial<FormValues>,
     resolver: zodResolver(schema),
   });
-  const cart = form.watch("cart");
+  const cart = form.watch("cart") as Schema["cart"];
   const { fields, update } = useFieldArray({
     control: form.control,
     name: "cart",
@@ -225,7 +241,7 @@ export const RefundForm = ({
                   </TableCell>
                   <TableCell>
                     <Typography fontWeight="bold">
-                      {getCartLinePrice(item).toFixed(2)}€
+                      {getCartLinePrice(item as CartItem).toFixed(2)}€
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -290,6 +306,9 @@ export const RefundForm = ({
             name="refund_reason"
             label="Raison du remboursement"
           >
+            <MenuItem value="">
+              <em>Sélectionner une raison</em>
+            </MenuItem>
             <MenuItem value="customer_request">Demande client</MenuItem>
             <MenuItem value="product_defect">Produit défectueux</MenuItem>
             <MenuItem value="wrong_product">Mauvais produit</MenuItem>
@@ -306,6 +325,9 @@ export const RefundForm = ({
             name="refund_method"
             label="Mode de remboursement"
           >
+            <MenuItem value="">
+              <em>Sélectionner un mode</em>
+            </MenuItem>
             <MenuItem value="cash">Espèces</MenuItem>
             <MenuItem value="card">Carte bancaire</MenuItem>
             <MenuItem value="check">Chèque</MenuItem>
@@ -338,28 +360,15 @@ export const RefundForm = ({
             <Typography variant="body2">
               Montant à rembourser:{" "}
               <strong>
-                {cart
-                  .reduce((prev, current) => {
-                    const item = {
-                      ...current,
-                      quantity: current.refundQuantity,
-                    } satisfies CartItem;
-                    prev += getCartLinePrice(item);
-                    return prev;
-                  }, 0)
-                  .toFixed(2)}
-                €
-                {/* {formatCurrency(
-                refundForm.refund_type === "full"
-                  ? selectedTransaction.total_amount
-                  : parseFloat(refundForm.refund_amount || 0),
-              )} */}
+                {sumRefundPrice(cart, selectedTransaction,cartItems??[] as ItemToRefund[]).toFixed(2)}€
               </strong>
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Mode de remboursement:{" "}
               <strong>
-                {getPaymentMethodLabel(form.getValues("refund_method"))}
+                {giftCardCode
+                  ? getPaymentMethodLabel(giftCardCode as Schema["refund_method"])
+                  : "—"}
               </strong>
             </Typography>
           </Card>
