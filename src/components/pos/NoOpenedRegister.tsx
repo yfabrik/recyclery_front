@@ -110,22 +110,38 @@ export const NoOpenedRegister = () => {
 
             <Dialog
                 open={openSessionDialog}
-                onClose={() => setOpenSessionDialog(false)}
+                onClose={() => {
+                    setOpenSessionDialog(false);
+                    setSelectedStoreId(null);
+                    setSelectedCashRegisterId(null);
+                }}
                 maxWidth="sm"
                 fullWidth
             >
                 <DialogTitle>Ouverture de Caisse</DialogTitle>
                 <DialogContent>
+                    {openSessionDialog && (
                     <OpenCaisseForm
+                        key={`${selectedStoreId ?? ""}-${selectedCashRegisterId ?? ""}`}
                         formId="OpenCaisseForm"
                         onSubmit={handleOpenSession}
+                        stores={availableStores}
                         defaultStoreId={selectedStoreId ?? undefined}
                         defaultCashRegisterId={selectedCashRegisterId ?? undefined}
                         lockStoreAndRegister={selectedStoreId !== null && selectedCashRegisterId !== null}
                     />
+                    )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenSessionDialog(false)}>Annuler</Button>
+                    <Button
+                        onClick={() => {
+                            setOpenSessionDialog(false);
+                            setSelectedStoreId(null);
+                            setSelectedCashRegisterId(null);
+                        }}
+                    >
+                        Annuler
+                    </Button>
                     <Button type="submit" form="OpenCaisseForm" variant="contained">
                         Ouvrir la Caisse
                     </Button>

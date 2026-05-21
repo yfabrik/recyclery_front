@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
+import type { StoreModel } from "../../interfaces/Models";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
 import { emptyStringToNull } from "../../services/zodTransform";
@@ -12,7 +13,8 @@ import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
 interface OpenCaisseFormProps extends BaseFormProps<Schema> {
-  // stores: StoreModel[];
+  /** Preloaded stores (e.g. from POS) so selects have options before async fetch. */
+  stores?: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
   defaultStoreId?: number;
   defaultCashRegisterId?: number;
@@ -32,43 +34,50 @@ export const OpenCaisseForm = ({
   formId,
   onSubmit,
   defaultValues,
+  stores: storesProp,
   defaultStoreId,
   defaultCashRegisterId,
   lockStoreAndRegister = false,
-  // stores,
 }: OpenCaisseFormProps) => {
-
-  const stores = useQuery({
+  const storesQuery = useQuery({
     queryKey: ["stores", { active: true }],
-    queryFn: () => fetchStores({ active: true }).then(response => response.data.stores),
-  })
+    queryFn: () =>
+      fetchStores({ active: true }).then((response) => response.data.stores),
+    enabled: !storesProp,
+  });
 
-
+  const storeOptions = storesProp ?? storesQuery.data ?? [];
 
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const { prompt, PromptDialog } = usePrompt();
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      store_id: defaultStoreId ?? "",
-      cash_register_id: defaultCashRegisterId ?? "",
+      store_id: "",
+      cash_register_id: "",
       opening_amount: "",
       notes: "",
       ...data,
     },
   });
 
-  // useEffect(() => {
-  //   if (!defaultStoreId) return;
-  //   form.setValue("store_id", defaultStoreId, { shouldValidate: true });
-  // }, [defaultStoreId, form]);
-
-  // useEffect(() => {
-  //   if (!defaultCashRegisterId) return;
-  //   form.setValue("cash_register_id", defaultCashRegisterId, { shouldValidate: true });
-  // }, [defaultCashRegisterId, form]);
-
   const store = form.watch("store_id") as number;
+  const selectedStore = storeOptions.find((s) => s.id == store);
+  const registersFromStore = selectedStore?.caisses ?? [];
+
+  useEffect(() => {
+    if (!defaultStoreId || !storeOptions.length) return;
+    if (!storeOptions.some((s) => s.id === defaultStoreId)) return;
+    form.setValue("store_id", defaultStoreId, { shouldValidate: true });
+
+    if (!defaultCashRegisterId) return;
+    const storeForDefaults = storeOptions.find((s) => s.id === defaultStoreId);
+    const registers = storeForDefaults?.caisses ?? [];
+    if (!registers.some((r) => r.id === defaultCashRegisterId)) return;
+    form.setValue("cash_register_id", defaultCashRegisterId, {
+      shouldValidate: true,
+    });
+  }, [defaultStoreId, defaultCashRegisterId, storeOptions, form]);
   // const [cashRegisters, setCashRegisters] = useState([]);
   // const getCaisses = async () => {
   //   const caisses = await fetchCaisses(store);
@@ -77,15 +86,15 @@ export const OpenCaisseForm = ({
 
   const cashRegisters = useQuery({
     queryKey: ["cashRegisters", { store_id: store }],
-    queryFn: () => fetchCaisses(store).then(response => response.data.cash_registers),
-    enabled: !!store,
-  })
+    queryFn: () =>
+      fetchCaisses(store).then((response) => response.data.cash_registers),
+    enabled: !!store && registersFromStore.length === 0,
+  });
 
-  // useEffect(() => {
-  //   if (store) getCaisses();
-  //   else setCashRegisters([]);
-  //   console.log(cashRegisters);
-  // }, [store]);
+  const registerOptions =
+    registersFromStore.length > 0
+      ? registersFromStore
+      : (cashRegisters.data ?? []);
 
   return (
     <>
@@ -93,9 +102,9 @@ export const OpenCaisseForm = ({
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
             <FormSelect name="store_id" control={form.control} label="Magasin" extra={{ disabled: lockStoreAndRegister }}>
-              {stores.data?.map((store) => (
-                <MenuItem key={store.id} value={store.id}>
-                  {store.name}
+              {storeOptions.map((storeOption) => (
+                <MenuItem key={storeOption.id} value={storeOption.id}>
+                  {storeOption.name}
                 </MenuItem>
               ))}
             </FormSelect>
@@ -108,7 +117,7 @@ export const OpenCaisseForm = ({
               label="Caisse"
               extra={{ disabled: lockStoreAndRegister }}
             >
-              {cashRegisters.data?.map((register) => (
+              {registerOptions.map((register) => (
                 <MenuItem key={register.id} value={register.id}>
                   {register.name}
                 </MenuItem>
