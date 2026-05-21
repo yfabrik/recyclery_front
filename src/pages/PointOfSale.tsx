@@ -8,7 +8,7 @@ import {
   Payment,
   QrCodeScanner,
   Remove,
-  ShoppingCart
+  ShoppingCart,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -42,15 +42,14 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
+import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
 import {
   schema,
   type CartItem,
   type Schema as CartSchema,
 } from "../components/forms/cartSchema";
-import {
-  type Schema as CloseCaisseSchema
-} from "../components/forms/CloseCaisseForm";
+import { type Schema as CloseCaisseSchema } from "../components/forms/CloseCaisseForm";
 import { FormInput, FormSelect } from "../components/forms/FormBase";
 import {
   ManualItemForm,
@@ -64,13 +63,11 @@ import type { LabeledItemModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getGiftCardByCode } from "../services/api/giftCards";
 import { getItemFromBarcode } from "../services/api/labeledItems";
-import {
-  closeCaisse,
-  getActiveCaisses
-} from "../services/api/store";
+import { closeCaisse, getActiveCaisses } from "../services/api/store";
+
 import { createSell, type CreateTransactionBody } from "../services/api/transactions";
 import { formatCurrency, formatWeight, getCartLinePrice, getCartTotal, getCartTotalWithGlobalPromotion, getGlobalPromotionDiscount, sumPromoCategorie } from "../services/cartService";
-import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
+
 const PointOfSale = () => {
   const { user } = useAuth();
   const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
@@ -85,8 +82,7 @@ const PointOfSale = () => {
   const [scanInput, setScanInput] = useState("");
   const [giftCardScanInput, setGiftCardScanInput] = useState("");
 
-
-  //TODO ? set type here so no unknow and so no need to put as CartShema after ? ? but resolver dont like it 
+  //TODO ? set type here so no unknow and so no need to put as CartShema after ? ? but resolver dont like it
   // const form = useForm<CartSchema>({
   const form = useForm({
     defaultValues: {
@@ -148,7 +144,10 @@ const PointOfSale = () => {
         return split;
       }
 
-      const giftUsage = Math.max(Math.min(split.gift_card_current_value ?? 0, remainingForGiftCards), 0);
+      const giftUsage = Math.max(
+        Math.min(split.gift_card_current_value ?? 0, remainingForGiftCards),
+        0,
+      );
       remainingForGiftCards = Math.max(remainingForGiftCards - giftUsage, 0);
       return { ...split, amount: giftUsage };
     });
@@ -168,7 +167,7 @@ const PointOfSale = () => {
     //     amount: Math.max(total - paidByOtherSplits, 0),
     //   };
     // });
-    return nextSplits
+    return nextSplits;
   };
 
   const arePaymentSplitsEqual = (
@@ -179,10 +178,10 @@ const PointOfSale = () => {
     return left.every((split, index) => {
       const compared = right[index];
       return (
-        split.method === compared.method
-        && (Number(split.amount) || 0) === (Number(compared.amount) || 0)
-        && split.gift_card_barcode === compared.gift_card_barcode
-        && split.gift_card_id === compared.gift_card_id
+        split.method === compared.method &&
+        (Number(split.amount) || 0) === (Number(compared.amount) || 0) &&
+        split.gift_card_barcode === compared.gift_card_barcode &&
+        split.gift_card_id === compared.gift_card_id
       );
     });
   };
@@ -196,8 +195,8 @@ const PointOfSale = () => {
     });
   }, [cartTotal, form, paymentSplits]);
 
-
-  const getCurrentCartSnapshot = () => (cart ?? []).map((item) => ({ ...item }));
+  const getCurrentCartSnapshot = () =>
+    (cart ?? []).map((item) => ({ ...item }));
 
   const addCart = () => {
     const currentCart = getCurrentCartSnapshot();
@@ -207,10 +206,7 @@ const PointOfSale = () => {
     nextCarts.push([] as CartSchema["cart"]);
     setCarts(nextCarts);
     setTabValue(newTabIndex);
-    form.reset(
-      { ...form.getValues(), cart: [] },
-      { keepDefaultValues: true }
-    );
+    form.reset({ ...form.getValues(), cart: [] }, { keepDefaultValues: true });
   };
 
   const removeCart = (index: number) => {
@@ -228,8 +224,11 @@ const PointOfSale = () => {
     setCarts(nextCarts);
     setTabValue(newTabValue);
     form.reset(
-      { ...form.getValues(), cart: (nextCarts[newTabValue] ?? []).map((item) => ({ ...item })) },
-      { keepDefaultValues: true }
+      {
+        ...form.getValues(),
+        cart: (nextCarts[newTabValue] ?? []).map((item) => ({ ...item })),
+      },
+      { keepDefaultValues: true },
     );
   };
 
@@ -241,10 +240,13 @@ const PointOfSale = () => {
     setCarts(nextCarts);
     setTabValue(newIndex);
     form.reset(
-      { ...form.getValues(), cart: (nextCarts[newIndex] ?? []).map((item) => ({ ...item })) },
-      { keepDefaultValues: true }
+      {
+        ...form.getValues(),
+        cart: (nextCarts[newIndex] ?? []).map((item) => ({ ...item })),
+      },
+      { keepDefaultValues: true },
     );
-  }
+  };
   const queryClient = useQueryClient();
 
   const activeSession = useQuery({
@@ -256,14 +258,21 @@ const PointOfSale = () => {
   const categories = useQuery({
     queryKey: [
       "categories",
-      { include: ["category", "promo"], only_category: true, sell: true, store_id: activeSession.data?.CashRegister?.recyclery_id },
+      {
+        include: ["category", "promo"],
+        only_category: true,
+        sell: true,
+        store_id: activeSession.data?.CashRegister?.recyclery_id,
+      },
     ],
     queryFn: () =>
-      fcat({ include: ["category", "promo"], only_category: true, sell: true, store_id: activeSession.data?.CashRegister?.recyclery_id }).then(
-        (response) => response.data.categories,
-      ),
+      fcat({
+        include: ["category", "promo"],
+        only_category: true,
+        sell: true,
+        store_id: activeSession.data?.CashRegister?.recyclery_id,
+      }).then((response) => response.data.categories),
   });
-
 
   // const openSession = useMutation({
   //   mutationFn: (data: {
@@ -354,9 +363,11 @@ const PointOfSale = () => {
     },
   });
 
-  const isLabeledItem = (item: ManualItemSchema | LabeledItemModel): item is LabeledItemModel => {
+  const isLabeledItem = (
+    item: ManualItemSchema | LabeledItemModel,
+  ): item is LabeledItemModel => {
     return "barcode" in item;
-  }
+  };
   const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
     const barcode = isLabeledItem(item) ? item.barcode : `MANUAL${Date.now()}`;
 
@@ -375,7 +386,10 @@ const PointOfSale = () => {
     const source = selectedSubcategory ?? selectedCategory;
     if (source?.priceBasedOnWeight) item.price = item.price * item.weight;
 
-    const promotion = !isLabeledItem(item) ? item.promotion : sumPromoCategorie(selectedCategory) + sumPromoCategorie(selectedSubcategory)
+    const promotion = !isLabeledItem(item)
+      ? item.promotion
+      : sumPromoCategorie(selectedCategory) +
+        sumPromoCategorie(selectedSubcategory);
 
     return {
       barcode,
@@ -391,11 +405,9 @@ const PointOfSale = () => {
       promotion,
       bundlePrice: source?.bundlePrice,
       bundleQuantity: source?.bundleQuantity,
-      priceBasedOnWeight: source?.priceBasedOnWeight ?? false
-
+      priceBasedOnWeight: source?.priceBasedOnWeight ?? false,
     } satisfies CartItem & { priceBasedOnWeight: boolean };
-
-  }
+  };
 
   const handleScanProduct = async () => {
     if (!scanInput.trim()) {
@@ -423,10 +435,9 @@ const PointOfSale = () => {
           quantity: cart[existingItem].quantity + 1,
         });
       } else {
-        const currentItem = handleitem(item)
+        const currentItem = handleitem(item);
 
-        append(currentItem)
-
+        append(currentItem);
       }
 
       setScanInput("");
@@ -441,11 +452,9 @@ const PointOfSale = () => {
     }
   };
 
-
-
   const handleAddManualItem = (data: ManualItemSchema) => {
     const manualItem = handleitem(data);
-   
+
     append(manualItem);
 
     setManualItemDialog(false);
@@ -516,7 +525,9 @@ const PointOfSale = () => {
       (sum, split) => sum + (Number(split.amount) || 0),
       0,
     );
-    const nonZeroSplits = data.payment_splits.filter((split) => Number(split.amount) > 0);
+    const nonZeroSplits = data.payment_splits.filter(
+      (split) => Number(split.amount) > 0,
+    );
     // const primaryPayment = nonZeroSplits[0] ?? data.payment_splits[0];
 
     if (activeSession.data) {
@@ -532,7 +543,7 @@ const PointOfSale = () => {
         payments: nonZeroSplits.map((split) => ({
           method: split.method,
           amount: Number(split.amount) || 0,
-          gift_card_code: split.gift_card_barcode
+          gift_card_code: split.gift_card_barcode,
         })),
         // payment_splits: nonZeroSplits.map((split) => ({
         //   method: split.method,
@@ -542,19 +553,15 @@ const PointOfSale = () => {
         items: data.cart.map((item) => ({
           ...item,
           total_price: item.quantity * item.price,
-
         })),
       } satisfies CreateTransactionBody;
       handleSell.mutate(transactionData);
 
     }
-
   };
 
   if (!activeSession.data) {
-    return (
-        <NoOpenedRegister />
-  );
+    return <NoOpenedRegister />;
   }
 
   return (
@@ -564,13 +571,20 @@ const PointOfSale = () => {
         activeSession={activeSession.data}
         setCloseSessionDialog={setCloseSessionDialog}
         showTransactionHistory={showTransactionHistory}
-        toggleTransactionHistory={() => setShowTransactionHistory((prev) => !prev)}
+        toggleTransactionHistory={() =>
+          setShowTransactionHistory((prev) => !prev)
+        }
       />
 
       {showTransactionHistory ? (
         <SalesHistory activeSession={activeSession.data} />
       ) : (
-        <form id="cartForm" onSubmit={form.handleSubmit(handleValidateCart, (err) => console.error(err))}>
+        <form
+          id="cartForm"
+          onSubmit={form.handleSubmit(handleValidateCart, (err) =>
+            console.error(err),
+          )}
+        >
           <Grid container spacing={2}>
             {/* Scanner et panier */}
             <Grid size={{ xs: 12, lg: 8 }}>
@@ -589,7 +603,9 @@ const PointOfSale = () => {
                     slotProps={{
                       input: {
                         startAdornment: (
-                          <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                          <QrCodeScanner
+                            sx={{ mr: 1, color: "text.secondary" }}
+                          />
                         ),
                       },
                     }}
@@ -614,12 +630,22 @@ const PointOfSale = () => {
                   </Button>
                 </Box>
               </Paper>
-              <Tabs value={tabValue} onChange={(_, val) => changeCart(val as number)}>
+              <Tabs
+                value={tabValue}
+                onChange={(_, val) => changeCart(val as number)}
+              >
                 {carts.map((_, index) => (
                   <Tab
                     key={index}
                     label={
-                      <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                        }}
+                      >
                         Panier {index + 1}
                         <Box
                           component="span"
@@ -643,10 +669,14 @@ const PointOfSale = () => {
                             width: 20,
                             height: 20,
                             borderRadius: "50%",
-                            color: carts.length <= 1 ? "action.disabled" : "inherit",
+                            color:
+                              carts.length <= 1 ? "action.disabled" : "inherit",
                             cursor: carts.length <= 1 ? "default" : "pointer",
                             "&:hover": {
-                              bgcolor: carts.length <= 1 ? "transparent" : "action.hover",
+                              bgcolor:
+                                carts.length <= 1
+                                  ? "transparent"
+                                  : "action.hover",
                             },
                           }}
                           aria-disabled={carts.length <= 1}
@@ -675,7 +705,8 @@ const PointOfSale = () => {
                   sx={{ display: "flex", alignItems: "center", gap: 1 }}
                 >
                   <ShoppingCart />
-                  Panier ({cartFields.length} article{cartFields.length > 1 ? "s" : ""})
+                  Panier ({cartFields.length} article
+                  {cartFields.length > 1 ? "s" : ""})
                 </Typography>
 
                 {cartFields.length === 0 ? (
@@ -707,7 +738,10 @@ const PointOfSale = () => {
                                     gap: 1,
                                   }}
                                 >
-                                  <Typography variant="body1" fontWeight="medium">
+                                  <Typography
+                                    variant="body1"
+                                    fontWeight="medium"
+                                  >
                                     {item.name}
                                   </Typography>
                                   {isNaN(+item.barcode) && (
@@ -719,20 +753,23 @@ const PointOfSale = () => {
                                     />
                                   )}
                                 </Box>
-                                <Typography variant="body2" color="textSecondary">
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                >
                                   {item.barcode}
                                 </Typography>
                                 {(item.category_name ||
                                   item.subcategory_name) && (
-                                    <Typography
-                                      variant="body2"
-                                      color="textSecondary"
-                                    >
-                                      {item.category_name}
-                                      {item.subcategory_name &&
-                                        ` > ${item.subcategory_name}`}
-                                    </Typography>
-                                  )}
+                                  <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                  >
+                                    {item.category_name}
+                                    {item.subcategory_name &&
+                                      ` > ${item.subcategory_name}`}
+                                  </Typography>
+                                )}
                               </Box>
                             </TableCell>
                             <TableCell>{formatWeight(item.weight)}</TableCell>
@@ -764,9 +801,9 @@ const PointOfSale = () => {
                                     return item.quantity - 1 <= 0
                                       ? remove(index)
                                       : update(index, {
-                                        ...item,
-                                        quantity: item.quantity - 1,
-                                      });
+                                          ...item,
+                                          quantity: item.quantity - 1,
+                                        });
                                   }}
                                 >
                                   <Remove />
@@ -787,22 +824,29 @@ const PointOfSale = () => {
                                 >
                                   <Add />
                                 </IconButton>
-                                {item.bundleQuantity && item.bundleQuantity != 0 && item.bundleQuantity != 1 && item.quantity >= item.bundleQuantity &&
-                                  <Chip
-                                    color="secondary"
-                                    icon={<Backpack />}
-                                    sx={{
-                                      marginLeft: 1,
-                                    }}
-                                    label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
-                                    size="small"
-                                  />
-                                }
+                                {item.bundleQuantity &&
+                                  item.bundleQuantity != 0 &&
+                                  item.bundleQuantity != 1 &&
+                                  item.quantity >= item.bundleQuantity && (
+                                    <Chip
+                                      color="secondary"
+                                      icon={<Backpack />}
+                                      sx={{
+                                        marginLeft: 1,
+                                      }}
+                                      label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
+                                      size="small"
+                                    />
+                                  )}
                               </Box>
                             </TableCell>
                             <TableCell>
                               <Typography fontWeight="bold">
-                                {formatCurrency(getCartLinePrice(item as CartItem)) /*FIXME  as cartItem devrait pas etre la */}
+                                {
+                                  formatCurrency(
+                                    getCartLinePrice(item as CartItem),
+                                  ) /*FIXME  as cartItem devrait pas etre la */
+                                }
                               </Typography>
                             </TableCell>
                             <TableCell>
@@ -826,7 +870,7 @@ const PointOfSale = () => {
 
             {/* Résumé et paiement */}
             <Grid size={{ xs: 12, lg: 4 }}>
-              <Paper sx={{ p: 2,/* position: "sticky",*/ top: 20 }}>
+              <Paper sx={{ p: 2, /* position: "sticky",*/ top: 20 }}>
                 <Typography variant="h6" gutterBottom>
                   Résumé de la Commande
                 </Typography>
@@ -834,21 +878,36 @@ const PointOfSale = () => {
                 <Divider sx={{ my: 2 }} />
 
                 <Box
-                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
                 >
                   <Typography>Types d'articles:</Typography>
                   <Typography>{cart.length}</Typography>
                 </Box>
                 <Box
-                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
                 >
                   <Typography>Total d'articles:</Typography>
                   <Typography>
-                    {cart.reduce((prev, current) => (prev += current.quantity), 0)}
+                    {cart.reduce(
+                      (prev, current) => (prev += current.quantity),
+                      0,
+                    )}
                   </Typography>
                 </Box>
                 <Box
-                  sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
                 >
                   <Typography>Poids</Typography>
                   <Typography>
@@ -862,7 +921,11 @@ const PointOfSale = () => {
                 </Box>
 
                 <Box
-                  sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 2,
+                  }}
                 >
                   <Typography>Sous-total:</Typography>
                   <Typography>{formatCurrency(cartSubtotal)}</Typography>
@@ -918,11 +981,15 @@ const PointOfSale = () => {
                         placeholder="Scanner ou saisir le code-barres de l'avoir..."
                         value={giftCardScanInput}
                         onChange={(e) => setGiftCardScanInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleScanGiftCard()}//FIXME y'a pas conflict avec scan item ?
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleScanGiftCard()
+                        } //FIXME y'a pas conflict avec scan item ?
                         slotProps={{
                           input: {
                             startAdornment: (
-                              <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                              <QrCodeScanner
+                                sx={{ mr: 1, color: "text.secondary" }}
+                              />
                             ),
                           },
                         }}
@@ -941,7 +1008,13 @@ const PointOfSale = () => {
                   </Grid>
 
                   <Grid size={{ xs: 12 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <Typography variant="subtitle2">Paiements</Typography>
                     </Box>
                   </Grid>
@@ -958,7 +1031,13 @@ const PointOfSale = () => {
                           />
                         </Box>
                       )}
-                      <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          alignItems: "flex-start",
+                        }}
+                      >
                         <Box sx={{ width: "42%" }}>
                           <FormSelect
                             label={`Mode de paiement #${index + 1}`}
@@ -966,14 +1045,16 @@ const PointOfSale = () => {
                             name={`payment_splits.${index}.method`}
                             extraSelect={{
                               size: "small",
-                              disabled: paymentSplits[index]?.method === "giftcard",
+                              disabled:
+                                paymentSplits[index]?.method === "giftcard",
                             }}
                           >
                             <MenuItem value="cash">Espèces</MenuItem>
                             <MenuItem value="card">Carte bancaire</MenuItem>
                             <MenuItem value="check">Chèque</MenuItem>
-                            <MenuItem value="giftcard" disabled>Avoir</MenuItem>
-
+                            <MenuItem value="giftcard" disabled>
+                              Avoir
+                            </MenuItem>
                           </FormSelect>
                         </Box>
                         <Box sx={{ width: "42%" }}>
@@ -984,11 +1065,14 @@ const PointOfSale = () => {
                             extra={{
                               type: "number",
                               size: "small",
-                              disabled: paymentSplits[index]?.method === "giftcard",
+                              disabled:
+                                paymentSplits[index]?.method === "giftcard",
                               slotProps: {
                                 input: {
                                   startAdornment: (
-                                    <Euro sx={{ mr: 1, color: "text.secondary" }} />
+                                    <Euro
+                                      sx={{ mr: 1, color: "text.secondary" }}
+                                    />
                                   ),
                                 },
                               },
@@ -1011,7 +1095,14 @@ const PointOfSale = () => {
                     <Button
                       variant="outlined"
                       size="small"
-                      onClick={() => appendPayment({ method: "cash", amount: 0, gift_card_barcode: undefined, gift_card_id: undefined })}
+                      onClick={() =>
+                        appendPayment({
+                          method: "cash",
+                          amount: 0,
+                          gift_card_barcode: undefined,
+                          gift_card_id: undefined,
+                        })
+                      }
                     >
                       + payment
                     </Button>
@@ -1072,13 +1163,13 @@ const PointOfSale = () => {
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormInput control={form.control} label="Code Postal" name="customer_postal_code" />
-
+                    <FormInput
+                      control={form.control}
+                      label="Code Postal"
+                      name="customer_postal_code"
+                    />
                   </Grid>
-                  <Grid size={{ xs: 12 }}>
-
-                  </Grid>
-
+                  <Grid size={{ xs: 12 }}></Grid>
                 </Grid>
                 <Button
                   fullWidth
@@ -1086,7 +1177,6 @@ const PointOfSale = () => {
                   size="large"
                   startIcon={<Payment />}
                   type="submit"
-
                   disabled={cart.length === 0 || totalPaid < cartTotal}
                   sx={{ mb: 2 }}
                 >
@@ -1118,7 +1208,7 @@ const PointOfSale = () => {
             type="submit"
             form="manualItemForm"
             variant="contained"
-          // disabled={!manualItemData.category_id || !manualItemData.price}
+            // disabled={!manualItemData.category_id || !manualItemData.price}
           >
             Ajouter au Panier
           </Button>
