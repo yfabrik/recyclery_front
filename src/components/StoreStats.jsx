@@ -147,10 +147,10 @@ const StoreStats = ({ stores, loading }) => {
                   <Grid size={{ xs:6}}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="warning.main" fontWeight="bold">
-                        {store.stats.items.available}
+                        {store.stats.items.sold}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        Articles
+                        Articles vendus ce mois
                       </Typography>
                     </Box>
                   </Grid>
