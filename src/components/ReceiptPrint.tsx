@@ -11,7 +11,9 @@ import {
   getCartTotal,
   getCartTotalWithGlobalPromotion,
   getGlobalPromotionDiscount,
+  getPaymentBalance,
   getPaymentMethodLabel,
+  roundCurrency,
   type GlobalPromotionInput,
 } from "../services/cartService";
 import type { CreateTransactionResponse } from "../services/api/transactions";
@@ -48,7 +50,11 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
     subtotalFromSale != null && totalFromSale != null
       ? Math.max(subtotal - totalAmount, 0)
       : getGlobalPromotionDiscount(subtotal, global_promotion);
-  const changeAmount = +(sale.payment_amount || 0) - +(sale.total_amount || 0);
+  const paidFromSale =
+    paymentLines.length > 0
+      ? paidAmount
+      : Number(sale.payment_amount ?? 0);
+  const receiptBalance = getPaymentBalance(paidFromSale, totalAmount);
 
   return (
     <Box sx={{ px: 2, py: 1, fontFamily: "monospace", fontSize: "12px", width: "80mm" }} className="receipt-print-root">
@@ -121,9 +127,9 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
       <Box sx={{ fontWeight: 700 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Sous-total:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(subtotal)}</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(roundCurrency(subtotal))}</Typography>
         </Box>
-        {globalPromotionDiscount > 0 && (
+        {roundCurrency(globalPromotionDiscount) > 0 && (
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
               Promotion globale
@@ -133,21 +139,21 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
               :
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-              -{formatCurrency(globalPromotionDiscount)}
+              -{formatCurrency(roundCurrency(globalPromotionDiscount))}
             </Typography>
           </Box>
         )}
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>TOTAL:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatCurrency(totalAmount)}</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace", fontWeight: 700 }}>{formatCurrency(receiptBalance.due)}</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Paye:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(paidAmount)}</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(receiptBalance.paid)}</Typography>
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Rendu:</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(changeAmount)}</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>{formatCurrency(receiptBalance.change)}</Typography>
         </Box>
       </Box>
 

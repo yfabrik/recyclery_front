@@ -91,6 +91,65 @@ export const formatCurrency = (amount: number) => {
   }).format(amount || 0);
 };
 
+/**
+ * Round to EUR cents (same precision as {@link formatCurrency}).
+ * Use for payment comparisons and amounts shown to the cashier — not for cart math or API payloads.
+ */
+export const roundCurrency = (amount: number) => {
+  const parts = new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).formatToParts(amount || 0);
+  let normalized = "";
+  for (const part of parts) {
+    if (part.type === "integer" || part.type === "group") {
+      normalized += part.value.replace(/\s/g, "");
+    } else if (part.type === "decimal") {
+      normalized += ".";
+    } else if (part.type === "fraction") {
+      normalized += part.value;
+    }
+  }
+  return Number(normalized) || 0;
+};
+
+/** Compare paid vs due at cent precision (avoids float noise blocking checkout). */
+export const isPaymentInsufficient = (totalPaid: number, cartTotal: number) =>
+  roundCurrency(totalPaid) < roundCurrency(cartTotal);
+
+/** Cent-rounded paid/due and change (+) or remaining (-) for payment UI. */
+export const getPaymentBalance = (totalPaid: number, cartTotal: number) => {
+  const paid = roundCurrency(totalPaid);
+  const due = roundCurrency(cartTotal);
+  const delta = paid - due;
+  return {
+    paid,
+    due,
+    change: delta > 0 ? delta : 0,
+    remaining: delta < 0 ? -delta : 0,
+  };
+};
+
+/** Whether a cash-session écart is non-zero at cent precision (display / alerts). */
+export const hasSignificantCashDifference = (difference: number) =>
+  roundCurrency(Math.abs(difference)) > 0;
+
+/** Cent-rounded expected vs counted for caisse close UI and bilan print. */
+export const getCashSessionBalance = (expected: number, counted: number) => {
+  const expectedDisplay = roundCurrency(expected);
+  const countedDisplay = roundCurrency(counted);
+  const differenceDisplay = expectedDisplay - countedDisplay;
+  return {
+    expected,
+    counted,
+    expectedDisplay,
+    countedDisplay,
+    difference: expected - counted,
+    differenceDisplay,
+    isBalanced: differenceDisplay === 0,
+  };
+};
+
 export const formatWeight = (amount: number) => {
   return new Intl.NumberFormat("fr-FR", {
     style: "unit",

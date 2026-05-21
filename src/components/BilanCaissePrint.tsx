@@ -2,7 +2,12 @@ import { Box, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { CashSession, TransactionModel } from "../interfaces/Models";
-import { formatCurrency, sumCashInPayments } from "../services/cartService";
+import {
+  formatCurrency,
+  getCashSessionBalance,
+  roundCurrency,
+  sumCashInPayments,
+} from "../services/cartService";
 
 interface BilanCaisseProps {
   session: CashSession;
@@ -200,9 +205,8 @@ export const BilanCaissePrint = ({
   const closedAt = session.closed_at
     ? new Date(session.closed_at).toLocaleString()
     : `${new Date().toLocaleString()} ,pas fermée`;
-  const countedAmount = closingAmount ?? session.closing_amount ??  0;
-  const expected =  expected_amount;
-  const difference =  expected_amount - countedAmount;
+  const countedAmount = closingAmount ?? session.closing_amount ?? 0;
+  const cashBalance = getCashSessionBalance(expected_amount, countedAmount);
 
   return (
     <>
@@ -284,19 +288,19 @@ export const BilanCaissePrint = ({
                 {closedAt}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Comptage : {formatCurrency(countedAmount)}
+                Comptage : {formatCurrency(cashBalance.countedDisplay)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                Attendu : {formatCurrency(expected)}
+                Attendu : {formatCurrency(cashBalance.expectedDisplay)}
               </Typography>
               <Typography
                 sx={{
                   fontSize: "0.7rem",
-                  fontWeight: difference === 0 ? 500 : 700,
-                  color: difference === 0 ? "inherit" : "#b00",
+                  fontWeight: cashBalance.isBalanced ? 500 : 700,
+                  color: cashBalance.isBalanced ? "inherit" : "#b00",
                 }}
               >
-                Écart : {formatCurrency(difference)}
+                Écart : {formatCurrency(cashBalance.differenceDisplay)}
               </Typography>
             </Box>
           </Box>
