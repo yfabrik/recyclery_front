@@ -450,10 +450,11 @@ const Labels = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingItem ? "Modifier l'article" : "Nouvel article"}
+          {editingItem ? `Modifier l'article ${editingItem.barcode}` : "Nouvel article"}
         </DialogTitle>
         <DialogContent>
           <LabeledItemForm
+          key={editingItem?.id ?? "new"}
             formId="labelItemForm"
             categories={categories.data || []}
             onSubmit={handleSave}

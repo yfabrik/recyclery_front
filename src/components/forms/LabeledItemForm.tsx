@@ -50,7 +50,6 @@ export const LabeledItemForm = ({
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-
   const conditionOptions = [
     { value: "excellent", label: "Excellent", color: "success" },
     { value: "good", label: "Bon état", color: "primary" },
@@ -76,6 +75,10 @@ export const LabeledItemForm = ({
   const subcategoryId = form.watch("subcategory_id");
 
   useEffect(() => {
+    //TODO faut remettre les value source default quand on  clean le field
+    if(defaultValues?.price && defaultValues?.weight) {
+      return;
+    }
     const priceState = form.getFieldState("price")
     const weightState = form.getFieldState("weight")
 
