@@ -10,9 +10,10 @@ export interface transactionsFilters {
   date_from?: string;
   date_to?: string;
   session?: number;
-  payment_method?: TransactionModel["payment_method"];
+  payment_method?: PaymentMethod;
   page?: number;
   include?: ("refund" | "items" | "payments")[];
+  type?: TransactionModel["transactionType"]
 }
 interface Stats {
   total_transactions: number;
@@ -23,7 +24,7 @@ interface Stats {
   sessions_count: number;
   payment_methods: {
     count: number;
-    payment_method: TransactionModel["payment_method"];
+    payment_method: PaymentMethod
     total: number;
   }[];
   by_day: {
@@ -40,7 +41,7 @@ interface Stats {
 }
 
 // Shared
-type PaymentMethod =  TransactionModel["payment_method"];
+type PaymentMethod = TransactionModel["payment_method"];
 
 type CartItemInput = {
   name: string;

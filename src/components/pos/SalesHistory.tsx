@@ -34,6 +34,7 @@ import {
   getTransactions,
   type CreateRefundBody,
   type CreateTransactionResponse,
+  type transactionsFilters,
 } from "../../services/api/transactions";
 import {
   formatCurrency,
@@ -42,12 +43,13 @@ import {
   getTransactionGlobalPromotion,
 } from "../../services/cartService";
 import { DetailTransaction } from "../DetailTransaction";
+import type { CartItem } from "../forms/cartSchema";
 import { RefundForm, type Schema } from "../forms/RefundForm";
 import { Loading } from "../Loading";
+import { useReceiptPrint } from "../ReceiptPrint";
 import { TransactionTableLine } from "../TransactionTableLine";
 import { useGiftCardPrint } from "./GiftCartPrint";
-import type { CartItem } from "../forms/cartSchema";
-import { useReceiptPrint } from "../ReceiptPrint";
+import { SaleHistoryFilter, type Filters } from "../forms/SaleHistoryFilter";
 
 export const SalesHistory = ({
   activeSession,
@@ -59,6 +61,18 @@ export const SalesHistory = ({
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionModel | null>(null);
   const [page, setPage] = useState(1);
+
+
+  const [filters, setFilters] = useState<Filters>({
+    date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    date_to: new Date().toISOString().split("T")[0],
+    transaction_number: "", // Recherche par numéro de transaction
+    transactionType: "",
+    transactionMethod: "",
+
+  });
 
   // États pour la pop-up des détails de transaction
   const [transactionDetailsDialog, setTransactionDetailsDialog] =
@@ -80,13 +94,18 @@ export const SalesHistory = ({
   const transactionsHistory = useQuery({
     queryKey: [
       "transactionsHistory",
-      { store_id: activeSession.CashRegister?.recyclery_id, page },
+      { store_id: activeSession.CashRegister?.recyclery_id, page, filters },
     ],
     queryFn: () =>
       getTransactions({
         store_id: activeSession.CashRegister?.recyclery_id,
         include: ["refund", "items"],
         page,
+        ...{ 
+          ...filters,
+          ...(filters.transactionType||filters.transactionType!="" ? {type: filters.transactionType}:{}),
+          ...(filters.transactionMethod||filters.transactionMethod!="" ?{payment_method: filters.transactionMethod}:{})
+         } satisfies transactionsFilters
       }).then((response) => response.data),
     enabled: !!activeSession.CashRegister?.recyclery_id,
   });
@@ -96,7 +115,7 @@ export const SalesHistory = ({
   ).filter(
     (transaction) =>
       transaction.CashSession?.cash_register_id ===
-        activeSession.cash_register_id ||
+      activeSession.cash_register_id ||
       transaction.cash_session_id === activeSession.id,
   );
 
@@ -248,6 +267,18 @@ export const SalesHistory = ({
   };
   return (
     <>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <SaleHistoryFilter
+          defaultValues={filters}
+          onChange={(values) =>
+            setFilters((prev) => ({
+              ...prev,
+              ...values,
+            })
+            )
+          } />
+      </Paper>
+
       <Paper sx={{ p: 2 }}>
         <Typography
           variant="h6"
