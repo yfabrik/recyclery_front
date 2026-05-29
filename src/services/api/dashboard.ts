@@ -37,20 +37,34 @@ interface Charts {
   labels: string[]
 }
 
-interface StoreStat extends Pick<StoreModel, "id" | "name" | "address" | "phone" | "email"> {
+export interface StoreStat extends Pick<StoreModel, "id" | "name" | "address" | "phone" | "email"> {
   stats: {
-    currentMonth: { transaction: number, revenue: number, averageTransaction: number, sessions: number }
+    currentMonth: { transactions: number, revenue: number, averageTransaction: number, sessions: number }
     lastMonth: { transaction: number, revenue: number }
-    items: { available: number }
+    items: { available: number, sold: number }
     growth: { revenue: number }
   }
 
 }
 
+export interface RemakeMe extends Pick<StoreModel, "id" | "name" | "address" | "phone" | "email"> {
+  stats: {
+    currentMonth: { transactions: number, revenue: number, averageTransaction: number, sessions: number, start: string, end: string }
+    lastMonth: { transaction: number, revenue: number, start: string, end: string }
+    items: { available: number, sold: number }
+    growth: { revenue: number }
+  }[]
+}
+
+
 export const getStats = (): Promise<AxiosResponse<{ data: Stats }>> => axiosInstance.get("/api/dashboard/stats");
 export const getActivities = (): Promise<AxiosResponse<{ data: Activity[] }>> => axiosInstance.get("/api/dashboard/activities");
 export const getChartsData = (): Promise<AxiosResponse<{ data: Charts }>> => axiosInstance.get("/api/dashboard/charts");
 export const getStoreStats = (): Promise<AxiosResponse<{ stores: StoreStat[] }>> => axiosInstance.get("/api/dashboard/stores-stats")
+export const getStoreHistoryStats = (id: StoreModel["id"]): Promise<AxiosResponse<{
+  success: true, data: RemakeMe
+}>> => axiosInstance.get("/api/dashboard/store-history/" + id)
+
 
 export const getAllDashboardData = async () => {
   const [statsResponse, activitiesResponse, chartsResponse] = await Promise.all(
