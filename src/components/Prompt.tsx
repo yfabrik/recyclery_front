@@ -12,6 +12,7 @@ import {
   Card,
   CardContent,
   Divider,
+  Chip,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -24,6 +25,7 @@ import {
   AttachMoney,
   Euro,
 } from "@mui/icons-material";
+import { formatCurrency } from "../services/cartService";
 
 type Resolver<T> = (value: T) => void;
 
@@ -35,19 +37,22 @@ export function usePrompt() {
   const [value, setValue] = useState("");
   const [unit, setUnit] = useState("kg");
   const [mode, setMode] = useState<PromptMode>("numeric");
+  const [valueToreach, setValueToReach] = useState<number | null>(null)
   const resolverRef = useRef<Resolver<string | null> | null>(null);
 
   const prompt = useCallback(
     (
       msg: string,
       defaultValue = "",
-      options?: { unit?: string; mode?: PromptMode },
+      options?: { unit?: string; mode?: PromptMode, valueToReach?: number },//TODO ensure valueToreach exist only with promptmode money
     ): Promise<string | null> => {
       setMessage(msg);
       setValue(defaultValue || "0");
       setUnit(options?.unit || "kg");
       setMode(options?.mode || "numeric");
       setOpen(true);
+      setValueToReach(options?.valueToReach || null)
+
 
       return new Promise((resolve) => {
         resolverRef.current = resolve;
@@ -84,6 +89,7 @@ export function usePrompt() {
             defaultValue={value || "0"}
             value={value}
             setValue={setValue}
+            valueToReach={valueToreach ?? undefined}
           />
         ) : (
           <NumericKeypad
@@ -465,6 +471,7 @@ interface MoneyCounterPromptProps {
   onClose: () => void;
   value: string;
   setValue: React.Dispatch<React.SetStateAction<string>>;
+  valueToReach?: number
 }
 
 // Définition des pièces et billets français
@@ -494,6 +501,7 @@ const MoneyCounterPrompt = ({
   setValue,
   defaultValue,
   onClose,
+  valueToReach
 }: MoneyCounterPromptProps) => {
 
   const [counts, setCounts] = useState<Record<number, number>>({});
@@ -531,12 +539,6 @@ const MoneyCounterPrompt = ({
     }));
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount);
-  };
 
   const getTotalByType = (type: string) => {
     return MONEY_DENOMINATIONS.filter((denom) => denom.type === type)
@@ -570,6 +572,7 @@ const MoneyCounterPrompt = ({
           {formatCurrency(coinsTotal)} en pièces + {formatCurrency(billsTotal)}{" "}
           en billets
         </Typography>
+        {valueToReach && <Chip label={`à atteindre:${valueToReach}€`} size="small" color={valueToReach != parseFloat(value) ? "warning" : "success"} />}
       </Box>
 
       <Grid container spacing={1}>
