@@ -12,7 +12,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -25,7 +24,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -38,9 +37,10 @@ import {
   getDonationsStats,
   updateDonation,
 } from "../../services/api/donations";
+import { formatCurrency } from "../../services/cartService";
 import { DonForm, type Schema } from "../forms/DonForm";
-import { StatCard } from "../StatCard";
 import { Loading } from "../Loading";
+import { StatCard } from "../StatCard";
 
 export const DonationsTab = () => {
 
@@ -145,15 +145,6 @@ export const DonationsTab = () => {
         return status;
     }
   };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(value || 0);
-  };
-
-
 
   return (
     <Box>

@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import { BarChart } from "@mui/x-charts/BarChart";
+import { formatCurrency } from "../../services/cartService";
 
 interface ChartProps {
   uData: number[];
@@ -32,10 +33,7 @@ export default function SimpleBarChart({
             label: label2,
             id: "uvId",
             barLabel: (item) =>
-              new Intl.NumberFormat("fr-FR", {
-                style: "currency",
-                currency: "EUR",
-              }).format(item.value!),
+              formatCurrency(item.value!)
           },
         ]}
         xAxis={[{ data: xLabels }]}
