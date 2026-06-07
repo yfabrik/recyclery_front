@@ -97,7 +97,7 @@ const getMetricRows = (
             category: "Toutes",
             subcategory: "",
             weightKg: sourceData.total_weight_kg || 0,
-          });
+          });//FIXME ça fou la merde la categorie toutes
           return;
         }
 
