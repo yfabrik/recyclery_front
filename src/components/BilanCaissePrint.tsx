@@ -85,7 +85,12 @@ export const BilanCaissePrint = ({
             prev["mixed"].amount += current.total_amount;
             prev["mixed"].count++;
             break;
+          case "transfer":
+            prev["transfer"].amount += current.total_amount;
+            prev["transfer"].count++;
+            break;
           default:
+            current.payment_method satisfies never
             break;
         }
         return prev;
@@ -106,11 +111,16 @@ export const BilanCaissePrint = ({
         giftcard: {
           amount: 0,
           count: 0,
-        }, mixed: {
+        }, 
+        mixed: {
           amount: 0,
           count: 0,
         },
-      },
+        transfer: {
+          amount: 0,
+          count: 0,
+        }
+      }satisfies transacStats,
     );
   }, [transactions]);
 
@@ -135,9 +145,14 @@ export const BilanCaissePrint = ({
             prev["giftcard"].amount += current.total_amount;
             prev["giftcard"].count++;
             break;
-          default: {
+          case "transfer":
+            prev["transfer"].amount += current.total_amount;
+            prev["transfer"].count++;
             break;
-          }
+          default: 
+            current.payment_method satisfies "mixed"
+            break;
+          
         }
         return prev;
       },
@@ -162,7 +177,11 @@ export const BilanCaissePrint = ({
           amount: 0,
           count: 0,
         },
-      },
+        transfer: {
+          amount: 0,
+          count: 0,
+        },
+      }satisfies transacStats,
     );
   }, [transactions]);
 
@@ -343,6 +362,11 @@ export const BilanCaissePrint = ({
                 {formatCurrency(saleDatas.giftcard.amount)}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
+                virements : {saleDatas.transfer.count} règlement
+                {saleDatas.transfer.count !== 1 ? "s" : ""}, total{" "}
+                {formatCurrency(saleDatas.transfer.amount)}
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
                 mixed : {saleDatas.mixed.count} règlement
                 {saleDatas.mixed.count !== 1 ? "s" : ""}, total{" "}
                 {formatCurrency(saleDatas.mixed.amount)}
@@ -397,6 +421,11 @@ export const BilanCaissePrint = ({
                 Avoir : {refundDatas.giftcard.count} remboursement
                 {refundDatas.giftcard.count !== 1 ? "s" : ""}, total{" "}
                 {formatCurrency(refundDatas.giftcard.amount)}
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                virements : {refundDatas.transfer.count} remboursement
+                {refundDatas.transfer.count !== 1 ? "s" : ""}, total{" "}
+                {formatCurrency(refundDatas.transfer.amount)}
               </Typography>
             </Stack>
             <Typography

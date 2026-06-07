@@ -1067,6 +1067,7 @@ const PointOfSale = () => {
                             <MenuItem value="cash">Espèces</MenuItem>
                             <MenuItem value="card">Carte bancaire</MenuItem>
                             <MenuItem value="check">Chèque</MenuItem>
+                            <MenuItem value="transfer">Virement</MenuItem>
                             <MenuItem value="giftcard" disabled>
                               Avoir
                             </MenuItem>

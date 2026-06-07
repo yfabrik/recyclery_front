@@ -14,7 +14,7 @@ const filterSchema = z.object({
     date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
     transaction_number: z.string().trim().optional(),
     transactionType: z.enum(["sell", "refund",""]).optional(),
-    transactionMethod: z.enum(["cash", "card", "check", "giftcard", "mixed",""]).optional() //TODO satisfies TransactionModel["payment_method"]
+    transactionMethod: z.enum(["cash", "card", "check", "giftcard", "mixed","transfer",""]).optional() //TODO satisfies TransactionModel["payment_method"]
 });
 export type Filters = z.infer<typeof filterSchema>;
 
@@ -57,11 +57,12 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
             <Grid container spacing={2} alignItems="center">
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormSelect control={filters.control} name="transactionMethod" label="payment type">
+                        {/* TODO reusable payments method */}
                         <MenuItem key="all-stores" value="">
                             Tous les type de payments
                         </MenuItem>
                         {
-                            ["cash", "card", "check", "giftcard", "mixed"].map((item) =>
+                            ["cash", "card", "check", "giftcard", "mixed","transfer"].map((item) =>
                                 <MenuItem key={item} value={item}>
                                     {item}
                                 </MenuItem>

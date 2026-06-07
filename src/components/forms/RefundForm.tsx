@@ -30,17 +30,17 @@ import { useFieldArray } from "react-hook-form";
 import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
 import { type CartItem } from "../forms/cartSchema";
 
-const sumRefundPrice=(cart:Schema["cart"],transaction:TransactionModel,alreadyRefunded:ItemToRefund[])=>{
-  const totalPromo = transaction.total_amount_before_promotion-transaction.total_amount ;
-  const totalItems = transaction.items?.reduce((prev, current) => prev+=current.TransactionItem.quantity,0) || 0;
+const sumRefundPrice = (cart: Schema["cart"], transaction: TransactionModel, alreadyRefunded: ItemToRefund[]) => {
+  const totalPromo = transaction.total_amount_before_promotion - transaction.total_amount;
+  const totalItems = transaction.items?.reduce((prev, current) => prev += current.TransactionItem.quantity, 0) || 0;
   const totalPromoPerItem = totalPromo / totalItems;
-return cart.reduce((prev, current) => {
-  const alreadyRefundedQuantity = alreadyRefunded.find((item) => item.barcode === current.barcode)?.refundQuantity || 0;
-  const currentPrice = getCartLinePrice(current as CartItem)
-  const refundPrice = (currentPrice/current.quantity-totalPromoPerItem)*(current.refundQuantity-alreadyRefundedQuantity)
-  prev += refundPrice
-  return prev
-},0)
+  return cart.reduce((prev, current) => {
+    const alreadyRefundedQuantity = alreadyRefunded.find((item) => item.barcode === current.barcode)?.refundQuantity || 0;
+    const currentPrice = getCartLinePrice(current as CartItem)
+    const refundPrice = (currentPrice / current.quantity - totalPromoPerItem) * (current.refundQuantity - alreadyRefundedQuantity)
+    prev += refundPrice
+    return prev
+  }, 0)
 }
 const refundItemSchema = itemSchema.extend({
   refundQuantity: z.number(),
@@ -56,7 +56,7 @@ const REFUND_REASONS = [
   "other",
 ] as const;
 
-const REFUND_METHODS = ["cash", "card", "check", "giftcard"] as const;
+const REFUND_METHODS = ["cash", "card", "check", "giftcard", "transfer"] as const;
 
 const requiredSelect = <const T extends readonly [string, ...string[]]>(
   values: T,
@@ -319,6 +319,7 @@ export const RefundForm = ({
         </Grid>
 
         {/* Mode de remboursement */}
+        {/* TODO make reusable payment method */}
         <Grid size={{ xs: 12, md: 6 }}>
           <FormSelect
             control={form.control}
@@ -332,6 +333,7 @@ export const RefundForm = ({
             <MenuItem value="card">Carte bancaire</MenuItem>
             <MenuItem value="check">Chèque</MenuItem>
             <MenuItem value="giftcard">GiftCard</MenuItem>
+            <MenuItem value="transfer">Virement</MenuItem>
           </FormSelect>
         </Grid>
         {giftCardCode === "giftcard" && (
@@ -360,7 +362,7 @@ export const RefundForm = ({
             <Typography variant="body2">
               Montant à rembourser:{" "}
               <strong>
-                {sumRefundPrice(cart, selectedTransaction,cartItems??[] as ItemToRefund[]).toFixed(2)}€
+                {sumRefundPrice(cart, selectedTransaction, cartItems ?? [] as ItemToRefund[]).toFixed(2)}€
               </strong>
             </Typography>
             <Typography variant="body2" color="textSecondary">
