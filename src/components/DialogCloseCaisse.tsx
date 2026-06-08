@@ -80,6 +80,7 @@ export const DialogCloseCaisse = ({
           setState={setState}
           closingAmount={closingAmount}
           setClosingAmount={setClosingAmount}
+          expectedAMount={roundCurrency(expectedCashAmount)}
         />
         {state == "valid" && (
           <>

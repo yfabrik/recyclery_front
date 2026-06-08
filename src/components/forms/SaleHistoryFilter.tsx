@@ -1,0 +1,145 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Clear } from "@mui/icons-material";
+import { Box, Button, Grid, IconButton, MenuItem } from "@mui/material";
+import { useDebouncer } from "@tanstack/react-pacer";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { FormDate, FormInput, FormSelect } from "./FormBase";
+
+const filterSchema = z.object({
+    date_from: z.coerce
+        .date()
+        .transform((val) => val.toISOString().slice(0, 10)),
+    date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
+    transaction_number: z.string().trim().optional(),
+    transactionType: z.enum(["sell", "refund",""]).optional(),
+    transactionMethod: z.enum(["cash", "card", "check", "giftcard", "mixed","transfer",""]).optional() //TODO satisfies TransactionModel["payment_method"]
+});
+export type Filters = z.infer<typeof filterSchema>;
+
+interface FilterFormProps {
+    defaultValues: Filters;
+    onChange: (values: Filters) => void;
+}
+
+export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) => {
+
+    const filters = useForm({
+        defaultValues,
+        resolver: zodResolver(filterSchema),
+    });
+    const onSubmit = (data: Filters) => {
+        onChange(data);
+        console.log("data");
+    };
+
+
+    const watch = filters.watch
+    const debouncer = useDebouncer(() => {
+        console.log("debouncing")
+        filters.handleSubmit(onSubmit, (e) => console.error(e))()
+    }, { wait: 1000 })
+    useEffect(() => {
+        const subscription = watch((values, { name, type }) => {
+            console.log(values, name, type)
+            debouncer.maybeExecute()
+        })
+        return () => {
+            debouncer.cancel()
+            subscription.unsubscribe()
+        }
+    }, [watch]) // watch all changes
+
+
+    return (
+        <form onSubmit={filters.handleSubmit(onSubmit)}>
+            <Grid container spacing={2} alignItems="center">
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormSelect control={filters.control} name="transactionMethod" label="payment type">
+                        {/* TODO reusable payments method */}
+                        <MenuItem key="all-stores" value="">
+                            Tous les type de payments
+                        </MenuItem>
+                        {
+                            ["cash", "card", "check", "giftcard", "mixed","transfer"].map((item) =>
+                                <MenuItem key={item} value={item}>
+                                    {item}
+                                </MenuItem>
+                            )}
+                    </FormSelect>
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormSelect control={filters.control} name="transactionType" label="transaction type">
+                        <MenuItem key="all-stores" value="">
+                            Tous les type de transactions
+                        </MenuItem>
+                        {
+                            ["sell", "refund"].map((item) =>
+                                <MenuItem key={item} value={item}>
+                                    {item}
+                                </MenuItem>
+                            )}
+                    </FormSelect>
+                </Grid>
+
+
+
+
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormDate
+                        control={filters.control}
+                        label="Date de début"
+                        name="date_from"
+                    />
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormDate
+                        control={filters.control}
+                        label="Date de fin"
+                        name="date_to"
+                    />
+                </Grid>
+
+
+                {/* Recherche par numéro de transaction */}
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormInput
+                        control={filters.control}
+                        name="transaction_number"
+                        label="N° de transaction"
+                        extra={{
+                            placeholder: "Ex: 20231215-001",
+                            slotProps: {
+                                input: {
+                                    endAdornment: (
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => filters.resetField("transaction_number")}
+                                            edge="end"
+                                        >
+                                            <Clear />
+                                        </IconButton>
+                                    ),
+                                },
+                            },
+                        }}
+                    />
+                </Grid>
+
+                {/* Bouton pour effacer tous les filtres */}
+                <Grid size={{ xs: 12 }}>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<Clear />}
+                            onClick={() => filters.reset()}
+                        >
+                            Effacer tous les filtres
+                        </Button>
+                    </Box>
+                </Grid>
+            </Grid>
+        </form>
+    );
+};

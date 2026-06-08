@@ -88,9 +88,9 @@ export default function PlanningPrint() {
     });
 
     const sortByDateThenTime = (a: TaskModel, b: TaskModel) => {
-      const dateA = new Date(a.scheduled_date).getTime();
-      const dateB = new Date(b.scheduled_date).getTime();
-      if (dateA !== dateB) return dateA - dateB;
+      const dateA = new Date(a.scheduled_date).toISOString().slice(0,10)
+      const dateB = new Date(b.scheduled_date).toISOString().slice(0,10)
+      if (dateA !== dateB) return new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime();
       const timeA = new Date(a.start_time).getTime();
       const timeB = new Date(b.start_time).getTime();
       return timeA - timeB;
