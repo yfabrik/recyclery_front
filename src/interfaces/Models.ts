@@ -272,7 +272,7 @@ export interface CashSession extends BaseModel {
 export interface TransactionModel extends BaseModel {
   change_amount: number;
   total_amount: number;
-  payment_method: "cash" | "card" | "check" | "giftcard" | "mixed";
+  payment_method: "cash" | "card" | "check" | "giftcard" | "mixed" |"transfer";
   transactionType: "sell" | "refund";
   payment_amount: number;
   // customer_name?: string;

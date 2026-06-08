@@ -533,6 +533,7 @@ const Encaissement = ({ form, cart }: EncaissementProps) => {
                                     <MenuItem value="card">Carte bancaire</MenuItem>
                                     <MenuItem value="check">Chèque</MenuItem>
                                     <MenuItem value="giftcard">Gift Card / Avoir</MenuItem>
+                                    <MenuItem value="transfer">virement</MenuItem>
                                 </FormSelect>
                             </Box>
                             <Box sx={{ flex: 1 }}>

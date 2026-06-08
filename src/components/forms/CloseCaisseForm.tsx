@@ -24,11 +24,13 @@ export const CloseCaisseForm = ({
   setState,
   closingAmount,
   setClosingAmount,
+  expectedAMount
 }: BaseFormProps<Schema> & {
   state: "prepare" | "valid";
   setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
   closingAmount: number;
   setClosingAmount: React.Dispatch<React.SetStateAction<number>>;
+  expectedAMount?:number
 }) => {
   const form = useForm({
     resolver: zodResolver(schema),
@@ -96,7 +98,7 @@ export const CloseCaisseForm = ({
                                 "",
                                 form.getValues("closing_amount")?.toString() ||
                                   "",
-                                { unit: "€", mode: "money" },
+                                { unit: "€", mode: "money","valueToReach":expectedAMount },
                               ),
                               { shouldDirty: true, shouldTouch: true },
                             );

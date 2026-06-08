@@ -24,16 +24,16 @@ export interface EcoOrganismQuarterStat extends Pick<
   EcoOrgModel,
   "id" | "name" | "description" | "is_active"
 > {
-  quarters: (quarterStat & {
-    quarter: string;
-    label: string;
+  quarters: ({
+    quarter: string;//TODO XXXX-T{1-4} 
+    // label: string;
     quarterIn: quarterStat & {
-      // Backend currently returns an object; keep array support for backward compatibility.
-      by_source_type: quarterInBySourceType | quarterInBySourceType[]
+      by_source_type: quarterInBySourceType 
     }
 
     quarterSell: Omit<quarterStat, 'categories'> & {
       categories: (cat & { quantity: number, subcategories: (cat & { quantity: number })[] })[];
+      quantity:number
     },
     quarterOut: quarterStat
   })[];

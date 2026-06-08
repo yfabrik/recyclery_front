@@ -31,7 +31,7 @@ export const schema = z.object({
   }),
   payment_splits: z.array(
     z.object({
-      method: z.enum(["cash", "card", "check", "giftcard"]),
+      method: z.enum(["cash", "card", "check", "giftcard","transfer"]),
       amount: z.coerce.number().nonnegative(),
       gift_card_barcode: z.string().optional(),
       gift_card_id: z.number().optional(),

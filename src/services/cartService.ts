@@ -77,6 +77,7 @@ export const getPaymentMethodLabel = (
     check: "Chèque",
     giftcard: "avoir",
     mixed: "Mixte",
+    transfer: "Virement"
     // Backward-compatible in case some UI paths still send the old casing.
     // giftCard: "avoir",
   } as const satisfies Record<TransactionModel["payment_method"], string>;
@@ -179,12 +180,20 @@ export const sumPromoCategorie = (categorie?: CategoryModel) => {
 
 export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
   //TODO handle mixed
-  return transactions.reduce((prev, current) =>
-    current.payment_method === "cash" ?
-      current.transactionType == "sell" ?
-        prev + current.total_amount :
-        prev - current.total_amount :
-      prev, openingAmount)
+  return transactions.reduce((prev, current) => {
+    if (!current.payments)
+      return current.payment_method === "cash" ?
+        current.transactionType == "sell" ?
+          prev + current.total_amount :
+          prev - current.total_amount :
+        prev
+    const payments = current.payments.reduce((p, c) => c.method == "cash" ? p += c.amount : p, 0)
+    if (current.transactionType == 'sell')
+      prev += payments
+    else
+      prev -= payments
+    return prev
+  }, openingAmount)
 
   return transactions.reduce((prev: number, current) => {
     // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
