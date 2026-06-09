@@ -32,6 +32,7 @@ import {
   DeleteSweep,
   Build,
   Assignment,
+  EventNote,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,6 +74,7 @@ const Sidebar = ({ open, onClose }) => {
         { label: 'Magasins', path: '/admin/config/store', icon: Store, roles: ['manager', 'admin'] },
         { label: 'Employés', path: '/employee-management', icon: People, roles: ['manager', 'admin'] },
         { label: 'Tâches', path: '/task-management', icon: Assignment, roles: ['admin'] },
+        { label: 'Tâches personnalisées', path: '/custom-task-schedules', icon: EventNote, roles: ['admin'] },
         { label: 'Planning', path: '/planning', icon: CalendarToday, roles: ['manager', 'admin'] },
         { label: 'Stats éco-organismes', path: '/admin/eco-organism-stats', icon: Category, roles: ['manager', 'admin'] },
         // { label: 'Utilisateurs', path: '/users', icon: People, roles: ['admin'] },

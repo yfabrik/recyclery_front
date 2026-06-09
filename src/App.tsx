@@ -25,6 +25,7 @@ import WasteManagement from "./pages/WasteManagement";
 import EmployeeTools from "./pages/EmployeeTools";
 import EmployeeManagement from "./components/admin/config/EmployeeManagement";
 import TaskManagement from "./components/admin/config/TaskManagement";
+import CustomTaskScheduleManagement from "./components/admin/config/CustomTaskScheduleManagement";
 import Planning from "./pages/Planning";
 import EcoOrganismStatsPage from "./pages/EcoOrganismStatsPage";
 
@@ -245,6 +246,14 @@ function App() {
             element={
               <ProtectedRoute module="config">
                 <TaskManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/custom-task-schedules"
+            element={
+              <ProtectedRoute module="config">
+                <CustomTaskScheduleManagement />
               </ProtectedRoute>
             }
           />
