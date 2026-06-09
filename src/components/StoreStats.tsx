@@ -1,5 +1,6 @@
 import {
   Assessment,
+  History,
   Store,
   TrendingDown,
   TrendingUp
@@ -11,7 +12,6 @@ import {
   CardContent,
   Chip,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
@@ -211,9 +211,31 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
           </Box>
 
           <Tooltip title={`CA mois dernier: ${formatCurrency(store.stats.lastMonth.revenue)}`}>
-            <Typography variant="body2" color="textSecondary" onClick={() => handleOpenDialog && handleOpenDialog(store)}>
-              vs mois dernier
-            </Typography>
+            <Box
+              component={handleOpenDialog ? "button" : "span"}
+              type={handleOpenDialog ? "button" : undefined}
+              onClick={() => handleOpenDialog?.(store)}
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
+                border: "none",
+                background: "none",
+                p: 0,
+                m: 0,
+                font: "inherit",
+                color: "text.secondary",
+                cursor: handleOpenDialog ? "pointer" : "default",
+                "&:hover": handleOpenDialog
+                  ? { color: "primary.main" }
+                  : undefined,
+              }}
+            >
+              {handleOpenDialog && <History fontSize="small" />}
+              <Typography variant="body2" component="span" color="inherit">
+                vs mois dernier
+              </Typography>
+            </Box>
           </Tooltip>
         </Box>
 
@@ -243,26 +265,58 @@ const StoreHistorySales = ({ openDialog, store, handleCloseDialog }: StoreHistor
         maxWidth="xl"
         fullWidth
       >
-        <DialogTitle>historique du magasin:{store.name}</DialogTitle>
-        <DialogContent>
-          {
-            history.data && (
-              history.data.data.stats.map((storeStat, index) => {
-                const data = history.data.data
-
+        <DialogTitle>
+          Historique du magasin : {store.name}
+        </DialogTitle>
+        <DialogContent sx={{ overflowX: "auto", pb: 2 }}>
+          {history.data && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                gap: 2,
+                alignItems: "stretch",
+                minHeight: 1,
+                py: 1,
+              }}
+            >
+              {history.data.data.stats.map((storeStat, index) => {
+                const data = history.data!.data;
                 return (
-                  <>
-                    <Typography sx={{mt:3,pl:3}}>{formatDate(new Date(storeStat.currentMonth.start))}  -  {formatDate(new Date(storeStat.currentMonth.end))}</Typography>
-                    < StoreMonthlyStats store={{ id: data.id, name: data.name, address: data.address, phone: data.phone, email: data.email, stats: storeStat }} key={index} />
-                  </>
-                )
-              })
-            )
-          }
+                  <Box
+                    key={index}
+                    sx={{
+                      flex: "0 0 320px",
+                      minWidth: 320,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      align="center"
+                      fontWeight="bold"
+                      sx={{ mb: 1.5 }}
+                    >
+                      {formatDate(new Date(storeStat.currentMonth.start))} –{" "}
+                      {formatDate(new Date(storeStat.currentMonth.end))}
+                    </Typography>
+                    <StoreMonthlyStats
+                      store={{
+                        id: data.id,
+                        name: data.name,
+                        address: data.address,
+                        phone: data.phone,
+                        email: data.email,
+                        stats: storeStat,
+                      }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions>
-          {/* <Button onClick={() => handleCloseDialog()}>fermer</Button> */}
-        </DialogActions>
       </Dialog>
     </Loading>
 
