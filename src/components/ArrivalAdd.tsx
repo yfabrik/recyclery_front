@@ -54,7 +54,6 @@ export const ArrivalAdd = ({
       );
 
       queryClient.invalidateQueries({ queryKey: ["arrivals", "today"] });
-      //TODO clear form
       formMethods?.reset();
     },
 

@@ -62,7 +62,6 @@ export const CreateCaisseDialog = ({
     onSuccess: () => {
       toast.success("Caisse créée avec succès");
       queryClient.invalidateQueries({ queryKey: ["caisses"] });
-      //TODO clear form here
       formMethods?.reset();
     },
     onError: () => toast.error("Erreur lors de la création de la caisse"),

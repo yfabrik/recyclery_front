@@ -153,7 +153,6 @@ const Admin = () => {
         <Divider />
 
         <Box sx={{ p: 3 }}>
-          {/* FIXME y'a une erreur quand on essai d'aller juste sur /admin */}
           <Routes>
             <Route index element={<Navigate to="/admin/config" replace />} />
             <Route path="config/*" element={<ConfigurationTab />} />

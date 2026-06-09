@@ -279,13 +279,7 @@ const CollectionPointsTab = () => {
             form="collectionPointForm"
             variant="contained"
             loading={updatePoint.isPending || createPoint.isPending}
-          //TODO
-          // disabled={
-          //   !formData.name ||
-          //   !formData.address ||
-          //   !formData.city ||
-          //   !formData.postal_code
-          // }
+
           >
             {editingPoint ? "Mettre à jour" : "Créer"}
           </Button>
