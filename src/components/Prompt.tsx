@@ -29,7 +29,21 @@ import { formatCurrency } from "../services/cartService";
 
 type Resolver<T> = (value: T) => void;
 
-type PromptMode = "numeric" | "money";
+export type PromptMode = "numeric" | "money";
+
+type NumericPromptOptions = {
+  mode?: "numeric";
+  unit?: string;
+  valueToReach?: never;
+};
+
+type MoneyPromptOptions = {
+  mode: "money";
+  unit?: string;
+  valueToReach?: number;
+};
+
+export type PromptOptions = NumericPromptOptions | MoneyPromptOptions;
 
 export function usePrompt() {
   const [open, setOpen] = useState(false);
@@ -44,14 +58,16 @@ export function usePrompt() {
     (
       msg: string,
       defaultValue = "",
-      options?: { unit?: string; mode?: PromptMode, valueToReach?: number },//TODO ensure valueToreach exist only with promptmode money
+      options?: PromptOptions,
     ): Promise<string | null> => {
       setMessage(msg);
       setValue(defaultValue || "0");
       setUnit(options?.unit || "kg");
       setMode(options?.mode || "numeric");
       setOpen(true);
-      setValueToReach(options?.valueToReach || null)
+      setValueToReach(
+        options?.mode === "money" ? (options.valueToReach ?? null) : null,
+      );
 
 
       return new Promise((resolve) => {
