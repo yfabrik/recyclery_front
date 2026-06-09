@@ -105,13 +105,21 @@ export default function PlanningPrint() {
     }));
   })();
 
-  const weekLabel = selectedDate.toLocaleDateString("fr-FR", {
+  const weekLabel =()=> { 
+    const from = new Date(date_from).toLocaleDateString("fr-FR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+  const to = new Date(date_to).toLocaleDateString("fr-FR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-
+  return `${from} - ${to}`;
+}
   const printContentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: printContentRef,
@@ -146,7 +154,7 @@ export default function PlanningPrint() {
           Planning de la semaine
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mb: 3, fontSize: "1.15rem" }}>
-          {weekLabel}
+          {weekLabel()}
           {storeName && ` — ${storeName}`}
         </Typography>
 
