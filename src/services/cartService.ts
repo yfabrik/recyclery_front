@@ -179,21 +179,35 @@ export const sumPromoCategorie = (categorie?: CategoryModel) => {
 
 
 export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
+    return transactions.reduce((prev, current) => {
+    if (current.payment_method == "cash")
+      return current.transactionType == "sell" ?
+        prev + current.total_amount :
+        prev - current.total_amount
+    if (!current.payments || current.payments.filter(payment => payment.method == "cash").length == 0)
+      return prev
+
+    const cashPayment = current.payments.reduce((acc, pay) => pay.method == "cash" ? acc : acc - pay.amount, current.total_amount)
+    return current.transactionType == "sell" ?
+      prev + cashPayment :
+      prev - cashPayment
+
+  }, 0)
   //TODO handle mixed
-  return transactions.reduce((prev, current) => {
-    if (!current.payments)
-      return current.payment_method === "cash" ?
-        current.transactionType == "sell" ?
-          prev + current.total_amount :
-          prev - current.total_amount :
-        prev
-    const payments = current.payments.reduce((p, c) => c.method == "cash" ? p += c.amount : p, 0)
-    if (current.transactionType == 'sell')
-      prev += payments
-    else
-      prev -= payments
-    return prev
-  }, openingAmount)
+  // return transactions.reduce((prev, current) => {
+  //   if (!current.payments)
+  //     return current.payment_method === "cash" ?
+  //       current.transactionType == "sell" ?
+  //         prev + current.total_amount :
+  //         prev - current.total_amount :
+  //       prev
+  //   const payments = current.payments.reduce((p, c) => c.method == "cash" ? p += c.amount : p, 0)
+  //   if (current.transactionType == 'sell')
+  //     prev += payments
+  //   else
+  //     prev -= payments
+  //   return prev
+  // }, openingAmount)
 
   return transactions.reduce((prev: number, current) => {
     // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
