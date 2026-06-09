@@ -294,7 +294,7 @@ export interface TransactionModel extends BaseModel {
 }
 
 export interface TransactionPayment extends BaseModel {
-  method: TransactionModel["payment_method"];
+  method: Exclude<TransactionModel["payment_method"], "mixed">;
   amount: number;
   metadata?: Record<string, unknown> | null;
   gift_card_id: GiftCard['id'] | null;

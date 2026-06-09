@@ -9,6 +9,7 @@ import {
   FormHelperText,
   FormLabel,
   InputLabel,
+  MenuItem,
   Radio,
   RadioGroup,
   Select,
@@ -39,6 +40,11 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
 import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
+import {
+  PAYMENT_METHODS,
+  TRANSACTION_TYPES,
+} from "../../interfaces/transactionConstants";
+import { getPaymentMethodLabel } from "../../services/cartService";
 export interface BaseFormProps<T> {
   formId: string;
   defaultValues?: Partial<T> | null;
@@ -512,3 +518,48 @@ export const FormCheckboxGroup = <
     />
   );
 };
+
+export const FormPaymentMethodSelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  control,
+  name,
+  label,
+  allLabel = "Tous les types de paiement",
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  allLabel?: string;
+}) => (
+  <FormSelect control={control} name={name} label={label}>
+    <MenuItem value="">{allLabel}</MenuItem>
+    {PAYMENT_METHODS.map((method) => (
+      <MenuItem key={method} value={method}>
+        {getPaymentMethodLabel(method)}
+      </MenuItem>
+    ))}
+  </FormSelect>
+);
+
+export const FormTransactionTypeSelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  control,
+  name,
+  label,
+  allLabel = "Tous les types de transactions",
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  allLabel?: string;
+}) => (
+  <FormSelect control={control} name={name} label={label}>
+    <MenuItem value="">{allLabel}</MenuItem>
+    {TRANSACTION_TYPES.map((type) => (
+      <MenuItem key={type} value={type}>
+        {type}
+      </MenuItem>
+    ))}
+  </FormSelect>
+);
+

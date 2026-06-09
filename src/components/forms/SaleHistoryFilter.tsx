@@ -1,11 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clear } from "@mui/icons-material";
-import { Box, Button, Grid, IconButton, MenuItem } from "@mui/material";
+import { Box, Button, Grid, IconButton } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import { FormDate, FormInput, FormSelect } from "./FormBase";
+import {
+    PAYMENT_METHOD_FILTER_VALUES,
+    TRANSACTION_TYPE_FILTER_VALUES,
+} from "../../interfaces/transactionConstants";
+import {
+    FormDate,
+    FormInput,
+    FormPaymentMethodSelect,
+    FormTransactionTypeSelect,
+} from "./FormBase";
 
 const filterSchema = z.object({
     date_from: z.coerce
@@ -13,8 +22,8 @@ const filterSchema = z.object({
         .transform((val) => val.toISOString().slice(0, 10)),
     date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
     transaction_number: z.string().trim().optional(),
-    transactionType: z.enum(["sell", "refund",""]).optional(),
-    transactionMethod: z.enum(["cash", "card", "check", "giftcard", "mixed","transfer",""]).optional() //TODO satisfies TransactionModel["payment_method"]
+    transactionType: z.enum(TRANSACTION_TYPE_FILTER_VALUES).optional(),
+    transactionMethod: z.enum(PAYMENT_METHOD_FILTER_VALUES).optional(),
 });
 export type Filters = z.infer<typeof filterSchema>;
 
@@ -56,31 +65,18 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
         <form onSubmit={filters.handleSubmit(onSubmit)}>
             <Grid container spacing={2} alignItems="center">
                 <Grid size={{ xs: 12, md: 3 }}>
-                    <FormSelect control={filters.control} name="transactionMethod" label="payment type">
-                        {/* TODO reusable payments method */}
-                        <MenuItem key="all-stores" value="">
-                            Tous les type de payments
-                        </MenuItem>
-                        {
-                            ["cash", "card", "check", "giftcard", "mixed","transfer"].map((item) =>
-                                <MenuItem key={item} value={item}>
-                                    {item}
-                                </MenuItem>
-                            )}
-                    </FormSelect>
+                    <FormPaymentMethodSelect
+                        control={filters.control}
+                        name="transactionMethod"
+                        label="payment type"
+                    />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                    <FormSelect control={filters.control} name="transactionType" label="transaction type">
-                        <MenuItem key="all-stores" value="">
-                            Tous les type de transactions
-                        </MenuItem>
-                        {
-                            ["sell", "refund"].map((item) =>
-                                <MenuItem key={item} value={item}>
-                                    {item}
-                                </MenuItem>
-                            )}
-                    </FormSelect>
+                    <FormTransactionTypeSelect
+                        control={filters.control}
+                        name="transactionType"
+                        label="transaction type"
+                    />
                 </Grid>
 
 
