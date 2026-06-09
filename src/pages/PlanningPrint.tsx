@@ -1,7 +1,7 @@
 import { Print } from "@mui/icons-material";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useSearchParams, Link as RouterLink } from "react-router";
 import { EmployeeTasksTimeline, type EmployeeTaskItem } from "../components/planning/EmployeeTasksTimeline";
@@ -105,24 +105,46 @@ export default function PlanningPrint() {
     }));
   })();
 
-  const weekLabel =()=> { 
-    const from = new Date(date_from).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
-  const to = new Date(date_to).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  return `${from} - ${to}`;
-}
+  const weekLabel = useMemo(() => {
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const from = new Date(date_from).toLocaleDateString("fr-FR", dateOptions);
+    const to = new Date(date_to).toLocaleDateString("fr-FR", dateOptions);
+    return `${from} - ${to}`;
+  }, [date_from, date_to]);
+
+  const printPageStyle = `
+    @page {
+      margin: 12mm 12mm 12mm 12mm;
+    }
+    @media print {
+      .planning-print-running-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 4mm 12mm 3mm;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+        z-index: 1000;
+      }
+      .planning-print-employee {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        padding-top: 4mm;
+        margin-top: 2mm;
+      }
+    }
+  `;
+
   const printContentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: printContentRef,
+    pageStyle: printPageStyle,
     documentTitle: `Planning semaine ${date_from} ${storeName ?? ""}`.trim(),
   });
 
@@ -142,21 +164,33 @@ export default function PlanningPrint() {
         </Button>
       </Box>
 
-      <Box
-        ref={printContentRef}
-        sx={{
-          "@media print": {
-            padding: 4,
-          },
-        }}
-      >
-        <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
-          Planning de la semaine
-        </Typography>
-        <Typography variant="h6" color="text.secondary" sx={{ mb: 3, fontSize: "1.15rem" }}>
-          {weekLabel()}
-          {storeName && ` — ${storeName}`}
-        </Typography>
+      <Box ref={printContentRef}>
+        <Box
+          className="planning-print-running-header"
+          sx={{ display: "none", displayPrint: "block" }}
+        >
+          <Typography variant="h6" component="p" sx={{ fontWeight: "bold", mb: 0.25 }}>
+            Planning de la semaine
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {weekLabel}
+            {storeName && ` — ${storeName}`}
+          </Typography>
+        </Box>
+
+        <Box sx={{ displayPrint: "none" }}>
+          <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
+            Planning de la semaine
+          </Typography>
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ mb: 3, fontSize: "1.15rem" }}
+          >
+            {weekLabel}
+            {storeName && ` — ${storeName}`}
+          </Typography>
+        </Box>
 
         {tasksQuery.isLoading && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -185,6 +219,7 @@ export default function PlanningPrint() {
             {byEmployee.map(({ employeeName, tasks }) => (
               <Box
                 key={employeeName}
+                className="planning-print-employee"
                 sx={{
                   minWidth: 320,
                   flex: "1 1 320px",
