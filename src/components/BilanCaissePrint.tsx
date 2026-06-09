@@ -1,23 +1,30 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { CashSession, TransactionModel } from "../interfaces/Models";
+import type {
+  CashSession,
+  TransactionModel,
+  TransactionPayment,
+} from "../interfaces/Models";
 import {
   formatCurrency,
   getCashSessionBalance,
-  roundCurrency,
   sumCashInPayments,
 } from "../services/cartService";
 
+type BilanCaisseTransaction = TransactionModel & {
+  payments: TransactionPayment[];
+};
+
 interface BilanCaisseProps {
   session: CashSession;
-  transactions: TransactionModel[];
+  transactions: BilanCaisseTransaction[];
   closingAmount?: number;
 }
 
 interface BilanCaissePrintPayload {
   session: CashSession;
-  transactions: TransactionModel[];
+  transactions: BilanCaisseTransaction[];
   closingAmount?: number;
 }
 
@@ -53,7 +60,7 @@ export const BilanCaissePrint = ({
   );
 
   type transacStats = Record<
-    TransactionModel["payment_method"] | "mixed",
+    Exclude<TransactionModel["payment_method"], "mixed">,
     {
       amount: number;
       count: number;
@@ -82,8 +89,10 @@ export const BilanCaissePrint = ({
             prev["giftcard"].count++;
             break;
           case "mixed":
-            prev["mixed"].amount += current.total_amount;
-            prev["mixed"].count++;
+            current.payments.forEach(payment => {
+              prev[payment.method].amount += payment.amount;
+              prev[payment.method].count++;
+            })
             break;
           case "transfer":
             prev["transfer"].amount += current.total_amount;
@@ -112,10 +121,7 @@ export const BilanCaissePrint = ({
           amount: 0,
           count: 0,
         }, 
-        mixed: {
-          amount: 0,
-          count: 0,
-        },
+
         transfer: {
           amount: 0,
           count: 0,
@@ -173,10 +179,7 @@ export const BilanCaissePrint = ({
           amount: 0,
           count: 0,
         },
-        mixed: {
-          amount: 0,
-          count: 0,
-        },
+
         transfer: {
           amount: 0,
           count: 0,
@@ -194,6 +197,26 @@ export const BilanCaissePrint = ({
       ),
     [transactions],
   );
+
+  const globalPromoStats = useMemo(() => {
+    return transactions.reduce(
+      (prev, current) => {
+        if (current.transactionType !== "sell") return prev;
+        const value = Number(current.global_promotion ?? 0);
+        if (value <= 0) return prev;
+        const type = current.global_promotion_type ?? "percent";
+        if (type === "percent" && value === 40) {
+          prev.percent40++;
+        } else if (type === "fixed" && value === 5) {
+          prev.fixed5++;
+        } else {
+          prev.other++;
+        }
+        return prev;
+      },
+      { percent40: 0, fixed5: 0, other: 0 },
+    );
+  }, [transactions]);
 
   const refundsTotal = useMemo(
     () =>
@@ -366,11 +389,7 @@ export const BilanCaissePrint = ({
                 {saleDatas.transfer.count !== 1 ? "s" : ""}, total{" "}
                 {formatCurrency(saleDatas.transfer.amount)}
               </Typography>
-              <Typography sx={{ fontSize: "0.7rem" }}>
-                mixed : {saleDatas.mixed.count} règlement
-                {saleDatas.mixed.count !== 1 ? "s" : ""}, total{" "}
-                {formatCurrency(saleDatas.mixed.amount)}
-              </Typography>
+              
             </Stack>
             <Typography
               sx={{
@@ -383,6 +402,38 @@ export const BilanCaissePrint = ({
             >
               Total ventes : {formatCurrency(salesTotal)}
             </Typography>
+          </Box>
+
+          {/* Block: Global promotions */}
+          <Box sx={printBlockSx}>
+            <Typography
+              component="h2"
+              sx={{
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                mb: 1,
+                borderBottom: "1px solid #333",
+                pb: 0.5,
+              }}
+            >
+              Promotions globales
+            </Typography>
+            <Stack spacing={0.25} sx={{ fontSize: "0.7rem" }}>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                40 % : {globalPromoStats.percent40} vente
+                {globalPromoStats.percent40 !== 1 ? "s" : ""}
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                5 € : {globalPromoStats.fixed5} vente
+                {globalPromoStats.fixed5 !== 1 ? "s" : ""}
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem" }}>
+                Autres : {globalPromoStats.other} vente
+                {globalPromoStats.other !== 1 ? "s" : ""}
+              </Typography>
+            </Stack>
           </Box>
 
           {/* Block: Refund summary */}
