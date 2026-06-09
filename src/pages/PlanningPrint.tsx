@@ -116,30 +116,58 @@ export default function PlanningPrint() {
     const to = new Date(date_to).toLocaleDateString("fr-FR", dateOptions);
     return `${from} - ${to}`;
   }, [date_from, date_to]);
-
+  
+// TODO remake this cleaner 
   const printPageStyle = `
     @page {
-      margin: 12mm 12mm 12mm 12mm;
+      margin: 12mm;
     }
     @media print {
-      .planning-print-running-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        padding: 4mm 12mm 3mm;
-        background: #fff;
-        border-bottom: 1px solid #ccc;
-        z-index: 1000;
+      .planning-print-table thead {
+        display: table-header-group;
       }
-      .planning-print-employee {
+      .planning-print-table tbody {
+        display: table-row-group;
+      }
+      .planning-print-table tr {
         break-inside: avoid;
         page-break-inside: avoid;
-        padding-top: 4mm;
-        margin-top: 2mm;
+      }
+      .planning-print-table th,
+      .planning-print-table td {
+        border: none;
+        padding: 0;
+        vertical-align: top;
+        text-align: left;
+        font-weight: normal;
+      }
+      .planning-print-table thead th {
+        padding-bottom: 3mm;
+        border-bottom: 1px solid #ccc;
+      }
+      .planning-print-table tbody td {
+        width: 50%;
+        padding-top: 3mm;
+        padding-right: 4mm;
+      }
+      .planning-print-table tbody td:last-child {
+        padding-right: 0;
+        padding-left: 4mm;
+      }
+      .planning-print-table tbody td:only-child {
+        padding-left: 0;
+        padding-right: 0;
       }
     }
   `;
+
+  const employeeRows = useMemo(() => {
+    const rows: (typeof byEmployee)[] = [];
+    for (let i = 0; i < byEmployee.length; i += 2) {
+      rows.push(byEmployee.slice(i, i + 2));
+    }
+    return rows;
+  }, [byEmployee]);
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -165,27 +193,14 @@ export default function PlanningPrint() {
       </Box>
 
       <Box ref={printContentRef}>
-        <Box
-          className="planning-print-running-header"
-          sx={{ display: "none", displayPrint: "block" }}
-        >
-          <Typography variant="h6" component="p" sx={{ fontWeight: "bold", mb: 0.25 }}>
-            Planning de la semaine
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {weekLabel}
-            {storeName && ` — ${storeName}`}
-          </Typography>
-        </Box>
-
-        <Box sx={{ displayPrint: "none" }}>
+        <Box className="planning-print-header" sx={{ mb: 3, displayPrint: "none" }}>
           <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
             Planning de la semaine
           </Typography>
           <Typography
             variant="h6"
             color="text.secondary"
-            sx={{ mb: 3, fontSize: "1.15rem" }}
+            sx={{ fontSize: "1.15rem" }}
           >
             {weekLabel}
             {storeName && ` — ${storeName}`}
@@ -207,32 +222,78 @@ export default function PlanningPrint() {
         )}
 
         {tasksQuery.isSuccess && byEmployee.length > 0 && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              flexWrap: "wrap",
-              gap: 3,
-              alignItems: "flex-start",
-            }}
-          >
-            {byEmployee.map(({ employeeName, tasks }) => (
-              <Box
-                key={employeeName}
-                className="planning-print-employee"
-                sx={{
-                  minWidth: 320,
-                  flex: "1 1 320px",
-                  maxWidth: 480,
-                }}
-              >
-                <EmployeeTasksTimeline
-                  employeeName={employeeName}
-                  tasks={tasks}
-                />
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 3,
+                alignItems: "flex-start",
+                displayPrint: "none",
+              }}
+            >
+              {byEmployee.map(({ employeeName, tasks }) => (
+                <Box
+                  key={employeeName}
+                  sx={{
+                    minWidth: 320,
+                    flex: "1 1 320px",
+                    maxWidth: 480,
+                  }}
+                >
+                  <EmployeeTasksTimeline
+                    employeeName={employeeName}
+                    tasks={tasks}
+                  />
+                </Box>
+              ))}
+            </Box>
+
+            <Box
+              component="table"
+              className="planning-print-table"
+              sx={{
+                display: "none",
+                displayPrint: "table",
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <Box component="thead">
+                <Box component="tr">
+                  <Box component="th" colSpan={2}>
+                    <Typography
+                      variant="h6"
+                      component="p"
+                      sx={{ fontWeight: "bold", mb: 0.25, fontSize: "1.1rem" }}
+                    >
+                      Planning de la semaine
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {weekLabel}
+                      {storeName && ` — ${storeName}`}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
-            ))}
-          </Box>
+              <Box component="tbody">
+                {employeeRows.map((row, rowIndex) => (
+                  <Box component="tr" key={rowIndex}>
+                    {row.map(({ employeeName, tasks }) => (
+                      <Box component="td" key={employeeName}>
+                        <EmployeeTasksTimeline
+                          employeeName={employeeName}
+                          tasks={tasks}
+                        />
+                      </Box>
+                    ))}
+                    {row.length === 1 && <Box component="td" />}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </>
         )}
       </Box>
     </Box>
