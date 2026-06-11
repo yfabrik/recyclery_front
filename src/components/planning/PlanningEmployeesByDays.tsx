@@ -1,7 +1,7 @@
 /***
  * @deprecated maybe ?
  */
-import { CalendarToday, Person, Warning } from "@mui/icons-material";
+import { CalendarToday, Person, Warning, WbSunny, WbTwilight, Brightness3 } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -181,7 +181,8 @@ export const PlanningEmployeesBydays = () => {
                                               gap: 0.5,
                                             }}
                                           >
-                                            🌞 Journée
+                                            <WbSunny sx={{ fontSize: 14 }} />
+                                            Journée
                                           </Typography>
                                           {allDayEmployees.map((employee) => (
                                             <Box
@@ -230,7 +231,8 @@ export const PlanningEmployeesBydays = () => {
                                               gap: 0.5,
                                             }}
                                           >
-                                            🌅 Matin
+                                            <WbTwilight sx={{ fontSize: 14 }} />
+                                            Matin
                                           </Typography>
                                           {morningOnlyEmployees.map(
                                             (employee) => (
@@ -283,7 +285,8 @@ export const PlanningEmployeesBydays = () => {
                                               gap: 0.5,
                                             }}
                                           >
-                                            🌆 Après-midi
+                                            <Brightness3 sx={{ fontSize: 14 }} />
+                                            Après-midi
                                           </Typography>
                                           {afternoonOnlyEmployees.map(
                                             (employee) => (

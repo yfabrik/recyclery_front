@@ -1,5 +1,5 @@
 import React from "react";
-import { Delete, Edit } from "@mui/icons-material";
+import { Assignment, Delete, Edit, LocalShipping } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -143,9 +143,10 @@ const WeekCollectionSection = ({
                     >
                       <Typography
                         variant="caption"
-                        sx={{ fontWeight: "bold", color: "#9c27b0" }}
+                        sx={{ fontWeight: "bold", color: "#9c27b0", display: "flex", alignItems: "center", gap: 0.5 }}
                       >
-                        🚚 {collection.collection_point_name}
+                        <LocalShipping sx={{ fontSize: 14 }} />
+                        {collection.collection_point_name}
                       </Typography>
                       <Typography
                         variant="caption"
@@ -276,9 +277,10 @@ const WeekCollectionSection = ({
                     >
                       <Typography
                         variant="caption"
-                        sx={{ fontWeight: "bold", color: "#4caf50" }}
+                        sx={{ fontWeight: "bold", color: "#4caf50", display: "flex", alignItems: "center", gap: 0.5 }}
                       >
-                        📋 {schedule.name}
+                        <Assignment sx={{ fontSize: 14 }} />
+                        {schedule.name}
                       </Typography>
                       <Typography
                         variant="caption"

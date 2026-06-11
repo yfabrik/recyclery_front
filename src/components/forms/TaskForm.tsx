@@ -17,6 +17,7 @@ import {
 } from "./FormBase";
 import type { EmployeeModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { TASK_CATEGORIES } from "../../constants/taskCategories";
 
 const schema = z.object({
   name: z.string().trim().nonempty("Le nom de la tâche est requis"),
@@ -86,26 +87,7 @@ export const TaskForm = ({
   defaultValues,
   employees,
 }: TaskFormProps) => {
-  const categories = [
-    { value: "collection", label: "Collecte", icon: "🚛", color: "primary" },
-    { value: "sorting", label: "Tri", icon: "♻️", color: "secondary" },
-    {
-      value: "maintenance",
-      label: "Maintenance",
-      icon: "🔧",
-      color: "warning",
-    },
-    { value: "sales", label: "Vente", icon: "💰", color: "success" },
-    {
-      value: "administration",
-      label: "Administration",
-      icon: "📋",
-      color: "info",
-    },
-    { value: "cleaning", label: "Nettoyage", icon: "🧹", color: "default" },
-    { value: "transport", label: "Transport", icon: "🚚", color: "primary" },
-    { value: "training", label: "Formation", icon: "🎓", color: "secondary" },
-  ];
+  const categories = TASK_CATEGORIES;
 
   const skillsOptions = [
     "Collecte",
@@ -221,8 +203,10 @@ export const TaskForm = ({
           <FormSelect control={form.control} name="category" label="Catégorie">
             {categories.map((category) => (
               <MenuItem key={category.value} value={category.value}>
-                {category.icon && <span>{category.icon} </span>}
-                {category.label}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {category.icon}
+                  {category.label}
+                </Box>
               </MenuItem>
             ))}
           </FormSelect>

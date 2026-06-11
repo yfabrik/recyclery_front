@@ -15,7 +15,7 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import type { BaseFormProps } from "./FormBase";
 import type { StoreModel } from "../../interfaces/Models";
-import { Star, Store } from "@mui/icons-material";
+import { Place, Star, Store } from "@mui/icons-material";
 import { DevTool } from "@hookform/devtools";
 
 const schema = z.object({
@@ -136,10 +136,11 @@ export const EmployeeStoresForm = ({
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
-                                  sx={{ mb: 1 }}
+                                  sx={{ mb: 1, display: "flex", alignItems: "center", gap: 0.5 }}
                                   noWrap
                                 >
-                                  📍 {store.address}
+                                  <Place sx={{ fontSize: 16, flexShrink: 0 }} />
+                                  {store.address}
                                 </Typography>
                               )}
 

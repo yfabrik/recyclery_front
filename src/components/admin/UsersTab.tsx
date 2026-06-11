@@ -1,10 +1,15 @@
 import {
   AdminPanelSettings,
+  Assignment,
+  BarChart,
   Delete,
   Edit,
+  Groups,
+  Lock,
   ManageAccounts,
   Person,
   PersonAdd,
+  Phone,
   VpnKey,
   Work
 } from "@mui/icons-material";
@@ -233,8 +238,9 @@ export const UsersTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
-          👥 Gestion des Utilisateurs
+        <Typography variant="h5" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Groups />
+          Gestion des Utilisateurs
         </Typography>
         <Button
           variant="contained"
@@ -276,8 +282,9 @@ export const UsersTab = () => {
       {userStats.data?.usersByRole && userStats.data?.usersByRole.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              📊 Répartition par Rôles
+            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <BarChart fontSize="small" />
+              Répartition par Rôles
             </Typography>
             <Grid container spacing={2}>
               {userStats.data.usersByRole.map((rolestat) => (
@@ -301,8 +308,9 @@ export const UsersTab = () => {
       {/* Liste des utilisateurs */}
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            📋 Liste des Utilisateurs ({users.data?.length || 0})
+          <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Assignment fontSize="small" />
+            Liste des Utilisateurs ({users.data?.length || 0})
           </Typography>
 
           {users.data?.length === 0 ? (
@@ -341,8 +349,10 @@ export const UsersTab = () => {
                               variant="caption"
                               display="block"
                               color="textSecondary"
+                              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              📞 {user.phone}
+                              <Phone sx={{ fontSize: 14 }} />
+                              {user.phone}
                             </Typography>
                           )}
                         </Box>
@@ -419,8 +429,18 @@ export const UsersTab = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          {editingUser ? "✏️ Modifier l'utilisateur" : "👤 Nouvel utilisateur"}
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {editingUser ? (
+            <>
+              <Edit fontSize="small" />
+              Modifier l'utilisateur
+            </>
+          ) : (
+            <>
+              <Person fontSize="small" />
+              Nouvel utilisateur
+            </>
+          )}
         </DialogTitle>
         <DialogContent>
           <UserForm
@@ -457,7 +477,10 @@ export const UsersTab = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>🔐 Changer le mot de passe</DialogTitle>
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Lock fontSize="small" />
+          Changer le mot de passe
+        </DialogTitle>
         <DialogContent>
 
           {editingUser && (

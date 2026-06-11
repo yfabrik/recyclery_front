@@ -44,7 +44,10 @@ import {
   Category,
   Language,
   School,
-  Build
+  Build,
+  Handyman,
+  Lightbulb,
+  RocketLaunch,
 } from '@mui/icons-material';
 
 const EmployeeTools = () => {
@@ -200,8 +203,9 @@ const EmployeeTools = () => {
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          🛠️ Outils Salariés
+        <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Handyman />
+          Outils Salariés
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           Accès rapide aux outils et services utiles pour votre travail quotidien.
@@ -209,9 +213,10 @@ const EmployeeTools = () => {
         </Typography>
       </Box>
       <Alert severity="info" sx={{ mb: 4 }}>
-        <Typography variant="body2">
-          <strong>💡 Astuce :</strong> Tous ces outils s'ouvrent dans un nouvel onglet pour ne pas interrompre votre travail.
-          Vous pouvez les utiliser simultanément avec l'application de recyclerie.
+        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+          <Lightbulb sx={{ fontSize: 20, mt: 0.25, flexShrink: 0 }} />
+          <span><strong>Astuce :</strong> Tous ces outils s'ouvrent dans un nouvel onglet pour ne pas interrompre votre travail.
+          Vous pouvez les utiliser simultanément avec l'application de recyclerie.</span>
         </Typography>
       </Alert>
       {categories.map((category) => (
@@ -365,8 +370,9 @@ const EmployeeTools = () => {
         <DialogContent>
           {selectedTool && (
             <Box>
-              <Typography variant="h6" gutterBottom>
-                🚀 Comment utiliser {selectedTool.title}
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <RocketLaunch fontSize="small" />
+                Comment utiliser {selectedTool.title}
               </Typography>
               
               <List>

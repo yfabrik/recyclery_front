@@ -5,7 +5,9 @@ import {
   Compost,
   Delete,
   Edit,
+  Email,
   Nature,
+  Phone,
 } from "@mui/icons-material";
 import {
   Box,
@@ -227,13 +229,15 @@ export const EcoOrganismsTab = () => {
                   <TableCell>
                     <Box>
                       {org.contact_email && (
-                        <Typography variant="body2">
-                          📧 {org.contact_email}
+                        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                          <Email sx={{ fontSize: 16 }} />
+                          {org.contact_email}
                         </Typography>
                       )}
                       {org.contact_phone && (
-                        <Typography variant="body2">
-                          📞 {org.contact_phone}
+                        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                          <Phone sx={{ fontSize: 16 }} />
+                          {org.contact_phone}
                         </Typography>
                       )}
                     </Box>

@@ -5,6 +5,7 @@ import {
   Assignment,
   Delete,
   Edit,
+  Groups,
   LocationOn,
   Person,
   Store,
@@ -356,7 +357,8 @@ export const DayTask = ({
                             mb: 0.5,
                           }}
                         >
-                          👥 Employés assignés (
+                          <Groups sx={{ fontSize: 14, mr: 0.5 }} />
+                          Employés assignés (
                           {schedule.assigned_employees.length})
                         </Typography>
                         <Box

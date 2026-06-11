@@ -45,6 +45,7 @@ import {
   updateTask,
 } from "../../../services/api/tasks";
 import { fetchUsers } from "../../../services/api/users";
+import { TASK_CATEGORIES } from "../../../constants/taskCategories";
 import { TaskForm } from "../../forms/TaskForm";
 
 /**
@@ -69,26 +70,7 @@ const TaskManagement = () => {
     [],
   );
 
-  const categories = [
-    { value: "collection", label: "Collecte", icon: "🚛", color: "primary" },
-    { value: "sorting", label: "Tri", icon: "♻️", color: "secondary" },
-    {
-      value: "maintenance",
-      label: "Maintenance",
-      icon: "🔧",
-      color: "warning",
-    },
-    { value: "sales", label: "Vente", icon: "💰", color: "success" },
-    {
-      value: "administration",
-      label: "Administration",
-      icon: "📋",
-      color: "info",
-    },
-    { value: "cleaning", label: "Nettoyage", icon: "🧹", color: "default" },
-    { value: "transport", label: "Transport", icon: "🚚", color: "primary" },
-    { value: "training", label: "Formation", icon: "🎓", color: "secondary" },
-  ];
+  const categories = TASK_CATEGORIES;
 
   const priorities = [
     { value: "low", label: "Faible", color: "success" },
@@ -381,7 +363,10 @@ const TaskManagement = () => {
                 <MenuItem value="all">Toutes les catégories</MenuItem>
                 {categories.map((category) => (
                   <MenuItem key={category.value} value={category.value}>
-                    {category.icon} {category.label}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {category.icon}
+                      {category.label}
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
@@ -481,7 +466,7 @@ const TaskManagement = () => {
                   <Stack spacing={1}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Chip
-                        icon={<span>{categoryInfo.icon}</span>}
+                        icon={categoryInfo.icon}
                         label={categoryInfo.label}
                         color={categoryInfo.color}
                         size="small"
@@ -742,7 +727,10 @@ const TaskManagement = () => {
                 >
                   {categories.map((category) => (
                     <MenuItem key={category.value} value={category.value}>
-                      {category.icon} {category.label}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {category.icon}
+                        {category.label}
+                      </Box>
                     </MenuItem>
                   ))}
                 </Select>

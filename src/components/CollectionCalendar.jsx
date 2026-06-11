@@ -322,7 +322,7 @@ const CollectionCalendar = () => {
         fetchEmployees()
       ]);
       
-      toast.success('🔄 Planning des collectes synchronisé avec le planning principal !');
+      toast.success('Planning des collectes synchronisé avec le planning principal !');
     } catch (error) {
       console.error('Erreur lors de la synchronisation:', error);
       toast.error('Erreur lors de la synchronisation');

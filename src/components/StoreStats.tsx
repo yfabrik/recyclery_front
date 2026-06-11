@@ -42,8 +42,9 @@ const StoreStats = ({ stores, loading }: StoreStatsProps) => {
   if (loading) {
     return (
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          📊 Statistiques par Magasin
+        <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Assessment fontSize="small" />
+          Statistiques par Magasin
         </Typography>
         <LinearProgress />
       </Box>

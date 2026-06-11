@@ -6,8 +6,16 @@ import {
   Add,
   ArrowBackIos,
   ArrowForwardIos,
+  Assignment,
   Delete,
   Edit,
+  Groups,
+  LocalShipping,
+  Place,
+  ShoppingCart,
+  Store,
+  WbSunny,
+  WbTwilight,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -200,7 +208,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🛒 Tâches de vente - Matin (8h-12h)
+              <ShoppingCart fontSize="small" />
+              Tâches de vente - Matin (8h-12h)
             </Typography>
             <Chip
               label={`${
@@ -341,9 +350,9 @@ export const WeekView = ({
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -377,9 +386,14 @@ export const WeekView = ({
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -447,9 +461,13 @@ export const WeekView = ({
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -583,7 +601,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🛒 Tâches de vente - Après-midi (13h-17h)
+              <ShoppingCart fontSize="small" />
+              Tâches de vente - Après-midi (13h-17h)
             </Typography>
             <Chip
               label={`${
@@ -724,9 +743,9 @@ export const WeekView = ({
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -760,9 +779,14 @@ export const WeekView = ({
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -830,9 +854,13 @@ export const WeekView = ({
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -968,7 +996,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              📍 Présence déchèterie - Matin (8h-12h)
+              <Place fontSize="small" />
+              Présence déchèterie - Matin (8h-12h)
             </Typography>
             <Chip
               label={`${
@@ -1105,9 +1134,9 @@ export const WeekView = ({
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -1145,9 +1174,14 @@ export const WeekView = ({
                                       fontSize: "0.7rem",
                                       fontWeight: "bold",
                                       textAlign: "center",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: 0.5,
                                     }}
                                   >
-                                    👥 Employés (
+                                    <Groups sx={{ fontSize: 14 }} />
+                                    Employés (
                                     {schedule.assigned_employees.length})
                                   </Typography>
                                   <Box
@@ -1341,7 +1375,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              📍 Présence déchèterie - Après-midi (13h-17h)
+              <Place fontSize="small" />
+              Présence déchèterie - Après-midi (13h-17h)
             </Typography>
             <Chip
               label={`${
@@ -1478,9 +1513,9 @@ export const WeekView = ({
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -1518,9 +1553,14 @@ export const WeekView = ({
                                       fontSize: "0.7rem",
                                       fontWeight: "bold",
                                       textAlign: "center",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: 0.5,
                                     }}
                                   >
-                                    👥 Employés (
+                                    <Groups sx={{ fontSize: 14 }} />
+                                    Employés (
                                     {schedule.assigned_employees.length})
                                   </Typography>
                                   <Box
@@ -1714,7 +1754,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🌅 Tâches normales - Matin (8h00 - 12h00)
+              <WbTwilight fontSize="small" />
+              Tâches normales - Matin (8h00 - 12h00)
             </Typography>
             <Chip
               label={`${
@@ -1876,9 +1917,12 @@ export const WeekView = ({
                                 sx={{
                                   fontWeight: "bold",
                                   color: "#2196f3",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
                                 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -1912,9 +1956,14 @@ export const WeekView = ({
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -1982,9 +2031,13 @@ export const WeekView = ({
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -2120,7 +2173,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🌞 Tâches normales - Après-midi (13h30 - 17h)
+              <WbSunny fontSize="small" />
+              Tâches normales - Après-midi (13h30 - 17h)
             </Typography>
             <Chip
               label={`${
@@ -2279,9 +2333,9 @@ export const WeekView = ({
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -2315,9 +2369,14 @@ export const WeekView = ({
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -2385,9 +2444,13 @@ export const WeekView = ({
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -2523,7 +2586,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🚚 Lieux de collecte - Matin (8h-12h)
+              <LocalShipping fontSize="small" />
+              Lieux de collecte - Matin (8h-12h)
             </Typography>
             <Chip
               label={`${
@@ -2660,9 +2724,10 @@ export const WeekView = ({
                           >
                             <Typography
                               variant="caption"
-                              sx={{ fontWeight: "bold", color: "#9c27b0" }}
+                              sx={{ fontWeight: "bold", color: "#9c27b0", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              🚚 {collection.collection_point_name}
+                              <LocalShipping sx={{ fontSize: 14 }} />
+                              {collection.collection_point_name}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -2812,9 +2877,10 @@ export const WeekView = ({
                           >
                             <Typography
                               variant="caption"
-                              sx={{ fontWeight: "bold", color: "#4caf50" }}
+                              sx={{ fontWeight: "bold", color: "#4caf50", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              📋 {getTaskDisplayName(schedule)}
+                              <Assignment sx={{ fontSize: 14 }} />
+                              {getTaskDisplayName(schedule)}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -2877,7 +2943,8 @@ export const WeekView = ({
                 gap: 1,
               }}
             >
-              🚚 Lieux de collecte - Après-midi (13h-17h)
+              <LocalShipping fontSize="small" />
+              Lieux de collecte - Après-midi (13h-17h)
             </Typography>
             <Chip
               label={`${
@@ -3018,9 +3085,10 @@ export const WeekView = ({
                             >
                               <Typography
                                 variant="caption"
-                                sx={{ fontWeight: "bold", color: "#9c27b0" }}
+                                sx={{ fontWeight: "bold", color: "#9c27b0", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🚚 {collection.collection_point_name}
+                                <LocalShipping sx={{ fontSize: 14 }} />
+                                {collection.collection_point_name}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -3173,9 +3241,10 @@ export const WeekView = ({
                           >
                             <Typography
                               variant="caption"
-                              sx={{ fontWeight: "bold", color: "#4caf50" }}
+                              sx={{ fontWeight: "bold", color: "#4caf50", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              📋 {getTaskDisplayName(schedule)}
+                              <Assignment sx={{ fontSize: 14 }} />
+                              {getTaskDisplayName(schedule)}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -3341,9 +3410,9 @@ const PlanningCardList = ()=>{
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -3377,9 +3446,14 @@ const PlanningCardList = ()=>{
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -3447,9 +3521,13 @@ const PlanningCardList = ()=>{
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -3650,9 +3728,9 @@ const PlanningCard = ()=>{
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -3686,9 +3764,14 @@ const PlanningCard = ()=>{
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -3756,9 +3839,13 @@ const PlanningCard = ()=>{
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>
@@ -3935,9 +4022,9 @@ const CardTasks = ()=>{
                               <Typography
                                 variant="caption"
                                 display="block"
-                                sx={{ fontWeight: "bold", color: "#2196f3" }}
+                                sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                               >
-                                🏪{" "}
+                                <Store sx={{ fontSize: 14 }} />
                                 {schedule.store_name || "Magasin non assigné"}
                               </Typography>
                               <Typography
@@ -3971,9 +4058,14 @@ const CardTasks = ()=>{
                                         fontSize: "0.7rem",
                                         fontWeight: "bold",
                                         textAlign: "center",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 0.5,
                                       }}
                                     >
-                                      👥 Employés (
+                                      <Groups sx={{ fontSize: 14 }} />
+                                      Employés (
                                       {schedule.assigned_employees.length})
                                     </Typography>
                                     <Box
@@ -4041,9 +4133,13 @@ const CardTasks = ()=>{
                                   sx={{
                                     fontWeight: "bold",
                                     color: "#9c27b0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                   }}
                                 >
-                                  📍 {schedule.location_name}
+                                  <Place sx={{ fontSize: 14 }} />
+                                  {schedule.location_name}
                                 </Typography>
                               )}
                             </Box>

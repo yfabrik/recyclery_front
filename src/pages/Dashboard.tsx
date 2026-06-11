@@ -11,6 +11,7 @@ import {
   Store,
   TrendingUp,
   VolunteerActivism,
+  WavingHand,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -289,8 +290,9 @@ const Dashboard = () => {
           }}
         >
           <Box>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
-              Bonjour, {user?.username} ! 👋
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", display: "flex", alignItems: "center", gap: 1 }}>
+              Bonjour, {user?.username} !
+              <WavingHand fontSize="medium" />
             </Typography>
             <Typography variant="body1" color="textSecondary">
               Voici un aperçu complet de l'activité de votre recyclerie
