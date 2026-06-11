@@ -445,7 +445,10 @@ export const SalesHistory = ({
         </DialogTitle>
         <DialogContent>
           {selectedTransaction && (
-            <DetailTransaction selectedTransaction={selectedTransaction} />
+            <DetailTransaction
+              selectedTransaction={selectedTransaction}
+              categories={categories.data ?? []}
+            />
           )}
         </DialogContent>
         <DialogActions>

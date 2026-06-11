@@ -575,7 +575,10 @@ export const SalesAnalyticsTab = () => {
         </DialogTitle>
         <DialogContent>
           {selectedTransaction && (
-            <DetailTransaction selectedTransaction={selectedTransaction} />
+            <DetailTransaction
+              selectedTransaction={selectedTransaction}
+              categories={categories.data ?? []}
+            />
           )}
         </DialogContent>
         <DialogActions>
