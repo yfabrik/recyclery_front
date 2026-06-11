@@ -8,6 +8,7 @@ import {
   FormGroup,
   FormHelperText,
   FormLabel,
+  Grid,
   InputLabel,
   MenuItem,
   Radio,
@@ -22,15 +23,28 @@ import {
   type SelectProps,
   type TextFieldProps
 } from "@mui/material";
+import { Category } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
-import type { ReactNode } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import {
   Controller,
+  useWatch,
+  type Control,
   type ControllerProps,
   type FieldPath,
   type FieldPathValue,
   type FieldValues,
   type SubmitHandler,
+  type UseFormSetValue,
 } from "react-hook-form";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -40,6 +54,8 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
 import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
+import { SelectedIcon } from "../SelectedIcon";
+import type { CategoryModel } from "../../interfaces/Models";
 import {
   PAYMENT_METHODS,
   TRANSACTION_TYPES,
@@ -414,6 +430,30 @@ export const FormRadioCard = ({ value, label, icon }: FormRadioCardProps) => {
 };
 
 
+const withMultiSelectCheckboxes = (
+  children: ReactNode,
+  selectedValues: unknown[],
+): ReactNode =>
+  Children.map(children, (child) => {
+    if (!isValidElement(child)) return child;
+
+    const menuItem = child as ReactElement<{ value?: unknown; children?: ReactNode }>;
+    if (menuItem.props.value === undefined) return child;
+
+    const value = menuItem.props.value;
+    const checked =
+      Array.isArray(selectedValues) && selectedValues.includes(value);
+
+    return cloneElement(menuItem, {
+      children: (
+        <>
+          <Checkbox checked={checked} />
+          {menuItem.props.children}
+        </>
+      ),
+    });
+  });
+
 export const FormMultiSelect = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -424,34 +464,41 @@ export const FormMultiSelect = <
   label,
   children,
   extra,
-  renderValue
+  renderValue,
+  showCheckboxes = false,
 }: FormControlProps<TFieldValues, TName, TTransformedValues> & {
   extra?: FormControlOwnProps;
-  renderValue?: (selected: FieldPathValue<TFieldValues, TName>) => ReactNode
+  renderValue?: (selected: FieldPathValue<TFieldValues, TName>) => ReactNode;
+  /** Prepends a read-only checkbox to each MenuItem (ListSubheader etc. unchanged). */
+  showCheckboxes?: boolean;
 }) => {
+  const labelId = `${name}-label`;
+
   return (
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState }) => {
         const errorMessage = getFieldErrorMessage(fieldState.error);
+        const selectChildren = showCheckboxes
+          ? withMultiSelectCheckboxes(children, field.value ?? [])
+          : children;
 
         return (
           <FormControl fullWidth error={fieldState.invalid} {...extra}>
-            <InputLabel id={name} shrink>
+            <InputLabel id={labelId} shrink>
               {label}
             </InputLabel>
             <Select
               multiple
-              labelId={name}
+              labelId={labelId}
               label={label}
               renderValue={renderValue}
               {...field}
               displayEmpty
               error={fieldState.invalid}
             >
-              {children}
-
+              {selectChildren}
             </Select>
             {fieldState.invalid && errorMessage && (
               <FormHelperText>{errorMessage}</FormHelperText>
@@ -460,8 +507,8 @@ export const FormMultiSelect = <
         );
       }}
     />
-  )
-}
+  );
+};
 
 export interface FormCheckboxGroupOption {
   value: string | number;
