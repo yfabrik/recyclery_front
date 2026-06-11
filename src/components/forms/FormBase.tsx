@@ -632,8 +632,9 @@ type CategoryFieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
 > = {
-  control: Control<TFieldValues>;
+  control: Control<TFieldValues, unknown, TTransformedValues>;
   categories: CategoryModel[];
   categoryFieldName?: TCategoryName;
   subcategoryFieldName?: TSubcategoryName;
@@ -685,6 +686,7 @@ export const FormSubcategorySelect = <
   TFieldValues extends FieldValues = FieldValues,
   TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
 >({
   control,
   categories,
@@ -697,7 +699,12 @@ export const FormSubcategorySelect = <
   resetInvalidSelection = true,
   emptyOptionLabel = "Aucune",
   setValue,
-}: CategoryFieldProps<TFieldValues, TCategoryName, TSubcategoryName> & {
+}: CategoryFieldProps<
+  TFieldValues,
+  TCategoryName,
+  TSubcategoryName,
+  TTransformedValues
+> & {
   label?: string;
   hideWhenEmpty?: boolean;
   resetOnCategoryChange?: boolean;
@@ -777,6 +784,7 @@ export const FormCategorySubcategoryFields = <
   TFieldValues extends FieldValues = FieldValues,
   TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
 >({
   control,
   categories,
@@ -794,7 +802,12 @@ export const FormCategorySubcategoryFields = <
   categoryEmptyOption,
   filterCategories,
   categoryExtra,
-}: CategoryFieldProps<TFieldValues, TCategoryName, TSubcategoryName> & {
+}: CategoryFieldProps<
+  TFieldValues,
+  TCategoryName,
+  TSubcategoryName,
+  TTransformedValues
+> & {
   gridSize?: { xs?: number; sm?: number; md?: number; lg?: number };
   hideWhenEmpty?: boolean;
   resetOnCategoryChange?: boolean;
