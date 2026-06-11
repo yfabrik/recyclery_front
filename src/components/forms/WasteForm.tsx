@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 import {
+  FormCategorySubcategoryFields,
   FormDate,
   FormInput,
   FormSelect,
@@ -79,21 +80,12 @@ export const WasteForm = ({
   });
 
   const disposalType = form.watch("disposal_type");
-  const categoryId = form.watch("category_id");
 
   useEffect(() => {
     if (disposalType !== "eco_organism") {
       form.setValue("eco_organism_id", "");
     }
   }, [disposalType, form]);
-
-  const subcategories = () => {
-    return categoryId ? categories.find(c => c.id == categoryId)?.subcategories || [] : []
-  }
-  useEffect(() => {
-    // reset subcategory when category changes
-    form.setValue("subcategory_id", "");
-  }, [categoryId, form]);
 
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
@@ -133,38 +125,15 @@ export const WasteForm = ({
             </FormSelect>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <FormSelect
-            control={form.control}
-            name="category_id"
-            label="Catégorie"
-          >
-            <MenuItem value="">Sélectionner une catégorie</MenuItem>
-            {categories.map((category) => (
-              <MenuItem key={category.id} value={category.id}>
-                {category.name}
-              </MenuItem>
-            ))}
-          </FormSelect>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <FormSelect
-            control={form.control}
-            name="subcategory_id"
-            label="Sous-catégorie"
-          >
-            <MenuItem value="">Sélectionner une sous-catégorie</MenuItem>
-            {subcategories()
-              .map((subcategory) => (
-                <MenuItem key={subcategory.id} value={subcategory.id}>
-                  {subcategory.name}
-                </MenuItem>
-              ))}
-          </FormSelect>
-        </Grid>
-
-
+        <FormCategorySubcategoryFields
+          control={form.control}
+          categories={categories}
+          setValue={form.setValue}
+          gridSize={{ xs: 12, sm: 6 }}
+          hideWhenEmpty={false}
+          categoryEmptyOption={{ value: "", label: "Sélectionner une catégorie" }}
+          emptyOptionLabel="Sélectionner une sous-catégorie"
+        />
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormInput

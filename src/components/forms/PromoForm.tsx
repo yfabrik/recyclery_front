@@ -6,7 +6,7 @@ import z from "zod"
 import type { CategoryModel, StoreModel } from "../../interfaces/Models"
 import { idSchema, nullString } from "../../interfaces/ZodTypes"
 import { emptyStringToNull } from "../../services/zodTransform"
-import { FormDate, FormInput, FormMultiSelect, FormSelect, FormSwitch, type BaseFormProps } from "./FormBase"
+import { FormCategorySubcategoryFields, FormDate, FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./FormBase"
 
 const schema = z.object({
     category_id: idSchema("categorie requis"),
@@ -94,50 +94,14 @@ export const PromoForm = ({
         previousStores.current = currentStores
     }, [form, selectedStores])
 
-    const SubCategories = ({ control }: { control: typeof form.control }) => {
-        const category = useWatch({
-            control: control,
-            name: "category_id",
-        });
-        const subcats =
-            categories.find((c) => c.id == category)?.subcategories ?? [];
-        return (
-            <FormSelect
-                control={control}
-                name="subcategory_id"
-                label="Sous-catégorie"
-                extra={{ disabled: subcats.length < 1 }}
-            >
-                <MenuItem value="">Aucune</MenuItem>
-                {subcats.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                    </MenuItem>
-                ))}
-            </FormSelect>
-        );
-    };
-
-
     return <form id={formId} onSubmit={form.handleSubmit(onSubmit, (e) => console.error(e))}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-                <FormSelect
-                    control={form.control}
-                    name="category_id"
-                    label="Catégorie"
-                >
-                    {categories.map((category) => (
-                        <MenuItem key={category.id} value={category.id}>
-                            {category.name}
-                        </MenuItem>
-                    ))}
-                </FormSelect>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-                <SubCategories control={form.control} />
-            </Grid>
+            <FormCategorySubcategoryFields
+                control={form.control}
+                categories={categories}
+                setValue={form.setValue}
+                hideWhenEmpty={false}
+            />
             <Grid size={{ xs: 12, md: 6 }}>
                 <FormDate control={form.control} label="date de debut" name="startDate"></FormDate>
             </Grid>

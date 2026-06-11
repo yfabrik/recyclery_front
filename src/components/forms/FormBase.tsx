@@ -563,3 +563,227 @@ export const FormTransactionTypeSelect = <
   </FormSelect>
 );
 
+const CategoryOptionLabel = ({
+  category,
+  showIcons = true,
+}: {
+  category: CategoryModel;
+  showIcons?: boolean;
+}) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    {showIcons &&
+      (category.icon ? (
+        <SelectedIcon iconName={category.icon || "Category"} />
+      ) : (
+        <Category fontSize="small" />
+      ))}
+    {category.name}
+  </Box>
+);
+
+type CategoryFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = {
+  control: Control<TFieldValues>;
+  categories: CategoryModel[];
+  categoryFieldName?: TCategoryName;
+  subcategoryFieldName?: TSubcategoryName;
+  categoryLabel?: string;
+  subcategoryLabel?: string;
+  showIcons?: boolean;
+  setValue?: UseFormSetValue<TFieldValues>;
+};
+
+export const FormCategorySelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  control,
+  name = "category_id" as TName,
+  label = "Catégorie",
+  categories,
+  showIcons = true,
+  emptyOption,
+  filterCategories,
+  extra,
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  categories: CategoryModel[];
+  showIcons?: boolean;
+  emptyOption?: { value: string | number; label: string };
+  filterCategories?: (cat: CategoryModel) => boolean;
+  extra?: FormControlOwnProps;
+}) => {
+  const visibleCategories = filterCategories
+    ? categories.filter(filterCategories)
+    : categories;
+
+  return (
+    <FormSelect control={control} name={name} label={label} extra={extra}>
+      {emptyOption && (
+        <MenuItem value={emptyOption.value}>{emptyOption.label}</MenuItem>
+      )}
+      {visibleCategories.map((category) => (
+        <MenuItem key={category.id} value={category.id}>
+          <CategoryOptionLabel category={category} showIcons={showIcons} />
+        </MenuItem>
+      ))}
+    </FormSelect>
+  );
+};
+
+export const FormSubcategorySelect = <
+  TFieldValues extends FieldValues = FieldValues,
+  TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  control,
+  categories,
+  categoryFieldName = "category_id" as TCategoryName,
+  subcategoryFieldName = "subcategory_id" as TSubcategoryName,
+  label = "Sous-catégorie",
+  showIcons = true,
+  hideWhenEmpty = true,
+  resetOnCategoryChange = true,
+  resetInvalidSelection = true,
+  emptyOptionLabel = "Aucune",
+  setValue,
+}: CategoryFieldProps<TFieldValues, TCategoryName, TSubcategoryName> & {
+  label?: string;
+  hideWhenEmpty?: boolean;
+  resetOnCategoryChange?: boolean;
+  resetInvalidSelection?: boolean;
+  emptyOptionLabel?: string;
+}) => {
+  const categoryId = useWatch({ control, name: categoryFieldName });
+  const subcategoryId = useWatch({ control, name: subcategoryFieldName });
+  const subcats = useMemo(
+    () => categories.find((c) => c.id == categoryId)?.subcategories ?? [],
+    [categories, categoryId],
+  );
+  const prevCategoryRef = useRef<
+    FieldPathValue<TFieldValues, TCategoryName> | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!setValue || !resetOnCategoryChange) return;
+    if (
+      prevCategoryRef.current !== undefined &&
+      prevCategoryRef.current !== categoryId
+    ) {
+      setValue(
+        subcategoryFieldName,
+        "" as FieldPathValue<TFieldValues, TSubcategoryName>,
+      );
+    }
+    prevCategoryRef.current = categoryId;
+  }, [
+    categoryId,
+    setValue,
+    resetOnCategoryChange,
+    subcategoryFieldName,
+  ]);
+
+  useEffect(() => {
+    if (!setValue || !resetInvalidSelection) return;
+    const hasValidSubcategory =
+      subcategoryId === "" ||
+      subcategoryId == null ||
+      subcats.some((cat) => String(cat.id) === String(subcategoryId));
+    if (!hasValidSubcategory) {
+      setValue(
+        subcategoryFieldName,
+        "" as FieldPathValue<TFieldValues, TSubcategoryName>,
+      );
+    }
+  }, [subcategoryId, subcats, setValue, resetInvalidSelection, subcategoryFieldName]);
+
+  const hasValidSubcategory =
+    subcategoryId === "" ||
+    subcategoryId == null ||
+    subcats.some((cat) => String(cat.id) === String(subcategoryId));
+
+  if (hideWhenEmpty && (subcats.length === 0 || !hasValidSubcategory)) {
+    return null;
+  }
+
+  return (
+    <FormSelect
+      control={control}
+      name={subcategoryFieldName}
+      label={label}
+      extra={{ disabled: subcats.length < 1 }}
+    >
+      <MenuItem value="">{emptyOptionLabel}</MenuItem>
+      {subcats.map((cat) => (
+        <MenuItem key={cat.id} value={cat.id}>
+          <CategoryOptionLabel category={cat} showIcons={showIcons} />
+        </MenuItem>
+      ))}
+    </FormSelect>
+  );
+};
+
+export const FormCategorySubcategoryFields = <
+  TFieldValues extends FieldValues = FieldValues,
+  TCategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TSubcategoryName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  control,
+  categories,
+  setValue,
+  gridSize = { xs: 12, md: 6 },
+  categoryFieldName = "category_id" as TCategoryName,
+  subcategoryFieldName = "subcategory_id" as TSubcategoryName,
+  categoryLabel = "Catégorie",
+  subcategoryLabel = "Sous-catégorie",
+  showIcons = true,
+  hideWhenEmpty = true,
+  resetOnCategoryChange = true,
+  resetInvalidSelection = true,
+  emptyOptionLabel = "Aucune",
+  categoryEmptyOption,
+  filterCategories,
+  categoryExtra,
+}: CategoryFieldProps<TFieldValues, TCategoryName, TSubcategoryName> & {
+  gridSize?: { xs?: number; sm?: number; md?: number; lg?: number };
+  hideWhenEmpty?: boolean;
+  resetOnCategoryChange?: boolean;
+  resetInvalidSelection?: boolean;
+  emptyOptionLabel?: string;
+  categoryEmptyOption?: { value: string | number; label: string };
+  filterCategories?: (cat: CategoryModel) => boolean;
+  categoryExtra?: FormControlOwnProps;
+}) => (
+  <>
+    <Grid size={gridSize}>
+      <FormCategorySelect
+        control={control}
+        name={categoryFieldName}
+        label={categoryLabel}
+        categories={categories}
+        showIcons={showIcons}
+        emptyOption={categoryEmptyOption}
+        filterCategories={filterCategories}
+        extra={categoryExtra}
+      />
+    </Grid>
+    <Grid size={gridSize}>
+      <FormSubcategorySelect
+        control={control}
+        categories={categories}
+        setValue={setValue}
+        categoryFieldName={categoryFieldName}
+        subcategoryFieldName={subcategoryFieldName}
+        label={subcategoryLabel}
+        showIcons={showIcons}
+        hideWhenEmpty={hideWhenEmpty}
+        resetOnCategoryChange={resetOnCategoryChange}
+        resetInvalidSelection={resetInvalidSelection}
+        emptyOptionLabel={emptyOptionLabel}
+      />
+    </Grid>
+  </>
+);

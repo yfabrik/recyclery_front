@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import type { CategoryModel, LabeledItemModel } from "../../interfaces/Models";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
-import { FormInput, FormSelect } from "./FormBase";
+import { FormCategorySelect, FormInput, FormSelect } from "./FormBase";
 
 const filterSchema = z.object({
     category_id: z.union([idSchema(), nullString()]),
@@ -87,17 +87,14 @@ export const LabelFiltersForm = ({ defaultValues, onChange, statusOptions, categ
 
                     </Grid>
                     <Grid size={{ xs: 12, md: 3 }}>
-                        <FormSelect control={filters.control} name="category_id" label="Catégorie">
-                            <MenuItem value={""}>Toutes</MenuItem>
-                            {categories
-                                .filter((cat) => !cat.parent_id)
-                                .map((category) => (
-                                    <MenuItem key={category.id} value={category.id}>
-                                        {category.name}
-                                    </MenuItem>
-                                ))}
-                        </FormSelect>
-
+                        <FormCategorySelect
+                            control={filters.control}
+                            name="category_id"
+                            label="Catégorie"
+                            categories={categories}
+                            emptyOption={{ value: "", label: "Toutes" }}
+                            filterCategories={(cat) => !cat.parent_id}
+                        />
                     </Grid>
                     <Grid size={{ xs: 12, md: 2 }}>
                         <Button

@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Add,
-  Category,
   Clear,
   Home,
   LocalShipping,
@@ -23,6 +22,7 @@ import type {
 import { idSchema } from "../../interfaces/ZodTypes";
 import { usePrompt } from "../Prompt";
 import {
+  FormCategorySubcategoryFields,
   FormDate,
   FormInput,
   FormRadio,
@@ -31,7 +31,6 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-import { SelectedIcon } from "../SelectedIcon";
 import { emptyStringToNull } from "../../services/zodTransform";
 const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
 
@@ -111,59 +110,59 @@ export const ArrivalForm = ({
     },
   });
 
-  const SubCategories = ({ control }: { control: typeof form.control }) => {
-    const category = useWatch({
-      control: control,
-      name: "category_id",
-    });
-    const subcategoryId = useWatch({
-      control: control,
-      name: "subcategory_id",
-    });
-    const subcats =
-      categories.find((c) => c.id == category)?.subcategories ?? [];
+  // const SubCategories = ({ control }: { control: typeof form.control }) => {
+  //   const category = useWatch({
+  //     control: control,
+  //     name: "category_id",
+  //   });
+  //   const subcategoryId = useWatch({
+  //     control: control,
+  //     name: "subcategory_id",
+  //   });
+  //   const subcats =
+  //     categories.find((c) => c.id == category)?.subcategories ?? [];
 
-    const hasValidSubcategory =
-      subcategoryId === "" ||
-      subcats.some((cat) => String(cat.id) === String(subcategoryId));
+  //   const hasValidSubcategory =
+  //     subcategoryId === "" ||
+  //     subcats.some((cat) => String(cat.id) === String(subcategoryId));
 
-    useEffect(() => {
-      if (!hasValidSubcategory) {
-        form.setValue("subcategory_id", "");
-      }
-    }, [hasValidSubcategory]);
+  //   useEffect(() => {
+  //     if (!hasValidSubcategory) {
+  //       form.setValue("subcategory_id", "");
+  //     }
+  //   }, [hasValidSubcategory]);
 
-    if (subcats.length === 0 || !hasValidSubcategory) return null;
+  //   if (subcats.length === 0 || !hasValidSubcategory) return null;
 
-    return (
-      <FormSelect
-        control={control}
-        name="subcategory_id"
-        label="Sous-catégorie"
-        extra={{ disabled: subcats.length < 1 }}
-      >
-        <MenuItem value="">Aucune</MenuItem>
-        {subcats.map((cat) => (
-          <MenuItem key={cat.id} value={cat.id}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              {cat.icon ? (
-                <SelectedIcon iconName={cat.icon || "Category"} />
-              ) : (
-                <Category />
-              )}
-              {cat.name}
-            </Box>
-          </MenuItem>
-        ))}
-      </FormSelect>
-    );
-  };
+  //   return (
+  //     <FormSelect
+  //       control={control}
+  //       name="subcategory_id"
+  //       label="Sous-catégorie"
+  //       extra={{ disabled: subcats.length < 1 }}
+  //     >
+  //       <MenuItem value="">Aucune</MenuItem>
+  //       {subcats.map((cat) => (
+  //         <MenuItem key={cat.id} value={cat.id}>
+  //           <Box
+  //             sx={{
+  //               display: "flex",
+  //               alignItems: "center",
+  //               gap: 1,
+  //             }}
+  //           >
+  //             {cat.icon ? (
+  //               <SelectedIcon iconName={cat.icon || "Category"} />
+  //             ) : (
+  //               <Category />
+  //             )}
+  //             {cat.name}
+  //           </Box>
+  //         </MenuItem>
+  //       ))}
+  //     </FormSelect>
+  //   );
+  // };
 
   const CollectionPoint = ({ control }: { control: typeof form.control }) => {
     const sourceType = useWatch({
@@ -217,11 +216,7 @@ export const ArrivalForm = ({
     )
   };
 
-
-  const categoryId = form.watch("category_id");
-  // const sourceType = form.watch("source_type");
-  // const weight = form.watch("weight");
-  // const collectionPointId = form.watch("collection_point_id");
+  // const categoryId = form.watch("category_id");
 
   const { prompt, PromptDialog } = usePrompt();
 
@@ -230,33 +225,12 @@ export const ArrivalForm = ({
     onReady?.({ reset });
   }, [onReady, reset]);
 
-  // useEffect(() => {
-  //   if (form.formState.isSubmitSuccessful) {
-  //     form.reset();
-  //   }
-  // }, [form.formState.isSubmitSuccessful, form]);
-
   // Reset subcategory when category changes to avoid out-of-range select values.
-  useEffect(() => {
-    form.setValue("subcategory_id", "");
-  }, [categoryId, form]);
-
-  // Auto-fill collection point details when selected
   // useEffect(() => {
-  //   if (collectionPointId && sourceType === "point") {
-  //     const selectedPoint = collectionPoints.find(
-  //       (p) => p.id == collectionPointId,
-  //     );
-  //     if (selectedPoint) {
-  //       // You can add these fields to the schema if needed
-  //       // For now, we just track the selection
-  //     }
-  //   }
-  // }, [collectionPointId, sourceType, collectionPoints]);
+  //   form.setValue("subcategory_id", "");
+  // }, [categoryId, form]);
 
-  // const getSubcategories = () => {
-  //   return categories.find((c) => c.id == categoryId)?.subcategories || [];
-  // };
+
 
   const sourceTypeOptions = [
     {
@@ -290,53 +264,11 @@ export const ArrivalForm = ({
           </Typography>
           <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
-              {/* Catégorie */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FormSelect
-                  control={form.control}
-                  name="category_id"
-                  label="Catégorie"
-                >
-                  {categories?.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                        }}
-                      >
-                        {category.icon ? (
-                          <SelectedIcon
-                            iconName={category.icon || "Category"}
-                          />
-                        ) : (
-                          <Category />
-                        )}
-                        {category.name}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </FormSelect>
-              </Grid>
-
-              {/* Sous-catégorie */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <SubCategories control={form.control} />
-                {/* <FormSelect
-                  name="subcategory_id"
-                  control={form.control}
-                  label="Sous-catégorie"
-                  extra={{ disabled: !categoryId }}
-                >
-                  <MenuItem value="">Aucune</MenuItem>
-                  {getSubcategories()?.map((subcategory) => (
-                    <MenuItem key={subcategory.id} value={subcategory.id}>
-                      {subcategory.name}
-                    </MenuItem>
-                  ))}
-                </FormSelect> */}
-              </Grid>
+              <FormCategorySubcategoryFields
+                control={form.control}
+                categories={categories}
+                setValue={form.setValue}
+              />
 
               {/* Poids */}
               <Grid size={{ xs: 12, md: 6 }}>

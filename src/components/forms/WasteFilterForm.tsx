@@ -5,7 +5,7 @@ import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z, { literal } from "zod";
-import { FormDate, FormSelect } from "./FormBase";
+import { FormCategorySelect, FormDate, FormSelect } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
 import type { CategoryModel } from "../../interfaces/Models";
 
@@ -55,15 +55,14 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
 
         <Grid container spacing={2} alignItems="center">
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-
-                <FormSelect control={form.control} name="category_id" label="Catégorie" extra={{ size: "small" }}>
-                    <MenuItem key="default" value="">Toutes</MenuItem>
-                    {categories.map((category) => (
-                        <MenuItem key={category.id} value={category.id}>
-                            {category.name}
-                        </MenuItem>
-                    ))}
-                </FormSelect>
+                <FormCategorySelect
+                    control={form.control}
+                    name="category_id"
+                    label="Catégorie"
+                    categories={categories}
+                    emptyOption={{ value: "", label: "Toutes" }}
+                    extra={{ size: "small" }}
+                />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
