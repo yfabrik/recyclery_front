@@ -220,7 +220,8 @@ const Dashboard = () => {
   });
   const ecoOrganismQuarterStats = useQuery({
     queryKey: ["ecoOrganismQuarterStats"],
-    queryFn: () => fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
+    queryFn: () =>
+      fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
   });
 
   const salesStats = useQuery({
@@ -239,7 +240,7 @@ const Dashboard = () => {
 
   const calculateTrend = (current: number = 0, previous: number = 0) => {
     if (!previous) return null;
-    const percentage =formatPercentage( ((current - previous) / previous));
+    const percentage = formatPercentage((current - previous) / previous);
     return {
       direction: current > previous ? "up" : "down",
       value: percentage,
@@ -327,14 +328,15 @@ const Dashboard = () => {
       {/* Statistiques principales améliorées */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          {/* article en stock / total item  */}
           <StatCard
             title="Articles en stock"
             value={stats.data?.availableItems?.toLocaleString() || "0"}
             subtitle={`sur ${stats.data?.totalItems?.toLocaleString() || "0"} total`}
             icon={<Inventory />}
             color="primary"
-            trend={salesTrend?.direction}
-            trendValue={salesTrend?.value}
+            // trend={salesTrend?.direction}
+            // trendValue={salesTrend?.value}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -414,7 +416,11 @@ const Dashboard = () => {
       </Grid>
 
       {/* Statistiques par magasin */}
-      <StoreStats stores={storesStats.data} loading={storesStats.isLoading} />
+
+      <StoreStats
+        stores={storesStats.data || []}
+        loading={storesStats.isLoading}
+      />
 
       <Grid container spacing={3}>
         {/* Graphiques de performance */}
@@ -537,8 +543,17 @@ const Dashboard = () => {
                   yAxis={[{ width: 50 }]}
                 />
               </Box>
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, mb: 0.5 }}
+                >
                   Quantité par catégorie
                 </Typography>
                 <PieChart
@@ -558,8 +573,17 @@ const Dashboard = () => {
                   height={200}
                 />
               </Box>
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, mb: 0.5 }}
+                >
                   Montant par catégorie
                 </Typography>
                 <PieChart
@@ -730,7 +754,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications onDismiss={() => { }} />
+            <DashboardNotifications onDismiss={() => {}} />
           </Stack>
         </Grid>
       </Grid>
