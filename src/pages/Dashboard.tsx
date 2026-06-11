@@ -70,6 +70,7 @@ import {
   type transactionsFilters,
 } from "../services/api/transactions";
 import { formatCurrency, formatPercentage } from "../services/cartService";
+import { Loading } from "../components/Loading";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -417,10 +418,9 @@ const Dashboard = () => {
 
       {/* Statistiques par magasin */}
 
-      <StoreStats
-        stores={storesStats.data || []}
-        loading={storesStats.isLoading}
-      />
+      <Loading isLoading={storesStats.isLoading}>
+        <StoreStats stores={storesStats.data || []} />
+      </Loading>
 
       <Grid container spacing={3}>
         {/* Graphiques de performance */}

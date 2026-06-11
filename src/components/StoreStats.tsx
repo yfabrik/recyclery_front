@@ -16,7 +16,6 @@ import {
   DialogTitle,
   Divider,
   Grid,
-  LinearProgress,
   Tooltip,
   Typography,
   type DialogProps
@@ -25,30 +24,20 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { getStoreHistoryStats, type StoreStat } from '../services/api/dashboard';
 import { formatCurrency } from '../services/cartService';
-import { Loading } from './Loading';
 import { formatDate } from '../services/dateService';
+import { Loading } from './Loading';
 
 interface StoreStatsProps {
   stores: StoreStat[]
-  loading: boolean
+  // loading: boolean
 }
 
-const StoreStats = ({ stores, loading }: StoreStatsProps) => {
+const StoreStats = ({ stores }: StoreStatsProps) => {
   const [selectedStore, setSelectedStore] = useState<StoreStat | null>(null)
   const [openHistoryStore, setOpenHistoryStore] = useState(false)
 
 
 
-  if (loading) {
-    return (
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          📊 Statistiques par Magasin
-        </Typography>
-        <LinearProgress />
-      </Box>
-    );
-  }
 
   if (!stores || stores.length === 0) {
     return (
