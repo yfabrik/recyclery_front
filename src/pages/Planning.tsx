@@ -40,6 +40,10 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
+import {
   PlaningForm,
   type Schema as TaskFormSchema,
 } from "../components/forms/planningForm";
@@ -210,7 +214,7 @@ const Planning = () => {
       }).then((response) => response.data.tasks),
   });
   if (schedules.isError) {
-    toast.error("Erreur lors du chargement des plannings");
+    toast.error(getApiErrorMessage(schedules.error, "Erreur lors du chargement des plannings"));
   }
 
   const stores = useQuery({
@@ -224,34 +228,34 @@ const Planning = () => {
   const addTask = useMutation({
     mutationFn: (data: TaskFormSchema) => createTask(data),
 
-    onSuccess: () => {
-      toast.success("Planning créé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Planning créé avec succès"));
       queryclient.invalidateQueries({ queryKey: ["tasks"] });
 
       handleCloseDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editTask = useMutation({
     mutationFn: (data: { id: number; data: TaskFormSchema }) =>
       updateTask(data.id, data.data),
-    onSuccess: () => {
-      toast.success("Planning mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Planning mis à jour avec succès"));
       handleCloseDialog();
       queryclient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
-      toast.error("Erreur lors de la sauvegarde");
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"));
       console.log("edit error", error);
     },
   });
   const removeTask = useMutation({
     mutationFn: (id: number) => deleteTask(id),
-    onSuccess: () => {
-      toast.success("Tâche supprimée avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Tâche supprimée avec succès"));
       queryclient.invalidateQueries({ queryKey: ["tasks"] });
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   });
 
   const employees = useQuery({
@@ -259,7 +263,7 @@ const Planning = () => {
     queryFn: () => getEmployees().then((response) => response.data.data),
   });
   if (employees.isError) {
-    toast.error("Erreur lors du chargement des employés");
+    toast.error(getApiErrorMessage(employees.error, "Erreur lors du chargement des employés"));
   }
 
   const missingEmployees = useMemo(() => {
@@ -451,7 +455,7 @@ const Planning = () => {
       setOpenTaskAssignmentDialog(true);
     } catch (error) {
       console.error("Erreur lors du chargement des employés:", error);
-      toast.error("Erreur lors du chargement des employés");
+      toast.error(getApiErrorMessage(error, "Erreur lors du chargement des employés"));
     }
   };
 

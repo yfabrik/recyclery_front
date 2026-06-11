@@ -42,6 +42,10 @@ import {
   Sync,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from '../utils/apiToastMessage';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollectionReceipt from './CollectionReceipt';
@@ -140,7 +144,7 @@ const CollectionCalendar = () => {
       
       setEvents(calendarEvents);
     } catch (error) {
-      toast.error('Erreur lors du chargement des collectes');
+      toast.error(getApiErrorMessage(error, 'Erreur lors du chargement des collectes'));
       console.error('Erreur:', error);
     } finally {
       setLoading(false);
@@ -269,24 +273,17 @@ const CollectionCalendar = () => {
       const token = localStorage.getItem('token');
       
       if (selectedEvent) {
-        await updateCollectionSchedule(selectedEvent.id,formData)
-        // await axios.put(`/api/collection-schedules/${selectedEvent.id}`, formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        toast.success('Collecte mise à jour avec succès');
+        const response = await updateCollectionSchedule(selectedEvent.id,formData)
+        toast.success(getApiSuccessMessage(response, 'Collecte mise à jour avec succès'));
       } else {
-        await createCollectionSchedule(formData)
-
-        // await axios.post('/api/collection-schedules', formData, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        toast.success('Collecte créée avec succès');
+        const response = await createCollectionSchedule(formData)
+        toast.success(getApiSuccessMessage(response, 'Collecte créée avec succès'));
       }
       
       handleCloseDialog();
       fetchEvents();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la sauvegarde');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la sauvegarde'));
     }
   };
 
@@ -295,16 +292,12 @@ const CollectionCalendar = () => {
     
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette collecte ?')) {
       try {
-        await deleteCollectionSchedule(selectedEvent.id)
-        // const token = localStorage.getItem('token');
-        // await axios.delete(`/api/collection-schedules/${selectedEvent.id}`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        toast.success('Collecte supprimée avec succès');
+        const response = await deleteCollectionSchedule(selectedEvent.id)
+        toast.success(getApiSuccessMessage(response, 'Collecte supprimée avec succès'));
         handleCloseDialog();
         fetchEvents();
       } catch (error) {
-        toast.error(error.response?.data?.error || 'Erreur lors de la suppression');
+        toast.error(getApiErrorMessage(error, 'Erreur lors de la suppression'));
       }
     }
   };
@@ -325,7 +318,7 @@ const CollectionCalendar = () => {
       toast.success('Planning des collectes synchronisé avec le planning principal !');
     } catch (error) {
       console.error('Erreur lors de la synchronisation:', error);
-      toast.error('Erreur lors de la synchronisation');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la synchronisation'));
     } finally {
       setSyncing(false);
     }

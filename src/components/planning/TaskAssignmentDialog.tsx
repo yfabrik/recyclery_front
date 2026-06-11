@@ -29,6 +29,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import { getAvailableUserForTask } from "../../services/api/planning";
 import {
@@ -381,24 +385,24 @@ const TaskAssignmentDialog = ({
   const assignEmployee = useMutation({
     mutationFn: (employeeId: number) => addEmployeeToTask(selectedTask.id, employeeId),
     onSuccess: (data,variables) => {
-      toast.success("Employé assigné avec succès");
+      toast.success(getApiSuccessMessage(data, "Employé assigné avec succès"));
       setHasChanges(true);
       queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
       queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
       onAssignEmployee?.(variables);
     },
-    onError: () => toast.error("Erreur lors de l'assignation"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de l'assignation")),
   })
   const unassignEmployee = useMutation({
     mutationFn: (employeeId: number) => removeEmployeeFromTask(selectedTask.id, employeeId),
     onSuccess: (data,variables) => {
-      toast.success("Employé retiré avec succès");
+      toast.success(getApiSuccessMessage(data, "Employé retiré avec succès"));
       setHasChanges(true);
       queryclient.invalidateQueries({ queryKey: ["availableEmployee", selectedTask.id] })
       queryclient.invalidateQueries({ queryKey: ["assignedEmployees", selectedTask.id] })
       onUnassignEmployee?.(variables);
     },
-    onError: () => toast.error("Erreur lors du retrait"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors du retrait")),
   })
 
   // Filter available employees (exclude already assigned)

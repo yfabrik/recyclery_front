@@ -4,6 +4,10 @@ import { createArrival, getArrivals } from "../services/api/arrival";
 import { formatWeight } from "../services/cartService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import type { CategoryModel, CollectionPointModel } from "../interfaces/Models";
 import type { UseFormReset } from "react-hook-form";
 import { useState } from "react";
@@ -50,17 +54,18 @@ export const ArrivalAdd = ({
     mutationFn: (data: ArrivalFormSchema) => createArrival(data),
     onSuccess: (response) => {
       toast.success(
-        `Arrivage ${response.data.arrival?.id} enregistré avec succès`,
+        getApiSuccessMessage(
+          response,
+          `Arrivage ${response.data.arrival?.id} enregistré avec succès`,
+        ),
       );
 
       queryClient.invalidateQueries({ queryKey: ["arrivals", "today"] });
       formMethods?.reset();
     },
 
-    onError: (error: { response?: { data?: { error?: string } } }) => {
-      toast.error(
-        error.response?.data?.error ?? "Erreur lors de l'enregistrement",
-      );
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors de l'enregistrement"));
     },
   });
 

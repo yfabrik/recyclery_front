@@ -15,6 +15,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type {
   ScheduleModel,
   StoreModel
@@ -56,31 +60,39 @@ const StoresTab = () => {
     queryKey: ["stores", "horaires"],
     queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores)
   })
-  if (stores.error) toast.error("Erreur lors du chargement des magasins");
+  if (stores.error)
+    toast.error(
+      getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"),
+    );
 
   const editStore = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateStore(id, data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Magasin mis à jour avec succès");
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(data, "Magasin mis à jour avec succès"),
+      );
       handleCloseDialog();
       queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
   })
   const addStore = useMutation({
     mutationFn: (data: Schema) => createStore(data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Magasin créé avec succès");
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Magasin créé avec succès"));
       handleCloseDialog();
       queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
   })
   const removeStore = useMutation({
     mutationFn: (id: number) => deleteStore(id),
-    onError: () => toast.error("Erreur lors de la suppression"),
-    onSuccess: () => {
-      toast.success("Magasin supprimé avec succès");
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Magasin supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["stores"] })
     }
   })
@@ -90,37 +102,56 @@ const StoresTab = () => {
     queryKey: ["users"],
     queryFn: () => fUsers({ role: "admin" }).then(response => response.data.users)
   })
-  if (users.error) toast.error("Erreur lors du chargement des utilisateurs")
+  if (users.error)
+    toast.error(
+      getApiErrorMessage(
+        users.error,
+        "Erreur lors du chargement des utilisateurs",
+      ),
+    );
 
 
   const saveHoraire = useMutation({
     mutationFn: (data: HoraireSchema) => createStoreHours(data),
-    onSuccess: () => {
-      toast.success("Horaires créés avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Horaires créés avec succès"));
       queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
       handleCloseHoursDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
+    onError: (error) =>
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la sauvegarde des horaires"),
+      ),
   })
 
   const editHoraire = useMutation({
     mutationFn: ({ id, data }: { id: number, data: HoraireSchema }) => updateStoreHours(id, data),
-    onSuccess: () => {
-      toast.success("Horaires mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(data, "Horaires mis à jour avec succès"),
+      );
       queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
       handleCloseHoursDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde des horaires")
+    onError: (error) =>
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la sauvegarde des horaires"),
+      ),
   })
 
   const removeHoraire = useMutation({
     mutationFn: (id: number) => deleteStoreHours(id),
-    onSuccess: () => {
-      toast.success("Horaires supprimés avec succès");
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(data, "Horaires supprimés avec succès"),
+      );
       queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
 
     },
-    onError: () => toast.error("Erreur lors de la suppression des horaires"),
+    onError: (error) =>
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la suppression des horaires"),
+      ),
   })
 
 

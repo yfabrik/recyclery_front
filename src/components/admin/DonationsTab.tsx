@@ -29,6 +29,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 import type { DonModel } from "../../interfaces/Models";
 import {
   createDonation,
@@ -53,7 +57,7 @@ export const DonationsTab = () => {
     queryKey: ["dons"],
     queryFn: () => getDonations().then(response => response.data.donations)
   })
-  if (donations.isError) toast.error("Erreur lors du chargement des dons");
+  if (donations.isError) toast.error(getApiErrorMessage(donations.error, "Erreur lors du chargement des dons"));
 
   const donationStats = useQuery({
     queryKey: ["donStats"],
@@ -63,9 +67,9 @@ export const DonationsTab = () => {
 
   const addDon = useMutation({
     mutationFn: (data: Schema) => createDonation(data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Don enregistré avec succès")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Don enregistré avec succès"))
       saved()
 
     }
@@ -73,18 +77,18 @@ export const DonationsTab = () => {
 
   const editDon = useMutation({
     mutationFn: (data: { id: number, data: Schema }) => updateDonation(data.id, data.data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Don mis à jour avec succès")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Don mis à jour avec succès"))
       saved()
     }
 
   })
   const deleteDon = useMutation({
     mutationFn: (id: number) => deleteDonation(id),
-    onError: () => toast.error("Erreur lors de la suppression"),
-    onSuccess: () => {
-      toast.success("Don supprimé avec succès")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Don supprimé avec succès"))
       queryClient.invalidateQueries({ queryKey: ["donStats"] })
       queryClient.invalidateQueries({ queryKey: ["dons"] })
     }

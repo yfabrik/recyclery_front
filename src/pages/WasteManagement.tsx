@@ -34,6 +34,10 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { AxiosResponse } from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import { Loading } from "../components/Loading";
 import { WasteFilterForm, type Filters } from "../components/forms/WasteFilterForm";
 import { WasteForm, type Schema } from "../components/forms/WasteForm";
@@ -111,22 +115,25 @@ const WasteManagement = () => {
     onSuccess: (data, variables) => {
       save(data, variables)
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const editWaste = useMutation({
     mutationFn: (data: { id: number, data: Schema }) => updateWaste(data.id, data.data),
     onSuccess: (data, variables) => {
       save(data, variables.data)
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const save = (data: AxiosResponse<{
     message: string;
   }, unknown, object>, variables: Schema) => {
     toast.success(
-      editingDisposal?.id
-        ? "Sortie de déchets mise à jour avec succès"
-        : "Sortie de déchets créée avec succès",
+      getApiSuccessMessage(
+        data,
+        editingDisposal?.id
+          ? "Sortie de déchets mise à jour avec succès"
+          : "Sortie de déchets créée avec succès",
+      ),
     );
     handleCloseDisposalDialog();
     queryClient.invalidateQueries({ queryKey: ["wasteStats"] })
@@ -135,12 +142,12 @@ const WasteManagement = () => {
   }
   const removeWaste = useMutation({
     mutationFn: (id: number) => deleteWaste(id),
-    onSuccess: () => {
-      toast.success("Sortie de déchets supprimée avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Sortie de déchets supprimée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["wasteStats"] })
       queryClient.invalidateQueries({ queryKey: ["disposals"] })
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   })
 
   const handleOpenDisposalDialog = (disposal: WasteModel | null = null) => {

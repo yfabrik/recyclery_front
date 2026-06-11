@@ -18,6 +18,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
+import {
   createGiftCard,
   listGiftCards,
   type GiftCardDto,
@@ -59,14 +63,13 @@ const GiftCard = () => {
   const addGiftCard = useMutation({
     mutationFn: (payload: CreateGiftCardRequestBody) => createGiftCard(payload),
     onSuccess: (response) => {
-      const payload = response.data;
-      toast.success(payload.message);
+      toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);
       setCreateForm(emptyForm);
       queryClient.invalidateQueries({ queryKey: ["giftCards"] });
     },
-    onError: () => {
-      toast.error("Erreur lors de la création de l'avoir");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors de la création de l'avoir"));
     },
   });
 

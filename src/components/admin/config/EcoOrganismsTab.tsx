@@ -34,6 +34,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { EcoOrgModel } from "../../../interfaces/Models";
 import {
   createEcoOrganism,
@@ -56,45 +60,45 @@ export const EcoOrganismsTab = () => {
     queryKey: ["ecoOrganism", { include: ["inCategories","sellCategories"] }],
     queryFn: () => getEcoOrganisms({ include: ["inCategories","sellCategories"] }).then(response => response.data.eco_organisms)
   })
-  if (ecoOrganisms.isError) toast.error("Erreur lors du chargement des éco-organismes");
+  if (ecoOrganisms.isError) toast.error(getApiErrorMessage(ecoOrganisms.error, "Erreur lors du chargement des éco-organismes"));
 
   const ecoOrganismStats = useQuery({
     queryKey: ["ecoStats"],
     queryFn: () => fetchEcoOrganismsStats().then(response => response.data.stats)
   })
-  if (ecoOrganismStats.isError) toast.error("Erreur lors du chargement des statistiques");
+  if (ecoOrganismStats.isError) toast.error(getApiErrorMessage(ecoOrganismStats.error, "Erreur lors du chargement des statistiques"));
 
   const editEcoOrganism = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEcoOrganism(id, data),
-    onSuccess: () => {
-      toast.success("Éco-organisme mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Éco-organisme mis à jour avec succès"));
       handleCloseEcoOrganismDialog();
       queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
       queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
 
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"))
   })
   const addEcoOrganism = useMutation({
     mutationFn: (data: Schema) => createEcoOrganism(data),
-    onSuccess: () => {
-      toast.success("Éco-organisme créé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Éco-organisme créé avec succès"));
       handleCloseEcoOrganismDialog();
       queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
       queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
 
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"))
   })
   const removeEcoOrganism = useMutation({
     mutationFn: (id: number) => deleteEcoOrganism(id),
-    onSuccess: () => {
-      toast.success("Éco-organisme supprimé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Éco-organisme supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["ecoOrganism"] })
       queryClient.invalidateQueries({ queryKey: ["ecoStats"] })
 
     },
-    onError: () => toast.error("Erreur lors de la suppression")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression"))
   })
 
   // const fetchEcoOrganisms = async () => {

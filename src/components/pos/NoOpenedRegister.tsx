@@ -23,6 +23,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import { fetchStores, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
 import { formatCurrency } from "../../services/cartService";
@@ -56,13 +60,13 @@ export const NoOpenedRegister = () => {
 
     const openSession = useMutation({
         mutationFn: (data: OpenCaisseSchema) => OpenCaisse(data),
-        onSuccess: () => {
-            toast.success("Session ouverte avec succès");
+        onSuccess: (data) => {
+            toast.success(getApiSuccessMessage(data, "Session ouverte avec succès"));
             setOpenSessionDialog(false);
             queryClient.invalidateQueries({ queryKey: ["activeSession"] });
         },
-        onError: () => {
-            toast.error("Erreur lors de l'ouverture");
+        onError: (error) => {
+            toast.error(getApiErrorMessage(error, "Erreur lors de l'ouverture"));
         },
     });
 
@@ -250,8 +254,8 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                 closingAmount: detail.closing_amount ?? 0,
             });
             toast.info(`Reimpression du bilan de la session #${session.id}`);
-        } catch {
-            toast.error(`Impossible de reimprimer la session #${session.id}`);
+        } catch (error) {
+            toast.error(getApiErrorMessage(error, `Impossible de reimprimer la session #${session.id}`));
         } finally {
             setIsPrinting(false);
         }

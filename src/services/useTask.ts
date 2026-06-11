@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import type { TaskModel } from "../interfaces/Models";
 import { createTask, getTasks, updateTask, deleteTask } from "./api/tasks";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 
 export const useTask = () => {
   const [tasks, setTasks] = useState<TaskModel[]>([]);
@@ -14,21 +18,25 @@ export const useTask = () => {
 
   const saveTask = async (data) => {
     if (!editingTask?.id) {
-      await createTask(data);
-      toast.success("Planning créé avec succès");
+      const response = await createTask(data);
+      toast.success(getApiSuccessMessage(response, "Planning créé avec succès"));
     } else {
-      await updateTask(editingTask.id, data);
-      toast.success("Planning mis à jour avec succès");
+      const response = await updateTask(editingTask.id, data);
+      toast.success(
+        getApiSuccessMessage(response, "Planning mis à jour avec succès"),
+      );
     }
   };
 
   const handleDeleteTask = async (task: TaskModel) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer la tâche "${task.name}" ?`)) {
       try {
-        await deleteTask(task.id);
-        toast.success("Planning supprimé avec succès");
-      } catch {
-        toast.error("Erreur lors de la suppression");
+        const response = await deleteTask(task.id);
+        toast.success(
+          getApiSuccessMessage(response, "Planning supprimé avec succès"),
+        );
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Erreur lors de la suppression"));
       }
     }
   };

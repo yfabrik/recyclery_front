@@ -22,6 +22,10 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 import type {
   CashSession,
   TransactionModel,
@@ -124,7 +128,7 @@ export const SalesHistory = ({
       createRefund(v.id, v.data),
     onSuccess: async (data, variables) => {
       handleCloseRefundDialog();
-      toast.success("Remboursement effectué avec succès");
+      toast.success(getApiSuccessMessage(data, "Remboursement effectué avec succès"));
       const isGiftCardRefund = variables.data.payment_method === "giftcard";
       if (isGiftCardRefund) {
         const refundGiftCard = data.data.giftCard;
@@ -145,8 +149,8 @@ export const SalesHistory = ({
         });
       }
     },
-    onError: () => {
-      toast.error("Erreur lors du remboursement");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors du remboursement"));
     },
   });
 

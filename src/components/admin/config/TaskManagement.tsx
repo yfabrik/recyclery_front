@@ -34,6 +34,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import {
   addEmployeeToTask,
@@ -128,7 +132,9 @@ const TaskManagement = () => {
       setTasks(tasksWithEmployees);
     } catch (error) {
       console.error("Erreur lors du chargement des tâches:", error);
-      toast.error("Erreur lors du chargement des tâches");
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors du chargement des tâches"),
+      );
     } finally {
       setLoading(false);
     }
@@ -162,13 +168,15 @@ const TaskManagement = () => {
   const handleSave = async (data) => {
     try {
       if (editingTask) {
-        // Mise à jour
-        await updateTask(editingTask.id, data);
-
-        toast.success("Tâche mise à jour avec succès");
+        const response = await updateTask(editingTask.id, data);
+        toast.success(
+          getApiSuccessMessage(response, "Tâche mise à jour avec succès"),
+        );
       } else {
-        await createTask(data);
-        toast.success("Tâche créée avec succès");
+        const response = await createTask(data);
+        toast.success(
+          getApiSuccessMessage(response, "Tâche créée avec succès"),
+        );
       }
 
       handleCloseDialog();
@@ -176,7 +184,7 @@ const TaskManagement = () => {
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
       toast.error(
-        error.response?.data?.error || "Erreur lors de la sauvegarde",
+        getApiErrorMessage(error, "Erreur lors de la sauvegarde"),
       );
     }
   };
@@ -187,12 +195,14 @@ const TaskManagement = () => {
     }
 
     try {
-      await deleteTask(taskId);
-      toast.success("Tâche supprimée avec succès");
+      const response = await deleteTask(taskId);
+      toast.success(
+        getApiSuccessMessage(response, "Tâche supprimée avec succès"),
+      );
       fetchTasks();
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression");
+      toast.error(getApiErrorMessage(error, "Erreur lors de la suppression"));
     }
   };
 
@@ -212,7 +222,9 @@ const TaskManagement = () => {
       setOpenAssignmentDialog(true);
     } catch (error) {
       console.error("Erreur lors du chargement des employés:", error);
-      toast.error("Erreur lors du chargement des employés");
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors du chargement des employés"),
+      );
     }
   };
 
@@ -227,7 +239,7 @@ const TaskManagement = () => {
   // Fonction pour assigner un employé à une tâche
   const handleAssignEmployee = async (employeeId: number) => {
     try {
-      await addEmployeeToTask(selectedTask.id, employeeId);
+      const response = await addEmployeeToTask(selectedTask.id, employeeId);
 
       // Mettre à jour la liste des employés assignés
       const employee = availableEmployees.find((emp) => emp.id === employeeId);
@@ -235,25 +247,32 @@ const TaskManagement = () => {
         setTaskEmployees((prev) => [...prev, employee]);
       }
 
-      toast.success("Employé assigné avec succès");
+      toast.success(
+        getApiSuccessMessage(response, "Employé assigné avec succès"),
+      );
     } catch (error) {
       console.error("Erreur lors de l'assignation:", error);
-      toast.error("Erreur lors de l'assignation");
+      toast.error(getApiErrorMessage(error, "Erreur lors de l'assignation"));
     }
   };
 
   // Fonction pour retirer un employé d'une tâche
   const handleUnassignEmployee = async (employeeId: number) => {
     try {
-      await removeEmployeeFromTask(selectedTask.id, employeeId);
+      const response = await removeEmployeeFromTask(
+        selectedTask.id,
+        employeeId,
+      );
 
       // Mettre à jour la liste des employés assignés
       setTaskEmployees((prev) => prev.filter((emp) => emp.id !== employeeId));
 
-      toast.success("Employé retiré avec succès");
+      toast.success(
+        getApiSuccessMessage(response, "Employé retiré avec succès"),
+      );
     } catch (error) {
       console.error("Erreur lors du retrait:", error);
-      toast.error("Erreur lors du retrait");
+      toast.error(getApiErrorMessage(error, "Erreur lors du retrait"));
     }
   };
 

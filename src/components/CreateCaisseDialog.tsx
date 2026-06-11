@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import { createCaisse, fetchCaisses } from "../services/api/store";
 import type { StoreModel } from "../interfaces/Models";
 import {
@@ -50,7 +54,7 @@ export const CreateCaisseDialog = ({
       fetchCaisses(store.id).then((response) => response.data.cash_registers),
     placeholderData: [],
   });
-  if (caisses.isError) toast.error("Erreur lors du chargement des caisses");
+  if (caisses.isError) toast.error(getApiErrorMessage(caisses.error, "Erreur lors du chargement des caisses"));
 
   const [formMethods, setFormMethods] = useState<{
     reset: (values?: Schema) => void;
@@ -59,12 +63,12 @@ export const CreateCaisseDialog = ({
   const addCaisse = useMutation({
     mutationFn: ({ id, name }: { id: number; name: CaisseSchema }) =>
       createCaisse(id, name),
-    onSuccess: () => {
-      toast.success("Caisse créée avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Caisse créée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["caisses"] });
       formMethods?.reset();
     },
-    onError: () => toast.error("Erreur lors de la création de la caisse"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la création de la caisse")),
   });
 
   const handleAddCashRegister = async (data: CaisseSchema) => {

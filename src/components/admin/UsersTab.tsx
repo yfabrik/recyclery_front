@@ -39,6 +39,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 import { type UserModel } from "../../interfaces/Models";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
@@ -65,7 +69,7 @@ export const UsersTab = () => {
     queryKey: ["users", { include: "managedStores" }],
     queryFn: () => fUsers({ include: "managedStores" }).then(response => response.data.users)
   })
-  if (users.isError) toast.error("Erreur lors du chargement des utilisateurs");
+  if (users.isError) toast.error(getApiErrorMessage(users.error, "Erreur lors du chargement des utilisateurs"));
 
   const roles = useQuery({
     queryKey: ["roles"],
@@ -85,18 +89,18 @@ export const UsersTab = () => {
 
   const editUser = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateUser(id, data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
       save()
-      toast.success("Utilisateur mis à jour avec succès")
+      toast.success(getApiSuccessMessage(data, "Utilisateur mis à jour avec succès"))
     }
   })
   const addUser = useMutation({
     mutationFn: (data: Schema) => createUser(data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
       save()
-      toast.success("Utilisateur créé avec succès");
+      toast.success(getApiSuccessMessage(data, "Utilisateur créé avec succès"));
     }
   })
   const save = () => {
@@ -107,23 +111,21 @@ export const UsersTab = () => {
 
   const removeUser = useMutation({
     mutationFn: (data: number) => deleteUser(data),
-    onError: () => toast.error("Erreur lors de la suppression"),
-    onSuccess: () => {
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["userStats"] })
-      toast.success("Utilisateur supprimé avec succès");
+      toast.success(getApiSuccessMessage(data, "Utilisateur supprimé avec succès"));
     }
   })
 
   const changePassword = useMutation({
     mutationFn: (data: { id: number, data: PasswordSchema }) => updateUserPassword(data.id, data.data),
-    onSuccess: () => {
-      toast.success("Mot de passe mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"));
       handleClosePasswordDialog();
     },
-    onError: () => toast.error(
-      "Erreur lors du changement de mot de passe",
-    )
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors du changement de mot de passe"))
   })
   const stores = useQuery({
     queryKey: ["stores", "active"],

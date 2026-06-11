@@ -7,6 +7,10 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import { fetchStores } from "../services/api/store";
 import {
   addAssignedStore,
@@ -39,14 +43,15 @@ const EmployeeStoreAssignment = ({
     queryFn: () => getAssignedStores(employeeId).then(response => response.data.assignments)
   })
 
-  if (stores.isError || assignments.isError) toast.error("Erreur lors du chargement des données");
+  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des données"));
+  if (assignments.isError) toast.error(getApiErrorMessage(assignments.error, "Erreur lors du chargement des données"));
 
 
   const removeAssignements = useMutation({
     mutationFn: (employeeId: number) => removeAssignedStores(employeeId),
     onSuccess: () => {
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde des affectations"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde des affectations")),
   })
 
 
@@ -54,7 +59,7 @@ const EmployeeStoreAssignment = ({
     mutationFn: (data: { employee_id: number, store_id: number, is_primary: boolean }) => addAssignedStore(data),
     onSuccess: () => {
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde des affectations"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde des affectations")),
   })
 
   const handleSave = async (data: Schema) => {
@@ -74,7 +79,7 @@ const EmployeeStoreAssignment = ({
       onClose();
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde des affectations");
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde des affectations"));
 
     }
   };
