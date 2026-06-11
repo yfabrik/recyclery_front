@@ -1,64 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type {
-  CategoryModel,
-  TransactionModel,
-  TransactionPayment,
-} from "../interfaces/Models";
+import type { TransactionModel, TransactionPayment } from "../interfaces/Models";
+import { mockCategories } from "../stories/fixtures";
 import type { RefundTransaction } from "../services/api/transactions";
 import axiosInstance from "../services/api/axios";
 import { DetailTransaction } from "./DetailTransaction";
 
 const nowIso = new Date().toISOString();
-
-const mockCategories: CategoryModel[] = [
-  {
-    id: 1,
-    createdAt: nowIso,
-    name: "Vêtements",
-    description: null,
-    icon: null,
-    parent_id: null,
-    defaultWeight: 0.5,
-    defaultPrice: 5,
-    IO: 1,
-    priceBasedOnWeight: false,
-    bundlePrice: 10,
-    bundleQuantity: 3,
-    subcategories: [
-      {
-        id: 11,
-        createdAt: nowIso,
-        name: "Homme",
-        description: null,
-        icon: null,
-        parent_id: 1,
-        defaultWeight: 0.5,
-        defaultPrice: 5,
-        IO: 1,
-        priceBasedOnWeight: false,
-        bundlePrice: 0,
-        bundleQuantity: 0,
-      },
-    ],
-  },
-  {
-    id: 2,
-    createdAt: nowIso,
-    name: "Livres",
-    description: null,
-    icon: null,
-    parent_id: null,
-    defaultWeight: 0.3,
-    defaultPrice: 2,
-    IO: 1,
-    priceBasedOnWeight: false,
-    bundlePrice: 0,
-    bundleQuantity: 0,
-    subcategories: [],
-  },
-];
 
 const mockPayments: TransactionPayment[] = [
   {

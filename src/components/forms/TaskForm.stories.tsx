@@ -1,37 +1,42 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-
+import { noopSubmit } from "../../stories/fixtures";
 import { TaskForm } from "./TaskForm";
 
 const meta = {
+  title: "Forms/TaskForm",
   component: TaskForm,
+  tags: ["autodocs"],
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component: "Task scheduling form with category, employees, and time slots.",
+      },
+    },
+  },
+  args: {
+    formId: "task-form",
+    employees: [
+      { id: 1, fullName: "Marie Dupont", nom: "Dupont", prenom: "Marie", isActive: true },
+      { id: 2, fullName: "Jean Martin", nom: "Martin", prenom: "Jean", isActive: true },
+    ],
+    onSubmit: noopSubmit,
+  },
 } satisfies Meta<typeof TaskForm>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    formId: "form1",
-    employees: [],
-    onSubmit: (data) => {
-      console.log(data);
-    },
-  },
-};
+export const Default: Story = {};
 
-export const MyStory = (args) => (
-  <>
-    <TaskForm {...args} />
-    <button type="submit" form={args.formId}>
-      Submit
-    </button>
-  </>
-);
-
-MyStory.args = {
-  formId: "storybook-form",
-  onSubmit:  (data) => {
-      console.log(data);
-    },
+export const WithSubmitButton: Story = {
+  render: (args) => (
+    <>
+      <TaskForm {...args} />
+      <button type="submit" form={args.formId}>
+        Submit
+      </button>
+    </>
+  ),
 };
