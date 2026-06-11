@@ -169,15 +169,7 @@ export const formatPercentage = (value: number) => {
 export const sumPromoCategorie = (categorie?: CategoryModel) => {
   return categorie?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
 }
-
-// export const formatWeight = (amount: number) => {
-//   return new Intl.NumberFormat("fr-FR", {
-//     style: "unit",
-//     unit: "kilogram",
-//   }).format(amount || 0);
-// };
-
-
+//same calcul in backend
 export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
     return transactions.reduce((prev, current) => {
     if (current.payment_method == "cash")
@@ -192,7 +184,7 @@ export const sumCashInPayments = (transactions: TransactionModel[], openingAmoun
       prev + cashPayment :
       prev - cashPayment
 
-  }, 0)
+  }, openingAmount)
   //TODO handle mixed
   // return transactions.reduce((prev, current) => {
   //   if (!current.payments)
