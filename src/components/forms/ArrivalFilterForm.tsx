@@ -6,11 +6,15 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { FormDate, FormSelect } from "./FormBase";
+import { useQuery } from "@tanstack/react-query";
+import { fetchCollectionPoints } from "../../services/api/collectionPoint";
+import { idSchema } from "../../interfaces/ZodTypes";
 
 const filterSchema = z.object({
     date_from: z.coerce.date(),
     date_to: z.coerce.date(),
     source_type: z.union([z.enum(["point", "apport", "house_clearance"]), z.literal("")]),
+    collection_point_id: z.union([idSchema(), z.literal("")]),
 });
 export type Filters = z.infer<typeof filterSchema>;
 
@@ -28,8 +32,18 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
     const onSubmit = (data: Filters) => {
         onChange(data);
     };
+    const collectionPoints = useQuery({
+        queryKey: ["collectionPoints"],
+        queryFn: () => fetchCollectionPoints(),
+    });
 
-
+    const sourceType = filters.watch("source_type");
+    useEffect(() => {
+        if (sourceType !== "point") {
+            filters.setValue("collection_point_id", "");
+        }
+    }, [sourceType, filters]);  
+    
     const watch = filters.watch
     const debouncer = useDebouncer(() => {
         filters.handleSubmit(onSubmit, (e) => console.error(e))()
@@ -66,7 +80,17 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
                         </MenuItem>
                     </FormSelect>
                 </Grid>
-
+                { sourceType === "point" && (
+                    <Grid size={{ xs: 12, md: 3 }}>
+                        
+                        <FormSelect control={filters.control} name="collection_point_id" label="Point de collecte">
+                            <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
+                            {collectionPoints.data &&collectionPoints.data.data.collection_points.map((point) => (
+                                <MenuItem key={`point.${point.id}`} value={point.id}>{point.name}</MenuItem>
+                            ))}
+                        </FormSelect>
+                    </Grid>
+                )}
 
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormDate
