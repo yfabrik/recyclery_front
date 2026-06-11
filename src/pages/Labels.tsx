@@ -31,6 +31,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
@@ -103,7 +107,7 @@ const Labels = () => {
       return getLabeledItems(params).then((response) => response.data);
     },
   });
-  if (items.isError) toast.error("Erreur lors du chargement des articles");
+  if (items.isError) toast.error(getApiErrorMessage(items.error, "Erreur lors du chargement des articles"));
 
   const itemStats = useQuery({
     queryKey: ["itemStats", "items", { filters }],
@@ -135,7 +139,7 @@ const Labels = () => {
     onSuccess: (data, variables) => {
       saved(data, variables);
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editItem = useMutation({
     mutationFn: (data: { id: number; data: Schema }) =>
@@ -144,24 +148,24 @@ const Labels = () => {
       console.log(context, data, variables);
       return saved(data, variables.data);
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const removeItem = useMutation({
     mutationFn: (id: number) => deleteLabeledItem(id),
-    onSuccess: () => {
-      toast.success("Article supprimé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Article supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["items"] });
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   });
 
   const sell = useMutation({
     mutationFn: (id: number) => sellItem(id),
-    onSuccess: () => {
-      toast.success("Article marqué comme vendu");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Article marqué comme vendu"));
       queryClient.invalidateQueries({ queryKey: ["items"] });
     },
-    onError: () => toast.error("Erreur lors de la vente"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la vente")),
   });
 
   const saved = (
@@ -193,9 +197,12 @@ const Labels = () => {
       triggerPrintLabel(data.data.item);
     }
     toast.success(
-      data.config.method == "post"
-        ? "Article créé avec succès"
-        : "Article mis à jour avec succès",
+      getApiSuccessMessage(
+        data,
+        data.config.method == "post"
+          ? "Article créé avec succès"
+          : "Article mis à jour avec succès",
+      ),
     );
     handleCloseDialog();
     queryClient.invalidateQueries({ queryKey: ["items"] });

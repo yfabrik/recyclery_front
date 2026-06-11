@@ -34,6 +34,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { EmployeeModel } from "../../../interfaces/Models";
 import {
   createEmployees,
@@ -70,7 +74,7 @@ const EmployeeManagement = () => {
     queryKey: ["skills"],
     queryFn: () => fetchSkills().then(response => response.data.skills || [])
   });
-  if (skills.isError) toast.error("Erreur lors du chargement des compétences");
+  if (skills.isError) toast.error(getApiErrorMessage(skills.error, "Erreur lors du chargement des compétences"));
 
 
   const availabilityOptions = [
@@ -97,44 +101,42 @@ const EmployeeManagement = () => {
     queryKey: ["stores", { active: true }],
     queryFn: () => fetchStores({ active: true }).then(response => response.data.stores)
   })
-  if (stores.isError) toast.error("Erreur lors du chargement des stores");
+  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des stores"));
 
   const employees = useQuery({
     queryKey: ["employees"],
     queryFn: () => getEmployees().then(response => response.data.data)
   })
-  if (employees.isError) toast.error("Erreur lors du chargement des employés");
+  if (employees.isError) toast.error(getApiErrorMessage(employees.error, "Erreur lors du chargement des employés"));
 
   const editEmployee = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEmployee(id, data),
-    onSuccess: () => {
-      toast.success("Employé mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Employé mis à jour avec succès"));
       handleCloseDialog();
       queryClient.invalidateQueries({ queryKey: ["employees"] })
 
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde",
-    ),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const addEmployee = useMutation({
     mutationFn: (data: Schema) => createEmployees(data),
-    onSuccess: () => {
-      toast.success("Employé créé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Employé créé avec succès"));
       handleCloseDialog();
       queryClient.invalidateQueries({ queryKey: ["employees"] })
 
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde",
-    ),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const removeEmployee = useMutation({
     mutationFn: (id: number) => deleteEmployee(id),
-    onSuccess: () => {
-      toast.success("Employé supprimé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Employé supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["employees"] })
 
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
 
   })
 
@@ -232,12 +234,12 @@ const EmployeeManagement = () => {
 
   const updateEmployeeSkillsMutation = useMutation({
     mutationFn: ({ id, data }: { id: number, data: { skills: string[] } }) => updateEmployeeSkills(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       handleCloseSkills()
-      toast.success("Compétences mises à jour avec succès");
+      toast.success(getApiSuccessMessage(data, "Compétences mises à jour avec succès"));
       // queryClient.invalidateQueries({ queryKey: ["employees"] })
     },
-    onError: () => toast.error("Erreur lors de la mise à jour des compétences"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour des compétences")),
   })
 
   const handleSaveSkills = (data: EmployeeSkillSchema) => {

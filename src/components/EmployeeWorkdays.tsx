@@ -11,6 +11,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
+import {
   addWorkdaysToUser,
   getUserWorkdays,
   type WorkdaysFormPayload,
@@ -57,7 +61,7 @@ const EmployeeWorkdays = ({
   });
   useEffect(() => {
     if (workdaysQuery.isError) {
-      toast.error("Erreur lors du chargement des jours de travail");
+      toast.error(getApiErrorMessage(workdaysQuery.error, "Erreur lors du chargement des jours de travail"));
     }
   }, [workdaysQuery.isError]);
 
@@ -66,14 +70,14 @@ const EmployeeWorkdays = ({
   const addWorkdays = useMutation({
     mutationFn: (data: WorkdaysFormPayload) =>
       addWorkdaysToUser(employeeId, data),
-    onSuccess: () => {
-      toast.success("Jours de travail mis à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Jours de travail mis à jour avec succès"));
       queryClient.invalidateQueries({ queryKey: ["workdays", employeeId] });
       onSave?.();
       onClose();
     },
-    onError: () => {
-      toast.error("Erreur lors de la sauvegarde des jours de travail");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde des jours de travail"));
     },
   });
 

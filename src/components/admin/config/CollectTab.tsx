@@ -22,6 +22,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { ScheduleModel } from "../../../interfaces/Models";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import {
@@ -52,7 +56,7 @@ export const CollectTab = () => {
     queryFn: () =>
       getPlanning({ category: "collection" }).then((res) => res.data.schedules),
   });
-  if (error) toast.error("Erreur lors de la recupération des collectes")
+  if (error) toast.error(getApiErrorMessage(error, "Erreur lors de la recupération des collectes"))
 
 
   const collectionPoints = useQuery({
@@ -68,21 +72,21 @@ export const CollectTab = () => {
     mutationFn: (formData: Partial<ScheduleModel>) => {
       return createPlanning(formData);
     },
-    onSuccess: (newItem) => {
-      toast.success("Collecte créé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Collecte créé avec succès"));
       //   queryClient.setQueryData(["collectes"], (old = []) => [...old, newItem]);
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
       handleCloseDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
 
   const editCollecte = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Partial<ScheduleModel> }) => {
       return updatePlanning(id, data);
     },
-    onSuccess: (updatedItem) => {
-      toast.success("Collecte mise à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Collecte mise à jour avec succès"));
       //   queryClient.setQueryData(["items"], (old = []) =>
       //     old.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
       //   );
@@ -90,7 +94,7 @@ export const CollectTab = () => {
       handleCloseDialog();
 
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
 
   const removeCollecte = useMutation({
@@ -98,7 +102,7 @@ export const CollectTab = () => {
     onSuccess: (deleted) => {
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   });
 
   const handleOpenDialog = (collecte: ScheduleModel | null = null) => {

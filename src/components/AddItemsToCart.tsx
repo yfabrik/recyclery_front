@@ -2,6 +2,7 @@ import { Add, QrCodeScanner } from "@mui/icons-material";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { getApiErrorMessage } from "../utils/apiToastMessage";
 import { getItemFromBarcode } from "../services/api/labeledItems";
 import type { CartItem } from "./forms/cartSchema";
 import {
@@ -77,7 +78,7 @@ export const AddItemsToCart = ({ handleAddToCart, categories }: AddItemsToCartPr
             if (error.response?.status === 404) {
                 toast.error("Article non trouvé");
             } else {
-                toast.error("Erreur lors du scan");
+                toast.error(getApiErrorMessage(error, "Erreur lors du scan"));
             }
         }
     };

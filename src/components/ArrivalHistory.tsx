@@ -15,7 +15,8 @@ export const ArrivalHistory = () => {
     const [filters, setFilters] = useState<Filters>({
         date_from: todayKey(),
         date_to: todayKey(),
-        source_type: ""
+        source_type: "",
+        collection_point_id: ""
     });
 
     const { data: arrivals = { arrivals: [], pagination: { total: 0, page: 1, total_pages: 1, items_per_page: 50, has_next: false, has_previous: false, limit: 50, offset: 0 } } }

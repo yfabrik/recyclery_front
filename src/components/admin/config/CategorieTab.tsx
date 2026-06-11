@@ -17,6 +17,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { CategoryModel } from "../../../interfaces/Models";
 import {
   createCategory,
@@ -53,16 +57,16 @@ export const CategoriesTab = () => {
 
   useEffect(() => {
     if (categories.error) {
-      toast.error("Erreur lors du chargement des catégories");
+      toast.error(getApiErrorMessage(categories.error, "Erreur lors du chargement des catégories"));
     }
   }, [categories.error]);
 
   const editCategory = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Schema }) =>
       updateCategory(id, data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Catégorie mise à jour avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Catégorie mise à jour avec succès"));
       queryClient.invalidateQueries({
         queryKey: ["categorie", { only_category: true, include: "Category" }],
       });
@@ -71,9 +75,9 @@ export const CategoriesTab = () => {
   });
   const addCategory = useMutation({
     mutationFn: (data: Schema) => createCategory(data),
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
-    onSuccess: () => {
-      toast.success("Catégorie créée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Catégorie créée avec succès"));
       queryClient.invalidateQueries({
         queryKey: ["categorie", { only_category: true, include: "Category" }],
       });
@@ -83,9 +87,9 @@ export const CategoriesTab = () => {
 
   const removeCategory = useMutation({
     mutationFn: (id: number) => deleteCategory(id),
-    onError: () => toast.error("Erreur lors de la suppression"),
-    onSuccess: () => {
-      toast.success("Catégorie supprimée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Catégorie supprimée avec succès"));
       queryClient.invalidateQueries({
         queryKey: ["categorie", { only_category: true, include: "Category" }],
       });
@@ -100,9 +104,9 @@ export const CategoriesTab = () => {
       id: number;
       data: { in?: boolean; out?: boolean; sell?: boolean };
     }) => patchCategoryApi(id, data),
-    onError: () => toast.error("Erreur lors de la mise à jour"),
-    onSuccess: () => {
-      toast.success("Catégorie mise à jour avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Catégorie mise à jour avec succès"));
       queryClient.invalidateQueries({
         queryKey: ["categorie", { only_category: true, include: "Category" }],
       });

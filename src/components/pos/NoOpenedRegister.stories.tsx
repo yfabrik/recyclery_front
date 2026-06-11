@@ -134,6 +134,12 @@ const meta = {
   tags: ["autodocs"],
   parameters: {
     layout: "fullscreen",
+    docs: {
+      description: {
+        component:
+          "POS screen when no cash register session is open. Mocks store list, register history, and session open API.",
+      },
+    },
   },
 } satisfies Meta<typeof StoryWrapper>;
 

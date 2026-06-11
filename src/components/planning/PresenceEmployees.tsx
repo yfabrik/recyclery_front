@@ -1,4 +1,4 @@
-import { CalendarToday, Person, Warning } from "@mui/icons-material";
+import { CalendarToday, Person, Warning, WbSunny, WbTwilight, Brightness3 } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { ReactNode } from "react";
 import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
 
 // ============================================================================
@@ -285,7 +286,12 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
         <TimeSlotSection
           employees={daySchedule.allDay}
           timeSlot="allday"
-          label="🌞 Journée"
+          label={
+            <>
+              <WbSunny sx={{ fontSize: 14 }} />
+              Journée
+            </>
+          }
           color="#4caf50"
         />
       )}
@@ -294,7 +300,12 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
         <TimeSlotSection
           employees={daySchedule.morning}
           timeSlot="morning"
-          label="🌅 Matin"
+          label={
+            <>
+              <WbTwilight sx={{ fontSize: 14 }} />
+              Matin
+            </>
+          }
           color="#ff9800"
         />
       )}
@@ -303,7 +314,12 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
         <TimeSlotSection
           employees={daySchedule.afternoon}
           timeSlot="afternoon"
-          label="🌆 Après-midi"
+          label={
+            <>
+              <Brightness3 sx={{ fontSize: 14 }} />
+              Après-midi
+            </>
+          }
           color="#2196f3"
         />
       )}
@@ -318,7 +334,7 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
 interface TimeSlotSectionProps {
   employees: EmployeeModel[];
   timeSlot: TimeSlot;
-  label: string;
+  label: ReactNode;
   color: string;
 }
 

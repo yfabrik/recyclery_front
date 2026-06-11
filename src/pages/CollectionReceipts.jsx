@@ -33,6 +33,7 @@ import {
   Person,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import { getApiErrorMessage } from '../utils/apiToastMessage';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollectionReceipt from '../components/CollectionReceipt';
@@ -79,7 +80,7 @@ const CollectionReceipts = () => {
       
       setReceipts(schedulesWithReceipts);
     } catch (error) {
-      toast.error('Erreur lors du chargement des bordereaux');
+      toast.error(getApiErrorMessage(error, 'Erreur lors du chargement des bordereaux'));
       console.error('Erreur:', error);
     } finally {
       setLoading(false);

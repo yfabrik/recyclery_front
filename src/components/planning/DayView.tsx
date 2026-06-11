@@ -2,6 +2,9 @@ import {
   Add,
   Delete,
   Edit,
+  Store,
+  WbSunny,
+  WbTwilight,
 } from "@mui/icons-material";
 import {
   Box,
@@ -72,9 +75,10 @@ export const DayView = ({
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography
                     variant="h6"
-                    sx={{ fontWeight: "bold", color: "#4caf50" }}
+                    sx={{ fontWeight: "bold", color: "#4caf50", display: "flex", alignItems: "center", gap: 1 }}
                   >
-                    🌅 Matin (8h - 12h)
+                    <WbTwilight fontSize="small" />
+                    Matin (8h - 12h)
                   </Typography>
                   <Chip
                     label={`${
@@ -166,7 +170,8 @@ export const DayView = ({
                               </Typography>
                               {schedule.category=="vente" && (
                                 <Chip
-                                  label="🏪 Ouverture"
+                                  icon={<Store sx={{ color: "white !important" }} />}
+                                  label="Ouverture"
                                   size="small"
                                   sx={{
                                     bgcolor: "#4caf50",
@@ -266,9 +271,10 @@ export const DayView = ({
                             <Typography
                               variant="caption"
                               display="block"
-                              sx={{ fontWeight: "bold", color: "#2196f3" }}
+                              sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              🏪 {schedule.store_name || "Magasin non assigné"}
+                              <Store sx={{ fontSize: 14 }} />
+                              {schedule.store_name || "Magasin non assigné"}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -330,9 +336,10 @@ export const DayView = ({
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography
                     variant="h6"
-                    sx={{ fontWeight: "bold", color: "#ff9800" }}
+                    sx={{ fontWeight: "bold", color: "#ff9800", display: "flex", alignItems: "center", gap: 1 }}
                   >
-                    🌞 Après-midi (13h30 - 17h)
+                    <WbSunny fontSize="small" />
+                    Après-midi (13h30 - 17h)
                   </Typography>
                   <Chip
                     label={`${
@@ -424,7 +431,8 @@ export const DayView = ({
                               </Typography>
                               {schedule.category=="vente" && (
                                 <Chip
-                                  label="🏪 Ouverture"
+                                  icon={<Store sx={{ color: "white !important" }} />}
+                                  label="Ouverture"
                                   size="small"
                                   sx={{
                                     bgcolor: "#4caf50",
@@ -524,9 +532,10 @@ export const DayView = ({
                             <Typography
                               variant="caption"
                               display="block"
-                              sx={{ fontWeight: "bold", color: "#2196f3" }}
+                              sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
-                              🏪 {schedule.store_name || "Magasin non assigné"}
+                              <Store sx={{ fontSize: 14 }} />
+                              {schedule.store_name || "Magasin non assigné"}
                             </Typography>
                             <Typography
                               variant="caption"

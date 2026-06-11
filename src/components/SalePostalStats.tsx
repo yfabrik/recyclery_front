@@ -1,3 +1,4 @@
+import { LocalPostOffice, Place } from "@mui/icons-material";
 import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
 import { formatCurrency } from "../services/cartService";
 import { useQuery } from "@tanstack/react-query";
@@ -23,8 +24,9 @@ export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
     <Card>
       <CardContent>
         <Loading isLoading={postalCodeStats.isLoading}>
-          <Typography variant="h6" gutterBottom>
-            📍 Top des codes postaux
+          <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Place fontSize="small" />
+            Top des codes postaux
           </Typography>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
             Les 10 codes postaux générant le plus de chiffre d'affaires
@@ -38,8 +40,9 @@ export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
                   mb: 0.5,
                 }}
               >
-                <Typography variant="body2" fontWeight="bold">
-                  📮 {postal.customer_postal_code}
+                <Typography variant="body2" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <LocalPostOffice sx={{ fontSize: 16 }} />
+                  {postal.customer_postal_code}
                 </Typography>
                 <Typography
                   variant="body2"

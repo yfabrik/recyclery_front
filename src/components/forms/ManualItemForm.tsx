@@ -1,7 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Grid, MenuItem } from "@mui/material";
-import { useForm, useWatch } from "react-hook-form";
-import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import { Grid } from "@mui/material";
+import { useForm } from "react-hook-form";
+import {
+  FormCategorySubcategoryFields,
+  FormInput,
+  type BaseFormProps,
+} from "./FormBase";
 
 import { Euro, Scale } from "@mui/icons-material";
 import { useEffect } from "react";
@@ -47,32 +51,6 @@ export const ManualItemForm = ({
 
 
 
-
-  const SubCategories = ({ control }: { control: typeof form.control }) => {
-    const category = useWatch({
-      control: control,
-      name: "category_id",
-    });
-    const subcats =
-      categories.find((c) => c.id == category)?.subcategories ?? [];
-    if (subcats.length === 0) return
-    return (
-      <FormSelect
-        control={control}
-        name="subcategory_id"
-        label="Sous-catégorie"
-        extra={{ disabled: subcats.length < 1 }}
-      >
-        <MenuItem value="">Aucune</MenuItem>
-        {subcats.map((category) => (
-          <MenuItem key={category.id} value={category.id}>
-            {category.name}
-          </MenuItem>
-        ))}
-      </FormSelect>
-    );
-  };
-
   const categoryId = form.watch("category_id");
   const subcategoryId = form.watch("subcategory_id");
 
@@ -107,25 +85,11 @@ export const ManualItemForm = ({
     <>
       <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormSelect
-              control={form.control}
-              name="category_id"
-              label="Catégorie"
-            >
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </FormSelect>
-          </Grid>
-
-          {/* Sous-catégorie si disponible */}
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <SubCategories control={form.control} />
-          </Grid>
+          <FormCategorySubcategoryFields
+            control={form.control}
+            categories={categories}
+            setValue={form.setValue}
+          />
 
           <Grid size={{ xs: 12, md: 6 }}>
             <FormInput

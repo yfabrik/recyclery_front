@@ -16,6 +16,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
+import {
   type CollectionPointModel,
   type ScheduleModel
 } from "../../../interfaces/Models";
@@ -60,38 +64,34 @@ const CollectionPointsTab = () => {
   })
 
   if (collectionPoints.error)
-    toast.error("Erreur lors du chargement des points de collecte");
+    toast.error(getApiErrorMessage(collectionPoints.error, "Erreur lors du chargement des points de collecte"));
 
 
   const updatePoint = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateCollectionPoint(id, data),
-    onError: () => toast.error(
-      "Erreur lors de la sauvegarde"
-    ),
-    onSuccess: () => {
-      toast.success("Point de collecte mis à jour avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Point de collecte mis à jour avec succès"));
       handleCloseDialog()
       queryClient.invalidateQueries({ queryKey: ["points"] })
     }
   })
   const createPoint = useMutation({
     mutationFn: (data: Schema) => createCollectionPoint(data),
-    onError: () => toast.error(
-      "Erreur lors de la sauvegarde"
-    ),
-    onSuccess: () => {
-      toast.success("Point de collecte créé avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Point de collecte créé avec succès"));
       handleCloseDialog()
       queryClient.invalidateQueries({ queryKey: ["points"] })
     }
   })
   const deletePoint = useMutation({
     mutationFn: (id: number) => deleteCollectionPoint(id),
-    onSuccess: () => {
-      toast.success("Point de collecte supprimé avec succès");
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Point de collecte supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["points"] })
     },
-    onError: () => toast.error("Erreur lors de la suppression")
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression"))
   })
 
 
@@ -99,7 +99,7 @@ const CollectionPointsTab = () => {
     queryKey: ["stores"],
     queryFn: () => fetchStores().then(response => response.data.stores)
   })
-  if (recycleries.isError) toast.error("Erreur lors du chargement des recycleries");
+  if (recycleries.isError) toast.error(getApiErrorMessage(recycleries.error, "Erreur lors du chargement des recycleries"));
 
   const handleOpenDialog = (point: CollectionPointModel | null = null) => {
     setEditingPoint(point);
@@ -177,9 +177,9 @@ const CollectionPointsTab = () => {
 
   const updatePresence = useMutation({
     mutationFn: ({ id, data }: { id: number, data: PresenceSchema }) => updatePointPresence(id, data),
-    onError: () => toast.error("Erreur lors de la sauvegarde de la présence"),
-    onSuccess: () => {
-      toast.success("Présence mise à jour avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde de la présence")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Présence mise à jour avec succès"));
       handleClosePresenceDialog()
       queryClient.invalidateQueries({ queryKey: ["points"] })
 
@@ -187,9 +187,9 @@ const CollectionPointsTab = () => {
   })
   const createPresence = useMutation({
     mutationFn: (data: PresenceSchema) => createPointPresence(data),
-    onError: () => toast.error("Erreur lors de la sauvegarde de la présence"),
-    onSuccess: () => {
-      toast.success("Présence créée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde de la présence")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Présence créée avec succès"));
       handleClosePresenceDialog()
       queryClient.invalidateQueries({ queryKey: ["points"] })
 
@@ -197,9 +197,9 @@ const CollectionPointsTab = () => {
   })
   const deletePresence = useMutation({
     mutationFn: (id: number) => deletePointPresence(id),
-    onError: () => toast.error("Erreur lors de la suppression de la présence"),
-    onSuccess: () => {
-      toast.success("Présence supprimée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression de la présence")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Présence supprimée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["points"] })
     }
   })

@@ -5,6 +5,16 @@ import { EcoOrganismStats } from "./EcoOrganismStats";
 const meta = {
   component: EcoOrganismStats,
   title: "Components/EcoOrganismStats",
+  tags: ["autodocs"],
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Quarterly eco-organism weight stats with expandable category breakdowns. Mock builders normalize quarterIn / quarterSell / quarterOut metrics.",
+      },
+    },
+  },
 } satisfies Meta<typeof EcoOrganismStats>;
 
 export default meta;
@@ -299,13 +309,6 @@ export const SingleEcoOrganism: Story = {
   args: {
     stats: mockStats.slice(0, 1),
     valueLabel: "Tonnes enlevées",
-  },
-};
-
-export const CustomValueLabel: Story = {
-  args: {
-    stats: mockStats,
-    valueLabel: "Poids collecté (kg)",
   },
 };
 

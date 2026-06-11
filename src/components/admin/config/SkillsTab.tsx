@@ -17,6 +17,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { SkillModel } from "../../../interfaces/Models";
 import {
   createSkill,
@@ -52,9 +56,9 @@ export const SkillsTab = () => {
 
   const createMutation = useMutation({
     mutationFn: (data: { name: string }) => createSkill(data),
-    onError: () => toast.error("Erreur lors de la création"),
-    onSuccess: () => {
-      toast.success("Compétence créée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la création")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Compétence créée avec succès"));
       queryClient.invalidateQueries({ queryKey: SKILLS_QUERY_KEY });
       handleCloseDialog();
     },
@@ -63,9 +67,9 @@ export const SkillsTab = () => {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { name: string } }) =>
       updateSkill(id, data),
-    onError: () => toast.error("Erreur lors de la mise à jour"),
-    onSuccess: () => {
-      toast.success("Compétence mise à jour avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Compétence mise à jour avec succès"));
       queryClient.invalidateQueries({ queryKey: SKILLS_QUERY_KEY });
       handleCloseDialog();
     },
@@ -73,9 +77,9 @@ export const SkillsTab = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteSkill(id),
-    onError: () => toast.error("Erreur lors de la suppression"),
-    onSuccess: () => {
-      toast.success("Compétence supprimée avec succès");
+    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Compétence supprimée avec succès"));
       queryClient.invalidateQueries({ queryKey: SKILLS_QUERY_KEY });
     },
   });

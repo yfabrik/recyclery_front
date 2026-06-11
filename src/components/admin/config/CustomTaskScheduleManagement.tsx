@@ -27,6 +27,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import { PRIORITIES, RECURRENCE_PATTERNS } from "../../../interfaces/shared";
 import {
@@ -60,7 +64,10 @@ const CustomTaskScheduleManagement = () => {
     queryKey: ["stores", { active: true }],
     queryFn: () => fetchStores({ active: true }).then((res) => res.data.stores),
   });
-  if (stores.isError) toast.error("Erreur lors du chargement des magasins");
+  if (stores.isError)
+    toast.error(
+      getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"),
+    );
 
   const schedulesQuery = useQuery({
     queryKey: CUSTOM_SCHEDULES_KEY,
@@ -68,37 +75,57 @@ const CustomTaskScheduleManagement = () => {
       getPlanning({ category: "custom" }).then((res) => res.data.schedules),
   });
   if (schedulesQuery.isError) {
-    toast.error("Erreur lors du chargement des tâches personnalisées");
+    toast.error(
+      getApiErrorMessage(
+        schedulesQuery.error,
+        "Erreur lors du chargement des tâches personnalisées",
+      ),
+    );
   }
 
   const addSchedule = useMutation({
     mutationFn: (data: Partial<ScheduleModel>) => createPlanning(data),
-    onSuccess: () => {
-      toast.success("Tâche personnalisée créée avec succès");
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(data, "Tâche personnalisée créée avec succès"),
+      );
       queryClient.invalidateQueries({ queryKey: CUSTOM_SCHEDULES_KEY });
       handleCloseDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
 
   const updateSchedule = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<ScheduleModel> }) =>
       updatePlanning(id, data),
-    onSuccess: () => {
-      toast.success("Tâche personnalisée mise à jour avec succès");
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(
+          data,
+          "Tâche personnalisée mise à jour avec succès",
+        ),
+      );
       queryClient.invalidateQueries({ queryKey: CUSTOM_SCHEDULES_KEY });
       handleCloseDialog();
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde"),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
 
   const deleteSchedule = useMutation({
     mutationFn: (id: number) => deletePlanning(id),
-    onSuccess: () => {
-      toast.success("Tâche personnalisée supprimée avec succès");
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(
+          data,
+          "Tâche personnalisée supprimée avec succès",
+        ),
+      );
       queryClient.invalidateQueries({ queryKey: CUSTOM_SCHEDULES_KEY });
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   });
 
   const getStoreName = (storeId?: number | null) => {

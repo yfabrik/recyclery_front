@@ -1,4 +1,4 @@
-import { Add, Delete, Edit, ExpandMore } from "@mui/icons-material";
+import { Add, Delete, Edit, ExpandMore, Groups, Store } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
@@ -361,9 +361,10 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
         <Typography
           variant="caption"
           display="block"
-          sx={{ fontWeight: "bold", color: "#2196f3" }}
+          sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
         >
-          🏪 {schedule.name || "Magasin non assigné"}
+          <Store sx={{ fontSize: 14 }} />
+          {schedule.name || "Magasin non assigné"}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           {periode}
@@ -389,9 +390,14 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                 fontSize: taskCss.fontSize,
                 fontWeight: "bold",
                 textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
               }}
             >
-              👥 Employés ({schedule?.Employees?.length || "0"})
+              <Groups sx={{ fontSize: 14 }} />
+              Employés ({schedule?.Employees?.length || "0"})
             </Typography>
             <Box
               sx={{

@@ -1,8 +1,9 @@
-import { Checkbox, FormControl, FormHelperText, Grid, InputLabel, ListSubheader, MenuItem, Select } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
+import { Grid, ListSubheader, MenuItem } from "@mui/material";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 import {
   FormInput,
+  FormMultiSelect,
   FormSelect,
   FormSwitch,
   FormTime,
@@ -105,55 +106,40 @@ export const CollecteForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Controller
-            name="location"
+          <FormMultiSelect
             control={form.control}
-            render={({ field, fieldState }) => (
-              <FormControl fullWidth error={fieldState.invalid}>
-                <InputLabel id={`location_label`} shrink>
-                  "Point de collecte"
-                </InputLabel>
-                <Select
-                  multiple
-                  labelId={`location_label`}
-                  label="Point de collecte"
-                  renderValue={(selected) => {
-                    return selected.map(item => {
-                      const [type, id] = item.split(".");
-                      if(type =="point"){
-                        return collectionPoints.find(point => point.id === +id)?.name;
-                      } else if(type =="store"){
-                        return stores.find(store => store.id === +id)?.name;
-                      }
-                    }).join(", ");
-                     
-                  }}
-                  {...field}
-                  displayEmpty
-                  error={fieldState.invalid}
-                >
-                  <ListSubheader>Points de collecte</ListSubheader>
-                  {collectionPoints.map((point) => (
-                    <MenuItem key={`point.${point.id}`} value={`point.${point.id}`}>
-                      <Checkbox checked={field.value?.includes(`point.${point.id}`)} />
-                      {point.name}
-                    </MenuItem>
-                  ))}
-                  <ListSubheader>Magasins</ListSubheader>
-                  {stores.map((store) => (
-                    <MenuItem key={`store.${store.id}`} value={`store.${store.id}`}>
-                      <Checkbox checked={field.value?.includes(`store.${store.id}`)} />
-                      Magasin {store.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {fieldState.invalid && (
-                  <FormHelperText>{fieldState.error?.message}</FormHelperText>
-                )}
-              </FormControl>
-            )}
-          />
-
+            name="location"
+            label="Point de collecte"
+            showCheckboxes
+            renderValue={(selected) =>
+              (selected ?? [])
+                .map((item) => {
+                  const [type, id] = item.split(".");
+                  if (type === "point") {
+                    return collectionPoints.find((point) => point.id === +id)?.name;
+                  }
+                  if (type === "store") {
+                    return stores.find((store) => store.id === +id)?.name;
+                  }
+                  return undefined;
+                })
+                .filter(Boolean)
+                .join(", ")
+            }
+          >
+            <ListSubheader>Points de collecte</ListSubheader>
+            {collectionPoints.map((point) => (
+              <MenuItem key={`point.${point.id}`} value={`point.${point.id}`}>
+                {point.name}
+              </MenuItem>
+            ))}
+            <ListSubheader>Magasins</ListSubheader>
+            {stores.map((store) => (
+              <MenuItem key={`store.${store.id}`} value={`store.${store.id}`}>
+                Magasin {store.name}
+              </MenuItem>
+            ))}
+          </FormMultiSelect>
         </Grid>
         <Grid size={{ xs: 12 }}>
           <FormInput

@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { WbSunny, WbTwilight } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -151,7 +152,8 @@ export const PlaningForm = ({
                 borderRadius: "20px",
               }}
             >
-              🌅 Matin (8h - 12h)
+              <WbTwilight sx={{ mr: 1 }} />
+              Matin (8h - 12h)
             </Button>
             <Button
               variant="outlined"
@@ -168,7 +170,8 @@ export const PlaningForm = ({
                 borderRadius: "20px",
               }}
             >
-              🌞 Après-midi (13h30 - 17h)
+              <WbSunny sx={{ mr: 1 }} />
+              Après-midi (13h30 - 17h)
             </Button>
           </Box>
         </Grid>

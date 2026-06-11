@@ -6,6 +6,7 @@ import {
   Nature,
   People,
   Psychology,
+  Settings,
   Store,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
@@ -36,8 +37,9 @@ export const ConfigurationTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
-          ⚙️ Configuration Logiciel
+        <Typography variant="h5" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Settings />
+          Configuration Logiciel
         </Typography>
       </Box>
 

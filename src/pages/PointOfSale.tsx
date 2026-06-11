@@ -41,6 +41,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
@@ -309,7 +313,7 @@ const PointOfSale = () => {
       console.log("closeSession success", data);
       const { difference_amount } = data.data;
 
-      let message = "Session fermée avec succès";
+      let message = getApiSuccessMessage(data, "Session fermée avec succès");
       if (hasSignificantCashDifference(difference_amount)) {
         message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${formatCurrency(roundCurrency(difference_amount))}`;
       }
@@ -324,8 +328,8 @@ const PointOfSale = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["activeSession"] });
     },
-    onError: () => {
-      toast.error("Erreur lors de la fermeture de la session");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors de la fermeture de la session"));
     },
   });
 
@@ -340,7 +344,9 @@ const PointOfSale = () => {
   const handleSell = useMutation({
     mutationFn: (data: CreateTransactionBody) => createSell(data),
     onSuccess: (data) => {
-      toast.success("Vente enregistrée avec succès");
+      toast.success(
+        getApiSuccessMessage(data, "Vente enregistrée avec succès"),
+      );
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       // setPaymentDialog(false);
       // setPaymentData({
@@ -371,8 +377,8 @@ const PointOfSale = () => {
         customer_postal_code: "",
       });
     },
-    onError: () => {
-      toast.error("Erreur lors de l'enregistrement de la vente");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors de l'enregistrement de la vente"));
     },
   });
 
@@ -460,7 +466,7 @@ const PointOfSale = () => {
       if (requestError.response?.status === 404) {
         toast.error("Article non trouvé");
       } else {
-        toast.error("Erreur lors du scan");
+        toast.error(getApiErrorMessage(error, "Erreur lors du scan"));
       }
     }
   };
@@ -526,7 +532,7 @@ const PointOfSale = () => {
         toast.error("Avoir non trouvé");
         return;
       }
-      toast.error("Erreur lors du scan de l'avoir");
+      toast.error(getApiErrorMessage(error, "Erreur lors du scan de l'avoir"));
     }
   };
 

@@ -7,6 +7,10 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 import type { UserModel } from "../interfaces/Models";
 
 const PERMISSIONS = {
@@ -214,10 +218,10 @@ export const AuthProvider = ({ children }: AuthProps) => {
         console.error("Erreur récupération permissions:", permError);
       }
 
-      toast.success("Connexion réussie !");
+      toast.success(getApiSuccessMessage(response, "Connexion réussie !"));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || "Erreur de connexion";
+      const message = getApiErrorMessage(error, "Erreur de connexion");
       toast.error(message);
       return { success: false, error: message };
     }
@@ -236,10 +240,10 @@ export const AuthProvider = ({ children }: AuthProps) => {
       setupAxiosInterceptors(token);
       setUser(user);
 
-      toast.success("Inscription réussie !");
+      toast.success(getApiSuccessMessage(response, "Inscription réussie !"));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || "Erreur d'inscription";
+      const message = getApiErrorMessage(error, "Erreur d'inscription");
       toast.error(message);
       return { success: false, error: message };
     }

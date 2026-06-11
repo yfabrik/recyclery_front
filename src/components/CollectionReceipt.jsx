@@ -40,6 +40,10 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from '../utils/apiToastMessage';
 import { createCollectionReceipt, getCollectionReceipt } from '../services/api/collectionSchedules';
 
 /**
@@ -116,7 +120,7 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
         setReceipt(null);
         setEditing(true);
       } else {
-        toast.error('Erreur lors du chargement du bordereau');
+        toast.error(getApiErrorMessage(error, 'Erreur lors du chargement du bordereau'));
       }
     } finally {
       setLoading(false);
@@ -171,11 +175,11 @@ const CollectionReceipt = ({ open, onClose, schedule, onSaved }) => {
       if (response.data.success) {
         setReceipt(response.data.receipt);
         setEditing(false);
-        toast.success('Bordereau sauvegardé avec succès');
+        toast.success(getApiSuccessMessage(response, 'Bordereau sauvegardé avec succès'));
         if (onSaved) onSaved();
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la sauvegarde');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la sauvegarde'));
     } finally {
       setLoading(false);
     }

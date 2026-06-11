@@ -31,6 +31,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TransactionModel, TransactionPayment } from "../../interfaces/Models";
@@ -90,7 +94,7 @@ export const SalesAnalyticsTab = () => {
     queryFn: () =>
       fStore({ active: true }).then((response) => response.data.stores),
   });
-  if (stores.isError) toast.error("Erreur lors du chargement des magasins");
+  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"));
 
   const transactions = useQuery({
     queryKey: ["transactions", filters, page],
@@ -136,12 +140,12 @@ export const SalesAnalyticsTab = () => {
 
   const addRefund = useMutation({
     mutationFn: (v: { id: number; data: Schema }) => createRefund(v.id, v.data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       handleCloseRefundDialog();
-      toast.success("Remboursement effectué avec succès");
+      toast.success(getApiSuccessMessage(data, "Remboursement effectué avec succès"));
     },
-    onError: () => {
-      toast.error("Erreur lors du remboursement");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Erreur lors du remboursement"));
     },
   });
 
@@ -575,7 +579,10 @@ export const SalesAnalyticsTab = () => {
         </DialogTitle>
         <DialogContent>
           {selectedTransaction && (
-            <DetailTransaction selectedTransaction={selectedTransaction} />
+            <DetailTransaction
+              selectedTransaction={selectedTransaction}
+              categories={categories.data ?? []}
+            />
           )}
         </DialogContent>
         <DialogActions>
