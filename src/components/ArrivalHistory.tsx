@@ -27,6 +27,7 @@ export const ArrivalHistory = () => {
                     date_from: filters.date_from.toISOString(),
                     date_to: filters.date_to.toISOString(),
                     ...(filters.source_type !== "" ? { source_type: filters.source_type } : {}),
+                    ...(filters.collection_point_id !== "" ? { collection_point_id: filters.collection_point_id } : {}),
                     page,
                 }).then((result) => result.data ?? []),
         });

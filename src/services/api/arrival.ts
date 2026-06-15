@@ -8,6 +8,7 @@ interface ArrivalFilters {
   date_from?: string;
   date_to?: string;
   source_type?: ArrivalModel["source_type"];
+  collection_point_id?: number;
   page?: number;
 }
 
