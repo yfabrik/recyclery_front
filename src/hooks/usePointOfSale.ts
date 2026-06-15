@@ -29,7 +29,7 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-import type { ReceiptSale } from "../components/admin/SalesAnalyticsTab";
+import type { ReceiptSale } from "../utils/transactionReceipt";
 import {
   schema,
   type CartFormValues,

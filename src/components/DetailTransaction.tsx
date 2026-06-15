@@ -45,6 +45,7 @@ import {
 import { Loading } from "./Loading";
 import type { CartItem } from "./forms/cartSchema";
 import { useMemo, useState } from "react";
+import { buildCartItemsFromTransaction } from "../utils/transactionReceipt";
 
 type EditablePaymentLine = {
   method: (typeof EDITABLE_PAYMENT_METHODS)[number]["value"];
@@ -64,35 +65,6 @@ const getRefundType = (
   if (refund.total_amount >= parentTotal) return "full";
   if (cumulativeRefunded >= parentTotal) return "full";
   return "partial";
-};
-
-const mapTransactionItemsToCart = (
-  transaction: TransactionModel,
-  categories?: CategoryModel[],
-): CartItem[] => {
-  return (transaction.items ?? []).map((item) => {
-    const txItem = item.TransactionItem;
-    const category = categories?.find((c) => c.id === item.category_id);
-    const subcategory = category?.subcategories?.find(
-      (c) => c.id === item.subcategory_id,
-    );
-    return {
-      name: txItem?.name ?? item.description ?? "",
-      price: Number(txItem?.price ?? item.price ?? 0),
-      quantity: Number(txItem?.quantity ?? 1),
-      category_name: item.category?.name ?? category?.name ?? "",
-      subcategory_name: item.subcategory?.name ?? subcategory?.name ?? "",
-      barcode: item.barcode ?? "",
-      category_id: item.category_id ?? 0,
-      subcategory_id: item.subcategory_id ?? null,
-      description: item.description ?? null,
-      weight: Number(item.weight ?? 0),
-      promotion: Number(txItem?.promotionValue ?? 0),
-      bundlePrice:
-        txItem?.bundlePrice != null ? Number(txItem.bundlePrice) : null,
-      bundleQuantity: txItem?.bundleQuantity ?? null,
-    };
-  });
 };
 
 const buildInitialPayments = (
@@ -828,7 +800,7 @@ export const DetailTransaction = ({
 
   const transaction = transactionDetails.data ?? selectedTransaction;
   const cartItems = useMemo(
-    () => mapTransactionItemsToCart(transaction, categories),
+    () => buildCartItemsFromTransaction(transaction, categories),
     [transaction, categories],
   );
 
