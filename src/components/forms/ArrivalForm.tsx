@@ -81,7 +81,7 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
-  onReady?: (method: { reset: UseFormReset<ArrivalFormInput> }) => void;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormSchema> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -222,7 +222,7 @@ export const ArrivalForm = ({
 
   const reset = form.reset;
   useEffect(() => {
-    onReady?.({ reset });
+    onReady?.({ reset: reset as UseFormReset<ArrivalFormSchema> });
   }, [onReady, reset]);
 
   // Reset subcategory when category changes to avoid out-of-range select values.

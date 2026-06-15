@@ -13,7 +13,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -34,10 +33,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
 import type { EcoOrgModel } from "../../../interfaces/Models";
 import {
   createEcoOrganism,
@@ -46,9 +41,13 @@ import {
   getEcoOrganisms,
   updateEcoOrganism
 } from "../../../services/api/ecoOrganism";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import { EcoOrganismForm, type Schema } from "../../forms/EcoOrganismForm";
-import { StatCard } from "../../StatCard";
 import { Loading } from "../../Loading";
+import { StatCard } from "../../StatCard";
 
 export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);

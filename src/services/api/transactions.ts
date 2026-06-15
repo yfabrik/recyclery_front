@@ -1,8 +1,8 @@
 import type { AxiosResponse } from "axios";
-import type { CashSession, TransactionItem, TransactionModel, UserModel } from "../../interfaces/Models";
+import type { CashSession, TransactionModel, UserModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { APIResponse } from "./types";
 import type { GiftCardDto } from "./giftCards";
+import type { APIResponse } from "./types";
 
 export interface transactionsFilters {
   store_id?: number;
@@ -219,6 +219,14 @@ export type TransactionDetailsModel = TransactionModel & {
   giftCard: GiftCardDto | null;
 };
 
+export type RefundTransaction = TransactionModel & {
+  refund_reason?: string;
+  refund_type?: "full" | "partial";
+  notes?: string;
+  created_by?: string;
+  CashSession?: CashSession | null;
+};
+
 export const getTransactions = (
   filters: transactionsFilters | null = null,
 ): Promise<
@@ -256,7 +264,7 @@ export const createRefund = (id: number, data: CreateRefundBody): Promise<AxiosR
 
 export const getRefundForTransaction = (
   id: number,
-): Promise<AxiosResponse<{ success: true; refunds: TransactionModel[] }>> =>
+): Promise<AxiosResponse<{ success: true; refunds: RefundTransaction[] }>> =>
   axiosInstance.get(`/api/sales-transactions/${id}/refunds`);
 
 // export const createCreditNote = (data) =>

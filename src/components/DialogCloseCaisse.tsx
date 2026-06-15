@@ -90,7 +90,12 @@ export const DialogCloseCaisse = ({
               onClick={() =>
                 triggerPrintBilanCaisse({
                   session: currentSession,
-                  transactions: transactions.data?.transactions || [],
+                  transactions: (transactions.data?.transactions ?? []).map(
+                    (transaction) => ({
+                      ...transaction,
+                      payments: transaction.payments ?? [],
+                    }),
+                  ),
                   closingAmount,
                 })
               }

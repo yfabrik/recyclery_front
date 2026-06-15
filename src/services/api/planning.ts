@@ -3,7 +3,7 @@ import type { EmployeeModel, ScheduleModel, TaskModel } from "../../interfaces/M
 import axiosInstance from "./axios";
 interface filters {
   store_id?: number;
-  category?: "vente" | "point" | "collection" | "custom";
+  category?: TaskModel["category"]
 }
 export const getPlanning = (filters?: filters): Promise<AxiosResponse<{ message: string, schedules: ScheduleModel[] }>> =>
   axiosInstance.get("/api/planning", { params: filters });

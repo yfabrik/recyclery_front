@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -17,15 +16,11 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
 import type { ScheduleModel } from "../../../interfaces/Models";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import {
@@ -35,6 +30,10 @@ import {
   updatePlanning,
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import { CollecteForm, type Schema } from "../../forms/CollecteForm";
 import { Loading } from "../../Loading";
 

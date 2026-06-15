@@ -20,7 +20,7 @@ export type { EcoOrganismQuarterStat };
 
 /** Single quarter entry from API */
 type QuarterEntry = EcoOrganismQuarterStat["quarters"][number];
-type QuarterCategory = QuarterEntry["categories"][number];
+type QuarterCategory = QuarterEntry["quarterIn"]["categories"][number];
 type QuarterSellCategory = QuarterEntry["quarterSell"]["categories"][number];
 type QuarterMetricSource = "total" | "quarterIn" | "quarterSell" | "quarterOut";
 
@@ -77,29 +77,24 @@ const getLastFourQuarterLabels = (): string[] => {
 const defaultQuarters = (): QuarterEntry[] =>
   getLastFourQuarterLabels().map((quarter) => ({
     quarter,
-    label: formatQuarterRange(quarter),
-    total_weight_kg: 0,
-    categories: [],
     // Minimal but type-correct mocks so the component can render even without real API data.
     quarterIn: {
       total_weight_kg: 0,
       categories: [],
-      by_source_type: [
-        {
-          point: {
-            total_weight_kg: 0,
-            categories: [] as QuarterEntry["quarterIn"]["categories"],
-          },
-          apport: {
-            total_weight_kg: 0,
-            categories: [] as QuarterEntry["quarterIn"]["categories"],
-          },
-          house_clearance: {
-            total_weight_kg: 0,
-            categories: [] as QuarterEntry["quarterIn"]["categories"],
-          },
+      by_source_type: {
+        point: {
+          total_weight_kg: 0,
+          categories: [] as QuarterEntry["quarterIn"]["categories"],
         },
-      ],
+        apport: {
+          total_weight_kg: 0,
+          categories: [] as QuarterEntry["quarterIn"]["categories"],
+        },
+        house_clearance: {
+          total_weight_kg: 0,
+          categories: [] as QuarterEntry["quarterIn"]["categories"],
+        },
+      },
     },
     quarterOut: {
       total_weight_kg: 0,
@@ -107,9 +102,10 @@ const defaultQuarters = (): QuarterEntry[] =>
     },
     quarterSell: {
       total_weight_kg: 0,
+      quantity: 0,
       categories: [],
     },
-  }));
+  } satisfies QuarterEntry));
 
 export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
   stats,
@@ -175,10 +171,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
     if (metricSource === "quarterIn") return quarter.quarterIn;
     if (metricSource === "quarterSell") return quarter.quarterSell;
     if (metricSource === "quarterOut") return quarter.quarterOut;
-    return {
-      total_weight_kg: quarter.total_weight_kg,
-      categories: quarter.categories,
-    };
+    return quarter.quarterOut;
   };
 
   const renderCategoryRows = (categories: Array<QuarterCategory | QuarterSellCategory>) => (

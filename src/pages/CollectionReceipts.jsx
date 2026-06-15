@@ -1,44 +1,40 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
+  CalendarToday,
+  FilterList,
+  LocationOn,
+  Person,
+  Receipt,
+  Search,
+  Visibility
+} from '@mui/icons-material';
+import {
   Box,
+  Button,
+  Chip,
+  Container,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
   TextField,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Alert,
+  Typography
 } from '@mui/material';
-import {
-  Receipt,
-  Visibility,
-  Download,
-  Print,
-  Search,
-  FilterList,
-  CalendarToday,
-  LocationOn,
-  Person,
-} from '@mui/icons-material';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { getApiErrorMessage } from '../utils/apiToastMessage';
-import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 import CollectionReceipt from '../components/CollectionReceipt';
+import { useAuth } from '../contexts/AuthContext';
 import { getCollectionSchedules } from '../services/api/collectionSchedules';
 import { fetchUsers } from '../services/api/users';
+import { getApiErrorMessage } from '../utils/apiToastMessage';
 
 const CollectionReceipts = () => {
   const { user } = useAuth();

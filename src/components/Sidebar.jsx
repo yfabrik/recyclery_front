@@ -1,40 +1,35 @@
-import React from 'react';
 import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
-  Divider,
-  Toolbar,
-  Typography,
-  Box,
-  Chip,
-} from '@mui/material';
-import {
-  Dashboard,
-  Inventory,
-  LocalShipping,
-  VolunteerActivism,
-  PointOfSale,
-  Store,
-  Settings,
-  People,
-  Assessment,
   AdminPanelSettings,
-  Schedule,
-  Receipt,
+  Assessment,
+  Assignment,
+  Build,
   CalendarToday,
   CardGiftcard,
   Category,
-  QrCode,
+  Dashboard,
   DeleteSweep,
-  Build,
-  Assignment,
   EventNote,
+  Inventory,
+  People,
+  PointOfSale,
+  QrCode,
+  Settings,
+  Store
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router';
+import {
+  Box,
+  Chip,
+  Divider,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
+} from '@mui/material';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 280;

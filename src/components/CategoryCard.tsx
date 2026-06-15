@@ -11,14 +11,19 @@ interface CategoryCardProps {
     isSubcategory?: boolean,
     handleOpenDialog: (c: CategoryModel | null, s?: CategoryModel["id"]) => void
     handleDelete: (c: CategoryModel) => void
-    patchCategory: UseMutationResult<AxiosResponse<any, any, {}>, Error, {
-        id: number;
-        data: {
-            in?: boolean;
-            out?: boolean;
-            sell?: boolean;
-        };
-    }, unknown>
+    patchCategory: UseMutationResult<
+        AxiosResponse<{ message: string; category: CategoryModel }>,
+        Error,
+        {
+            id: number;
+            data: {
+                in?: boolean;
+                out?: boolean;
+                sell?: boolean;
+            };
+        },
+        unknown
+    >
 }
 
 export const CategoryCard = ({

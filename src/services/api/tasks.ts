@@ -1,12 +1,13 @@
 import type { AxiosResponse } from "axios";
 import axiosInstance from "./axios";
+import type { TaskFormSchema } from "../../components/forms/TaskForm";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 interface filterTask {
   include?: ("user" | "store")[];
   store_id?: number;
   date_from?: string | Date;
   date_to?: string | Date;
-  category?: "vente" | "point" | "collection" | "custom";
+  category?: TaskModel["category"];
 }
 export const getTasks = (filter?: filterTask): Promise<AxiosResponse<{ message: string, tasks: TaskModel[] }>> => {
   if (filter?.include)
@@ -19,10 +20,11 @@ export const getEmployeesForTask = (id: number): Promise<AxiosResponse<{
 }>> =>
   axiosInstance.get(`/api/tasks/${id}/employees`);
 
-export const updateTask = (id: number, data) =>
+export const updateTask = (id: number, data: TaskFormSchema) =>
   axiosInstance.put(`/api/tasks/${id}`, data);
 
-export const createTask = (data) => axiosInstance.post("/api/tasks", data);
+export const createTask = (data: TaskFormSchema) =>
+  axiosInstance.post("/api/tasks", data);
 
 export const deleteTask = (id: number) =>
   axiosInstance.delete(`/api/tasks/${id}`);

@@ -250,7 +250,12 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
             const detail = await getSessionDetails(session.id).then((response) => response.data.session);
             triggerPrintBilanCaisse({
                 session: detail,
-                transactions: detail.SalesTransactions ?? [],
+                transactions: (detail.SalesTransactions ?? []).map(
+                    (transaction) => ({
+                      ...transaction,
+                      payments: transaction.payments ?? [],
+                    }),
+                  ),
                 closingAmount: detail.closing_amount ?? 0,
             });
             toast.info(`Reimpression du bilan de la session #${session.id}`);
