@@ -231,7 +231,7 @@ export const CollectTab = () => {
                         })}`}
                       </TableCell>
                       <TableCell>
-                        {item.collection_point_id && collectionPoints.data?.find(point => point.id === item.collection_point_id)?.name}
+                        {item.collection_point_id && collectionPoints?.data?.find(point => point.id === item.collection_point_id)?.name}
                         {item.store_id && stores.data?.find(store => store.id === item.store_id)?.name}
                         {!item.collection_point_id && !item.store_id && "Aucun"}
                       </TableCell>
