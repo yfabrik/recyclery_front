@@ -26,6 +26,7 @@ import {
   getPaymentBalance,
   isPaymentInsufficient,
 } from "../../services/cartService";
+import { POS_PAYMENT_METHODS } from "../../constants/paymentMethods";
 
 interface PaymentPanelProps {
   paymentFields: FieldArrayWithId<CartFormValues, "payment_splits", "id">[];
@@ -141,13 +142,15 @@ export const PaymentPanel = ({
                     disabled: paymentSplits[index]?.method === "giftcard",
                   }}
                 >
-                  <MenuItem value="cash">Espèces</MenuItem>
-                  <MenuItem value="card">Carte bancaire</MenuItem>
-                  <MenuItem value="check">Chèque</MenuItem>
-                  <MenuItem value="transfer">Virement</MenuItem>
-                  <MenuItem value="giftcard" disabled>
-                    Avoir
-                  </MenuItem>
+                  {POS_PAYMENT_METHODS.map((method) => (
+                    <MenuItem
+                      key={method.value}
+                      value={method.value}
+                      disabled={method.value === "giftcard"}
+                    >
+                      {method.label}
+                    </MenuItem>
+                  ))}
                 </FormSelect>
               </Box>
               <Box sx={{ width: "42%" }}>

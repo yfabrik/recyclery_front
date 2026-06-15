@@ -1,18 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilterList, Search } from "@mui/icons-material";
-import { Button, Grid, MenuItem, Paper, type ChipProps } from "@mui/material";
+import { Button, Grid, MenuItem, Paper } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import type { CategoryModel, LabeledItemModel } from "../../interfaces/Models";
+import type { CategoryModel } from "../../interfaces/Models";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import {
+  LABELED_ITEM_STATUSES,
+  LABELED_ITEM_STATUS_FILTER_VALUES,
+} from "../../constants/labeledItemStatuses";
 import { FormCategorySelect, FormInput, FormSelect } from "./FormBase";
 
 const filterSchema = z.object({
     category_id: z.union([idSchema(), nullString()]),
     search: z.string().trim().optional(),
-    status: z.enum(["available", "sold", "reserved",""]),
+    status: z.enum(LABELED_ITEM_STATUS_FILTER_VALUES),
 
 });
 export type Filters = z.infer<typeof filterSchema>;
@@ -20,15 +24,10 @@ export type Filters = z.infer<typeof filterSchema>;
 interface FilterFormProps {
     defaultValues: Filters;
     onChange: (values: Filters) => void;
-    statusOptions: {
-        value: LabeledItemModel["status"];
-        label: string;
-        color: NonNullable<ChipProps["color"]>;
-    }[]
     categories: CategoryModel[]
 }
 
-export const LabelFiltersForm = ({ defaultValues, onChange, statusOptions, categories }: FilterFormProps) => {
+export const LabelFiltersForm = ({ defaultValues, onChange, categories }: FilterFormProps) => {
 
     const filters = useForm({
         defaultValues,
@@ -78,7 +77,7 @@ export const LabelFiltersForm = ({ defaultValues, onChange, statusOptions, categ
                     <Grid size={{ xs: 12, md: 3 }}>
                         <FormSelect label="Statut" control={filters.control} name="status">
                             <MenuItem value={""}>Tous</MenuItem>
-                            {statusOptions.map((status) => (
+                            {LABELED_ITEM_STATUSES.map((status) => (
                                 <MenuItem key={status.value} value={status.value}>
                                     {status.label}
                                 </MenuItem>

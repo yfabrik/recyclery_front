@@ -1,7 +1,11 @@
 import { Close, History, PointOfSale, ShoppingCart } from "@mui/icons-material"
-import { Box, Button, Grid, Paper, Typography } from "@mui/material"
+import { Box, Button, Chip, Grid, Paper, Typography } from "@mui/material"
 import type { CashSession } from "../interfaces/Models"
 import { formatCurrency } from "../services/cartService"
+import {
+  getCashSessionStatusColor,
+  getCashSessionStatusLabel,
+} from "../constants/cashSessionStatuses"
 
 interface ActiveSessionInfosProps {
     activeSession: CashSession
@@ -26,6 +30,12 @@ export const ActiveSessionInfos = ({
                             <Typography variant="h6">
                                 {activeSession.Recyclery?.name} -{" "}
                                 {activeSession.CashRegister?.name}
+                                <Chip
+                                    size="small"
+                                    sx={{ ml: 1 }}
+                                    label={getCashSessionStatusLabel(activeSession.status)}
+                                    color={getCashSessionStatusColor(activeSession.status)}
+                                />
                             </Typography>
                             <Typography variant="body2" color="textSecondary">
                                 Session: {activeSession.id} | Ouvert:{" "}

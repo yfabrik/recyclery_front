@@ -14,6 +14,10 @@ import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { useEffect } from "react";
+import {
+  USER_ROLE_VALUES,
+  USER_ROLES,
+} from "../../constants/userRoles";
 
 const schema = z.object({
   username: z.string().trim().nonempty("username requis"),
@@ -28,7 +32,7 @@ const schema = z.object({
     .transform((val) => (val == "" ? null : val)),
   phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
   password: z.string(),
-  role: z.enum(["employee", "manager", "admin"], "role requis"),
+  role: z.enum(USER_ROLE_VALUES, "role requis"),
   recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   isActive: z.boolean().default(true),
   managedStores: z.array(idSchema())
@@ -38,7 +42,6 @@ export type Schema = z.infer<typeof schema>;
 
 export interface UserFormProps extends BaseFormProps<Schema> {
   stores: StoreModel[];
-  roles: { name: string; display_name: string }[];
 }
 
 export const UserForm = ({
@@ -46,7 +49,6 @@ export const UserForm = ({
   onSubmit,
   defaultValues,
   stores,
-  roles,
 }: UserFormProps) => {
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
 
@@ -104,9 +106,9 @@ export const UserForm = ({
         )}
         <Grid size={{ xs: 12, md: 6 }}>
           <FormSelect control={form.control} label="Rôle" name="role">
-            {roles.map((role) => (
-              <MenuItem key={role.name} value={role.name}>
-                {role.display_name}
+            {USER_ROLES.map((role) => (
+              <MenuItem key={role.value} value={role.value}>
+                {role.label}
               </MenuItem>
             ))}
           </FormSelect>

@@ -58,9 +58,10 @@ import { SelectedIcon } from "../SelectedIcon";
 import type { CategoryModel } from "../../interfaces/Models";
 import {
   PAYMENT_METHODS,
+} from "../../constants/paymentMethods";
+import {
   TRANSACTION_TYPES,
-} from "../../interfaces/transactionConstants";
-import { getPaymentMethodLabel } from "../../services/cartService";
+} from "../../constants/transactionTypes";
 export interface BaseFormProps<T> {
   formId: string;
   defaultValues?: Partial<T> | null;
@@ -581,8 +582,8 @@ export const FormPaymentMethodSelect = <
   <FormSelect control={control} name={name} label={label}>
     <MenuItem value="">{allLabel}</MenuItem>
     {PAYMENT_METHODS.map((method) => (
-      <MenuItem key={method} value={method}>
-        {getPaymentMethodLabel(method)}
+      <MenuItem key={method.value} value={method.value}>
+        {method.label}
       </MenuItem>
     ))}
   </FormSelect>
@@ -603,8 +604,8 @@ export const FormTransactionTypeSelect = <
   <FormSelect control={control} name={name} label={label}>
     <MenuItem value="">{allLabel}</MenuItem>
     {TRANSACTION_TYPES.map((type) => (
-      <MenuItem key={type} value={type}>
-        {type}
+      <MenuItem key={type.value} value={type.value}>
+        {type.label}
       </MenuItem>
     ))}
   </FormSelect>

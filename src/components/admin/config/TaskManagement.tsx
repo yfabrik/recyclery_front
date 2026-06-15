@@ -50,6 +50,8 @@ import {
 } from "../../../services/api/tasks";
 import { fetchUsers } from "../../../services/api/users";
 import { TASK_CATEGORIES } from "../../../constants/taskCategories";
+import { RECURRENCE_PATTERNS } from "../../../constants/recurrencePatterns";
+import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
 import { TaskForm } from "../../forms/TaskForm";
 
 /**
@@ -76,12 +78,7 @@ const TaskManagement = () => {
 
   const categories = TASK_CATEGORIES;
 
-  const priorities = [
-    { value: "low", label: "Faible", color: "success" },
-    { value: "medium", label: "Moyenne", color: "warning" },
-    { value: "high", label: "Élevée", color: "error" },
-    { value: "urgent", label: "Urgente", color: "error" },
-  ];
+  const priorities = TASK_PRIORITIES;
 
   useEffect(() => {
     fetchTasks();
@@ -890,7 +887,7 @@ const TaskManagement = () => {
                     onChange={handleInputChange}
                     label="Modèle de récurrence"
                   >
-                    {recurrencePatterns.map((pattern) => (
+                    {RECURRENCE_PATTERNS.map((pattern) => (
                       <MenuItem key={pattern.value} value={pattern.value}>
                         {pattern.label}
                       </MenuItem>

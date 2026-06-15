@@ -20,11 +20,6 @@ const meta = {
     defaultValues: {},
     onSubmit: noopSubmit,
     stores: mockStores,
-    roles: [
-      { name: "employee", display_name: "Employé" },
-      { name: "manager", display_name: "Manager" },
-      { name: "admin", display_name: "Administrateur" },
-    ],
   },
 } satisfies Meta<typeof UserForm>;
 

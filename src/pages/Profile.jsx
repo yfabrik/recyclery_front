@@ -25,30 +25,16 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import {
+  getUserRoleColor,
+  getUserRoleLabel,
+} from '../constants/userRoles';
 
 const Profile = () => {
   const { user } = useAuth();
 
   const handleSave = () => {
     toast.success('Profil mis à jour');
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'employee': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'admin': return 'Administrateur';
-      case 'manager': return 'Gestionnaire';
-      case 'employee': return 'Employé';
-      default: return 'Inconnu';
-    }
   };
 
   return (
@@ -83,8 +69,8 @@ const Profile = () => {
               </Typography>
               
               <Chip
-                label={getRoleLabel(user?.role)}
-                color={getRoleColor(user?.role)}
+                label={getUserRoleLabel(user?.role)}
+                color={getUserRoleColor(user?.role)}
                 sx={{ mb: 2 }}
               />
               
@@ -135,7 +121,7 @@ const Profile = () => {
                   <TextField
                     fullWidth
                     label="Rôle"
-                    value={getRoleLabel(user?.role)}
+                    value={getUserRoleLabel(user?.role)}
                     variant="outlined"
                     size="small"
                     disabled

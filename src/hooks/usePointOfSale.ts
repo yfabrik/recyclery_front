@@ -11,6 +11,7 @@ import type {
   UserModel,
 } from "../interfaces/Models";
 import { getGiftCardByCode } from "../services/api/giftCards";
+import { isGiftCardUnusable } from "../constants/giftCardStatuses";
 import {
   createSell,
   type CreateTransactionBody,
@@ -336,7 +337,7 @@ export const usePointOfSale = ({
       }
       const giftCard = payload.data;
 
-      if (["redeemed", "expired", "cancelled"].includes(giftCard.status)) {
+      if (isGiftCardUnusable(giftCard.status)) {
         toast.error("Cet avoir n'est pas utilisable");
         return;
       }

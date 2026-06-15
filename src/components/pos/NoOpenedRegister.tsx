@@ -30,6 +30,10 @@ import {
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import { fetchStores, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
 import { formatCurrency } from "../../services/cartService";
+import {
+  getCashSessionStatusColor,
+  getCashSessionStatusLabel,
+} from "../../constants/cashSessionStatuses";
 import { useBilanCaissePrint } from "../BilanCaissePrint";
 import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
 import { Loading } from "../Loading";
@@ -285,7 +289,16 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                             {sessions.data?.data?.sessions?.map((session) => (
                                 <ListItem key={session.id} divider>
                                     <ListItemText
-                                        primary={`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")} -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}
+                                        primary={
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <span>{`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")} -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
+                                                <Chip
+                                                    size="small"
+                                                    label={getCashSessionStatusLabel(session.status)}
+                                                    color={getCashSessionStatusColor(session.status)}
+                                                />
+                                            </Box>
+                                        }
                                         secondary={`Ouverture: ${formatCurrency(session.opening_amount)} | Fermeture: ${
                                             session.closing_amount != null
                                                 ? formatCurrency(session.closing_amount)

@@ -32,35 +32,28 @@ import {
   getCartTotal,
   getCartTotalWithGlobalPromotion,
   getGlobalPromotionDiscount,
-  getPaymentMethodLabel,
   getTransactionGlobalPromotion,
   getTransactionGlobalPromotionDiscount,
   getTransactionStoreName,
   getTransactionSubtotal,
 } from "../services/cartService";
-import { PAYMENT_METHODS } from "../interfaces/transactionConstants";
+import {
+  EDITABLE_PAYMENT_METHODS,
+  getPaymentMethodColor,
+  getPaymentMethodLabel,
+} from "../constants/paymentMethods";
 import { Loading } from "./Loading";
 import type { CartItem } from "./forms/cartSchema";
 import { useMemo, useState } from "react";
 
-const EDITABLE_PAYMENT_METHODS = PAYMENT_METHODS.filter((m) => m !== "mixed");
-
 type EditablePaymentLine = {
-  method: (typeof EDITABLE_PAYMENT_METHODS)[number];
+  method: (typeof EDITABLE_PAYMENT_METHODS)[number]["value"];
   amount: number;
 };
 
-const REFUND_REASON_LABELS: Record<string, string> = {
-  customer_request: "Demande client",
-  product_defect: "Produit défectueux",
-  wrong_product: "Mauvais produit",
-  overcharge: "Surcharge",
-  return_policy: "Politique de retour",
-  other: "Autre",
-};
-
-const getRefundReasonLabel = (reason?: string) =>
-  (reason && REFUND_REASON_LABELS[reason]) || reason || "—";
+import {
+  getRefundReasonLabel,
+} from "../constants/refundReasons";
 
 const getRefundType = (
   refund: RefundTransaction,
@@ -469,8 +462,8 @@ function DetailTransactionBody({
                             }
                           >
                             {EDITABLE_PAYMENT_METHODS.map((method) => (
-                              <MenuItem key={method} value={method}>
-                                {getPaymentMethodLabel(method)}
+                              <MenuItem key={method.value} value={method.value}>
+                                {method.label}
                               </MenuItem>
                             ))}
                           </Select>
@@ -682,7 +675,9 @@ function DetailTransactionBody({
                                 label={getPaymentMethodLabel(
                                   refund.payment_method,
                                 )}
-                                color="info"
+                                color={getPaymentMethodColor(
+                                  refund.payment_method,
+                                )}
                                 size="small"
                               />
                             </TableCell>

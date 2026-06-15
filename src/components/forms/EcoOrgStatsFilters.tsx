@@ -4,11 +4,13 @@ import type { EcoOrganismStatsRow } from "../admin/EcoOrganismStatsTable";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
+import {  useEffect, useMemo } from "react";
 import { useDebouncer } from "@tanstack/react-pacer";
+import { useQuery } from "@tanstack/react-query";
 import { Button, Grid, MenuItem } from "@mui/material";
 import { FormDate, FormSelect } from "./FormBase";
 import { FilterList } from "@mui/icons-material";
+import { fetchCollectionPoints } from "../../services/api/collectionPoint";
 
 const filterSchema = z.object({
   eco_organism_id: z.union([idSchema(), z.literal("")]),
@@ -16,6 +18,7 @@ const filterSchema = z.object({
   quarter: z.string(),
   month_year: z.date().nullable(),
   source_type: z.string(),
+  collection_point_id: z.union([idSchema(), z.literal("")]),
   category: z.string(),
 });
 
@@ -28,6 +31,7 @@ const getDefaultFilters = (): Filters => {
     quarter: "",
     month_year: null,
     source_type: "",
+    collection_point_id: "",
     category: "",
   };
 };
@@ -56,13 +60,25 @@ interface EcoOrgoStatsFiltersProps {
 }
 export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange }: EcoOrgoStatsFiltersProps) => {
 
-  const form = useForm<Omit<Filters, "eco_organism_id"> & { eco_organism_id: unknown }, unknown, Filters>({
+  const form = useForm<
+    Omit<Filters, "eco_organism_id" | "collection_point_id"> & {
+      eco_organism_id: unknown;
+      collection_point_id: unknown;
+    },
+    unknown,
+    Filters
+  >({
     defaultValues: defaultValues,
     resolver: zodResolver(filterSchema),
   });
   const onSubmit = (values: Filters) => {
     onChange(values)
   };
+
+  const collectionPoints = useQuery({
+    queryKey: ["collectionPoints"],
+    queryFn: () => fetchCollectionPoints(),
+  });
 
   // const SourceType = ({ control }: { control: typeof form.control }) => {
   //   const metric_source = useWatch({
@@ -120,12 +136,20 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
 
 
   const metric_source = form.watch("metric_source")
+  const sourceType = form.watch("source_type")
 
   useEffect(() => {
     if (metric_source != "quarterIn") {
       form.setValue("source_type", "");
+      form.setValue("collection_point_id", "");
     }
-  }, [metric_source]);
+  }, [metric_source, form]);
+
+  useEffect(() => {
+    if (sourceType !== "point") {
+      form.setValue("collection_point_id", "");
+    }
+  }, [sourceType, form]);
 
 
   const watch = form.watch;
@@ -189,21 +213,33 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
           />
         </Grid>
 
-        { metric_source == "quarterIn" && (
-          <Grid size={{ xs: 12, md: 2 }}>
-            <FormSelect
-              control={form.control}
-              name="source_type"
-              label="Source"
-            >
-              <MenuItem value="">Toutes les sources</MenuItem>
-              {sourceTypeOptions.map((sourceType) => (
-                <MenuItem key={sourceType} value={sourceType}>
-                  {sourceType}
-                </MenuItem>
-              ))}
-            </FormSelect>
-          </Grid>
+        {metric_source == "quarterIn" && (
+          <>
+            <Grid size={{ xs: 12, md: 2 }}>
+              <FormSelect
+                control={form.control}
+                name="source_type"
+                label="Source"
+              >
+                <MenuItem value="">Toutes les sources</MenuItem>
+                {sourceTypeOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </FormSelect>
+            </Grid>
+            {sourceType === "point" && (
+              <Grid size={{ xs: 12, md: 3 }}>
+                <FormSelect control={form.control} name="collection_point_id" label="Point de collecte">
+                  <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
+                  {collectionPoints.data?.data.collection_points.map((point) => (
+                    <MenuItem key={`point.${point.id}`} value={point.id}>{point.name}</MenuItem>
+                  ))}
+                </FormSelect>
+              </Grid>
+            )}
+          </>
         )}
         {/* <Grid size={{ xs: 12, md: 2 }}>
           <SourceType control={form.control} />

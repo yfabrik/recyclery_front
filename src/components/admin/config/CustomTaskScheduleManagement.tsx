@@ -32,7 +32,10 @@ import {
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
 import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
-import { PRIORITIES, RECURRENCE_PATTERNS } from "../../../interfaces/shared";
+import {
+  getRecurrencePatternLabel,
+} from "../../../constants/recurrencePatterns";
+import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
 import {
   createPlanning,
   deletePlanning,
@@ -170,14 +173,11 @@ const CustomTaskScheduleManagement = () => {
   };
 
   const getPriorityInfo = (priority: string | null) => {
-    return PRIORITIES.find((p) => p.value === priority) || PRIORITIES[1];
+    return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
   };
 
-  const getRecurrenceLabel = (pattern: string | null) => {
-    return (
-      RECURRENCE_PATTERNS.find((p) => p.value === pattern)?.label || "Aucune"
-    );
-  };
+  const getRecurrenceLabel = (pattern: string | null) =>
+    getRecurrencePatternLabel(pattern);
 
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
     if (schedule.day_of_week) {

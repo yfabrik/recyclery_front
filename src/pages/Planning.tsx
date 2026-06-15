@@ -37,6 +37,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { TASK_PRIORITIES } from "../constants/taskPriorities";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
@@ -138,12 +139,6 @@ const Planning = () => {
     },
     { value: "completed", label: "Terminé", color: "success", icon: <Save /> },
     { value: "cancelled", label: "Annulé", color: "error", icon: <Stop /> },
-  ];
-
-  const priorityOptions = [
-    { value: "low", label: "Faible", color: "success", icon: <FlagOutlined /> },
-    { value: "medium", label: "Moyenne", color: "warning", icon: <Flag /> },
-    { value: "high", label: "Élevée", color: "error", icon: <PriorityHigh /> },
   ];
 
   const date_from = () => {
@@ -547,7 +542,7 @@ const Planning = () => {
 
   const getPriorityInfo = (priority: string) => {
     return (
-      priorityOptions.find((p) => p.value === priority) || priorityOptions[1]
+      TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1]
     );
   };
 

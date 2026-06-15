@@ -13,6 +13,10 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
+import {
+  LABELED_ITEM_CONDITIONS,
+  LABELED_ITEM_CONDITION_VALUES,
+} from "../../constants/labeledItemConditions";
 import { usePrompt } from "../Prompt";
 import { useEffect } from "react";
 
@@ -24,7 +28,7 @@ const schema = (categories: CategoryModel[]) => z.object({
   subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
   weight: z.coerce.number().positive(),
   price: z.coerce.number().positive("prix requis"),
-  condition_state: z.enum(["excellent", "good", "fair", "poor"]),
+  condition_state: z.enum(LABELED_ITEM_CONDITION_VALUES),
   location: z.string().transform((v) => (v == "" ? null : v)),
   description: z.string().transform((v) => (v == "" ? null : v)),
   autoPrint: z.boolean().default(true),
@@ -50,12 +54,6 @@ export const LabeledItemForm = ({
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const conditionOptions = [
-    { value: "excellent", label: "Excellent", color: "success" },
-    { value: "good", label: "Bon état", color: "primary" },
-    { value: "fair", label: "État correct", color: "warning" },
-    { value: "poor", label: "Mauvais état", color: "error" },
-  ] as const;
 
   const form = useForm({
     defaultValues: {
@@ -197,7 +195,7 @@ export const LabeledItemForm = ({
               name="condition_state"
               label="État"
             >
-              {conditionOptions.map((condition) => (
+              {LABELED_ITEM_CONDITIONS.map((condition) => (
                 <MenuItem key={condition.value} value={condition.value}>
                   {condition.label}
                 </MenuItem>

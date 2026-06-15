@@ -1,28 +1,29 @@
-import React from 'react';
 import {
+  Add,
+  Business,
+  Email,
+  Person
+} from '@mui/icons-material';
+import {
+  Avatar,
   Box,
-  Typography,
   Button,
   Card,
   CardContent,
-  Grid,
   Chip,
-  Avatar,
+  Grid,
   List,
   ListItem,
-  ListItemText,
   ListItemAvatar,
+  ListItemText,
+  Typography,
 } from '@mui/material';
-import {
-  Add,
-  Person,
-  Email,
-  Business,
-  AdminPanelSettings,
-  ManageAccounts,
-  Work,
-} from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import {
+  getUserRoleColor,
+  getUserRoleIcon,
+  getUserRoleLabel,
+} from '../constants/userRoles';
 /**
  * 
  * @returns @deprecated mais j'aime bien les card
@@ -55,33 +56,6 @@ const Users = () => {
     },
   ];
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'employee': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'admin': return 'Administrateur';
-      case 'manager': return 'Gestionnaire';
-      case 'employee': return 'Employé';
-      default: return 'Inconnu';
-    }
-  };
-
-  const getRoleIcon = (role) => {
-    switch (role) {
-      case 'admin': return <AdminPanelSettings />;
-      case 'manager': return <ManageAccounts />;
-      case 'employee': return <Work />;
-      default: return <Person />;
-    }
-  };
-
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -109,16 +83,16 @@ const Users = () => {
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: `${getRoleColor(user.role)}.main` }}>
-                      {getRoleIcon(user.role)}
+                    <Avatar sx={{ bgcolor: `${getUserRoleColor(user.role)}.main` }}>
+                      {getUserRoleIcon(user.role) ?? <Person />}
                     </Avatar>
                     <Box>
                       <Typography variant="h6">
                         {user.username}
                       </Typography>
                       <Chip
-                        label={getRoleLabel(user.role)}
-                        color={getRoleColor(user.role)}
+                        label={getUserRoleLabel(user.role)}
+                        color={getUserRoleColor(user.role)}
                         size="small"
                       />
                     </Box>

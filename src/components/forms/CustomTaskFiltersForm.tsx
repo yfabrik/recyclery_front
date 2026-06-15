@@ -6,26 +6,30 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
-import { PRIORITIES, RECURRENCE_PATTERNS } from "../../interfaces/shared";
+import { PRIORITY_FILTER_VALUES } from "../../constants/taskPriorities";
+import { TASK_PRIORITIES } from "../../constants/taskPriorities";
+import {
+  RECURRENCE_FILTER_VALUES,
+  RECURRENCE_PATTERNS,
+} from "../../constants/recurrencePatterns";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
-import { SelectedIcon } from "../SelectedIcon";
 import { FormInput, FormSelect } from "./FormBase";
 
 const filterSchema = z.object({
   search: z.string().trim().optional(),
   store_id: z.union([idSchema(), nullString()]),
-  priority: z.enum(["all", "low", "medium", "high", "urgent"]),
-  recurrence: z.enum(["all", "none", "daily", "weekly", "monthly"]),
+  priority: z.enum(PRIORITY_FILTER_VALUES),
+  recurrence: z.enum(RECURRENCE_FILTER_VALUES),
 });
 
 export type CustomTaskFilters = z.infer<typeof filterSchema>;
 
-export const CUSTOM_TASK_FILTER_DEFAULTS = {
+export const CUSTOM_TASK_FILTER_DEFAULTS: CustomTaskFilters = {
   search: "",
-  store_id: "",
+  store_id: null,
   priority: "all",
   recurrence: "all",
-} as CustomTaskFilters;
+};
 
 interface CustomTaskFiltersFormProps {
   stores: StoreModel[];
@@ -116,10 +120,10 @@ export const CustomTaskFiltersForm = ({
         <Grid size={{ xs: 12, md: 2 }}>
           <FormSelect control={filters.control} name="priority" label="Priorité">
             <MenuItem value="all">Toutes les priorités</MenuItem>
-            {PRIORITIES.map((priority) => (
+            {TASK_PRIORITIES.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <SelectedIcon iconName={priority.icon || "Flag"} />
+                  {priority.icon}
                   {priority.label}
                 </Box>
               </MenuItem>

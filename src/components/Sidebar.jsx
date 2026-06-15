@@ -31,6 +31,10 @@ import {
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  getUserRoleColor,
+  getUserRoleLabel,
+} from '../constants/userRoles';
 
 const drawerWidth = 280;
 
@@ -122,11 +126,9 @@ const Sidebar = ({ open, onClose }) => {
           {user?.username}
         </Typography>
         <Chip
-          label={user?.role === 'admin' ? 'Administrateur' :
-            user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
+          label={getUserRoleLabel(user?.role)}
           size="small"
-          color={user?.role === 'admin' ? 'error' :
-            user?.role === 'manager' ? 'warning' : 'default'}
+          color={getUserRoleColor(user?.role)}
           variant="outlined"
         />
       </Box>

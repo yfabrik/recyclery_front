@@ -27,7 +27,6 @@ import {
   TableRow,
   Tooltip,
   Typography,
-  type ChipProps
 } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -47,6 +46,14 @@ import {
   type Schema,
 } from "../components/forms/LabeledItemForm";
 import type { LabeledItemModel } from "../interfaces/Models";
+import {
+  getLabeledItemConditionColor,
+  getLabeledItemConditionLabel,
+} from "../constants/labeledItemConditions";
+import {
+  getLabeledItemStatusColor,
+  getLabeledItemStatusLabel,
+} from "../constants/labeledItemStatuses";
 import { fetchCategories as fcat } from "../services/api/categories";
 import {
   createLabeledItem,
@@ -70,28 +77,6 @@ const Labels = () => {
     search: "",
   });
   const [page, setPage] = useState(1);
-
-  //TODO  faut limiter pour que y'ai que 1 foix la value et ensure que la value soit presente +type color
-  const conditionOptions: {
-    value: LabeledItemModel["condition_state"];
-    label: string;
-    color: NonNullable<ChipProps["color"]>;
-  }[] = [
-    { value: "excellent", label: "Excellent", color: "success" },
-    { value: "good", label: "Bon état", color: "primary" },
-    { value: "fair", label: "État correct", color: "warning" },
-    { value: "poor", label: "Mauvais état", color: "error" },
-  ] as const;
-
-  const statusOptions: {
-    value: LabeledItemModel["status"];
-    label: string;
-    color: NonNullable<ChipProps["color"]>;
-  }[] = [
-    { value: "available", label: "Disponible", color: "success" },
-    { value: "reserved", label: "Réservé", color: "warning" },
-    { value: "sold", label: "Vendu", color: "error" },
-  ] as const;
 
   const queryClient = useQueryClient();
   const items = useQuery({
@@ -304,7 +289,6 @@ const Labels = () => {
       </Grid>
       {/* Filtres */}
       <LabelFiltersForm
-        statusOptions={statusOptions}
         defaultValues={filters}
         onChange={(values) =>
           setFilters((prev) => ({
@@ -369,29 +353,15 @@ const Labels = () => {
                     <TableCell>
                       <Chip
                         size="small"
-                        label={
-                          conditionOptions.find(
-                            (c) => c.value === item.condition_state,
-                          )?.label
-                        }
-                        color={
-                          conditionOptions.find(
-                            (c) => c.value === item.condition_state,
-                          )?.color
-                        }
+                        label={getLabeledItemConditionLabel(item.condition_state)}
+                        color={getLabeledItemConditionColor(item.condition_state)}
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
                         size="small"
-                        label={
-                          statusOptions.find((s) => s.value === item.status)
-                            ?.label
-                        }
-                        color={
-                          statusOptions.find((s) => s.value === item.status)
-                            ?.color
-                        }
+                        label={getLabeledItemStatusLabel(item.status)}
+                        color={getLabeledItemStatusColor(item.status)}
                       />
                     </TableCell>
                     <TableCell>

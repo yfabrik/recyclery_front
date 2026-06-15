@@ -42,6 +42,10 @@ import { Loading } from "../components/Loading";
 import { WasteFilterForm, type Filters } from "../components/forms/WasteFilterForm";
 import { WasteForm, type Schema } from "../components/forms/WasteForm";
 import type { WasteModel } from "../interfaces/Models";
+import {
+  getDisposalTypeColor,
+  getDisposalTypeLabel,
+} from "../constants/disposalTypes";
 import { fetchCategories as fcat } from "../services/api/categories";
 import { getEcoOrganisms } from "../services/api/ecoOrganism";
 import {
@@ -180,24 +184,6 @@ const WasteManagement = () => {
     removeWaste.mutate(id)
   };
 
-
-  const getDisposalTypeLabel = (type: string) => {
-    const types = {
-      eco_organism: "Éco-organisme",
-      landfill: "Déchetterie",
-      other: "Autre",
-    } as const;
-    return types[type as keyof typeof types] || type;
-  };
-
-  const getDisposalTypeColor = (type: string) => {
-    const colors = {
-      eco_organism: "success",
-      landfill: "warning",
-      other: "default",
-    } as const;
-    return colors[type as keyof typeof colors] || "default";
-  };
 
   const formatWeight = (weight: NonNullable<WasteModel["weight_kg"]>) => {
     if (weight >= 1000) {

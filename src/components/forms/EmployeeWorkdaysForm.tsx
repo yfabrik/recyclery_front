@@ -17,6 +17,10 @@ import {
 import z from "zod";
 import { FormTime, type BaseFormProps } from "./FormBase";
 import type { WorkdaysModel } from "../../interfaces/Models";
+import {
+  WORKDAY_TIME_SLOT_VALUES,
+  getWorkdayTimeSlotLabel,
+} from "../../constants/workdayTimeSlots";
 
 const workdaySchema = z.object({
   start_time: z
@@ -30,7 +34,7 @@ const workdaySchema = z.object({
       val.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" }),
     ),
   is_working: z.boolean(),
-  time_slot: z.enum(["morning", "afternoon"]),
+  time_slot: z.enum(WORKDAY_TIME_SLOT_VALUES),
   day_of_week: z.string(),
 });
 const schema = z.object({
@@ -75,7 +79,7 @@ export const EmployeeWorkdaysForm = ({
     def?: WorkdaysModel[],
   ): Workday[] => {
     return [1, 2, 3, 4, 5, 6, 0].flatMap((day) => {
-      return (["morning", "afternoon"] as const).map((slot) => {
+      return WORKDAY_TIME_SLOT_VALUES.map((slot) => {
         const today = new Intl.DateTimeFormat("fr", {
           weekday: "long",
         }).format(new Date(1970, 0, 4 + day));
@@ -276,7 +280,7 @@ const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
               onClick={(e) => e.stopPropagation()}
             />
             <Box component="span" sx={{ flex: 1 }}>
-              {`${day} - ${slot == "morning" ? "Matin" : "Après-midi"}`}
+              {`${day} - ${getWorkdayTimeSlotLabel(slot)}`}
             </Box>
           </Box>
           <Horaires control={control} name={name} />

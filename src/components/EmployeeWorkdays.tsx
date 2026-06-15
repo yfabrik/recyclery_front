@@ -1,4 +1,4 @@
-import { CalendarToday, Save, WbSunny, WbTwilight } from "@mui/icons-material";
+import { CalendarToday, Save } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ import {
   getUserWorkdays,
   type WorkdaysFormPayload,
 } from "../services/api/users";
+import { WORKDAY_TIME_SLOTS } from "../constants/workdayTimeSlots";
 import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
 import { Loading } from "./Loading";
 
@@ -43,16 +44,6 @@ const EmployeeWorkdays = ({
     { key: "saturday", label: "Samedi", short: "Sam" },
     { key: "sunday", label: "Dimanche", short: "Dim" },
   ];
-
-  const timeSlots = [
-    { key: "morning", label: "Matin", icon: <WbSunny />, color: "#ff9800" },
-    {
-      key: "afternoon",
-      label: "Après-midi",
-      icon: <WbTwilight />,
-      color: "#2196f3",
-    },
-  ] as const;
 
   const queryClient = useQueryClient();
   const workdaysQuery = useQuery({
@@ -111,14 +102,14 @@ const EmployeeWorkdays = ({
                   Jour
                 </Typography>
               </Grid>
-              {timeSlots.map((slot) => (
-                <Grid size={{ xs: 4.5 }} key={slot.key}>
+              {WORKDAY_TIME_SLOTS.map((slot) => (
+                <Grid size={{ xs: 4.5 }} key={slot.value}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     {slot.icon}
                     <Typography
                       variant="subtitle1"
                       fontWeight="bold"
-                      sx={{ color: slot.color }}
+                      color={`${slot.color}.main`}
                     >
                       {slot.label}
                     </Typography>

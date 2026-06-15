@@ -24,9 +24,12 @@ import {
 import {
   createGiftCard,
   listGiftCards,
-  type GiftCardDto,
   type CreateGiftCardRequestBody,
 } from "../services/api/giftCards";
+import {
+  getGiftCardStatusColor,
+  getGiftCardStatusLabel,
+} from "../constants/giftCardStatuses";
 import { formatCurrency } from "../services/cartService";
 import { Loading } from "../components/Loading";
 
@@ -94,13 +97,6 @@ const GiftCard = () => {
     });
   };
 
-  const getStatusColor = (status: GiftCardDto["status"]) => {
-    if (status === "active" || status === "partially_used") return "success";
-    if (status === "redeemed") return "info";
-    if (status === "cancelled") return "error";
-    return "warning";
-  };
-
   return (
     <Box>
       <Box
@@ -162,8 +158,8 @@ const GiftCard = () => {
                     </Typography>
                     <Chip
                       size="small"
-                      label={giftCard.status}
-                      color={getStatusColor(giftCard.status)}
+                      label={getGiftCardStatusLabel(giftCard.status)}
+                      color={getGiftCardStatusColor(giftCard.status)}
                     />
                   </Box>
                   <Typography variant="h6" color="primary" fontWeight={700}>

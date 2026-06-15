@@ -35,6 +35,10 @@ import {
 } from "../../utils/apiToastMessage";
 import type { DonModel } from "../../interfaces/Models";
 import {
+  getDonationStatusColor,
+  getDonationStatusLabel,
+} from "../../constants/donationStatuses";
+import {
   createDonation,
   deleteDonation,
   getDonations,
@@ -123,32 +127,6 @@ export const DonationsTab = () => {
       deleteDon.mutate(donation.id)
     }
   }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "warning";
-      case "accepted":
-        return "success";
-      case "rejected":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "En attente";
-      case "accepted":
-        return "Accepté";
-      case "rejected":
-        return "Refusé";
-      default:
-        return status;
-    }
-  };
 
   return (
     <Box>
@@ -246,8 +224,8 @@ export const DonationsTab = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={getStatusLabel(donation.status)}
-                      color={getStatusColor(donation.status)}
+                      label={getDonationStatusLabel(donation.status)}
+                      color={getDonationStatusColor(donation.status)}
                       size="small"
                     />
                   </TableCell>

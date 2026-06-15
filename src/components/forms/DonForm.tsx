@@ -10,6 +10,10 @@ import {
 import * as z from "zod";
 import { phoneSchema } from "../../interfaces/ZodTypes";
 import { emptyStringToNull } from "../../services/zodTransform";
+import {
+  DONATION_STATUSES,
+  DONATION_STATUS_VALUES,
+} from "../../constants/donationStatuses";
 
 const schema = z.object({
   donor_name: z.string().trim().nonempty(),
@@ -25,7 +29,7 @@ const schema = z.object({
       z.coerce.number().min(0),
     ])
   ) as z.ZodType<number>,//TODO remake
-  status: z.enum(["pending", "accepted", "rejected"]),
+  status: z.enum(DONATION_STATUS_VALUES),
 });
 
 export type Schema = z.infer<typeof schema>;
@@ -103,9 +107,11 @@ export const DonForm = ({
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} label="Statut" name="status">
-            <MenuItem value="pending">En Attente</MenuItem>
-            <MenuItem value="accepted">Accepté</MenuItem>
-            <MenuItem value="rejected">Refusé</MenuItem>
+            {DONATION_STATUSES.map((status) => (
+              <MenuItem key={status.value} value={status.value}>
+                {status.label}
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
       </Grid>

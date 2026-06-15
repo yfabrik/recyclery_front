@@ -8,12 +8,14 @@ import z, { literal } from "zod";
 import { FormCategorySelect, FormDate, FormSelect } from "./FormBase";
 import { idSchema } from "../../interfaces/ZodTypes";
 import type { CategoryModel } from "../../interfaces/Models";
+import {
+  DISPOSAL_TYPE_FILTER_VALUES,
+  FORM_DISPOSAL_TYPES,
+} from "../../constants/disposalTypes";
 
 const filterSchema = z.object({
     category_id: z.union([idSchema(), literal("")]),
-    disposal_type: z.enum(["eco_organism",
-        "landfill",
-        "other", ""]),
+    disposal_type: z.enum(DISPOSAL_TYPE_FILTER_VALUES),
     date_from: z.coerce.date(),
     date_to: z.coerce.date()
 })
@@ -68,9 +70,9 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                 <FormSelect control={form.control} name="disposal_type" label="Type" extra={{ size: "small" }}>
                     <MenuItem value="">Tous</MenuItem>
-                    <MenuItem value="eco_organism">Éco-organisme</MenuItem>
-                    <MenuItem value="landfill">Déchetterie</MenuItem>
-                    <MenuItem value="other">Autre</MenuItem>
+                    {FORM_DISPOSAL_TYPES.map((type) => (
+                        <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+                    ))}
                 </FormSelect>
 
             </Grid>

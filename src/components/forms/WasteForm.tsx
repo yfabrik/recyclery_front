@@ -14,9 +14,14 @@ import {
 import { idSchema } from "../../interfaces/ZodTypes";
 import type { CategoryModel, EcoOrgModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { FORM_DISPOSAL_TYPES } from "../../constants/disposalTypes";
 
-
-const disposalTypeEnum = z.enum(["eco_organism", "landfill", "other"]);
+const disposalTypeEnum = z.enum(
+  FORM_DISPOSAL_TYPES.map((type) => type.value) as [
+    (typeof FORM_DISPOSAL_TYPES)[number]["value"],
+    ...(typeof FORM_DISPOSAL_TYPES)[number]["value"][],
+  ],
+);
 
 const schema =(categories: CategoryModel[]) => z.object({
   disposal_date: z.coerce.date("La date de sortie est requise"),
@@ -104,9 +109,11 @@ export const WasteForm = ({
             name="disposal_type"
             label="Type de sortie"
           >
-            <MenuItem value="eco_organism">Éco-organisme</MenuItem>
-            <MenuItem value="landfill">Déchetterie</MenuItem>
-            <MenuItem value="other">Autre</MenuItem>
+            {FORM_DISPOSAL_TYPES.map((type) => (
+              <MenuItem key={type.value} value={type.value}>
+                {type.label}
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
         {disposalType === "eco_organism" && (

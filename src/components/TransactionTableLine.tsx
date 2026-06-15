@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import type { TransactionModel } from "../interfaces/Models";
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
+import { getPaymentMethodColor } from "../constants/paymentMethods";
 interface TransactionTableLineProps {
   transaction: TransactionModel;
   handleReprintReceipt: (id: number) => void;
@@ -46,7 +47,7 @@ export const TransactionTableLine = ({
         <Chip
           label={getPaymentMethodLabel(transaction.payment_method)}
           size="small"
-          color={transaction.payment_method === "cash" ? "success" : "primary"}
+          color={getPaymentMethodColor(transaction.payment_method)}
         />
       </TableCell>
       <TableCell align="right">

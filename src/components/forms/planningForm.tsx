@@ -3,7 +3,8 @@ import { WbSunny, WbTwilight } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { PRIORITIES as priorities } from "../../interfaces/shared";
+import { TASK_PRIORITIES } from "../../constants/taskPriorities";
+import { WORKDAY_TIME_SLOT_VALUES } from "../../constants/workdayTimeSlots";
 import { idSchema, noEmptyStr } from "../../interfaces/ZodTypes";
 import {
   FormDate,
@@ -13,7 +14,6 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import { emptyStringToNull } from "../../services/zodTransform";
-import { SelectedIcon } from "../SelectedIcon";
 
 type StoreOption = {
   id: number;
@@ -68,7 +68,7 @@ export const PlaningForm = ({
     },
   });
 
-  const handleQuickTimeSlot = (slot: "morning" | "afternoon") => {
+  const handleQuickTimeSlot = (slot: (typeof WORKDAY_TIME_SLOT_VALUES)[number]) => {
     if (slot === "morning") {
       form.setValue("start_time", new Date(new Date().setHours(8, 0)));
       form.setValue("end_time", new Date(new Date().setHours(12, 0)));
@@ -178,10 +178,10 @@ export const PlaningForm = ({
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} name="priority" label="Priorité">
-            {priorities.map((priority) => (
+            {TASK_PRIORITIES.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <SelectedIcon iconName={priority.icon || "Flag"} />
+                  {priority.icon}
                   {priority.label}
                 </Box>
               </MenuItem>

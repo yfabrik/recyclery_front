@@ -29,6 +29,7 @@ import {
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { getUserRoleLabel } from '../constants/userRoles';
 
 interface NavBarProps {
   onMenuToggle: () => void
@@ -246,8 +247,7 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
               <Box>
                 <Typography variant="subtitle2">{user?.username}</Typography>
                 <Typography variant="caption" color="textSecondary">
-                  {user?.role === 'admin' ? 'Administrateur' :
-                    user?.role === 'manager' ? 'Gestionnaire' : 'Employé'}
+                  {getUserRoleLabel(user?.role ?? "employee")}
                 </Typography>
               </Box>
             </MenuItem>

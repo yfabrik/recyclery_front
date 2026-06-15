@@ -44,12 +44,16 @@ import {
   getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
 import { type UserModel } from "../../interfaces/Models";
+import {
+  getUserRoleColor,
+  getUserRoleIcon,
+  getUserRoleLabel,
+} from "../../constants/userRoles";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
   deleteUser,
   fetchUsers as fUsers,
-  getRoles,
   getUsersStats,
   updateUser,
   updateUserPassword,
@@ -70,11 +74,6 @@ export const UsersTab = () => {
     queryFn: () => fUsers({ include: "managedStores" }).then(response => response.data.users)
   })
   if (users.isError) toast.error(getApiErrorMessage(users.error, "Erreur lors du chargement des utilisateurs"));
-
-  const roles = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => getRoles().then(response => response.data.roles)
-  })
 
   const userStats = useQuery({
     queryKey: ["userStats"],
@@ -167,43 +166,6 @@ export const UsersTab = () => {
     removeUser.mutate(user.id)
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    const COLORS = {
-      admin: "error",
-      direction: "warning",
-      coordination: "info",
-      encadrant: "primary",
-      salarie: "default",
-    } as const as Record<string, "error" | "warning" | "info" | "primary" | "default">;
-    return COLORS[role] || "default";
-  };
-  const getRoleColor = (role: UserModel["role"]) => {
-    switch (role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'employee': return 'info';
-      default: role satisfies never;
-    }
-  };
-
-  const getRoleLabel = (role: UserModel["role"]) => {
-    switch (role) {
-      case 'admin': return 'Administrateur';
-      case 'manager': return 'Gestionnaire';
-      case 'employee': return 'Employé';
-      default: role satisfies never;
-    }
-  };
-
-  const getRoleIcon = (role: UserModel["role"]) => {
-    switch (role) {
-      case 'admin': return <AdminPanelSettings />;
-      case 'manager': return <ManageAccounts />;
-      case 'employee': return <Work />;
-      default: return <Person />;
-    }
-  };
-
   const formatLastLogin = (lastLogin: string) => {
     if (!lastLogin) return "Jamais connecté";
     return new Date(lastLogin).toLocaleDateString("fr-FR", {
@@ -293,9 +255,9 @@ export const UsersTab = () => {
                 <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
                   <Box sx={{ textAlign: "center" }}>
                     <Chip
-                      icon={getRoleIcon(rolestat.role)}
-                      label={getRoleLabel(rolestat.role)}
-                      color={getRoleColor(rolestat.role)}
+                      icon={getUserRoleIcon(rolestat.role)}
+                      label={getUserRoleLabel(rolestat.role)}
+                      color={getUserRoleColor(rolestat.role)}
                       sx={{ mb: 1 }}
                     />
                     <Typography variant="h6">{rolestat.count}</Typography>
@@ -362,8 +324,8 @@ export const UsersTab = () => {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Chip
-                          label={getRoleLabel(user.role)}
-                          color={getRoleColor(user.role)}
+                          label={getUserRoleLabel(user.role)}
+                          color={getUserRoleColor(user.role)}
                           size="small"
                         />
                       </TableCell>
@@ -447,7 +409,6 @@ export const UsersTab = () => {
         <DialogContent>
           <UserForm
             formId="UserForm"
-            roles={roles.data}
             stores={stores.data || []}
             defaultValues={{ ...editingUser, managedStores: editingUser?.managedStores?.map(s => s.id) }}
             onSubmit={handleSaveUser}

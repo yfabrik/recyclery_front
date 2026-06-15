@@ -1,4 +1,4 @@
-import { CalendarToday, Person, Warning, WbSunny, WbTwilight, Brightness3 } from "@mui/icons-material";
+import { CalendarToday, Person, Warning } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -12,6 +12,14 @@ import {
 } from "@mui/material";
 import type { ReactNode } from "react";
 import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
+import {
+  ALLDAY_PRESENCE_SLOT,
+  WORKDAY_TIME_SLOT_AVATAR_COLORS,
+  getWorkdayTimeSlot,
+} from "../../constants/workdayTimeSlots";
+
+const MORNING_SLOT = getWorkdayTimeSlot("morning")!;
+const AFTERNOON_SLOT = getWorkdayTimeSlot("afternoon")!;
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -286,13 +294,8 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
         <TimeSlotSection
           employees={daySchedule.allDay}
           timeSlot="allday"
-          label={
-            <>
-              <WbSunny sx={{ fontSize: 14 }} />
-              Journée
-            </>
-          }
-          color="#4caf50"
+          label={ALLDAY_PRESENCE_SLOT.label}
+          color={ALLDAY_PRESENCE_SLOT.avatarColor}
         />
       )}
 
@@ -302,11 +305,13 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
           timeSlot="morning"
           label={
             <>
-              <WbTwilight sx={{ fontSize: 14 }} />
-              Matin
+              <Box component="span" sx={{ display: "flex", fontSize: 14 }}>
+                {MORNING_SLOT.icon}
+              </Box>
+              {MORNING_SLOT.label}
             </>
           }
-          color="#ff9800"
+          color={WORKDAY_TIME_SLOT_AVATAR_COLORS.morning}
         />
       )}
 
@@ -316,11 +321,13 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
           timeSlot="afternoon"
           label={
             <>
-              <Brightness3 sx={{ fontSize: 14 }} />
-              Après-midi
+              <Box component="span" sx={{ display: "flex", fontSize: 14 }}>
+                {AFTERNOON_SLOT.icon}
+              </Box>
+              {AFTERNOON_SLOT.label}
             </>
           }
-          color="#2196f3"
+          color={WORKDAY_TIME_SLOT_AVATAR_COLORS.afternoon}
         />
       )}
     </>
@@ -418,12 +425,10 @@ const EmployeeBadge = ({ employee, timeSlot }: EmployeeBadgeProps) => {
 // ============================================================================
 
 const getTimeSlotColor = (timeSlot: TimeSlot): string => {
-  const colorMap: Record<TimeSlot, string> = {
-    allday: "#4caf50", // Green
-    morning: "#ff9800", // Orange
-    afternoon: "#2196f3", // Blue
-  };
-  return colorMap[timeSlot];
+  if (timeSlot === "allday") {
+    return ALLDAY_PRESENCE_SLOT.avatarColor;
+  }
+  return WORKDAY_TIME_SLOT_AVATAR_COLORS[timeSlot];
 };
 
 // ============================================================================

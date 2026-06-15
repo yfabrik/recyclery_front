@@ -22,6 +22,11 @@ import {
   getCartLinePrice,
   getPaymentMethodLabel,
 } from "../../services/cartService";
+import { REFUND_PAYMENT_METHODS } from "../../constants/paymentMethods";
+import {
+  REFUND_REASONS,
+  REFUND_REASON_VALUES,
+} from "../../constants/refundReasons";
 import { itemSchema } from "./cartSchema";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,16 +52,12 @@ const refundItemSchema = itemSchema.extend({
 });
 type ItemToRefund = z.infer<typeof refundItemSchema>;
 
-const REFUND_REASONS = [
-  "customer_request",
-  "product_defect",
-  "wrong_product",
-  "overcharge",
-  "return_policy",
-  "other",
-] as const;
-
-const REFUND_METHODS = ["cash", "card", "check", "giftcard", "transfer"] as const;
+const REFUND_METHOD_VALUES = REFUND_PAYMENT_METHODS.map(
+  (method) => method.value,
+) as [
+  (typeof REFUND_PAYMENT_METHODS)[number]["value"],
+  ...(typeof REFUND_PAYMENT_METHODS)[number]["value"][],
+];
 
 const requiredSelect = <const T extends readonly [string, ...string[]]>(
   values: T,
@@ -69,8 +70,8 @@ const requiredSelect = <const T extends readonly [string, ...string[]]>(
 
 const schema = z.object({
   cart: z.array(refundItemSchema),
-  refund_reason: requiredSelect(REFUND_REASONS, "raison requis"),
-  refund_method: requiredSelect(REFUND_METHODS, "methode requis"),
+  refund_reason: requiredSelect(REFUND_REASON_VALUES, "raison requis"),
+  refund_method: requiredSelect(REFUND_METHOD_VALUES, "methode requis"),
   gift_card_code: z.string().transform(v => v == "" ? null : v).optional(),
   notes: z.string(),
 });
@@ -309,17 +310,15 @@ export const RefundForm = ({
             <MenuItem value="">
               <em>Sélectionner une raison</em>
             </MenuItem>
-            <MenuItem value="customer_request">Demande client</MenuItem>
-            <MenuItem value="product_defect">Produit défectueux</MenuItem>
-            <MenuItem value="wrong_product">Mauvais produit</MenuItem>
-            <MenuItem value="overcharge">Surcharge</MenuItem>
-            <MenuItem value="return_policy">Politique de retour</MenuItem>
-            <MenuItem value="other">Autre</MenuItem>
+            {REFUND_REASONS.map((reason) => (
+              <MenuItem key={reason.value} value={reason.value}>
+                {reason.label}
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
 
         {/* Mode de remboursement */}
-        {/* TODO make reusable payment method */}
         <Grid size={{ xs: 12, md: 6 }}>
           <FormSelect
             control={form.control}
@@ -329,11 +328,11 @@ export const RefundForm = ({
             <MenuItem value="">
               <em>Sélectionner un mode</em>
             </MenuItem>
-            <MenuItem value="cash">Espèces</MenuItem>
-            <MenuItem value="card">Carte bancaire</MenuItem>
-            <MenuItem value="check">Chèque</MenuItem>
-            <MenuItem value="giftcard">GiftCard</MenuItem>
-            <MenuItem value="transfer">Virement</MenuItem>
+            {REFUND_PAYMENT_METHODS.map((method) => (
+              <MenuItem key={method.value} value={method.value}>
+                {method.label}
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
         {giftCardCode === "giftcard" && (

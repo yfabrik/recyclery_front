@@ -1,5 +1,6 @@
 import type { CartItem } from "../components/forms/cartSchema";
 import type { CategoryModel, TransactionModel } from "../interfaces/Models";
+import { getPaymentMethodLabel as getPaymentMethodLabelFromConstants } from "../constants/paymentMethods";
 
 export type GlobalPromotionType = "percent" | "fixed";
 
@@ -70,19 +71,7 @@ export const getTransactionGlobalPromotionDiscount = (
 
 export const getPaymentMethodLabel = (
   method: TransactionModel["payment_method"],
-) => {
-  const labels = {
-    cash: "Espèces",
-    card: "Carte bancaire",
-    check: "Chèque",
-    giftcard: "avoir",
-    mixed: "Mixte",
-    transfer: "Virement"
-    // Backward-compatible in case some UI paths still send the old casing.
-    // giftCard: "avoir",
-  } as const satisfies Record<TransactionModel["payment_method"], string>;
-  return labels[method] || method;
-};
+) => getPaymentMethodLabelFromConstants(method);
 
 export const getTransactionStoreName = (
   transaction: Pick<TransactionModel, "CashSession">,

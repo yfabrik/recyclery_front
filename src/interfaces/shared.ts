@@ -17,20 +17,11 @@ export const TIME_SLOTS = [
   { value: "Autre", label: "Autre créneau" },
 ];
 
-export const PRIORITIES = [
-  { value: "low", label: "Faible", color: "success", icon: "FlagOutlined" },
-  { value: "medium", label: "Moyenne", color: "warning", icon: "Flag" },
-  { value: "high", label: "Élevée", color: "error", icon: "PriorityHigh" },
-  { value: "urgent", label: "Urgente", color: "error", icon: "" },
-];
-
-export const RECURRENCE_PATTERNS = [
-  { value: "", label: "Aucune" },
-  { value: "daily", label: "Quotidienne" },
-  { value: "weekly", label: "Hebdomadaire" },
-  { value: "monthly", label: "Mensuelle" },
-  { value: "custom", label: "Personnalisée" },
-];
+export { PRIORITIES } from "../constants/taskPriorities";
+export {
+  RECURRENCE_PATTERN_FORM_OPTIONS as RECURRENCE_PATTERNS,
+  getRecurrencePatternLabel,
+} from "../constants/recurrencePatterns";
 
 export const STATUS_OPTIONS = [
   { value: "new", label: "Nouveau", color: "grey", icon: " <Add /> " },

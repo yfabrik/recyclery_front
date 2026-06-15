@@ -5,9 +5,11 @@ import * as z from "zod";
 
 import {
   DAYS_OF_WEEK,
-  PRIORITIES as priorities,
-  RECURRENCE_PATTERNS as recurrencePatterns,
 } from "../../interfaces/shared";
+import {
+  RECURRENCE_PATTERN_FORM_OPTIONS,
+} from "../../constants/recurrencePatterns";
+import { TASK_PRIORITIES } from "../../constants/taskPriorities";
 import {
   FormDate,
   FormInput,
@@ -214,7 +216,7 @@ export const TaskForm = ({
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} name="priority" label="Priorité">
-            {priorities.map((priority) => (
+            {TASK_PRIORITIES.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 {priority.label}
               </MenuItem>
@@ -325,7 +327,7 @@ export const TaskForm = ({
             name="recurrence_pattern"
             label="Modèle de récurrence"
           >
-            {recurrencePatterns.map((pattern) => (
+            {RECURRENCE_PATTERN_FORM_OPTIONS.map((pattern) => (
               <MenuItem key={pattern.value} value={pattern.value}>
                 {pattern.label}
               </MenuItem>
