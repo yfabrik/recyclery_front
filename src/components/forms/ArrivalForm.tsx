@@ -2,13 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Add,
   Clear,
-  Home,
-  LocalShipping,
   LocationOn,
   Save,
   Scale,
   TouchApp,
-  VolunteerActivism,
 } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
@@ -19,6 +16,7 @@ import type {
   CategoryModel,
   CollectionPointModel,
 } from "../../interfaces/Models";
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { usePrompt } from "../Prompt";
 import {
@@ -232,24 +230,6 @@ export const ArrivalForm = ({
 
 
 
-  const sourceTypeOptions = [
-    {
-      value: "point" as const,
-      label: "Point de Collecte",
-      icon: <LocalShipping />,
-    },
-    {
-      value: "apport" as const,
-      label: "Apport Volontaire",
-      icon: <VolunteerActivism />,
-    },
-    {
-      value: "house_clearance" as const,
-      label: "Vide Maison",
-      icon: <Home />,
-    },
-  ];
-
   return (
     <>
       <Grid size={{ xs: 12, lg: 8 }}>
@@ -344,7 +324,7 @@ export const ArrivalForm = ({
                   label="Provenance"
                 >
                   <Grid container spacing={2}>
-                    {sourceTypeOptions.map((source) => (
+                    {ARRIVAL_SOURCE_TYPES.map((source) => (
                       <Grid size={{ xs: 12, md: 4 }} key={source.value}>
                         <FormRadioCard
                           label={source.label}

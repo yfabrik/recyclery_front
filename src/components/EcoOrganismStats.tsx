@@ -15,6 +15,7 @@ import React, { useState } from "react";
 import { useMediaQuery, useTheme } from "@mui/material";
 import type { EcoOrganismQuarterStat } from "../services/api/ecoOrganism";
 import type { ArrivalModel } from "../interfaces/Models";
+import { getArrivalSourceLabel } from "../constants/arrivalSourceTypes";
 
 export type { EcoOrganismQuarterStat };
 
@@ -157,15 +158,6 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
 
   const currentStat = stats[tab];
   const quarters = currentStat?.quarters?.length ? currentStat.quarters : defaultQuarters();
-
-  const arrivalSourceLabels: Record<ArrivalModel["source_type"], string> = {
-    point: "Point de Collecte",
-    apport: "Apport Volontaire",
-    house_clearance: "Vide Maison",
-  };
-
-  const getArrivalSourceLabel = (sourceType: ArrivalModel["source_type"]) =>
-    arrivalSourceLabels[sourceType] || sourceType;
 
   const getQuarterMetric = (quarter: QuarterEntry) => {
     if (metricSource === "quarterIn") return quarter.quarterIn;
