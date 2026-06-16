@@ -1,0 +1,40 @@
+name: Vulnerability Scan
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0' # every sunday at 00:00
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
+
+      - name: Aqua Security Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:latest
+          format: 'table'
+          exit-code: 0   # IMPORTANT: never fail build
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Save results (optional)
+        run: echo "Scan completed - check logs for vulnerabilities"
