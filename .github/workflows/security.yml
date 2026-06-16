@@ -31,7 +31,7 @@ jobs:
       - name: Aqua Security Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ghcr.io/${{ github.repository }}:latest
+          image-ref: ghcr.io/${{ github.repository }}:v${{ steps.pkg.outputs.version }}
           format: 'table'
           exit-code: 0   # IMPORTANT: never fail build
           severity: CRITICAL,HIGH,MEDIUM
