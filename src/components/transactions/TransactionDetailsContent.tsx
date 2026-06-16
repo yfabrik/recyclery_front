@@ -88,7 +88,6 @@ export const TransactionDetailsContent = ({
     queryFn: () =>
       getRefundForTransaction(transaction.id).then((response) => response.data.refunds),
     placeholderData: [],
-    enabled: !editable,
   });
   const refunds = refundsQuery.data ?? [];
   const hasRefunds = refunds.length > 0;
