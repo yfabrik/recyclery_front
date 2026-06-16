@@ -5,6 +5,8 @@ on:
     branches: ["main"]
     paths:
       - "src/**"
+      - "package.json"
+      - "dockerfile"
 
   workflow_dispatch:
 
@@ -19,6 +21,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Read version from package.json
+        id: pkg
+        shell: bash
+        run: echo "version=$(node -p \"JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version\")" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -39,6 +46,8 @@ jobs:
           context: .
           build-args: VITE_BANNER_TEXT=${{ vars.VITE_BANNER_TEXT }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ghcr.io/${{ github.repository }}:v${{ steps.pkg.outputs.version }}
           labels: ${{ steps.meta.outputs.labels }}
 

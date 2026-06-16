@@ -1,5 +1,7 @@
 # Recyclerie
 
+[![Tests](https://github.com/yfabrik/recyclery_front/actions/workflows/test.yml/badge.svg)](https://github.com/yfabrik/recyclerie_front/actions/workflows/test.yml)
+
 Interface web de gestion pour les recycleries : caisse, arrivages, étiquetage, planning, administration des magasins et suivi des ventes.
 
 Ce dépôt contient le **front-end** uniquement. Il communique avec une API REST backend (non incluse ici).
