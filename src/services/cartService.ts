@@ -75,7 +75,7 @@ export const getPaymentMethodLabel = (
 
 export const getTransactionStoreName = (
   transaction: Pick<TransactionModel, "CashSession">,
-) => transaction.CashSession?.Recyclery?.name ?? "N/A";
+) => transaction.CashSession?.Recyclery?.name ?? transaction.CashSession?.CashRegister?.Recyclery?.name ?? "N/A";
 
 export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("fr-FR", {

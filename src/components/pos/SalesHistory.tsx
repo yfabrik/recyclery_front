@@ -1,6 +1,6 @@
 import { Description } from "@mui/icons-material";
 import { Paper, Typography } from "@mui/material";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -12,17 +12,20 @@ import { fetchCategories } from "../../services/api/categories";
 import {
   createRefund,
   getTransactions,
+  updateTransaction,
   type CreateRefundBody,
   type transactionsFilters,
 } from "../../services/api/transactions";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
-import type { Schema } from "../forms/RefundForm";
+import type { Schema as RefundSchema } from "../forms/RefundForm";
+import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
 import { SaleHistoryFilter, type Filters } from "../forms/SaleHistoryFilter";
 import { buildCreateRefundBody } from "../../utils/refundBody";
+import { buildUpdateTransactionBody } from "../../utils/editTransactionBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 
 export const SalesHistory = ({
@@ -30,6 +33,7 @@ export const SalesHistory = ({
 }: {
   activeSession: CashSession;
 }) => {
+  const queryClient = useQueryClient();
   const { triggerPrintGiftCard, giftCardPrintNode } = useGiftCardPrint();
   const [refundDialog, setRefundDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
@@ -126,12 +130,38 @@ export const SalesHistory = ({
     },
   });
 
-  const handleSubmitRefund = async (data: Schema) => {
+  const editTransaction = useMutation({
+    mutationFn: (v: { id: number; data: ReturnType<typeof buildUpdateTransactionBody> }) =>
+      updateTransaction(v.id, v.data),
+    onSuccess: (data) => {
+      toast.success(
+        getApiSuccessMessage(data, "Transaction mise à jour avec succès"),
+      );
+      queryClient.invalidateQueries({ queryKey: ["transactionsHistory"] });
+      handleCloseTransactionDetailsDialog();
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la mise à jour de la transaction"),
+      );
+    },
+  });
+
+  const handleSubmitRefund = async (data: RefundSchema) => {
     if (!selectedTransaction) return;
 
     addRefund.mutate({
       id: selectedTransaction.id,
       data: buildCreateRefundBody(data, activeSession.id),
+    });
+  };
+
+  const handleSaveTransaction = (data: EditTransactionSchema) => {
+    if (!selectedTransaction) return;
+
+    editTransaction.mutate({
+      id: selectedTransaction.id,
+      data: buildUpdateTransactionBody(data, activeSession.id),
     });
   };
 
@@ -160,6 +190,10 @@ export const SalesHistory = ({
     setTransactionDetailsDialog(false);
     setSelectedTransaction(null);
   };
+
+  const isEditableTransaction =
+    selectedTransaction?.transactionType === "sell" &&
+    selectedTransaction.cash_session_id === activeSession.id;
 
   return (
     <>
@@ -192,6 +226,7 @@ export const SalesHistory = ({
           handleRefund={handleRefund}
           handleReprintReceipt={handleReprintReceipt}
           handleShowDetail={handleViewTransactionDetails}
+          currentCashSessionId={activeSession.id}
         />
       </Paper>
 
@@ -208,6 +243,8 @@ export const SalesHistory = ({
         onClose={handleCloseTransactionDetailsDialog}
         transaction={selectedTransaction}
         categories={categories.data ?? []}
+        editable={isEditableTransaction}
+        onSubmit={isEditableTransaction ? handleSaveTransaction : undefined}
       />
 
       {giftCardPrintNode}

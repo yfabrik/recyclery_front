@@ -2,16 +2,15 @@ import { Undo } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Card,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   Typography,
 } from "@mui/material";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
-import { formatCurrency, getPaymentMethodLabel } from "../../services/cartService";
+import { useSelectedTransaction } from "../../hooks/useSelectedTransaction";
+import { Loading } from "../Loading";
 import { RefundForm, type Schema } from "../forms/RefundForm";
 
 interface RefundTransactionDialogProps {
@@ -30,83 +29,45 @@ export const RefundTransactionDialog = ({
   categories,
   onSubmit,
   formId = "refundForm",
-}: RefundTransactionDialogProps) => (
-  <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-    <DialogTitle>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Undo color="error" />
-        <Typography variant="h6">
-          Remboursement - Transaction #{transaction?.id}
-        </Typography>
-      </Box>
-    </DialogTitle>
-    <DialogContent>
-      {transaction && (
-        <>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <Card variant="outlined" sx={{ p: 2, bgcolor: "#f8f9fa" }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Informations de la transaction
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Montant total:{" "}
-                      <strong>{formatCurrency(transaction.total_amount)}</strong>
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Mode de paiement:{" "}
-                      <strong>
-                        {getPaymentMethodLabel(transaction.payment_method)}
-                      </strong>
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Date:{" "}
-                      <strong>
-                        {new Date(transaction.createdAt).toLocaleDateString(
-                          "fr-FR",
-                        )}
-                      </strong>
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Caissier:{" "}
-                      <strong>
-                        {transaction.CashSession?.User?.username || "N/A"}
-                      </strong>
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Card>
-            </Grid>
-          </Grid>
+}: RefundTransactionDialogProps) => {
+  const details = useSelectedTransaction(transaction?.id ?? null, open);
+  const fullTransaction = details.data ?? transaction;
 
-          <RefundForm
-            formId={formId}
-            onSubmit={onSubmit}
-            selectedTransaction={transaction}
-            categories={categories}
-          />
-        </>
-      )}
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose}>Annuler</Button>
-      <Button
-        type="submit"
-        form={formId}
-        variant="contained"
-        color="error"
-        startIcon={<Undo />}
-      >
-        Procéder au remboursement
-      </Button>
-    </DialogActions>
-  </Dialog>
-);
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Undo color="error" />
+          <Typography variant="h6">
+            Remboursement - Transaction #{transaction?.id}
+          </Typography>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Loading isLoading={details.isLoading}>
+          {fullTransaction && (
+            <RefundForm
+              formId={formId}
+              onSubmit={onSubmit}
+              selectedTransaction={fullTransaction}
+              categories={categories}
+            />
+          )}
+        </Loading>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Annuler</Button>
+        <Button
+          type="submit"
+          form={formId}
+          variant="contained"
+          color="error"
+          startIcon={<Undo />}
+          disabled={details.isLoading}
+        >
+          Procéder au remboursement
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};

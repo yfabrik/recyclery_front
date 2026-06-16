@@ -35,6 +35,8 @@ interface PaymentPanelProps {
   giftCardScanInput: string;
   setGiftCardScanInput: (value: string) => void;
   onScanGiftCard: () => void;
+  readOnly?: boolean;
+  showSubmitButton?: boolean;
 }
 
 export const PaymentPanel = ({
@@ -44,6 +46,8 @@ export const PaymentPanel = ({
   giftCardScanInput,
   setGiftCardScanInput,
   onScanGiftCard,
+  readOnly = false,
+  showSubmitButton = true,
 }: PaymentPanelProps) => {
   const { control, setValue } = useFormContext<CartFormValues, unknown, CartSchema>();
 
@@ -67,40 +71,42 @@ export const PaymentPanel = ({
   const paymentBalance = getPaymentBalance(totalPaid, cartTotal);
 
   return (
-    <Paper sx={{ p: 2, mt: 2 }}>
+    <Paper sx={{ p: 2 }}>
       <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Gift Card / Avoir
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Scanner ou saisir le code-barres de l'avoir..."
-              value={giftCardScanInput}
-              onChange={(e) => setGiftCardScanInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onScanGiftCard()}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
-                  ),
-                },
-              }}
-            />
-            <Button
-              variant="contained"
-              size="small"
-              type="button"
-              onClick={onScanGiftCard}
-              sx={{ minWidth: 96 }}
-              disabled={giftCardScanInput.trim().length < 1}
-            >
-              Scanner
-            </Button>
-          </Box>
-        </Grid>
+        {!readOnly && (
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Gift Card / Avoir
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Scanner ou saisir le code-barres de l'avoir..."
+                value={giftCardScanInput}
+                onChange={(e) => setGiftCardScanInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onScanGiftCard()}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <QrCodeScanner sx={{ mr: 1, color: "text.secondary" }} />
+                    ),
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                size="small"
+                type="button"
+                onClick={onScanGiftCard}
+                sx={{ minWidth: 96 }}
+                disabled={giftCardScanInput.trim().length < 1}
+              >
+                Scanner
+              </Button>
+            </Box>
+          </Grid>
+        )}
 
         <Grid size={{ xs: 12 }}>
           <Box
@@ -139,7 +145,8 @@ export const PaymentPanel = ({
                   name={`payment_splits.${index}.method`}
                   extraSelect={{
                     size: "small",
-                    disabled: paymentSplits[index]?.method === "giftcard",
+                    disabled:
+                      readOnly || paymentSplits[index]?.method === "giftcard",
                   }}
                 >
                   {POS_PAYMENT_METHODS.map((method) => (
@@ -161,7 +168,8 @@ export const PaymentPanel = ({
                   extra={{
                     type: "number",
                     size: "small",
-                    disabled: paymentSplits[index]?.method === "giftcard",
+                    disabled:
+                      readOnly || paymentSplits[index]?.method === "giftcard",
                     slotProps: {
                       input: {
                         startAdornment: (
@@ -172,35 +180,39 @@ export const PaymentPanel = ({
                   }}
                 />
               </Box>
-              <IconButton
-                color="error"
-                onClick={() => removePayment(index)}
-                disabled={paymentFields.length <= 1}
-                sx={{ mt: 0.5 }}
-                size="small"
-              >
-                <Close />
-              </IconButton>
+              {!readOnly && (
+                <IconButton
+                  color="error"
+                  onClick={() => removePayment(index)}
+                  disabled={paymentFields.length <= 1}
+                  sx={{ mt: 0.5 }}
+                  size="small"
+                >
+                  <Close />
+                </IconButton>
+              )}
             </Box>
           </Grid>
         ))}
-        <Grid size={{ xs: 12 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            type="button"
-            onClick={() =>
-              appendPayment({
-                method: "cash",
-                amount: 0,
-                gift_card_barcode: undefined,
-                gift_card_id: undefined,
-              })
-            }
-          >
-            + payment
-          </Button>
-        </Grid>
+        {!readOnly && (
+          <Grid size={{ xs: 12 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              type="button"
+              onClick={() =>
+                appendPayment({
+                  method: "cash",
+                  amount: 0,
+                  gift_card_barcode: undefined,
+                  gift_card_id: undefined,
+                })
+              }
+            >
+              + payment
+            </Button>
+          </Grid>
+        )}
         <Grid size={{ xs: 10 }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
             Promotion globale panier
@@ -226,6 +238,7 @@ export const PaymentPanel = ({
                 <Typography variant="body2">% </Typography>
                 <Switch
                   checked={globalPromotion.type === "fixed"}
+                  disabled={readOnly}
                   onChange={(_, checked) =>
                     setValue(
                       "global_promotion.type",
@@ -246,6 +259,7 @@ export const PaymentPanel = ({
                 extra={{
                   type: "number",
                   size: "small",
+                  disabled: readOnly,
                 }}
               />
             </Box>
@@ -278,23 +292,26 @@ export const PaymentPanel = ({
             control={control}
             label="Code Postal"
             name="customer_postal_code"
+            extra={{ disabled: readOnly }}
           />
         </Grid>
         <Grid size={{ xs: 12 }}></Grid>
       </Grid>
-      <Button
-        fullWidth
-        variant="contained"
-        size="large"
-        startIcon={<Payment />}
-        type="submit"
-        disabled={
-          cart.length === 0 || isPaymentInsufficient(totalPaid, cartTotal)
-        }
-        sx={{ mb: 2 }}
-      >
-        Encaisser
-      </Button>
+      {!readOnly && showSubmitButton && (
+        <Button
+          fullWidth
+          variant="contained"
+          size="large"
+          startIcon={<Payment />}
+          type="submit"
+          disabled={
+            cart.length === 0 || isPaymentInsufficient(totalPaid, cartTotal)
+          }
+          sx={{ mb: 2 }}
+        >
+          Encaisser
+        </Button>
+      )}
     </Paper>
   );
 };

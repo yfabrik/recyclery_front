@@ -83,6 +83,8 @@ export type CreateTransactionBody = {
   payment_amount?: number;
 };
 
+export type UpdateTransactionBody = CreateTransactionBody;
+
 // Practical runtime rules currently enforced:
 // - if payments provided: sum(payments.amount) === total_amount
 // - every giftcard payment line must have gift_card_code
@@ -276,6 +278,11 @@ export const createSell = (
   AxiosResponse<CreateTransactionResponse>
 > => axiosInstance.post("/api/sales-transactions", data);
 
+export const updateTransaction = (
+  id: number,
+  data: UpdateTransactionBody,
+): Promise<AxiosResponse<CreateTransactionResponse>> =>
+  axiosInstance.put(`/api/sales-transactions/${id}`, data);
 
 export const getTransactionDetails = (id: number): Promise<AxiosResponse<{ success: true; transaction: TransactionDetailsModel }>> =>
   axiosInstance.get(`/api/sales-transactions/${id}`);

@@ -23,6 +23,7 @@ interface TransactionListTableProps {
   handleReprintReceipt: (id: number) => void;
   handleShowDetail: (transaction: TransactionModel) => void;
   handleRefund?: (transaction: TransactionModel) => void;
+  currentCashSessionId?: number;
 }
 
 export const TransactionListTable = ({
@@ -35,6 +36,7 @@ export const TransactionListTable = ({
   handleReprintReceipt,
   handleShowDetail,
   handleRefund,
+  currentCashSessionId,
 }: TransactionListTableProps) => (
   <Loading isLoading={isLoading}>
     {transactions.length === 0 ? (
@@ -62,6 +64,7 @@ export const TransactionListTable = ({
                 handleRefund={handleRefund}
                 handleReprintReceipt={handleReprintReceipt}
                 handleShowDetail={handleShowDetail}
+                currentCashSessionId={currentCashSessionId}
               />
             ))}
           </TableBody>

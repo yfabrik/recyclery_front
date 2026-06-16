@@ -83,6 +83,14 @@ export const SellRow: Story = {
   },
 };
 
+export const EditableRow: Story = {
+  args: {
+    transaction: baseTransaction,
+    currentCashSessionId: 1,
+    ...handlers,
+  },
+};
+
 export const RefundRow: Story = {
   args: {
     transaction: {

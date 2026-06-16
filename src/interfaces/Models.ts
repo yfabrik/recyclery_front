@@ -263,9 +263,9 @@ export interface CashSession extends BaseModel {
   cash_register_id: number;
   user_id: number;
 
-  CashRegister?: Pick<CaisseModel, "name" | "recyclery_id">;
+  CashRegister?: CaisseModel;
   User?: UserModel;
-  Recyclery?: Pick<StoreModel, "name">;
+  Recyclery?: StoreModel;
   SalesTransactions?: TransactionModel[];
 }
 

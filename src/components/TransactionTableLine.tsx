@@ -1,4 +1,4 @@
-import { Print, Undo, Visibility } from "@mui/icons-material";
+import { Delete, Edit, Print, Undo, Visibility } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -8,23 +8,45 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { TransactionModel } from "../interfaces/Models";
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
 import { getPaymentMethodColor } from "../constants/paymentMethods";
+import { toast } from "react-toastify";
 interface TransactionTableLineProps {
   transaction: TransactionModel;
   handleReprintReceipt: (id: number) => void;
   handleRefund?: (t: TransactionModel) => void;
   handleShowDetail: (t: TransactionModel) => void;
+  currentCashSessionId?: number;
 }
 export const TransactionTableLine = ({
   transaction,
   handleReprintReceipt,
   handleRefund,
   handleShowDetail,
+  currentCashSessionId,
 }: TransactionTableLineProps) => {
+  const isEditable =
+    transaction.transactionType === "sell" &&
+    currentCashSessionId != null &&
+    transaction.cash_session_id === currentCashSessionId;
+  const isRefund = transaction.transactionType === "refund";
+
   return (
-    <TableRow key={transaction.id}>
+    <TableRow
+      key={transaction.id}
+      sx={
+        isRefund
+          ? {
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+              "&:hover": {
+                bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
+              },
+            }
+          : undefined
+      }
+    >
       <TableCell>
         <Typography variant="body2" fontWeight="bold">
           {transaction.id}
@@ -40,7 +62,7 @@ export const TransactionTableLine = ({
         })}
       </TableCell>
       <TableCell>
-        {transaction?.CashSession?.CashRegister?.Recyclery.name || "N/A"}
+        {transaction?.CashSession?.CashRegister?.Recyclery?.name || "N/A"}
       </TableCell>
       <TableCell>{transaction?.CashSession?.User?.username || "N/A"}</TableCell>
       <TableCell>
@@ -51,7 +73,11 @@ export const TransactionTableLine = ({
         />
       </TableCell>
       <TableCell align="right">
-        <Typography variant="body2" fontWeight="bold" color="success.main">
+        <Typography
+          variant="body2"
+          fontWeight="bold"
+          color={isRefund ? "error.main" : "success.main"}
+        >
           {formatCurrency(transaction.total_amount)}
         </Typography>
       </TableCell>
@@ -60,13 +86,13 @@ export const TransactionTableLine = ({
       </TableCell>
       <TableCell>
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Voir les détails">
+          <Tooltip title={isEditable ? "Modifier" : "Voir les détails"}>
             <IconButton
               size="small"
               color="primary"
               onClick={() => handleShowDetail(transaction)}
             >
-              <Visibility />
+              {isEditable ? <Edit /> : <Visibility />}
             </IconButton>
           </Tooltip>
 
@@ -101,6 +127,17 @@ export const TransactionTableLine = ({
                 <Undo />
               </IconButton>
             </Tooltip>)}
+            {isEditable && (
+              <Tooltip title="annuler la transaction">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={()=>toast.error("Cette fonctionnalité n'est pas encore disponible")}
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            )}
         </Box>
       </TableCell>
     </TableRow>

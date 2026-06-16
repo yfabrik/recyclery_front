@@ -1,24 +1,9 @@
-import {
-  Box,
-  Card,
-  Chip,
-  Grid,
-  IconButton,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
-import { useForm } from "react-hook-form";
+import { Card, Grid, MenuItem, Typography } from "@mui/material";
+import { useForm, useFieldArray } from "react-hook-form";
 import z from "zod";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import {
   formatCurrency,
-  formatWeight,
   getCartLinePrice,
   getPaymentMethodLabel,
 } from "../../services/cartService";
@@ -28,25 +13,38 @@ import {
   REFUND_REASON_VALUES,
 } from "../../constants/refundReasons";
 import { itemSchema } from "./cartSchema";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Add, Backpack, Loyalty, Remove } from "@mui/icons-material";
-import { useFieldArray } from "react-hook-form";
 import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
 import { type CartItem } from "../forms/cartSchema";
+import { CartTable } from "../pos/CartTable";
+import { TransactionInfoCard } from "../transactions/TransactionInfoCard";
 
-const sumRefundPrice = (cart: Schema["cart"], transaction: TransactionModel, alreadyRefunded: ItemToRefund[]) => {
-  const totalPromo = transaction.total_amount_before_promotion - transaction.total_amount;
-  const totalItems = transaction.items?.reduce((prev, current) => prev += current.TransactionItem.quantity, 0) || 0;
+const sumRefundPrice = (
+  cart: Schema["cart"],
+  transaction: TransactionModel,
+  alreadyRefunded: ItemToRefund[],
+) => {
+  const totalPromo =
+    transaction.total_amount_before_promotion - transaction.total_amount;
+  const totalItems =
+    transaction.items?.reduce(
+      (prev, current) => (prev += current.TransactionItem.quantity),
+      0,
+    ) || 0;
   const totalPromoPerItem = totalPromo / totalItems;
   return cart.reduce((prev, current) => {
-    const alreadyRefundedQuantity = alreadyRefunded.find((item) => item.barcode === current.barcode)?.refundQuantity || 0;
-    const currentPrice = getCartLinePrice(current as CartItem)
-    const refundPrice = (currentPrice / current.quantity - totalPromoPerItem) * (current.refundQuantity - alreadyRefundedQuantity)
-    prev += refundPrice
-    return prev
-  }, 0)
-}
+    const alreadyRefundedQuantity =
+      alreadyRefunded.find((item) => item.barcode === current.barcode)
+        ?.refundQuantity || 0;
+    const currentPrice = getCartLinePrice(current as CartItem);
+    const refundPrice =
+      (currentPrice / current.quantity - totalPromoPerItem) *
+      (current.refundQuantity - alreadyRefundedQuantity);
+    prev += refundPrice;
+    return prev;
+  }, 0);
+};
+
 const refundItemSchema = itemSchema.extend({
   refundQuantity: z.number(),
 });
@@ -72,7 +70,10 @@ const schema = z.object({
   cart: z.array(refundItemSchema),
   refund_reason: requiredSelect(REFUND_REASON_VALUES, "raison requis"),
   refund_method: requiredSelect(REFUND_METHOD_VALUES, "methode requis"),
-  gift_card_code: z.string().transform(v => v == "" ? null : v).optional(),
+  gift_card_code: z
+    .string()
+    .transform((v) => (v == "" ? null : v))
+    .optional(),
   notes: z.string(),
 });
 export type Schema = z.infer<typeof schema>;
@@ -87,18 +88,6 @@ export const RefundForm = ({
   selectedTransaction: TransactionModel;
   categories: CategoryModel[];
 }) => {
-  //   const categories = useQuery({
-  //     queryKey: [
-  //       "categories",
-  //       { include: ["category", "promo"], only_category: true, sell: true },
-  //     ],
-  //     queryFn: () =>
-  //       fetchCategories({
-  //         include: ["category", "promo"],
-  //         only_category: true,
-  //         sell: true,
-  //       }).then((response) => response.data.categories),
-  //   });
   const cartItems = selectedTransaction.items?.map((item) => {
     const category = categories?.find((c) => c.id === item.category_id);
     const subcategory = category?.subcategories?.find(
@@ -114,7 +103,6 @@ export const RefundForm = ({
       0,
     );
 
-    //manque la possibilité de faire un autre refund, faut recup les deja refund et empecher de reduire le refund count
     return {
       ...item,
       ...item.TransactionItem,
@@ -125,6 +113,7 @@ export const RefundForm = ({
       description: "",
     } satisfies ItemToRefund;
   });
+
   const form = useForm<FormValues, unknown, Schema>({
     defaultValues: {
       cart: cartItems || [],
@@ -135,240 +124,142 @@ export const RefundForm = ({
     } satisfies Partial<FormValues>,
     resolver: zodResolver(schema),
   });
+
   const cart = form.watch("cart") as Schema["cart"];
   const { fields, update } = useFieldArray({
     control: form.control,
     name: "cart",
   });
   const giftCardCode = form.watch("refund_method");
+  const noop = () => {};
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}>
-      {/* TODO need list des items with checkbox to select witch one to refunds + 1 checkbox on top to select all 
-      refund_method need "giftCard"?
-      */}
-
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}
+    >
       <Grid container spacing={3} sx={{ mt: 1 }}>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Article</TableCell>
-                <TableCell>Poids unitaire</TableCell>
-                <TableCell>Prix unitaire</TableCell>
-                <TableCell>Quantité</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Refunds</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {fields.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <Box>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <Typography variant="body1" fontWeight="medium">
-                          {item.name}
-                        </Typography>
-                        {isNaN(+item.barcode) && (
-                          <Chip
-                            size="small"
-                            label="Manuel"
-                            color="info"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                      <Typography variant="body2" color="textSecondary">
-                        {item.barcode}
-                      </Typography>
-                      {(item.category_name || item.subcategory_name) && (
-                        <Typography variant="body2" color="textSecondary">
-                          {item.category_name}
-                          {item.subcategory_name &&
-                            ` > ${item.subcategory_name}`}
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{formatWeight(item.weight)}</TableCell>
-                  <TableCell>
-                    {formatCurrency(item.price)}
-                    {item.promotion != 0 && (
-                      <Chip
-                        color="secondary"
-                        icon={<Loyalty />}
-                        sx={{
-                          marginLeft: 1,
-                        }}
-                        label={`-${item.promotion}%`}
-                        size="small"
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography sx={{ minWidth: 30, textAlign: "center" }}>
-                        {item.quantity}
-                      </Typography>
-
-                      {item.bundleQuantity &&
-                        item.bundleQuantity != 0 &&
-                        item.bundleQuantity != 1 &&
-                        item.quantity >= item.bundleQuantity && (
-                          <Chip
-                            color="secondary"
-                            icon={<Backpack />}
-                            sx={{
-                              marginLeft: 1,
-                            }}
-                            label={`${Math.trunc(item.quantity / item.bundleQuantity)} pack`}
-                            size="small"
-                          />
-                        )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography fontWeight="bold">
-                      {getCartLinePrice(item as CartItem).toFixed(2)}€
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => {
-                          // if (item.refundQuantity === 0) return
-                          if (!form.getFieldState(`cart.${index}`).isDirty)
-                            return;
-                          form.setValue(
-                            `cart.${index}.refundQuantity`,
-                            item.refundQuantity - 1,
-                            { shouldDirty: true, shouldTouch: true },
-                          ); //pour dirty field
-                          return update(index, {
-                            ...item,
-                            refundQuantity: item.refundQuantity - 1,
-                          });
-                        }}
-                      >
-                        <Remove />
-                      </IconButton>
-                      <Typography sx={{ minWidth: 30, textAlign: "center" }}>
-                        {item.refundQuantity}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => {
-                          if (item.refundQuantity === item.quantity) return;
-                          form.setValue(
-                            `cart.${index}.refundQuantity`,
-                            item.refundQuantity - 1,
-                            { shouldDirty: true, shouldTouch: true },
-                          ); //just pour dirty field
-                          return update(index, {
-                            ...item,
-                            refundQuantity: item.refundQuantity + 1,
-                          });
-                        }}
-                      >
-                        <Add />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Raison du remboursement */}
         <Grid size={{ xs: 12 }}>
-          <FormSelect
-            control={form.control}
-            name="refund_reason"
-            label="Raison du remboursement"
-          >
-            <MenuItem value="">
-              <em>Sélectionner une raison</em>
-            </MenuItem>
-            {REFUND_REASONS.map((reason) => (
-              <MenuItem key={reason.value} value={reason.value}>
-                {reason.label}
-              </MenuItem>
-            ))}
-          </FormSelect>
+          <TransactionInfoCard transaction={selectedTransaction} />
         </Grid>
 
-        {/* Mode de remboursement */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormSelect
-            control={form.control}
-            name="refund_method"
-            label="Mode de remboursement"
-          >
-            <MenuItem value="">
-              <em>Sélectionner un mode</em>
-            </MenuItem>
-            {REFUND_PAYMENT_METHODS.map((method) => (
-              <MenuItem key={method.value} value={method.value}>
-                {method.label}
-              </MenuItem>
-            ))}
-          </FormSelect>
-        </Grid>
-        {giftCardCode === "giftcard" && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput control={form.control} name="gift_card_code" label="Code du GiftCard" />
-          </Grid>
-        )}
-        {/* Notes */}
         <Grid size={{ xs: 12 }}>
-          <FormInput
-            control={form.control}
-            name="notes"
-            label="Notes (optionnel)"
-            extra={{
-              placeholder: "Informations supplémentaires...",
+          <CartTable
+            fields={fields}
+            update={(index, value) =>
+              update(index, value as (typeof fields)[number])
+            }
+            remove={noop}
+            allowRemove={false}
+            quantityEditable={false}
+            showRefundColumn
+            size="small"
+            canDecreaseRefund={(index) =>
+              form.getFieldState(`cart.${index}`).isDirty
+            }
+            canIncreaseRefund={(_index, item) =>
+              (item.refundQuantity ?? 0) < item.quantity
+            }
+            onRefundQuantityChange={(index, refundQuantity) => {
+              const item = fields[index];
+              form.setValue(`cart.${index}.refundQuantity`, refundQuantity, {
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+              update(index, { ...item, refundQuantity });
             }}
           />
         </Grid>
 
-        {/* Résumé du remboursement */}
         <Grid size={{ xs: 12 }}>
-          <Card variant="outlined" sx={{ p: 2, bgcolor: "#e3f2fd" }}>
+          <Card variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              Détails du remboursement
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <FormSelect
+                  control={form.control}
+                  name="refund_reason"
+                  label="Raison du remboursement"
+                >
+                  <MenuItem value="">
+                    <em>Sélectionner une raison</em>
+                  </MenuItem>
+                  {REFUND_REASONS.map((reason) => (
+                    <MenuItem key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </MenuItem>
+                  ))}
+                </FormSelect>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormSelect
+                  control={form.control}
+                  name="refund_method"
+                  label="Mode de remboursement"
+                >
+                  <MenuItem value="">
+                    <em>Sélectionner un mode</em>
+                  </MenuItem>
+                  {REFUND_PAYMENT_METHODS.map((method) => (
+                    <MenuItem key={method.value} value={method.value}>
+                      {method.label}
+                    </MenuItem>
+                  ))}
+                </FormSelect>
+              </Grid>
+
+              {giftCardCode === "giftcard" && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FormInput
+                    control={form.control}
+                    name="gift_card_code"
+                    label="Code du GiftCard"
+                  />
+                </Grid>
+              )}
+
+              <Grid size={{ xs: 12 }}>
+                <FormInput
+                  control={form.control}
+                  name="notes"
+                  label="Notes (optionnel)"
+                  extra={{
+                    placeholder: "Informations supplémentaires...",
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card variant="outlined" sx={{ p: 2, bgcolor: "#f8f9fa" }}>
             <Typography variant="subtitle2" gutterBottom>
               Résumé du remboursement
             </Typography>
             <Typography variant="body2">
               Montant à rembourser:{" "}
               <strong>
-                {sumRefundPrice(cart, selectedTransaction, cartItems ?? [] as ItemToRefund[]).toFixed(2)}€
+                {formatCurrency(
+                  sumRefundPrice(
+                    cart,
+                    selectedTransaction,
+                    cartItems ?? ([] as ItemToRefund[]),
+                  ),
+                )}
+           
               </strong>
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Mode de remboursement:{" "}
               <strong>
                 {giftCardCode
-                  ? getPaymentMethodLabel(giftCardCode as Schema["refund_method"])
+                  ? getPaymentMethodLabel(
+                      giftCardCode as Schema["refund_method"],
+                    )
                   : "—"}
               </strong>
             </Typography>

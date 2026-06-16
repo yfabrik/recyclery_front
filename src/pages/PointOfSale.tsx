@@ -1,4 +1,4 @@
-import { Container, Dialog, DialogActions, DialogContent, DialogTitle, Button, Grid } from "@mui/material";
+import { Box, Container, Dialog, DialogActions, DialogContent, DialogTitle, Button, Grid } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider } from "react-hook-form";
@@ -139,7 +139,12 @@ const PointOfSale = () => {
                 />
                 <CartTable
                   fields={pos.cartFields}
-                  update={pos.updateCartItem}
+                  update={(index, value) =>
+                    pos.updateCartItem(
+                      index,
+                      value as Parameters<typeof pos.updateCartItem>[1],
+                    )
+                  }
                   remove={pos.removeCartItem}
                 />
               </Grid>
@@ -151,14 +156,16 @@ const PointOfSale = () => {
                   globalPromotionDiscount={pos.globalPromotionDiscount}
                   paymentBalance={pos.paymentBalance}
                 />
-                <PaymentPanel
-                  paymentFields={pos.paymentFields}
-                  appendPayment={pos.appendPayment}
-                  removePayment={pos.removePayment}
-                  giftCardScanInput={pos.giftCardScanInput}
-                  setGiftCardScanInput={pos.setGiftCardScanInput}
-                  onScanGiftCard={pos.handleScanGiftCard}
-                />
+                <Box sx={{ mt: 2 }}>
+                  <PaymentPanel
+                    paymentFields={pos.paymentFields}
+                    appendPayment={pos.appendPayment}
+                    removePayment={pos.removePayment}
+                    giftCardScanInput={pos.giftCardScanInput}
+                    setGiftCardScanInput={pos.setGiftCardScanInput}
+                    onScanGiftCard={pos.handleScanGiftCard}
+                  />
+                </Box>
               </Grid>
             </Grid>
           </form>

@@ -57,5 +57,6 @@ export const schema = z.object({
 
 export type Schema = z.infer<typeof schema>;
 export type CartFormValues = z.input<typeof schema>;
+export type CartItemInput = z.input<typeof itemSchema>;
 export type CartItem = z.infer<typeof itemSchema>
 // export type CartItem = Schema["cart"][number];

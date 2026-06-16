@@ -1,7 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import type { Schema as ManualItemSchema } from "../components/forms/ManualItemForm";
 import type {
@@ -10,19 +8,11 @@ import type {
   LabeledItemModel,
   UserModel,
 } from "../interfaces/Models";
-import { getGiftCardByCode } from "../services/api/giftCards";
-import { isGiftCardUnusable } from "../constants/giftCardStatuses";
 import {
   createSell,
   type CreateTransactionBody,
 } from "../services/api/transactions";
 import {
-  formatCurrency,
-  getCartTotal,
-  getCartTotalWithGlobalPromotion,
-  getGlobalPromotionDiscount,
-  getPaymentBalance,
-  roundCurrency,
   sumPromoCategorie,
 } from "../services/cartService";
 import {
@@ -31,11 +21,12 @@ import {
 } from "../utils/apiToastMessage";
 import type { ReceiptSale } from "../utils/transactionReceipt";
 import {
-  schema,
   type CartFormValues,
   type CartItem,
   type Schema as CartSchema,
 } from "../components/forms/cartSchema";
+import { useCheckoutFormCore } from "./useCheckoutFormCore";
+import { buildTransactionBody } from "../utils/transactionBody";
 
 const defaultFormValues: CartFormValues = {
   cart: [],
@@ -58,41 +49,6 @@ interface UsePointOfSaleOptions {
   onManualItemAdded?: () => void;
 }
 
-const recalculatePaymentSplits = (
-  currentSplits: CartSchema["payment_splits"],
-  total: number,
-): CartSchema["payment_splits"] => {
-  let remainingForGiftCards = total;
-  return currentSplits.map((split) => {
-    if (split.method !== "giftcard") {
-      return split;
-    }
-
-    const giftUsage = Math.max(
-      Math.min(split.gift_card_current_value ?? 0, remainingForGiftCards),
-      0,
-    );
-    remainingForGiftCards = Math.max(remainingForGiftCards - giftUsage, 0);
-    return { ...split, amount: giftUsage };
-  });
-};
-
-const arePaymentSplitsEqual = (
-  left: CartSchema["payment_splits"],
-  right: CartSchema["payment_splits"],
-) => {
-  if (left.length !== right.length) return false;
-  return left.every((split, index) => {
-    const compared = right[index];
-    return (
-      split.method === compared.method &&
-      (Number(split.amount) || 0) === (Number(compared.amount) || 0) &&
-      split.gift_card_barcode === compared.gift_card_barcode &&
-      split.gift_card_id === compared.gift_card_id
-    );
-  });
-};
-
 export const usePointOfSale = ({
   categories,
   activeSession,
@@ -102,68 +58,29 @@ export const usePointOfSale = ({
 }: UsePointOfSaleOptions) => {
   const queryClient = useQueryClient();
   const [tabValue, setTabValue] = useState(0);
-  const [giftCardScanInput, setGiftCardScanInput] = useState("");
   const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
-
-  const form = useForm<CartFormValues, unknown, CartSchema>({
-    defaultValues: defaultFormValues,
-    resolver: zodResolver(schema),
-  });
-
   const {
-    fields: cartFields,
-    append,
-    update,
-    remove: removeCartItem,
-  } = useFieldArray({
-    control: form.control,
-    name: "cart",
-  });
-  const {
-    fields: paymentFields,
-    append: appendPayment,
-    remove: removePayment,
-  } = useFieldArray({
-    control: form.control,
-    name: "payment_splits",
-  });
-
-  const cart = useWatch({
-    control: form.control,
-    name: "cart",
-    defaultValue: [],
-  }) as CartSchema["cart"];
-  const paymentSplits = useWatch({
-    control: form.control,
-    name: "payment_splits",
-    defaultValue: [{ method: "cash", amount: 0 }],
-  }) as CartSchema["payment_splits"];
-  const globalPromotion = useWatch({
-    control: form.control,
-    name: "global_promotion",
-    defaultValue: { type: "percent", value: 0 },
-  }) as CartSchema["global_promotion"];
-
-  const cartSubtotal = getCartTotal(cart);
-  const globalPromotionDiscount = getGlobalPromotionDiscount(
+    form,
+    cartFields,
+    appendCartItem: append,
+    updateCartItem: update,
+    removeCartItem,
+    paymentFields,
+    appendPayment,
+    removePayment,
+    cart,
     cartSubtotal,
-    globalPromotion,
-  );
-  const cartTotal = getCartTotalWithGlobalPromotion(cart, globalPromotion);
-  const totalPaid = paymentSplits.reduce(
-    (sum, split) => sum + (Number(split.amount) || 0),
-    0,
-  );
-  const paymentBalance = getPaymentBalance(totalPaid, cartTotal);
-
-  useEffect(() => {
-    const nextSplits = recalculatePaymentSplits(paymentSplits, cartTotal);
-    if (arePaymentSplitsEqual(paymentSplits, nextSplits)) return;
-    form.setValue("payment_splits", nextSplits, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  }, [cartTotal, form, paymentSplits]);
+    globalPromotionDiscount,
+    cartTotal,
+    totalPaid,
+    paymentBalance,
+    giftCardScanInput,
+    setGiftCardScanInput,
+    handleScanGiftCard,
+  } = useCheckoutFormCore({
+    defaultValues: defaultFormValues,
+    autoRecalculateGiftCardSplits: true,
+  });
 
   const resetPaymentFields = () => ({
     global_promotion: defaultFormValues.global_promotion,
@@ -321,61 +238,6 @@ export const usePointOfSale = ({
     toast.success(`${manualItem.name} ajouté au panier`);
   };
 
-  const handleScanGiftCard = async () => {
-    const barcode = giftCardScanInput.trim();
-    if (!barcode) {
-      toast.error("Veuillez saisir un code-barres d'avoir");
-      return;
-    }
-
-    try {
-      const response = await getGiftCardByCode(barcode);
-      const payload = response.data;
-      if (!payload.success) {
-        toast.error(payload.message || "Avoir non trouvé");
-        return;
-      }
-      const giftCard = payload.data;
-
-      if (isGiftCardUnusable(giftCard.status)) {
-        toast.error("Cet avoir n'est pas utilisable");
-        return;
-      }
-
-      const amount = Number(giftCard.current_value ?? 0);
-
-      if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error("Aucun solde disponible sur cet avoir");
-        return;
-      }
-
-      const existingIndex = paymentSplits.findIndex(
-        (split) => split.gift_card_barcode === barcode,
-      );
-      if (existingIndex !== -1) {
-        toast.info("Cet avoir est déjà ajouté");
-        return;
-      }
-
-      appendPayment({
-        method: "giftcard",
-        amount,
-        gift_card_barcode: giftCard.code ?? barcode,
-        gift_card_id: giftCard.id,
-        gift_card_current_value: giftCard.current_value,
-      });
-      setGiftCardScanInput("");
-      toast.success(`Avoir ajouté: ${formatCurrency(amount)}`);
-    } catch (error) {
-      const requestError = error as { response?: { status?: number } };
-      if (requestError.response?.status === 404) {
-        toast.error("Avoir non trouvé");
-        return;
-      }
-      toast.error(getApiErrorMessage(error, "Erreur lors du scan de l'avoir"));
-    }
-  };
-
   const handleSell = useMutation({
     mutationFn: (data: CreateTransactionBody) => createSell(data),
     onSuccess: (data) => {
@@ -414,38 +276,11 @@ export const usePointOfSale = ({
   });
 
   const handleValidateCart = (data: CartSchema) => {
-    const subtotal = getCartTotal(data.cart);
-    const total = getCartTotalWithGlobalPromotion(
-      data.cart,
-      data.global_promotion,
-    );
-    const paymentAmount = data.payment_splits.reduce(
-      (sum, split) => sum + (Number(split.amount) || 0),
-      0,
-    );
-    const nonZeroSplits = data.payment_splits.filter(
-      (split) => Number(split.amount) > 0,
-    );
-
     if (activeSession) {
-      const transactionData = {
-        cash_session_id: activeSession.id,
-        total_amount: roundCurrency(total),
-        total_amount_before_promotion: roundCurrency(subtotal),
-        global_promotion: Number(data.global_promotion.value) || 0,
-        global_promotion_type: data.global_promotion.type,
-        payment_amount: roundCurrency(paymentAmount),
-        customer_postal_code: data.customer_postal_code,
-        payments: nonZeroSplits.map((split) => ({
-          method: split.method,
-          amount: Number(split.amount) || 0,
-          gift_card_code: split.gift_card_barcode,
-        })),
-        items: data.cart.map((item) => ({
-          ...item,
-          total_price: item.quantity * item.price,
-        })),
-      } satisfies CreateTransactionBody;
+      const transactionData = buildTransactionBody(data, activeSession.id, {
+        normalizePostalCodeToNull: false,
+        includeTotalPrice: true,
+      }) as CreateTransactionBody;
       handleSell.mutate(transactionData);
     }
   };
