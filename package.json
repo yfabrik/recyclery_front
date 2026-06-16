@@ -19,7 +19,7 @@
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.3.6",
-    "@mui/lab": "^7.0.1-beta.22",
+    "@mui/lab": "^7.0.1-beta.25",
     "@mui/material": "^7.3.6",
     "@mui/x-charts": "^8.24.0",
     "@mui/x-date-pickers": "^8.21.0",
