@@ -1,17 +1,14 @@
 import {
-  AdminPanelSettings,
   Assignment,
   BarChart,
   Delete,
   Edit,
   Groups,
   Lock,
-  ManageAccounts,
   Person,
   PersonAdd,
   Phone,
   VpnKey,
-  Work
 } from "@mui/icons-material";
 import {
   Alert,
@@ -34,21 +31,17 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../utils/apiToastMessage";
-import { type UserModel } from "../../interfaces/Models";
-import {
   getUserRoleColor,
   getUserRoleIcon,
   getUserRoleLabel,
 } from "../../constants/userRoles";
+import { type UserModel } from "../../interfaces/Models";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
@@ -58,7 +51,14 @@ import {
   updateUser,
   updateUserPassword,
 } from "../../services/api/users";
-import { PasswordChangeForm, type Schema as PasswordSchema } from "../forms/PasswordChangeForm";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
+import {
+  PasswordChangeForm,
+  type Schema as PasswordSchema,
+} from "../forms/PasswordChangeForm";
 import { UserForm, type Schema } from "../forms/UserForm";
 import { StatCardNoIcon } from "../StatCard";
 
@@ -67,70 +67,93 @@ export const UsersTab = () => {
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<UserModel | null>(null);
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const users = useQuery({
     queryKey: ["users", { include: "managedStores" }],
-    queryFn: () => fUsers({ include: "managedStores" }).then(response => response.data.users)
-  })
-  if (users.isError) toast.error(getApiErrorMessage(users.error, "Erreur lors du chargement des utilisateurs"));
+    queryFn: () =>
+      fUsers({ include: "managedStores" }).then(
+        (response) => response.data.users,
+      ),
+  });
+  if (users.isError)
+    toast.error(
+      getApiErrorMessage(
+        users.error,
+        "Erreur lors du chargement des utilisateurs",
+      ),
+    );
 
   const userStats = useQuery({
     queryKey: ["userStats"],
-    queryFn: () => getUsersStats().then(response => response.data.stats),
+    queryFn: () => getUsersStats().then((response) => response.data.stats),
     placeholderData: {
       totalUsers: 0,
       usersByRole: [],
       activeEmployees: 0,
       recentLogins: 0,
-    }
-  })
+    },
+  });
 
   const editUser = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateUser(id, data),
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
+      updateUser(id, data),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
-      save()
-      toast.success(getApiSuccessMessage(data, "Utilisateur mis à jour avec succès"))
-    }
-  })
+      save();
+      toast.success(
+        getApiSuccessMessage(data, "Utilisateur mis à jour avec succès"),
+      );
+    },
+  });
   const addUser = useMutation({
     mutationFn: (data: Schema) => createUser(data),
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
-      save()
+      save();
       toast.success(getApiSuccessMessage(data, "Utilisateur créé avec succès"));
-    }
-  })
+    },
+  });
   const save = () => {
     handleCloseUserDialog();
-    queryClient.invalidateQueries({ queryKey: ["users"] })
-    queryClient.invalidateQueries({ queryKey: ["userStats"] })
-  }
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+    queryClient.invalidateQueries({ queryKey: ["userStats"] });
+  };
 
   const removeUser = useMutation({
     mutationFn: (data: number) => deleteUser(data),
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["userStats"] })
-      toast.success(getApiSuccessMessage(data, "Utilisateur supprimé avec succès"));
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      toast.success(
+        getApiSuccessMessage(data, "Utilisateur supprimé avec succès"),
+      );
+    },
+  });
 
   const changePassword = useMutation({
-    mutationFn: (data: { id: number, data: PasswordSchema }) => updateUserPassword(data.id, data.data),
+    mutationFn: (data: { id: number; data: PasswordSchema }) =>
+      updateUserPassword(data.id, data.data),
     onSuccess: (data) => {
-      toast.success(getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"));
+      toast.success(
+        getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"),
+      );
       handleClosePasswordDialog();
     },
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors du changement de mot de passe"))
-  })
+    onError: (error) =>
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors du changement de mot de passe"),
+      ),
+  });
   const stores = useQuery({
     queryKey: ["stores", "active"],
-    queryFn: () => fStores({ active: true }).then(response => response.data.stores)
-  })
-
+    queryFn: () =>
+      fStores({ active: true }).then((response) => response.data.stores),
+  });
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
     setEditingUser(user);
@@ -143,8 +166,8 @@ export const UsersTab = () => {
   };
 
   const handleSaveUser = async (data: Schema) => {
-    if (editingUser?.id) editUser.mutate({ id: editingUser.id, data })
-    else addUser.mutate(data)
+    if (editingUser?.id) editUser.mutate({ id: editingUser.id, data });
+    else addUser.mutate(data);
   };
 
   const handleOpenPasswordDialog = (user: UserModel) => {
@@ -158,12 +181,12 @@ export const UsersTab = () => {
   };
 
   const handleChangePassword = async (data: PasswordSchema) => {
-    if (!editingUser?.id) return
-    changePassword.mutate({ id: editingUser?.id, data })
+    if (!editingUser?.id) return;
+    changePassword.mutate({ id: editingUser?.id, data });
   };
 
   const handleDeleteUser = async (user: UserModel) => {
-    removeUser.mutate(user.id)
+    removeUser.mutate(user.id);
   };
 
   const formatLastLogin = (lastLogin: string) => {
@@ -202,7 +225,11 @@ export const UsersTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        >
           <Groups />
           Gestion des Utilisateurs
         </Typography>
@@ -243,36 +270,45 @@ export const UsersTab = () => {
       </Grid>
 
       {/* Répartition par rôles */}
-      {userStats.data?.usersByRole && userStats.data?.usersByRole.length > 0 && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <BarChart fontSize="small" />
-              Répartition par Rôles
-            </Typography>
-            <Grid container spacing={2}>
-              {userStats.data.usersByRole.map((rolestat) => (
-                <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
-                  <Box sx={{ textAlign: "center" }}>
-                    <Chip
-                      icon={getUserRoleIcon(rolestat.role)}
-                      label={getUserRoleLabel(rolestat.role)}
-                      color={getUserRoleColor(rolestat.role)}
-                      sx={{ mb: 1 }}
-                    />
-                    <Typography variant="h6">{rolestat.count}</Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
+      {userStats.data?.usersByRole &&
+        userStats.data?.usersByRole.length > 0 && (
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <BarChart fontSize="small" />
+                Répartition par Rôles
+              </Typography>
+              <Grid container spacing={2}>
+                {userStats.data.usersByRole.map((rolestat) => (
+                  <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
+                    <Box sx={{ textAlign: "center" }}>
+                      <Chip
+                        icon={getUserRoleIcon(rolestat.role)}
+                        label={getUserRoleLabel(rolestat.role)}
+                        color={getUserRoleColor(rolestat.role)}
+                        sx={{ mb: 1 }}
+                      />
+                      <Typography variant="h6">{rolestat.count}</Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Liste des utilisateurs */}
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
             <Assignment fontSize="small" />
             Liste des Utilisateurs ({users.data?.length || 0})
           </Typography>
@@ -299,21 +335,19 @@ export const UsersTab = () => {
                       <TableCell>
                         <Box>
                           <Typography variant="body2" fontWeight="bold">
-                            {user.first_name && user.last_name
-                              ? `${user.first_name} ${user.last_name}`
-                              : user.username}
+                            {user.username}
                           </Typography>
-                          {user.first_name && user.last_name && (
-                            <Typography variant="caption" color="textSecondary">
-                              @{user.username}
-                            </Typography>
-                          )}
+
                           {user.phone && (
                             <Typography
                               variant="caption"
                               display="block"
                               color="textSecondary"
-                              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
                             >
                               <Phone sx={{ fontSize: 14 }} />
                               {user.phone}
@@ -330,7 +364,8 @@ export const UsersTab = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {user.managedStores?.map(s => s.name).toString() || "Non assigné"}
+                        {user.managedStores?.map((s) => s.name).toString() ||
+                          "Non assigné"}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
@@ -364,9 +399,7 @@ export const UsersTab = () => {
                               <VpnKey />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip
-                            title="supprimer utilisateur"
-                          >
+                          <Tooltip title="supprimer utilisateur">
                             <IconButton
                               size="small"
                               color="error"
@@ -410,7 +443,10 @@ export const UsersTab = () => {
           <UserForm
             formId="UserForm"
             stores={stores.data || []}
-            defaultValues={{ ...editingUser, managedStores: editingUser?.managedStores?.map(s => s.id) }}
+            defaultValues={{
+              ...editingUser,
+              managedStores: editingUser?.managedStores?.map((s) => s.id),
+            }}
             onSubmit={handleSaveUser}
           />
         </DialogContent>
@@ -421,12 +457,6 @@ export const UsersTab = () => {
             form="UserForm"
             variant="contained"
             loading={editUser.isPending || addUser.isPending}
-          // disabled={
-          //   !userForm.username ||
-          //   !userForm.email ||
-          //   !userForm.role ||
-          //   (!editingUser && !userForm.password)
-          // }
           >
             {editingUser ? "Mettre à jour" : "Créer"}
           </Button>
@@ -445,7 +475,6 @@ export const UsersTab = () => {
           Changer le mot de passe
         </DialogTitle>
         <DialogContent>
-
           {editingUser && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Changement de mot de passe pour :{" "}
@@ -453,8 +482,10 @@ export const UsersTab = () => {
             </Alert>
           )}
 
-          <PasswordChangeForm formId="passwordChange" onSubmit={handleChangePassword} />
-
+          <PasswordChangeForm
+            formId="passwordChange"
+            onSubmit={handleChangePassword}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog}>Annuler</Button>
@@ -464,11 +495,6 @@ export const UsersTab = () => {
             type="submit"
             form="passwordChange"
             loading={changePassword.isPending}
-          // disabled={
-          //   !passwordForm.currentPassword ||
-          //   !passwordForm.newPassword ||
-          //   !passwordForm.confirmPassword
-          // }
           >
             Changer le mot de passe
           </Button>

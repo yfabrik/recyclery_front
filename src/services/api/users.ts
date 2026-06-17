@@ -19,7 +19,7 @@ interface UserStats {
   activeEmployees: number
 }
 
-export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ users: UserModel[] }>> =>
+export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ users: UserModel[] ,success:true}>> =>
   axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
 // export const getEmployees = () => axiosInstance.get("/api/users/employees")
 
