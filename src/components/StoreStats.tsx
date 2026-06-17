@@ -3,8 +3,8 @@ import {
   History,
   Store,
   TrendingDown,
-  TrendingUp
-} from '@mui/icons-material';
+  TrendingUp,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -18,31 +18,35 @@ import {
   Grid,
   Tooltip,
   Typography,
-  type DialogProps
-} from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { getStoreHistoryStats, type StoreStat } from '../services/api/dashboard';
-import { formatCurrency } from '../services/cartService';
-import { formatDate } from '../services/dateService';
-import { Loading } from './Loading';
+  type DialogProps,
+} from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import {
+  getStoreHistoryStats,
+  type StoreStat,
+} from "../services/api/dashboard";
+import { formatCurrency } from "../services/cartService";
+import { formatDate } from "../services/dateService";
+import { Loading } from "./Loading";
 
 interface StoreStatsProps {
-  stores: StoreStat[]
+  stores: StoreStat[];
   // loading: boolean
 }
 
 const StoreStats = ({ stores }: StoreStatsProps) => {
-  const [selectedStore, setSelectedStore] = useState<StoreStat | null>(null)
-  const [openHistoryStore, setOpenHistoryStore] = useState(false)
-
-
-
+  const [selectedStore, setSelectedStore] = useState<StoreStat | null>(null);
+  const [openHistoryStore, setOpenHistoryStore] = useState(false);
 
   if (!stores || stores.length === 0) {
     return (
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        >
           <Store />
           Statistiques du mois, par Magasin
         </Typography>
@@ -58,16 +62,20 @@ const StoreStats = ({ stores }: StoreStatsProps) => {
   }
 
   const handleOpenHistoryDialog = (store: StoreStat) => {
-    setSelectedStore(store)
-    setOpenHistoryStore(true)
-  }
+    setSelectedStore(store);
+    setOpenHistoryStore(true);
+  };
   const handleCloseHistoryDialog = () => {
-    setSelectedStore(null)
-    setOpenHistoryStore(false)
-  }
+    setSelectedStore(null);
+    setOpenHistoryStore(false);
+  };
   return (
     <Box sx={{ mb: 3 }}>
-      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
         <Store />
         Statistiques du mois, par Magasin
       </Typography>
@@ -75,14 +83,20 @@ const StoreStats = ({ stores }: StoreStatsProps) => {
       <Grid container spacing={3}>
         {stores.map((store) => (
           <Grid size={{ xs: 12, md: 6, lg: 4 }} key={store.id}>
-            <StoreMonthlyStats store={store} handleOpenDialog={handleOpenHistoryDialog} />
+            <StoreMonthlyStats
+              store={store}
+              handleOpenDialog={handleOpenHistoryDialog}
+            />
           </Grid>
         ))}
       </Grid>
-      {selectedStore &&
-        <StoreHistorySales openDialog={openHistoryStore} store={selectedStore} handleCloseDialog={handleCloseHistoryDialog} />
-      }
-
+      {selectedStore && (
+        <StoreHistorySales
+          openDialog={openHistoryStore}
+          store={selectedStore}
+          handleCloseDialog={handleCloseHistoryDialog}
+        />
+      )}
     </Box>
   );
 };
@@ -90,19 +104,21 @@ const StoreStats = ({ stores }: StoreStatsProps) => {
 export default StoreStats;
 
 interface StoreMonthlyStatsProps {
-  store: StoreStat
-  handleOpenDialog?: (store: StoreStat) => void
+  store: StoreStat;
+  handleOpenDialog?: (store: StoreStat) => void;
 }
-const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) => {
-
+const StoreMonthlyStats = ({
+  store,
+  handleOpenDialog,
+}: StoreMonthlyStatsProps) => {
   const formatPercentage = (value: number) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+    return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
   };
 
   const getGrowthColor = (value: number) => {
-    if (value > 0) return 'success';
-    if (value < 0) return 'error';
-    return 'default';
+    if (value > 0) return "success";
+    if (value < 0) return "error";
+    return "default";
   };
 
   const getGrowthIcon = (value: number) => {
@@ -111,11 +127,11 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
     return undefined;
   };
   return (
-    <Card sx={{ height: '100%', position: 'relative' }}>
+    <Card sx={{ height: "100%", position: "relative" }}>
       <CardContent>
         {/* En-tête du magasin */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
             <Store />
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
@@ -131,7 +147,6 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
             color={getGrowthColor(store.stats.growth.revenue)}
             size="small"
             icon={getGrowthIcon(store.stats.growth.revenue)}
-
           />
         </Box>
 
@@ -141,7 +156,7 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
         <Grid container spacing={2}>
           {/* Chiffre d'affaires */}
           <Grid size={{ xs: 6 }}>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography variant="h5" color="success.main" fontWeight="bold">
                 {formatCurrency(store.stats.currentMonth.revenue)}
               </Typography>
@@ -153,7 +168,7 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
 
           {/* Transactions */}
           <Grid size={{ xs: 6 }}>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography variant="h5" color="primary.main" fontWeight="bold">
                 {store.stats.currentMonth.transactions}
               </Typography>
@@ -165,7 +180,7 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
 
           {/* Panier moyen */}
           <Grid size={{ xs: 6 }}>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography variant="h6" color="info.main" fontWeight="bold">
                 {formatCurrency(store.stats.currentMonth.averageTransaction)}
               </Typography>
@@ -177,7 +192,7 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
 
           {/* Articles disponibles */}
           <Grid size={{ xs: 6 }}>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography variant="h6" color="warning.main" fontWeight="bold">
                 {store.stats.items.sold}
               </Typography>
@@ -191,15 +206,23 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
         <Divider sx={{ my: 2 }} />
 
         {/* Détails supplémentaires */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Assessment fontSize="small" color="action" />
             <Typography variant="body2" color="textSecondary">
               {store.stats.currentMonth.sessions} sessions
             </Typography>
           </Box>
 
-          <Tooltip title={`CA mois dernier: ${formatCurrency(store.stats.lastMonth.revenue)}`}>
+          <Tooltip
+            title={`CA mois dernier: ${formatCurrency(store.stats.lastMonth.revenue)}`}
+          >
             <Box
               component={handleOpenDialog ? "button" : "span"}
               type={handleOpenDialog ? "button" : undefined}
@@ -227,37 +250,37 @@ const StoreMonthlyStats = ({ store, handleOpenDialog }: StoreMonthlyStatsProps) 
             </Box>
           </Tooltip>
         </Box>
-
       </CardContent>
     </Card>
-  )
-}
-
-
+  );
+};
 
 interface StoreHistorySalesProps {
-  openDialog: boolean
-  store: StoreStat
-  handleCloseDialog: DialogProps["onClose"]
+  openDialog: boolean;
+  store: StoreStat;
+  handleCloseDialog: DialogProps["onClose"];
 }
-const StoreHistorySales = ({ openDialog, store, handleCloseDialog }: StoreHistorySalesProps) => {
-
+const StoreHistorySales = ({
+  openDialog,
+  store,
+  handleCloseDialog,
+}: StoreHistorySalesProps) => {
   const history = useQuery({
     queryKey: ["storeHistory", store.id],
-    queryFn: () => getStoreHistoryStats(store.id).then(response => response.data)
-  })
+    queryFn: () =>
+      getStoreHistoryStats(store.id).then((response) => response.data),
+  });
   return (
-    <Loading isLoading={history.isLoading}>
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="xl"
-        fullWidth
-      >
-        <DialogTitle>
-          Historique du magasin : {store.name}
-        </DialogTitle>
-        <DialogContent sx={{ overflowX: "auto", pb: 2 }}>
+    <Dialog
+      open={openDialog}
+      onClose={handleCloseDialog}
+      maxWidth="xl"
+      fullWidth
+    >
+      <DialogTitle>Historique du magasin : {store.name}</DialogTitle>
+
+      <DialogContent sx={{ overflowX: "auto", pb: 2 }}>
+        <Loading isLoading={history.isLoading}>
           {history.data && (
             <Box
               sx={{
@@ -305,9 +328,8 @@ const StoreHistorySales = ({ openDialog, store, handleCloseDialog }: StoreHistor
               })}
             </Box>
           )}
-        </DialogContent>
-      </Dialog>
-    </Loading>
-
-  )
-}
+        </Loading>
+      </DialogContent>
+    </Dialog>
+  );
+};
