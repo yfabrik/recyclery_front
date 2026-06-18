@@ -30,14 +30,12 @@ import {
   Select,
   Stack,
   TextField,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
+import { TASK_CATEGORIES } from "../../../constants/taskCategories";
+import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
 import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import {
   addEmployeeToTask,
@@ -49,17 +47,18 @@ import {
   updateTask,
 } from "../../../services/api/tasks";
 import { fetchUsers } from "../../../services/api/users";
-import { TASK_CATEGORIES } from "../../../constants/taskCategories";
-import { RECURRENCE_PATTERNS } from "../../../constants/recurrencePatterns";
-import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import { TaskForm } from "../../forms/TaskForm";
 
 /**
  * @deprecated
- * @returns 
+ * @returns
  */
 const TaskManagement = () => {
-  const [tasks, setTasks] = useState<TaskModel[]>([]);
+  const [tasks, setTasks] = useState<Array<TaskModel&{assigned_employees?:EmployeeModel[]}>>([]);
   const [employees, setEmployees] = useState<EmployeeModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -180,13 +179,11 @@ const TaskManagement = () => {
       fetchTasks();
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
-      toast.error(
-        getApiErrorMessage(error, "Erreur lors de la sauvegarde"),
-      );
+      toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"));
     }
   };
 
-  const handleDelete = async (taskId) => {
+  const handleDelete = async (taskId: number) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette tâche ?")) {
       return;
     }
@@ -204,7 +201,7 @@ const TaskManagement = () => {
   };
 
   // Fonction pour ouvrir le dialogue d'assignation des employés
-  const handleAssignEmployees = async (task) => {
+  const handleAssignEmployees = async (task: TaskModel) => {
     setSelectedTask(task);
     try {
       // Récupérer les employés assignés à cette tâche
@@ -236,6 +233,7 @@ const TaskManagement = () => {
   // Fonction pour assigner un employé à une tâche
   const handleAssignEmployee = async (employeeId: number) => {
     try {
+      if (!selectedTask) throw new Error("no selected task");
       const response = await addEmployeeToTask(selectedTask.id, employeeId);
 
       // Mettre à jour la liste des employés assignés
@@ -256,6 +254,7 @@ const TaskManagement = () => {
   // Fonction pour retirer un employé d'une tâche
   const handleUnassignEmployee = async (employeeId: number) => {
     try {
+      if (!selectedTask) throw new Error("no selected task");
       const response = await removeEmployeeFromTask(
         selectedTask.id,
         employeeId,
@@ -273,15 +272,15 @@ const TaskManagement = () => {
     }
   };
 
-  const getCategoryInfo = (category) => {
+  const getCategoryInfo = (category:TaskModel["category"]) => {
     return categories.find((cat) => cat.value === category) || categories[0];
   };
 
-  const getPriorityInfo = (priority) => {
+  const getPriorityInfo = (priority:TaskModel["priority"]) => {
     return priorities.find((pri) => pri.value === priority) || priorities[1];
   };
 
-  const formatDuration = (minutes) => {
+  const formatDuration = (minutes:number) => {
     if (minutes < 60) {
       return `${minutes} min`;
     }
