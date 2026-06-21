@@ -12,12 +12,12 @@ import { alpha } from "@mui/material/styles";
 import type { TransactionModel } from "../interfaces/Models";
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
 import { getPaymentMethodColor } from "../constants/paymentMethods";
-import { toast } from "react-toastify";
 interface TransactionTableLineProps {
   transaction: TransactionModel;
   handleReprintReceipt: (id: number) => void;
   handleRefund?: (t: TransactionModel) => void;
   handleShowDetail: (t: TransactionModel) => void;
+  handleRemove?:(id: number) => void;
   currentCashSessionId?: number;
 }
 export const TransactionTableLine = ({
@@ -25,6 +25,7 @@ export const TransactionTableLine = ({
   handleReprintReceipt,
   handleRefund,
   handleShowDetail,
+  handleRemove,
   currentCashSessionId,
 }: TransactionTableLineProps) => {
   const isEditable =
@@ -132,7 +133,7 @@ export const TransactionTableLine = ({
                 <IconButton
                   size="small"
                   color="error"
-                  onClick={()=>toast.error("Cette fonctionnalité n'est pas encore disponible")}
+                  onClick={()=>handleRemove && handleRemove(transaction.id)}
                 >
                   <Delete />
                 </IconButton>

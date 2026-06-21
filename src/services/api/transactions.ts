@@ -286,3 +286,6 @@ export const updateTransaction = (
 
 export const getTransactionDetails = (id: number): Promise<AxiosResponse<{ success: true; transaction: TransactionDetailsModel }>> =>
   axiosInstance.get(`/api/sales-transactions/${id}`);
+
+export const deleteTransaction = (id: number): Promise<AxiosResponse<{ success: true; }>> =>
+  axiosInstance.delete(`/api/sales-transactions/${id}`);

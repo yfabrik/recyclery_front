@@ -11,6 +11,7 @@ import type { CashSession, TransactionModel } from "../../interfaces/Models";
 import { fetchCategories } from "../../services/api/categories";
 import {
   createRefund,
+  deleteTransaction,
   getTransactions,
   updateTransaction,
   type CreateRefundBody,
@@ -93,7 +94,7 @@ export const SalesHistory = ({
   ).filter(
     (transaction) =>
       transaction.CashSession?.cash_register_id ===
-        activeSession.cash_register_id ||
+      activeSession.cash_register_id ||
       transaction.cash_session_id === activeSession.id,
   );
 
@@ -133,11 +134,12 @@ export const SalesHistory = ({
   const editTransaction = useMutation({
     mutationFn: (v: { id: number; data: ReturnType<typeof buildUpdateTransactionBody> }) =>
       updateTransaction(v.id, v.data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success(
         getApiSuccessMessage(data, "Transaction mise à jour avec succès"),
       );
       queryClient.invalidateQueries({ queryKey: ["transactionsHistory"] });
+      queryClient.invalidateQueries({ queryKey: ["transactionDetails", variables.id] });
       handleCloseTransactionDetailsDialog();
     },
     onError: (error) => {
@@ -146,6 +148,28 @@ export const SalesHistory = ({
       );
     },
   });
+
+  const removeTransaction = useMutation({
+    mutationFn: (id: number) => deleteTransaction(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["transactionsHistory"] });
+      toast.success(
+        getApiSuccessMessage(data, "Transaction mise à jour avec succès"),
+      );
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la suppression de la transaction"),
+      );
+    },
+  })
+
+  const handleRemoveTransaction = (data: TransactionModel["id"]) => {
+   return toast.error("Cette fonctionnalité n'est pas encore disponible")
+    if (window.confirm("supprimer la transaction ?")) {
+      removeTransaction.mutate(data)
+    }
+  }
 
   const handleSubmitRefund = async (data: RefundSchema) => {
     if (!selectedTransaction) return;
@@ -227,6 +251,7 @@ export const SalesHistory = ({
           handleReprintReceipt={handleReprintReceipt}
           handleShowDetail={handleViewTransactionDetails}
           currentCashSessionId={activeSession.id}
+          handleRemove={handleRemoveTransaction}
         />
       </Paper>
 
