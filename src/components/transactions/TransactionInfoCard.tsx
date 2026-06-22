@@ -2,7 +2,12 @@ import { Description } from "@mui/icons-material";
 import { Card, Chip, Grid, Typography } from "@mui/material";
 import type { TransactionModel } from "../../interfaces/Models";
 import type { RefundTransaction } from "../../services/api/transactions";
-import { getTransactionStoreName } from "../../services/cartService";
+import { getPaymentMethodColor } from "../../constants/paymentMethods";
+import {
+  getTransactionTypeColor,
+  getTransactionTypeLabel,
+} from "../../constants/transactionTypes";
+import { getPaymentMethodLabel, getTransactionStoreName } from "../../services/cartService";
 
 interface TransactionInfoCardProps {
   transaction: TransactionModel;
@@ -60,6 +65,26 @@ export const TransactionInfoCard = ({
             <strong>
               {transaction.CashSession?.User?.username || "N/A"}
             </strong>
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 6, md: 3 }}>
+          <Typography variant="body2" color="textSecondary" component="div">
+            Type:{" "}
+            <Chip
+              label={getTransactionTypeLabel(transaction.transactionType)}
+              color={getTransactionTypeColor(transaction.transactionType)}
+              size="small"
+            />
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 6, md: 3 }}>
+          <Typography variant="body2" color="textSecondary" component="div">
+            Mode de paiement:{" "}
+            <Chip
+              label={getPaymentMethodLabel(transaction.payment_method)}
+              color={getPaymentMethodColor(transaction.payment_method)}
+              size="small"
+            />
           </Typography>
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>

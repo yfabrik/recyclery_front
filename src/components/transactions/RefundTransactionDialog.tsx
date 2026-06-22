@@ -6,12 +6,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Grid,
   Typography,
 } from "@mui/material";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import { useSelectedTransaction } from "../../hooks/useSelectedTransaction";
 import { Loading } from "../Loading";
 import { RefundForm, type Schema } from "../forms/RefundForm";
+import { RefundHistoryCard } from "./RefundHistoryCard";
+import { TransactionFinancialSummaryCard } from "./TransactionFinancialSummaryCard";
+import { TransactionInfoCard } from "./TransactionInfoCard";
 
 interface RefundTransactionDialogProps {
   open: boolean;
@@ -46,12 +50,25 @@ export const RefundTransactionDialog = ({
       <DialogContent>
         <Loading isLoading={details.isLoading}>
           {fullTransaction && (
-            <RefundForm
-              formId={formId}
-              onSubmit={onSubmit}
-              selectedTransaction={fullTransaction}
-              categories={categories}
-            />
+            <>
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid size={{ xs: 12 }}>
+                  <TransactionInfoCard transaction={fullTransaction} />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <RefundHistoryCard transaction={fullTransaction} />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TransactionFinancialSummaryCard transaction={fullTransaction} />
+                </Grid>
+              </Grid>
+              <RefundForm
+                formId={formId}
+                onSubmit={onSubmit}
+                selectedTransaction={fullTransaction}
+                categories={categories}
+              />
+            </>
           )}
         </Loading>
       </DialogContent>

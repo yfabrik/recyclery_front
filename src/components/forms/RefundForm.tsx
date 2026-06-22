@@ -17,7 +17,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
 import { type CartItem } from "../forms/cartSchema";
 import { CartTable } from "../pos/CartTable";
-import { TransactionInfoCard } from "../transactions/TransactionInfoCard";
 
 const sumRefundPrice = (
   cart: Schema["cart"],
@@ -139,10 +138,6 @@ export const RefundForm = ({
       onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}
     >
       <Grid container spacing={3} sx={{ mt: 1 }}>
-        <Grid size={{ xs: 12 }}>
-          <TransactionInfoCard transaction={selectedTransaction} />
-        </Grid>
-
         <Grid size={{ xs: 12 }}>
           <CartTable
             fields={fields}
