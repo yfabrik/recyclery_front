@@ -40,7 +40,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           build-args: VITE_BANNER_TEXT=${{ vars.VITE_BANNER_TEXT }}
