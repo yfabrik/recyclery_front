@@ -47,6 +47,7 @@ import {
 } from "../../../services/api/employee";
 import { fetchSkills, updateEmployeeSkills } from "../../../services/api/skills";
 import { fetchStores } from "../../../services/api/store";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import {
@@ -74,7 +75,7 @@ const EmployeeManagement = () => {
     queryKey: ["skills"],
     queryFn: () => fetchSkills().then(response => response.data.skills || [])
   });
-  if (skills.isError) toast.error(getApiErrorMessage(skills.error, "Erreur lors du chargement des compétences"));
+  useQueryErrorToast(skills.error, "Erreur lors du chargement des compétences");
 
 
   // const availabilityOptions = [
@@ -101,13 +102,13 @@ const EmployeeManagement = () => {
     queryKey: ["stores", { active: true }],
     queryFn: () => fetchStores({ active: true }).then(response => response.data.stores)
   })
-  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des stores"));
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des stores");
 
   const employees = useQuery({
     queryKey: ["employees"],
     queryFn: () => getEmployees().then(response => response.data.data)
   })
-  if (employees.isError) toast.error(getApiErrorMessage(employees.error, "Erreur lors du chargement des employés"));
+  useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
   const editEmployee = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEmployee(id, data),

@@ -15,12 +15,13 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import type { CategoryModel } from "../../../interfaces/Models";
 import {
   createCategory,
@@ -54,12 +55,7 @@ export const CategoriesTab = () => {
       ),
     queryKey: ["categorie", { only_category: true, include: "Category" }],
   });
-
-  useEffect(() => {
-    if (categories.error) {
-      toast.error(getApiErrorMessage(categories.error, "Erreur lors du chargement des catégories"));
-    }
-  }, [categories.error]);
+  useQueryErrorToast(categories.error, "Erreur lors du chargement des catégories");
 
   const editCategory = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Schema }) =>

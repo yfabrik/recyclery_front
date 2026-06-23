@@ -27,6 +27,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -67,24 +68,17 @@ const CustomTaskScheduleManagement = () => {
     queryKey: ["stores", { active: true }],
     queryFn: () => fetchStores({ active: true }).then((res) => res.data.stores),
   });
-  if (stores.isError)
-    toast.error(
-      getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"),
-    );
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const schedulesQuery = useQuery({
     queryKey: CUSTOM_SCHEDULES_KEY,
     queryFn: () =>
       getPlanning({ category: "custom" }).then((res) => res.data.schedules),
   });
-  if (schedulesQuery.isError) {
-    toast.error(
-      getApiErrorMessage(
-        schedulesQuery.error,
-        "Erreur lors du chargement des tâches personnalisées",
-      ),
-    );
-  }
+  useQueryErrorToast(
+    schedulesQuery.error,
+    "Erreur lors du chargement des tâches personnalisées",
+  );
 
   const addSchedule = useMutation({
     mutationFn: (data: Partial<ScheduleModel>) => createPlanning(data),

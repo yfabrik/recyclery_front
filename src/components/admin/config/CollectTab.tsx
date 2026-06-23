@@ -21,6 +21,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import type { ScheduleModel } from "../../../interfaces/Models";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import {
@@ -55,7 +56,7 @@ export const CollectTab = () => {
     queryFn: () =>
       getPlanning({ category: "collection" }).then((res) => res.data.schedules),
   });
-  if (error) toast.error(getApiErrorMessage(error, "Erreur lors de la recupération des collectes"))
+  useQueryErrorToast(error, "Erreur lors de la recupération des collectes");
 
 
   const collectionPoints = useQuery({

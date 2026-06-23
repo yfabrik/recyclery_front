@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -54,7 +55,7 @@ export const CreateCaisseDialog = ({
       fetchCaisses(store.id).then((response) => response.data.cash_registers),
     placeholderData: [],
   });
-  if (caisses.isError) toast.error(getApiErrorMessage(caisses.error, "Erreur lors du chargement des caisses"));
+  useQueryErrorToast(caisses.error, "Erreur lors du chargement des caisses");
 
   const [formMethods, setFormMethods] = useState<{
     reset: (values?: Schema) => void;

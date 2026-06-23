@@ -2,10 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import { getApiErrorMessage } from "../../utils/apiToastMessage";
 import z from "zod";
 import type { EmployeeModel, SkillModel } from "../../interfaces/Models";
+import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 import { detailEmployee } from "../../services/api/employee";
 import { fetchSkills } from "../../services/api/skills";
 import { FormCheckboxGroup, type BaseFormProps } from "./FormBase";
@@ -29,7 +28,7 @@ export const EmployeeSkillForm = ({
     queryFn: () =>
       fetchSkills().then((response) => response.data.skills || []),
   });
-  if (skills.isError) toast.error(getApiErrorMessage(skills.error, "Erreur lors du chargement des compétences"));
+  useQueryErrorToast(skills.error, "Erreur lors du chargement des compétences");
 
   const userSkills = useQuery({
     queryKey: ["userSkills", { employeeId: employee.id }],
@@ -41,8 +40,10 @@ export const EmployeeSkillForm = ({
       }),
     enabled: !!employee.id,
   });
-  if (userSkills.isError)
-    toast.error(getApiErrorMessage(userSkills.error, "Erreur lors du chargement des compétences de l'employée"));
+  useQueryErrorToast(
+    userSkills.error,
+    "Erreur lors du chargement des compétences de l'employée",
+  );
 
   const skillsForm = useForm<Schema>({
     defaultValues: { skills: [] },

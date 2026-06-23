@@ -38,6 +38,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { TASK_PRIORITIES } from "../constants/taskPriorities";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
@@ -208,9 +209,7 @@ const Planning = () => {
         date_to: date_from().date_to,
       }).then((response) => response.data.tasks),
   });
-  if (schedules.isError) {
-    toast.error(getApiErrorMessage(schedules.error, "Erreur lors du chargement des plannings"));
-  }
+  useQueryErrorToast(schedules.error, "Erreur lors du chargement des plannings");
 
   const stores = useQuery({
     queryKey: ["stores", { include: ["employees"] }],
@@ -257,9 +256,7 @@ const Planning = () => {
     queryKey: ["employees"],
     queryFn: () => getEmployees().then((response) => response.data.data),
   });
-  if (employees.isError) {
-    toast.error(getApiErrorMessage(employees.error, "Erreur lors du chargement des employés"));
-  }
+  useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
   const missingEmployees = useMemo(() => {
     const data = employees.data;
