@@ -33,12 +33,10 @@ export const ArrivalAdd = ({
       pagination: {
         total: 0,
         page: 1,
-        total_pages: 1,
-        items_per_page: 50,
-        has_next: false,
-        has_previous: false,
-        limit: 50,
-        offset: 0,
+        perPage: 50,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
       },
     },
   } = useQuery({
