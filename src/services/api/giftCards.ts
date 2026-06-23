@@ -1,5 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axiosInstance from "./axios";
+import type { PaginationMeta } from "./pagination";
 
 // =========================
 // Shared GiftCard Types
@@ -36,11 +37,7 @@ export type GetGiftCardByCodeResponse = {
   data: GiftCardDto;
 };
 
-export type PaginationDto = {
-  limit: number;
-  offset: number;
-  total: number;
-};
+export type PaginationDto = PaginationMeta;
 
 export type ApiErrorResponse = {
   success: false;
@@ -103,7 +100,7 @@ export type GetGiftCardsQuery = {
 export type GetGiftCardsResponse = {
   success: true;
   data: GiftCardDto[];
-  pagination: PaginationDto;
+  pagination: PaginationMeta;
 };
 
 export type GetGiftCardsApiResponse = GetGiftCardsResponse | ApiErrorResponse;
@@ -121,7 +118,7 @@ export const getGiftCardByCode = (
 export const listGiftCards = (
   query: GetGiftCardsQuery = {},
 ): Promise<AxiosResponse<GetGiftCardsApiResponse>> =>
-  axiosInstance.get("/api/gift-cards", { params: query });
+  axiosInstance.get<GetGiftCardsApiResponse>("/api/gift-cards", { params: query });
 
 export const createGiftCard = (
   data: CreateGiftCardRequestBody,

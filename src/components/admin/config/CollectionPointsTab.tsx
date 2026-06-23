@@ -15,6 +15,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -62,9 +63,10 @@ const CollectionPointsTab = () => {
     queryKey: ["points"],
     queryFn: () => fCol().then(response => response.data.collection_points || [])
   })
-
-  if (collectionPoints.error)
-    toast.error(getApiErrorMessage(collectionPoints.error, "Erreur lors du chargement des points de collecte"));
+  useQueryErrorToast(
+    collectionPoints.error,
+    "Erreur lors du chargement des points de collecte",
+  );
 
 
   const updatePoint = useMutation({
@@ -99,7 +101,10 @@ const CollectionPointsTab = () => {
     queryKey: ["stores"],
     queryFn: () => fetchStores().then(response => response.data.stores)
   })
-  if (recycleries.isError) toast.error(getApiErrorMessage(recycleries.error, "Erreur lors du chargement des recycleries"));
+  useQueryErrorToast(
+    recycleries.error,
+    "Erreur lors du chargement des recycleries",
+  );
 
   const handleOpenDialog = (point: CollectionPointModel | null = null) => {
     setEditingPoint(point);

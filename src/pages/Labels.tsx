@@ -34,6 +34,7 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
@@ -92,7 +93,7 @@ const Labels = () => {
       return getLabeledItems(params).then((response) => response.data);
     },
   });
-  if (items.isError) toast.error(getApiErrorMessage(items.error, "Erreur lors du chargement des articles"));
+  useQueryErrorToast(items.error, "Erreur lors du chargement des articles");
 
   const itemStats = useQuery({
     queryKey: ["itemStats", "items", { filters }],

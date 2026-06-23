@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -42,9 +43,8 @@ const EmployeeStoreAssignment = ({
     queryKey: ["assignments", employeeId],
     queryFn: () => getAssignedStores(employeeId).then(response => response.data.assignments)
   })
-
-  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des données"));
-  if (assignments.isError) toast.error(getApiErrorMessage(assignments.error, "Erreur lors du chargement des données"));
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des données");
+  useQueryErrorToast(assignments.error, "Erreur lors du chargement des données");
 
 
   const removeAssignements = useMutation({

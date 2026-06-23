@@ -8,8 +8,8 @@ import {
   Typography
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -50,11 +50,10 @@ const EmployeeWorkdays = ({
     queryKey: ["workdays", employeeId],
     queryFn: () => getUserWorkdays(employeeId).then((res) => res.data.workdays),
   });
-  useEffect(() => {
-    if (workdaysQuery.isError) {
-      toast.error(getApiErrorMessage(workdaysQuery.error, "Erreur lors du chargement des jours de travail"));
-    }
-  }, [workdaysQuery.isError]);
+  useQueryErrorToast(
+    workdaysQuery.error,
+    "Erreur lors du chargement des jours de travail",
+  );
 
   const workdays = workdaysQuery.data ?? [];
 

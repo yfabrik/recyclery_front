@@ -40,11 +40,11 @@ export const TransactionTableLine = ({
       sx={
         isRefund
           ? {
-              bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-              "&:hover": {
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
-              },
-            }
+            bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+            "&:hover": {
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
+            },
+          }
           : undefined
       }
     >
@@ -117,7 +117,7 @@ export const TransactionTableLine = ({
             </IconButton>
           </Tooltip>
 
-          {handleRefund && transaction.transactionType === "sell" && (
+          {handleRefund && transaction.transactionType === "sell" && !isEditable && (
 
             <Tooltip title="Remboursement">
               <IconButton

@@ -29,6 +29,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -61,7 +62,7 @@ export const DonationsTab = () => {
     queryKey: ["dons"],
     queryFn: () => getDonations().then(response => response.data.donations)
   })
-  if (donations.isError) toast.error(getApiErrorMessage(donations.error, "Erreur lors du chargement des dons"));
+  useQueryErrorToast(donations.error, "Erreur lors du chargement des dons");
 
   const donationStats = useQuery({
     queryKey: ["donStats"],

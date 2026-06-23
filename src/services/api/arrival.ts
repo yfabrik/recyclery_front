@@ -2,7 +2,7 @@ import type { AxiosResponse } from "axios";
 import type { ArrivalModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { ArrivalFormSchema } from "../../components/forms/ArrivalForm";
-import type { Pagination } from "./types";
+import type { PaginationMeta } from "./pagination";
 
 interface ArrivalFilters {
   date_from?: string;
@@ -12,7 +12,21 @@ interface ArrivalFilters {
   page?: number;
 }
 
-export const getArrivals = (filters?: ArrivalFilters): Promise<AxiosResponse<{ message: string, arrivals: ArrivalModel[], pagination: Pagination }>> =>
-  axiosInstance.get("/api/arrivals", { params: filters });
+type GetArrivalsRawResponse = {
+  message: string;
+  arrivals: ArrivalModel[];
+  pagination: PaginationMeta;
+};
+
+type GetArrivalsResponse = {
+  message: string;
+  arrivals: ArrivalModel[];
+  pagination: PaginationMeta;
+};
+
+export const getArrivals = (
+  filters?: ArrivalFilters,
+): Promise<AxiosResponse<GetArrivalsResponse>> =>
+  axiosInstance.get<GetArrivalsRawResponse>("/api/arrivals", { params: filters });
 
 export const createArrival = (data: ArrivalFormSchema): Promise<AxiosResponse<{success: boolean, message: string, arrival: ArrivalModel }>> => axiosInstance.post("/api/arrivals", data)

@@ -47,6 +47,7 @@ import {
 } from "../../../services/api/employee";
 import { fetchSkills, updateEmployeeSkills } from "../../../services/api/skills";
 import { fetchStores } from "../../../services/api/store";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
 import {
@@ -74,24 +75,24 @@ const EmployeeManagement = () => {
     queryKey: ["skills"],
     queryFn: () => fetchSkills().then(response => response.data.skills || [])
   });
-  if (skills.isError) toast.error(getApiErrorMessage(skills.error, "Erreur lors du chargement des compétences"));
+  useQueryErrorToast(skills.error, "Erreur lors du chargement des compétences");
 
 
-  const availabilityOptions = [
-    { value: "full_time", label: "Temps plein" },
-    { value: "part_time", label: "Temps partiel" },
-    { value: "weekend", label: "Week-end" },
-    { value: "evening", label: "Soirée" },
-    { value: "flexible", label: "Flexible" },
-  ];
+  // const availabilityOptions = [
+  //   { value: "full_time", label: "Temps plein" },
+  //   { value: "part_time", label: "Temps partiel" },
+  //   { value: "weekend", label: "Week-end" },
+  //   { value: "evening", label: "Soirée" },
+  //   { value: "flexible", label: "Flexible" },
+  // ];
 
-  const roleOptions = [
-    { value: "employee", label: "Employé" },
-    { value: "manager", label: "Manager" },
-    { value: "supervisor", label: "Superviseur" },
-    { value: "driver", label: "Chauffeur" },
-    { value: "collector", label: "Collecteur" },
-  ];
+  // const roleOptions = [
+  //   { value: "employee", label: "Employé" },
+  //   { value: "manager", label: "Manager" },
+  //   { value: "supervisor", label: "Superviseur" },
+  //   { value: "driver", label: "Chauffeur" },
+  //   { value: "collector", label: "Collecteur" },
+  // ];
 
   const [filters, setFilters] = useState<EmployeeFilters>(EMPLOYEE_FILTER_DEFAULTS);
 
@@ -101,13 +102,13 @@ const EmployeeManagement = () => {
     queryKey: ["stores", { active: true }],
     queryFn: () => fetchStores({ active: true }).then(response => response.data.stores)
   })
-  if (stores.isError) toast.error(getApiErrorMessage(stores.error, "Erreur lors du chargement des stores"));
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des stores");
 
   const employees = useQuery({
     queryKey: ["employees"],
     queryFn: () => getEmployees().then(response => response.data.data)
   })
-  if (employees.isError) toast.error(getApiErrorMessage(employees.error, "Erreur lors du chargement des employés"));
+  useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
   const editEmployee = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEmployee(id, data),
@@ -204,15 +205,15 @@ const EmployeeManagement = () => {
   //   return colors[role] || "default";
   // };
 
-  const AVAILABILITY_COLORS = {
-    full_time: "success",
-    part_time: "warning",
-    weekend: "info",
-    evening: "secondary",
-    flexible: "default",
-  } as const;
-  const getAvailabilityColor = (availability: keyof typeof AVAILABILITY_COLORS) =>
-    AVAILABILITY_COLORS[availability] ?? "default";
+  // const AVAILABILITY_COLORS = {
+  //   full_time: "success",
+  //   part_time: "warning",
+  //   weekend: "info",
+  //   evening: "secondary",
+  //   flexible: "default",
+  // } as const;
+  // const getAvailabilityColor = (availability: keyof typeof AVAILABILITY_COLORS) =>
+  //   AVAILABILITY_COLORS[availability] ?? "default";
 
   const filteredEmployees =
     employees.data?.filter((employee) => {
@@ -220,15 +221,17 @@ const EmployeeManagement = () => {
         !filters.search?.trim() ||
         employee.nom?.toLowerCase().includes(filters.search.toLowerCase()) ||
         employee.email?.toLowerCase().includes(filters.search.toLowerCase());
-      const matchesRole =
-        !filters.role ||
-        (employee as { role?: string }).role === filters.role;
+      // const matchesRole =
+      //   // !filters.role ||
+      //   (employee as { role?: string }).role === filters.role;
       const matchesStatus =
         !filters.status ||
         (filters.status === "active" && employee.isActive !== false) ||
         (filters.status === "inactive" && employee.isActive === false);
 
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch && 
+      // matchesRole &&
+       matchesStatus;
     }) || [];
 
 
@@ -283,7 +286,7 @@ const EmployeeManagement = () => {
             onChange={(values) =>
               setFilters((prev) => ({ ...prev, ...values }))
             }
-            roleOptions={roleOptions}
+            // roleOptions={roleOptions}
           />
         </Paper>
         {/* Liste des employés */}
@@ -348,11 +351,11 @@ const EmployeeManagement = () => {
                       </Box>
                     )}
 
-                    {employee.contract_hours && (
+                    {employee.workTime && (
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AccessTime fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {employee.contract_hours}h/semaine
+                          {employee.workTime}h/semaine
                         </Typography>
                       </Box>
                     )}
@@ -366,7 +369,7 @@ const EmployeeManagement = () => {
                       </Box>
                     )}
 
-                    {employee.availability && (
+                    {/* {employee.availability && (
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <CalendarToday fontSize="small" color="action" />
                         <Chip
@@ -382,7 +385,7 @@ const EmployeeManagement = () => {
                           variant="outlined"
                         />
                       </Box>
-                    )}
+                    )} */}
 
                     {employee.skills && employee.skills.length > 0 && (
                       <Box>
@@ -475,7 +478,9 @@ const EmployeeManagement = () => {
               Aucun employé trouvé
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              {filters.search || filters.role || filters.status
+              {filters.search ||
+              //  filters.role ||
+                filters.status
                 ? "Essayez de modifier vos critères de recherche"
                 : "Commencez par ajouter un employé"}
             </Typography>
@@ -567,7 +572,7 @@ const EmployeeManagement = () => {
         <DialogContent>
           {editingEmployee && (
             <Box sx={{ mt: 2 }}>
-              <EmployeeSkillForm formId="employeeSkillsForm" onSubmit={handleSaveSkills} employee={editingEmployee} defaultValues={editingEmployee?.skills || []} />
+              <EmployeeSkillForm formId="employeeSkillsForm" onSubmit={handleSaveSkills} employee={editingEmployee} />
 
             </Box>
           )}

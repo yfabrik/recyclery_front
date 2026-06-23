@@ -42,6 +42,7 @@ import {
   getUserRoleLabel,
 } from "../../constants/userRoles";
 import { type UserModel } from "../../interfaces/Models";
+import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
@@ -76,13 +77,7 @@ export const UsersTab = () => {
         (response) => response.data.users,
       ),
   });
-  if (users.isError)
-    toast.error(
-      getApiErrorMessage(
-        users.error,
-        "Erreur lors du chargement des utilisateurs",
-      ),
-    );
+  useQueryErrorToast(users.error, "Erreur lors du chargement des utilisateurs");
 
   const userStats = useQuery({
     queryKey: ["userStats"],

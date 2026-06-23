@@ -21,6 +21,7 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
+import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TransactionModel } from "../../interfaces/Models";
@@ -70,10 +71,7 @@ export const SalesAnalyticsTab = () => {
     queryFn: () =>
       fStore({ active: true }).then((response) => response.data.stores),
   });
-  if (stores.isError)
-    toast.error(
-      getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"),
-    );
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const transactions = useQuery({
     queryKey: ["transactions", filters, page],

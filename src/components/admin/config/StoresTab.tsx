@@ -15,6 +15,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -60,10 +61,7 @@ const StoresTab = () => {
     queryKey: ["stores", "horaires"],
     queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores)
   })
-  if (stores.error)
-    toast.error(
-      getApiErrorMessage(stores.error, "Erreur lors du chargement des magasins"),
-    );
+  useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const editStore = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateStore(id, data),
@@ -102,13 +100,7 @@ const StoresTab = () => {
     queryKey: ["users"],
     queryFn: () => fUsers({ role: "admin" }).then(response => response.data.users)
   })
-  if (users.error)
-    toast.error(
-      getApiErrorMessage(
-        users.error,
-        "Erreur lors du chargement des utilisateurs",
-      ),
-    );
+  useQueryErrorToast(users.error, "Erreur lors du chargement des utilisateurs");
 
 
   const saveHoraire = useMutation({

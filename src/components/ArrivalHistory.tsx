@@ -5,9 +5,10 @@ import { Box, Chip, Pagination, Paper, Table, TableBody, TableCell, TableContain
 import { Business, Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";
 import type { ArrivalModel } from "../interfaces/Models";
 import { useQuery } from "@tanstack/react-query";
+import { muiPageCount } from "../services/api/pagination";
 
 export const ArrivalHistory = () => {
-    const todayKey = () => new Date().toISOString().split("T")[0];
+    const todayKey = () => new Date();
 
     const [page, setPage] = useState(1);
 
@@ -19,7 +20,7 @@ export const ArrivalHistory = () => {
         collection_point_id: ""
     });
 
-    const { data: arrivals = { arrivals: [], pagination: { total: 0, page: 1, total_pages: 1, items_per_page: 50, has_next: false, has_previous: false, limit: 50, offset: 0 } } }
+    const { data: arrivals = { arrivals: [], pagination: { total: 0, page: 1, perPage: 50, totalPages: 1, hasNext: false, hasPrevious: false } } }
         = useQuery({
             queryKey: ["arrivals", filters, page],
             queryFn: () =>
@@ -148,12 +149,10 @@ export const ArrivalHistory = () => {
             </TableContainer>
             <Box sx={{ display: "flex", justifyContent: "center", padding: 1 }}>
                 <Pagination
-                    count={
-                        arrivals.pagination?.totalPages || 1
-                    }
+                    count={muiPageCount(arrivals.pagination)}
                     color="primary"
                     page={page}
-                    onChange={(e, val) => setPage(val)}
+                    onChange={(_e, val) => setPage(val)}
                 />
             </Box>
         </Paper>)

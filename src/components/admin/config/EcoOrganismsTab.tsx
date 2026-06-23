@@ -34,6 +34,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import type { EcoOrgModel } from "../../../interfaces/Models";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import {
   createEcoOrganism,
   deleteEcoOrganism,
@@ -59,13 +60,19 @@ export const EcoOrganismsTab = () => {
     queryKey: ["ecoOrganism", { include: ["inCategories","sellCategories"] }],
     queryFn: () => getEcoOrganisms({ include: ["inCategories","sellCategories"] }).then(response => response.data.eco_organisms)
   })
-  if (ecoOrganisms.isError) toast.error(getApiErrorMessage(ecoOrganisms.error, "Erreur lors du chargement des éco-organismes"));
+  useQueryErrorToast(
+    ecoOrganisms.error,
+    "Erreur lors du chargement des éco-organismes",
+  );
 
   const ecoOrganismStats = useQuery({
     queryKey: ["ecoStats"],
     queryFn: () => fetchEcoOrganismsStats().then(response => response.data.stats)
   })
-  if (ecoOrganismStats.isError) toast.error(getApiErrorMessage(ecoOrganismStats.error, "Erreur lors du chargement des statistiques"));
+  useQueryErrorToast(
+    ecoOrganismStats.error,
+    "Erreur lors du chargement des statistiques",
+  );
 
   const editEcoOrganism = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEcoOrganism(id, data),
