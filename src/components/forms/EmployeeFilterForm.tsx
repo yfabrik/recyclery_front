@@ -9,34 +9,34 @@ import { FormInput, FormSelect } from "./FormBase";
 
 const filterSchema = z.object({
   search: z.string().optional(),
-  role: z.string().optional(),
+  // role: z.string().optional(),
   status: z.string().optional(),
 });
 export type EmployeeFilters = z.infer<typeof filterSchema>;
 
 const defaultFilterValues: EmployeeFilters = {
   search: "",
-  role: "",
+  // role: "",
   status: "",
 };
 
 export const EMPLOYEE_FILTER_DEFAULTS = defaultFilterValues;
 
-interface RoleOption {
-  value: string;
-  label: string;
-}
+// interface RoleOption {
+//   value: string;
+//   label: string;
+// }
 
 interface EmployeeFilterFormProps {
   defaultValues?: EmployeeFilters;
   onChange: (values: EmployeeFilters) => void;
-  roleOptions: RoleOption[];
+  // roleOptions: RoleOption[];
 }
 
 export const EmployeeFilterForm = ({
   defaultValues = defaultFilterValues,
   onChange,
-  roleOptions,
+  // roleOptions,
 }: EmployeeFilterFormProps) => {
   const form = useForm<EmployeeFilters>({
     defaultValues,
@@ -82,7 +82,7 @@ export const EmployeeFilterForm = ({
             }}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+        {/* <Grid size={{ xs: 12, md: 3 }}>
           <FormSelect label="Rôle" control={form.control} name="role">
             <MenuItem key="all" value="">
               Tous les rôles
@@ -93,7 +93,7 @@ export const EmployeeFilterForm = ({
               </MenuItem>
             ))}
           </FormSelect>
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12, md: 3 }}>
           <FormSelect control={form.control} name="status" label="Statut">
             <MenuItem value="">Tous</MenuItem>

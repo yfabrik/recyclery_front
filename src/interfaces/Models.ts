@@ -215,6 +215,7 @@ export interface EmployeeModel extends BaseModel {
   Tasks?: TaskModel[];
   TaskSchedules?: ScheduleModel[];
   Skills?: SkillModel[];
+  workTime?:number
 }
 
 export interface WorkdaysModel extends BaseModel {
