@@ -1,10 +1,14 @@
 import {
   Add,
+  Bookmark,
   Delete,
   Edit,
+  Euro,
+  Inventory2,
   PointOfSale,
   Print,
-  QrCode
+  QrCode,
+  Sell
 } from "@mui/icons-material";
 import {
   Box,
@@ -40,7 +44,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
 import { useLabelPrint } from "../components/LabelPrint";
 import { Loading } from "../components/Loading";
-import { StatCardNoIcon } from "../components/StatCard";
+import { StatCard } from "../components/StatCard";
 import { LabelFiltersForm, type Filters } from "../components/forms/LabelFiltersForm";
 import {
   LabeledItemForm,
@@ -254,36 +258,40 @@ const Labels = () => {
       {/* Statistiques rapides */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Articles disponibles"
             value={
               itemStats.data?.available_items || 0
             }
+            icon={<Inventory2 />}
             color="primary"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Articles vendus"
             value={
               itemStats.data?.sold_items || 0
             }
-            color="success.main"
+            icon={<Sell />}
+            color="success"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Articles réservés"
             value={
               itemStats.data?.reserved_items || 0
             }
+            icon={<Bookmark />}
             color="warning"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Valeur totale stock"
             value={formatCurrency(itemStats.data?.total_value || 0)}
+            icon={<Euro />}
             color="info"
           />
         </Grid>

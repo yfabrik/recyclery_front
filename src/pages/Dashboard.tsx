@@ -49,7 +49,7 @@ import { BarChart, PieChart } from "@mui/x-charts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
-import { StatCard } from "../components/dashboard/StatCard";
+import { StatCard } from "../components/StatCard";
 import DashboardNotifications from "../components/DashboardNotifications";
 import EcoOrganismStats from "../components/EcoOrganismStats";
 import QuickStats from "../components/QuickStats";

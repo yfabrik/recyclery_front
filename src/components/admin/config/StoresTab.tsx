@@ -1,6 +1,9 @@
 import {
   Add,
-  Schedule
+  CheckCircle,
+  PointOfSale,
+  Schedule,
+  Store
 } from "@mui/icons-material";
 import {
   Box,
@@ -38,7 +41,7 @@ import {
 import { fetchUsers as fUsers } from "../../../services/api/users";
 import { CardStore } from "../../CardStore";
 import { CreateCaisseDialog } from "../../CreateCaisseDialog";
-import { StatCardNoIcon } from "../../StatCard";
+import { StatCard } from "../../StatCard";
 import { StoreForm, type Schema } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
@@ -235,27 +238,30 @@ const StoresTab = () => {
       {/* Statistiques rapides */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Magasins total"
             value={stores.data?.length || 0}
+            icon={<Store />}
             color="primary"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Magasins actifs"
             value={stores.data?.filter((store) => store.is_active).length || 0}
-            color="success.main"
+            icon={<CheckCircle />}
+            color="success"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Caisses total"
             value={stores.data?.reduce(
               (sum, store) => sum + (store.caisses?.length || 0),
               0,
             ) || 0}
-            color="info.main"
+            icon={<PointOfSale />}
+            color="info"
           />
         </Grid>
       </Grid>

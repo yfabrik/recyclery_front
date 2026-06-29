@@ -182,27 +182,27 @@ export const EcoOrganismsTab = () => {
             <StatCard
               title=" Total Éco-organismes"
               value={ecoOrganismStats.data?.total_eco_organisms || 0}
-            >
-              <Nature color="primary" sx={{ fontSize: 40 }} />
-            </StatCard>
+              icon={<Nature />}
+              color="primary"
+            />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title=" Actifs"
               value={ecoOrganismStats.data?.active_eco_organisms || 0}
-            >
-              <CheckCircle color="success" sx={{ fontSize: 40 }} />
-            </StatCard>
+              icon={<CheckCircle />}
+              color="success"
+            />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title="Inactifs"
               value={ecoOrganismStats.data?.inactive_eco_organisms || 0}
-            >
-              <Block color="error" sx={{ fontSize: 40 }} />
-            </StatCard>
+              icon={<Block />}
+              color="error"
+            />
           </Grid>
         </Grid>
       )}

@@ -135,30 +135,36 @@ export const DonationsTab = () => {
       {donationStats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="Total Dons" value={donationStats.data?.total_donations || 0}>
-              <CardGiftcard color="primary" sx={{ fontSize: 40 }} />
-            </StatCard>
+            <StatCard
+              title="Total Dons"
+              value={donationStats.data?.total_donations || 0}
+              icon={<CardGiftcard />}
+              color="primary"
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="En Attente"
               value={donationStats.data?.pending_donations || 0}
-            >
-              <Schedule color="warning" sx={{ fontSize: 40 }} />
-            </StatCard>
+              icon={<Schedule />}
+              color="warning"
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title="Acceptés" value={donationStats.data?.accepted_donations || 0}>
-              <CheckCircle color="success" sx={{ fontSize: 40 }} />
-            </StatCard>
+            <StatCard
+              title="Acceptés"
+              value={donationStats.data?.accepted_donations || 0}
+              icon={<CheckCircle />}
+              color="success"
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="Valeur Estimée"
               value={formatCurrency(donationStats.data?.total_estimated_value || 0)}
-            >
-              <TrendingUp color="info" sx={{ fontSize: 40 }} />
-            </StatCard>
+              icon={<TrendingUp />}
+              color="info"
+            />
           </Grid>
         </Grid>
       )}

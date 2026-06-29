@@ -1,6 +1,7 @@
 import {
   Assignment,
   BarChart,
+  CheckCircle,
   Delete,
   Edit,
   Groups,
@@ -61,7 +62,7 @@ import {
   type Schema as PasswordSchema,
 } from "../forms/PasswordChangeForm";
 import { UserForm, type Schema } from "../forms/UserForm";
-import { StatCardNoIcon } from "../StatCard";
+import { StatCard } from "../StatCard";
 
 export const UsersTab = () => {
   const [userDialog, setUserDialog] = useState(false);
@@ -240,26 +241,29 @@ export const UsersTab = () => {
       {/* Statistiques des utilisateurs */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title="Utilisateurs actifs"
             value={userStats.data?.totalUsers || 0}
+            icon={<Person />}
             color="primary"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title=" Connectés (30j)"
             value={userStats.data?.activeEmployees || 0}
-            color="success.main"
+            icon={<CheckCircle />}
+            color="success"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCardNoIcon
+          <StatCard
             title=" Rôles différents"
             value={userStats.data?.usersByRole?.length || 0}
-            color="info.main"
+            icon={<Groups />}
+            color="info"
           />
         </Grid>
       </Grid>

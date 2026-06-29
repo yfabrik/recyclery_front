@@ -2,7 +2,11 @@ import {
   Assessment,
   Clear,
   Description,
+  PointOfSale,
+  Receipt,
   Refresh,
+  ShoppingCart,
+  TrendingUp,
 } from "@mui/icons-material";
 import {
   Box,
@@ -43,6 +47,7 @@ import { SalePostalStats } from "../SalePostalStats";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
+import { StatCard } from "../StatCard";
 
 export const SalesAnalyticsTab = () => {
   const [page, setPage] = useState(1);
@@ -218,75 +223,48 @@ export const SalesAnalyticsTab = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                {statistics.data?.total_transactions || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Transactions totales
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Transactions totales"
+            value={statistics.data?.total_transactions || 0}
+            icon={<Receipt />}
+            color="primary"
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="success.main" fontWeight="bold">
-                {formatCurrency(statistics.data?.total_sales || 0)}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Chiffre d'affaires net
-              </Typography>
-              {statistics.data?.total_refunded && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    display="block"
-                  >
-                    Brut:{" "}
-                    {formatCurrency(
-                      statistics.data?.total_sales_before_refunds ||
-                        statistics.data?.total_sales ||
-                        0,
-                    )}
-                  </Typography>
-                  <Typography variant="caption" color="error" display="block">
-                    Remboursé: -
-                    {formatCurrency(statistics.data?.total_refunded || 0)}
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Chiffre d'affaires net"
+            value={formatCurrency(statistics.data?.total_sales || 0)}
+            icon={<TrendingUp />}
+            color="success"
+            subtitle={
+              statistics.data?.total_refunded
+                ? `Brut: ${formatCurrency(
+                    statistics.data.total_sales_before_refunds ||
+                      statistics.data.total_sales ||
+                      0,
+                  )} · Remboursé: -${formatCurrency(statistics.data.total_refunded || 0)}`
+                : undefined
+            }
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="info.main" fontWeight="bold">
-                {formatCurrency(statistics.data?.average_transaction || 0)}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Panier moyen
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Panier moyen"
+            value={formatCurrency(statistics.data?.average_transaction || 0)}
+            icon={<ShoppingCart />}
+            color="info"
+          />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h4" color="warning.main" fontWeight="bold">
-                {statistics.data?.sessions_count || 0}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Sessions de caisse
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Sessions de caisse"
+            value={statistics.data?.sessions_count || 0}
+            icon={<PointOfSale />}
+            color="warning"
+          />
         </Grid>
       </Grid>
 

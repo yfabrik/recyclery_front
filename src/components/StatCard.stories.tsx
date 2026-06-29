@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { People } from "@mui/icons-material";
-import { Avatar } from "@mui/material";
-import { StatCard, StatCardNoIcon } from "./StatCard";
+import { Euro, People, ShoppingCart } from "@mui/icons-material";
+import { StatCard } from "./StatCard";
 
 const meta = {
   title: "Components/StatCard",
@@ -12,9 +11,16 @@ const meta = {
     docs: {
       description: {
         component:
-          "Admin tab stat card (simpler than Dashboard/StatCard). Supports optional children slot for an icon. StatCardNoIcon is a centered compact variant.",
+          "Unified metric card with optional avatar icon, subtitle, and trend indicator.",
       },
     },
+  },
+  args: {
+    title: "Chiffre d'affaires",
+    value: "12 450 €",
+    subtitle: "Ce mois",
+    icon: <Euro />,
+    color: "primary",
   },
 } satisfies Meta<typeof StatCard>;
 
@@ -26,17 +32,42 @@ export const WithIcon: Story = {
   args: {
     title: "Utilisateurs actifs",
     value: 24,
-    color: "primary.main",
-    children: (
-      <Avatar sx={{ bgcolor: "primary.main" }}>
-        <People />
-      </Avatar>
-    ),
+    color: "primary",
+    icon: <People />,
+    subtitle: "employés",
   },
 };
 
-export const NoIconVariant: Story = {
-  render: () => (
-    <StatCardNoIcon title="Magasins" value={5} color="success.main" />
-  ),
+export const WithTrendUp: Story = {
+  args: {
+    title: "Ventes",
+    value: "342",
+    subtitle: "Transactions",
+    icon: <ShoppingCart />,
+    color: "success",
+    trend: "up",
+    trendValue: "+12 %",
+  },
+};
+
+export const WithTrendDown: Story = {
+  args: {
+    title: "Panier moyen",
+    value: "36,40 €",
+    subtitle: "Ce mois",
+    icon: <Euro />,
+    color: "warning",
+    trend: "down",
+    trendValue: "-3 %",
+  },
+};
+
+export const NoTrend: Story = {
+  args: {
+    title: "Articles en stock",
+    value: "1 204",
+    subtitle: "Disponibles",
+    icon: <ShoppingCart />,
+    color: "info",
+  },
 };

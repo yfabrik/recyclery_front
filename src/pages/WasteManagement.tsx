@@ -10,8 +10,6 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Container,
   Dialog,
@@ -56,6 +54,7 @@ import {
   updateWaste,
   type wasteFilter,
 } from "../services/api/wasteDisposal";
+import { StatCard } from "../components/StatCard";
 
 const WasteManagement = () => {
 
@@ -116,21 +115,21 @@ const WasteManagement = () => {
 
   const addWaste = useMutation({
     mutationFn: (data: Schema) => createWaste(data),
-    onSuccess: (data, variables) => {
-      save(data, variables)
+    onSuccess: (data) => {
+      save(data)
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const editWaste = useMutation({
     mutationFn: (data: { id: number, data: Schema }) => updateWaste(data.id, data.data),
-    onSuccess: (data, variables) => {
-      save(data, variables.data)
+    onSuccess: (data) => {
+      save(data)
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const save = (data: AxiosResponse<{
     message: string;
-  }, unknown, object>, variables: Schema) => {
+  }, unknown, object>) => {
     toast.success(
       getApiSuccessMessage(
         data,
@@ -192,6 +191,25 @@ const WasteManagement = () => {
     return `${weight} kg`;
   };
 
+  const wasteFormDefaults: Partial<Schema> | null = editingDisposal
+    ? {
+      disposal_date: new Date(editingDisposal.disposal_date),
+      disposal_type:
+          editingDisposal.disposal_type === "recycling"
+            ? "other"
+            : editingDisposal.disposal_type,
+      category_id: editingDisposal.category_id,
+      subcategory_id: editingDisposal.subcategory_id,
+      eco_organism_id: editingDisposal.eco_organism_id,
+      weight_kg: editingDisposal.weight_kg ?? 0,
+      volume_m3: editingDisposal.volume_m3 ?? 0,
+      transport_method: editingDisposal.transport_method,
+      transport_company: editingDisposal.transport_company,
+      transport_cost: editingDisposal.transport_cost ?? 0,
+      notes: editingDisposal.notes,
+    }
+    : null;
+
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -227,91 +245,39 @@ const WasteManagement = () => {
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Loading isLoading={stats.isLoading}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Box>
-                      <Typography color="text.secondary" gutterBottom>
-                        Total Sorties
-                      </Typography>
-                      <Typography variant="h4">
-                        {stats.data?.total_disposals || 0}
-                      </Typography>
-                    </Box>
-                    <Assessment color="primary" sx={{ fontSize: 40 }} />
-                  </Box>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Total Sorties"
+                value={stats.data?.total_disposals || 0}
+                icon={<Assessment />}
+                color="primary"
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Box>
-                      <Typography color="text.secondary" gutterBottom>
-                        Poids Total
-                      </Typography>
-                      <Typography variant="h4">
-                        {formatWeight(stats.data?.total_weight_kg || 0)}
-                      </Typography>
-                    </Box>
-                    <TrendingUp color="success" sx={{ fontSize: 40 }} />
-                  </Box>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Poids Total"
+                value={formatWeight(stats.data?.total_weight_kg || 0)}
+                icon={<TrendingUp />}
+                color="success"
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Box>
-                      <Typography color="text.secondary" gutterBottom>
-                        Éco-organismes
-                      </Typography>
-                      <Typography variant="h4">
-                        {stats.data?.eco_organism_disposals || 0}
-                      </Typography>
-                    </Box>
-                    <Nature color="success" sx={{ fontSize: 40 }} />
-                  </Box>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Éco-organismes"
+                value={stats.data?.eco_organism_disposals || 0}
+                icon={<Nature />}
+                color="success"
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Box>
-                      <Typography color="text.secondary" gutterBottom>
-                        Déchetterie
-                      </Typography>
-                      <Typography variant="h4">
-                        {stats.data?.landfill_disposals || 0}
-                      </Typography>
-                    </Box>
-                    <DeleteSweep color="warning" sx={{ fontSize: 40 }} />
-                  </Box>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Déchetterie"
+                value={stats.data?.landfill_disposals || 0}
+                icon={<DeleteSweep />}
+                color="warning"
+              />
             </Grid>
           </Loading>
         </Grid>
@@ -425,7 +391,7 @@ const WasteManagement = () => {
         <DialogContent>
           <WasteForm
             formId="wasteForm"
-            defaultValues={editingDisposal}
+            defaultValues={wasteFormDefaults}
             onSubmit={handleSaveDisposal}
             categories={categories.data || []}
             ecoOrganisms={ecoOrganisms.data || []}
