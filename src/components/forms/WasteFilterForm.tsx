@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FilterList } from "@mui/icons-material";
-import { Button, Grid, MenuItem } from "@mui/material";
+import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z, { literal } from "zod";
 import { FormCategorySelect, FormDate, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 import { idSchema } from "../../interfaces/ZodTypes";
 import type { CategoryModel } from "../../interfaces/Models";
 import {
@@ -86,15 +86,8 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
                 <FormDate control={form.control} name="date_to" label="Date fin" extra={{ slotProps: { textField: { size: "small" } } }} />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                <Button
-                    variant="outlined"
-                    type="reset"
-                    startIcon={<FilterList />}
-                    onClick={() => form.reset()}
-                >
-                    Effacer
-                </Button>
+            <Grid size="auto" sx={{ ml: "auto" }}>
+                <ResetFiltersButton onReset={() => form.reset()} />
             </Grid>
         </Grid>
     )

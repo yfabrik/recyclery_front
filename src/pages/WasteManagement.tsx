@@ -195,19 +195,33 @@ const WasteManagement = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        <DeleteSweep /> Gestion des Déchets
-      </Typography>
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <Box
         sx={{
-          marginBottom: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 2,
+          flexWrap: "wrap",
+          mb: 2,
         }}
       >
-        Suivez et gérez les sorties de déchets vers les éco-organismes et
-        déchetteries
-      </Typography>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            <DeleteSweep /> Gestion des Déchets
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Suivez et gérez les sorties de déchets vers les éco-organismes et
+            déchetteries
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpenDisposalDialog()}
+        >
+          Nouvelle Sortie
+        </Button>
+      </Box>
       {/* Statistiques */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -302,24 +316,8 @@ const WasteManagement = () => {
           </Loading>
         </Grid>
       )}
-      {/* Actions et filtres */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
-        >
-          <Typography variant="h6"> Liste des Sorties de Déchets</Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenDisposalDialog()}
-          >
-            Nouvelle Sortie
-          </Button>
-        </Box>
-
+      {/* Filtres */}
+      <Paper sx={{ p: 2, mb: 3 }}>
         <WasteFilterForm
           categories={categories.data || []}
           defaultValues={filters}

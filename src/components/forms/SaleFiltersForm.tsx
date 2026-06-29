@@ -1,13 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clear } from "@mui/icons-material";
-import { Box, Button, Grid, IconButton, MenuItem } from "@mui/material";
-import { useEffect, useRef } from "react";
+import { Grid, IconButton, MenuItem } from "@mui/material";
+import { useDebouncer } from "@tanstack/react-pacer";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FormDate, FormInput, FormSelect } from "./FormBase";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
-import { useDebouncedCallback, useDebouncer } from "@tanstack/react-pacer";
+import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import { FormDate, FormInput, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
     store_id: z.union([idSchema(), nullString()]),
@@ -176,16 +177,8 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
                 </Grid>
 
                 {/* Bouton pour effacer tous les filtres */}
-                <Grid size={{ xs: 12 }}>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-                        <Button
-                            variant="outlined"
-                            startIcon={<Clear />}
-                            onClick={() => filters.reset()}
-                        >
-                            Effacer tous les filtres
-                        </Button>
-                    </Box>
+                <Grid size="auto" sx={{ ml: "auto" }}>
+                    <ResetFiltersButton onReset={() => filters.reset()} />
                 </Grid>
             </Grid>
         </form>

@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {  useEffect, useMemo } from "react";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Grid, MenuItem } from "@mui/material";
+import { Grid, MenuItem } from "@mui/material";
 import { FormDate, FormSelect } from "./FormBase";
-import { FilterList } from "@mui/icons-material";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../services/api/collectionPoint";
 
 const filterSchema = z.object({
@@ -261,15 +261,10 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
           </FormSelect>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<FilterList />}
-            onClick={() => form.reset(getDefaultFilters())}
-          >
-            Reinitialiser
-          </Button>
+        <Grid size="auto" sx={{ ml: "auto" }}>
+          <ResetFiltersButton
+            onReset={() => form.reset(getDefaultFilters())}
+          />
         </Grid>
       </Grid>
     </form>

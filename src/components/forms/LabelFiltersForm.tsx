@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FilterList, Search } from "@mui/icons-material";
-import { Button, Grid, MenuItem, Paper } from "@mui/material";
+import { Search } from "@mui/icons-material";
+import { Grid, MenuItem, Paper } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,7 @@ import {
   LABELED_ITEM_STATUS_FILTER_VALUES,
 } from "../../constants/labeledItemStatuses";
 import { FormCategorySelect, FormInput, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
     category_id: z.union([idSchema(), nullString()]),
@@ -95,17 +96,8 @@ export const LabelFiltersForm = ({ defaultValues, onChange, categories }: Filter
                             filterCategories={(cat) => !cat.parent_id}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 2 }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<FilterList />}
-                            onClick={() => filters.reset()
-
-                            }
-                        >
-                            Réinitialiser
-                        </Button>
+                    <Grid size="auto" sx={{ ml: "auto" }}>
+                        <ResetFiltersButton onReset={() => filters.reset()} />
                     </Grid>
                 </Grid>
             </Paper>

@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clear } from "@mui/icons-material";
-import { Box, Button, Grid, MenuItem } from "@mui/material";
+import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { FormDate, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCollectionPoints } from "../../services/api/collectionPoint";
 import { idSchema } from "../../interfaces/ZodTypes";
@@ -111,16 +111,8 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
 
 
                 {/* Bouton pour effacer tous les filtres */}
-                <Grid size={{ xs: 12 }}>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-                        <Button
-                            variant="outlined"
-                            startIcon={<Clear />}
-                            onClick={() => filters.reset()}
-                        >
-                            Effacer tous les filtres
-                        </Button>
-                    </Box>
+                <Grid size="auto" sx={{ ml: "auto" }}>
+                    <ResetFiltersButton onReset={() => filters.reset()} />
                 </Grid>
             </Grid>
         </form>

@@ -2,7 +2,6 @@ import {
   Assessment,
   Clear,
   Description,
-  FilterList,
   Refresh,
 } from "@mui/icons-material";
 import {
@@ -204,16 +203,7 @@ export const SalesAnalyticsTab = () => {
         </Button>
       </Box>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-        >
-          <FilterList />
-          Filtres
-        </Typography>
-
+      <Paper sx={{ p: 2, mb: 3 }}>
         <SaleFiltersForm
           stores={stores.data || []}
           defaultValues={filters}

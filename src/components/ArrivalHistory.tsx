@@ -52,20 +52,23 @@ export const ArrivalHistory = () => {
         return icons[type] || <Business />;
     };
     return (
-        <Paper sx={{ p: 3 }}>
-            <ArrivalFilterForm
-                defaultValues={filters}
-                onChange={(values) =>
-                    setFilters((prev) => ({
-                        ...prev,
-                        ...values,
-                    }))
-                }
-            />
-            <Typography variant="h6" gutterBottom>
-                Arrivages du jour ({new Date().toLocaleDateString("fr-FR")})
-            </Typography>
-            <TableContainer>
+        <>
+            <Paper sx={{ p: 2, mb: 3 }}>
+                <ArrivalFilterForm
+                    defaultValues={filters}
+                    onChange={(values) =>
+                        setFilters((prev) => ({
+                            ...prev,
+                            ...values,
+                        }))
+                    }
+                />
+            </Paper>
+            <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                    Arrivages du jour ({new Date().toLocaleDateString("fr-FR")})
+                </Typography>
+                <TableContainer>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -155,5 +158,7 @@ export const ArrivalHistory = () => {
                     onChange={(_e, val) => setPage(val)}
                 />
             </Box>
-        </Paper>)
+        </Paper>
+        </>
+    )
 }

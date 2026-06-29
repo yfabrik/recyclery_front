@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Refresh, Search } from "@mui/icons-material";
-import { Button, Grid, MenuItem } from "@mui/material";
+import { Search } from "@mui/icons-material";
+import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { FormInput, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -101,19 +102,13 @@ export const EmployeeFilterForm = ({
             <MenuItem value="inactive">Inactif</MenuItem>
           </FormSelect>
         </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            type="button"
-            onClick={() => {
+        <Grid size="auto" sx={{ ml: "auto" }}>
+          <ResetFiltersButton
+            onReset={() => {
               form.reset(defaultFilterValues);
               onChange(defaultFilterValues);
             }}
-            fullWidth
-          >
-            Reset
-          </Button>
+          />
         </Grid>
       </Grid>
     </form>

@@ -14,6 +14,7 @@ import {
 } from "../../constants/recurrencePatterns";
 import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import { FormInput, FormSelect } from "./FormBase";
+import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
   search: z.string().trim().optional(),
@@ -161,17 +162,8 @@ export const CustomTaskFiltersForm = ({
           </Grid>
         )}
 
-        <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Clear />}
-              type="button"
-              onClick={handleReset}
-            >
-              Effacer tous les filtres
-            </Button>
-          </Box>
+        <Grid size="auto" sx={{ ml: "auto" }}>
+          <ResetFiltersButton onReset={handleReset} />
         </Grid>
       </Grid>
     </form>
