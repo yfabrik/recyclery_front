@@ -11,7 +11,9 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
+import { updateProfile as updateProfileApi } from "../services/api/profile";
 import type { UserModel } from "../interfaces/Models";
+import type { Schema as ProfileSchema } from "../components/forms/ProfileForm";
 
 const PERMISSIONS = {
   admin: {
@@ -79,6 +81,9 @@ interface AuthContextValue {
     action?: PermissionAction,
   ) => boolean;
   isAuthenticated: boolean;
+  updateProfile: (
+    data: ProfileSchema,
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -277,6 +282,21 @@ export const AuthProvider = ({ children }: AuthProps) => {
     // return hasPermission(`${module}.${action}`);
   };
 
+  const updateProfile = async (data: ProfileSchema) => {
+    try {
+      const response = await updateProfileApi(data);
+      setUser(response.data.user);
+      toast.success(
+        getApiSuccessMessage(response, "Profil mis à jour avec succès"),
+      );
+      return { success: true };
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Erreur lors de la mise à jour");
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
   const value = {
     user,
     // permissions,
@@ -288,6 +308,7 @@ export const AuthProvider = ({ children }: AuthProps) => {
     // hasPermission,
     hasModuleAccess,
     isAuthenticated: !!user,
+    updateProfile,
     // isAdmin: user?.role === "admin",
     // isManager: ["admin", "direction", "coordination", "encadrant"].includes(
     //   user?.role
