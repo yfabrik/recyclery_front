@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { EcoOrganismStatsExport } from "../components/admin/EcoOrganismStatsExport";
 import EcoOrganismStatsTable, {
   type EcoMetricSource,
   type EcoOrganismStatsRow,
@@ -258,6 +259,21 @@ const EcoOrganismStatsPage = () => {
       );
   }, [allRows, displayedQuarters, filters.metric_source, filters.source_type, filters.category]);
 
+  const filteredRows = useMemo(() => {
+    return allRows
+      .filter((row) =>
+        selectedQuarter === "" ? true : row.quarter === selectedQuarter,
+      )
+      .filter((row) =>
+        filters.metric_source !== "quarterIn" || filters.source_type === ""
+          ? true
+          : row.sourceType === filters.source_type,
+      )
+      .filter((row) =>
+        filters.category === "" ? true : row.category === filters.category,
+      );
+  }, [allRows, selectedQuarter, filters.metric_source, filters.source_type, filters.category]);
+
   // const sourceTypeOptions = useMemo(() => {
   //   return Array.from(
   //     new Set(allRows.map((row) => row.sourceType).filter(Boolean)),
@@ -270,13 +286,29 @@ const EcoOrganismStatsPage = () => {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Statistiques Eco-organismes
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Vue detaillee des flux entrants, sortants et vendus par eco-organisme.
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Statistiques Eco-organismes
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Vue detaillee des flux entrants, sortants et vendus par eco-organisme.
+          </Typography>
+        </Box>
+        <EcoOrganismStatsExport
+          filteredRows={filteredRows}
+          allRows={allRows}
+          metricSource={filters.metric_source}
+          disabled={ecoStats.isLoading}
+        />
       </Box>
 
       <Paper sx={{ p: 2 }}>
