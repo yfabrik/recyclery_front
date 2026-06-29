@@ -9,6 +9,8 @@ import {
   FormHelperText,
   FormLabel,
   Grid,
+  IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Radio,
@@ -23,7 +25,7 @@ import {
   type SelectProps,
   type TextFieldProps
 } from "@mui/material";
-import { Category } from "@mui/icons-material";
+import { Category, Visibility, VisibilityOff } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import {
   Children,
@@ -32,6 +34,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -126,6 +129,60 @@ export const FormInput = <
           helperText={fieldState.invalid && fieldState.error?.message}
           error={fieldState.invalid}
           aria-invalid={fieldState.invalid}
+        />
+      )}
+    />
+  );
+};
+
+export const FormPasswordInput = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  name,
+  control,
+  label,
+  extra,
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  extra?: TextFieldProps;
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <TextField
+          fullWidth
+          label={label}
+          {...field}
+          {...extra}
+          type={showPassword ? "text" : "password"}
+          helperText={fieldState.invalid && fieldState.error?.message}
+          error={fieldState.invalid}
+          aria-invalid={fieldState.invalid}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={
+                      showPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
+                    onClick={() => setShowPassword((show) => !show)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
         />
       )}
     />
