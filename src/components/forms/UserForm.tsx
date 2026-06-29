@@ -6,6 +6,7 @@ import * as z from "zod";
 import {
   FormInput,
   FormMultiSelect,
+  FormPasswordInput,
   FormSelect,
   FormSwitch,
   type BaseFormProps,
@@ -96,11 +97,10 @@ export const UserForm = ({
         </Grid>
         {!defaultValues?.id && (
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormPasswordInput
               control={form.control}
               label="Mot de passe"
               name="password"
-              extra={{ type: "password" }}
             />
           </Grid>
         )}
