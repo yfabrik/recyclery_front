@@ -1,5 +1,5 @@
 import { Box, Grid } from "@mui/material";
-import { FormProvider } from "react-hook-form";
+import { FormProvider, type FieldErrors } from "react-hook-form";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import { useTransactionRefunds } from "../../hooks/useTransactionRefunds";
 import { buildTransactionCartFormValues } from "../../utils/editTransactionDefaults";
@@ -11,6 +11,8 @@ import { TransactionFinancialSummaryCard } from "./TransactionFinancialSummaryCa
 import { TransactionInfoCard } from "./TransactionInfoCard";
 import { type CartFormValues, type Schema } from "../forms/cartSchema";
 import { useCheckoutFormCore } from "../../hooks/useCheckoutFormCore";
+import { toast } from "react-toastify";
+import { collectFormErrorMessages } from "../../utils/formErrors";
 
 interface TransactionDetailsContentProps {
   transaction: TransactionModel;
@@ -51,7 +53,15 @@ export const TransactionDetailsContent = ({
 
   const { refunds } = useTransactionRefunds(transaction.id);
 
-  const noop = () => {};
+  //TODO should hihglight the paper group that contains the error
+  const onSubmitError = (err: FieldErrors<CartFormValues>) => {
+    console.error(err);
+    for (const message of collectFormErrorMessages(err)) {
+      toast.error(message);
+    }
+  };
+
+  const noop = () => { };
 
   const content = (
     <FormProvider {...form}>
@@ -110,7 +120,7 @@ export const TransactionDetailsContent = ({
 
   if (editable && onSubmit) {
     return (
-      <Box component="form" id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+      <Box component="form" id={formId} onSubmit={form.handleSubmit(onSubmit,onSubmitError)}>
         {content}
       </Box>
     );
