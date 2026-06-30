@@ -12,6 +12,8 @@ const meta = {
   tags: ["autodocs"],
   parameters: {
     layout: "padded",
+    // ArrivalForm renders its own submit button, so skip the global one.
+    formSubmit: false,
     docs: {
       description: {
         component:

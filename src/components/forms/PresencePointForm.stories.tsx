@@ -28,14 +28,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const WithSubmitButton: Story = {
-  render: (args) => (
-    <>
-      <PresencePointForm {...args} />
-      <button type="submit" form={args.formId}>
-        Submit
-      </button>
-    </>
-  ),
-};
