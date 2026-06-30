@@ -40,12 +40,17 @@ import {
     Flag,
     PriorityHigh,
     FlagOutlined,
+    ShoppingCart,
+    VolunteerActivism,
+    LocalShipping,
+    Inventory,
+    People,
 } from "@mui/icons-material";
 import type { SvgIconComponent } from "@mui/icons-material";
 import type { SvgIconProps } from "@mui/material";
 
 /** Named map of icon name → component for lookup */
-const MuiIcons: Record<string, SvgIconComponent> = {
+const MuiIcons = {
     //// icon category
     Category,
     LocalLaundryService,
@@ -91,10 +96,20 @@ const MuiIcons: Record<string, SvgIconComponent> = {
     PriorityHigh,
     FlagOutlined,
     ///////
-};
 
-export const SelectedIcon = ({ iconName, props }: { iconName: string, props?: SvgIconProps }) => {
-    const IconComponent = MuiIcons[iconName];
+    ////icon dashboard activity item
+    ShoppingCart,
+    VolunteerActivism,
+    LocalShipping,
+    Inventory,
+    People,
+    ///////
+}as const satisfies Record<string, SvgIconComponent>;
+
+export type MuiIconName = keyof typeof MuiIcons;
+
+export const SelectedIcon = ({ iconName, props }: { iconName: MuiIconName | (string & {}), props?: SvgIconProps }) => {
+    const IconComponent = MuiIcons[iconName as MuiIconName];
     if (!IconComponent) return null;
     return <IconComponent  {...props} />;
 };

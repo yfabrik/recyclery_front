@@ -6,12 +6,12 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import { idSchema } from "../../interfaces/ZodTypes";
 import { FormDate, FormInput, FormSelect } from "./FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
-    store_id: z.union([idSchema(), nullString()]),
+    store_id: z.union([idSchema(), z.literal("")]),
     period: z.enum(["week", "month", "custom"]),
     date_from: z.coerce
         .date()
@@ -20,6 +20,8 @@ const filterSchema = z.object({
     transaction_number: z.string().trim().optional(),
 });
 export type Filters = z.infer<typeof filterSchema>;
+export type FiltersInput = z.input<typeof filterSchema>;
+
 
 interface FilterFormProps {
     stores: StoreModel[];

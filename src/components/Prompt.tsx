@@ -45,6 +45,8 @@ type MoneyPromptOptions = {
 
 export type PromptOptions = NumericPromptOptions | MoneyPromptOptions;
 
+export type PromptFn = ReturnType<typeof usePrompt>["prompt"];
+
 export function usePrompt() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");

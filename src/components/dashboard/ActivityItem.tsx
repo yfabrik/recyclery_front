@@ -1,43 +1,26 @@
 import {
-  Typography,
-  Box,
+  MoreVert
+} from "@mui/icons-material";
+import {
   Avatar,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
+  Box,
   Chip,
   IconButton,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography,
 } from "@mui/material";
-import {
-  Inventory,
-  ShoppingCart,
-  People,
-  LocalShipping,
-  VolunteerActivism,
-  MoreVert,
-  Info,
-} from "@mui/icons-material";
 import React from "react";
 import type { Activity } from "../../services/api/dashboard";
+import { SelectedIcon } from "../SelectedIcon";
 
-// Fonction pour obtenir l'icône par nom
-const getIconByName = (iconName: string) => {
-  const icons = {
-    ShoppingCart,
-    VolunteerActivism,
-    LocalShipping,
-    Inventory,
-    People,
-  };
-  return icons[iconName] || Info;
-};
 
 
 interface ActivityItemProps {
   activity: Activity
 }
 export const ActivityItem = ({ activity }: ActivityItemProps) => {
-  const IconComponent = getIconByName(activity.icon);
 
   return (
     <ListItem sx={{ px: 0 }}>
@@ -45,7 +28,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
         <Avatar
           sx={{ bgcolor: `${activity.color}.main`, width: 40, height: 40 }}
         >
-          <IconComponent />
+          <SelectedIcon iconName={activity.icon} />
         </Avatar>
       </ListItemAvatar>
       <ListItemText

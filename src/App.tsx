@@ -1,33 +1,33 @@
-import React, { useState, type ReactNode } from "react";
-import { Routes, Route, Navigate } from "react-router";
 import { Box, CircularProgress, Container } from "@mui/material";
+import { useState, type ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router";
 import { useAuth, type PermissionModule } from "./contexts/AuthContext";
 
 // Components
+import Banner from "./components/Banner";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-import Banner from "./components/Banner";
 
 // Pages
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Users from "./pages/Users";
-import Settings from "./pages/Settings";
-import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
-import CollectionReceipts from "./pages/CollectionReceipts";
-import Arrivals from "./pages/Arrivals";
-import Labels from "./pages/Labels";
-import PointOfSale from "./pages/PointOfSale";
-import GiftCard from "./pages/GiftCard";
-import WasteManagement from "./pages/WasteManagement";
-import EmployeeTools from "./pages/EmployeeTools";
+import CustomTaskScheduleManagement from "./components/admin/config/CustomTaskScheduleManagement";
 import EmployeeManagement from "./components/admin/config/EmployeeManagement";
 import TaskManagement from "./components/admin/config/TaskManagement";
-import CustomTaskScheduleManagement from "./components/admin/config/CustomTaskScheduleManagement";
-import Planning from "./pages/Planning";
+import Admin from "./pages/Admin";
+import Arrivals from "./pages/Arrivals";
+import CollectionReceipts from "./pages/CollectionReceipts";
+import Dashboard from "./pages/Dashboard";
 import EcoOrganismStatsPage from "./pages/EcoOrganismStatsPage";
+import EmployeeTools from "./pages/EmployeeTools";
+import GiftCard from "./pages/GiftCard";
+import Labels from "./pages/Labels";
+import Login from "./pages/Login";
+import Planning from "./pages/Planning";
+import PointOfSale from "./pages/PointOfSale";
+import Profile from "./pages/Profile";
+import Register from "./pages/Register";
+import Settings from "./pages/Settings";
+import Users from "./pages/Users";
+import WasteManagement from "./pages/WasteManagement";
 
 // Route protégée
 const ProtectedRoute = ({ children, module }: { children: ReactNode, module?: PermissionModule }) => {

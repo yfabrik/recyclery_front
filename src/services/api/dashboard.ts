@@ -1,7 +1,8 @@
+import type { ChipProps } from "@mui/material";
 import type { AxiosResponse } from "axios";
-import axiosInstance from "./axios";
+import type { MuiIconName } from "../../components/SelectedIcon";
 import type { StoreModel } from "../../interfaces/Models";
-import type { ReactNode } from "react";
+import axiosInstance from "./axios";
 
 export interface Activity {
   id: number
@@ -9,10 +10,10 @@ export interface Activity {
   description: string
   amount: string
   time: string
-  icon: string | ReactNode
-  color: string
+  icon: MuiIconName
+  color: NonNullable<ChipProps["color"]>
   status: string
-  statusColor: string
+  statusColor: NonNullable<ChipProps["color"]>
 }
 
 export interface Stats {
