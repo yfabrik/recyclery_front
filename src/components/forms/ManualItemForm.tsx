@@ -1,43 +1,38 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Euro, Scale } from "@mui/icons-material";
 import { Grid } from "@mui/material";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import * as z from "zod";
+import type { CategoryModel } from "../../interfaces/Models";
+import { sumPromoCategorie } from "../../services/cartService";
+import { emptyStringToNull } from "../../services/zodTransform";
+import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
   type BaseFormProps,
 } from "./FormBase";
+import {
+  manualItemSchema,
+  type ManualItemSchema,
+} from "./itemCoreSchema";
 
-import { Euro, Scale } from "@mui/icons-material";
-import { useEffect } from "react";
-import * as z from "zod";
-import type { CategoryModel } from "../../interfaces/Models";
-import { idSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
-import { usePrompt } from "../Prompt";
-import { sumPromoCategorie } from "../../services/cartService";
 
-const schema = z.object({
-  category_id: idSchema("categorie requis"),
-  subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  weight: z.coerce.number().positive(),
-  price: z.coerce.number("prix requis").positive("prix requis"),
-  description: z.string(),
-  promotion: z.coerce.number().min(0).max(100),
-});
+type FormValues = z.input<ReturnType<typeof manualItemSchema>>;
 
-export type Schema = z.infer<typeof schema>;
 export const ManualItemForm = ({
   formId,
   onSubmit,
   defaultValues,
   categories,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<ManualItemSchema> & {
   categories: CategoryModel[];
 }) => {
   const { prompt, PromptDialog } = usePrompt();
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm({
-    resolver: zodResolver(schema),
+  const form = useForm<FormValues, unknown, ManualItemSchema>({
+    resolver: zodResolver(manualItemSchema(categories)),
     defaultValues: {
       category_id: "",
       subcategory_id: "",
@@ -80,9 +75,27 @@ export const ManualItemForm = ({
     }
 
   }, [categoryId, subcategoryId, categories]);
-
+  // const onDefaults = useCallback(
+  //   ({
+  //     category,
+  //     subcategory,
+  //   }: {
+  //     category: CategoryModel | undefined;
+  //     subcategory: CategoryModel | undefined;
+  //   }) => {
+  //     const promoState = form.getFieldState("promotion");
+  //     const promoValue = (form.getValues("promotion") || 0) as number;
+  //     const promo =
+  //       sumPromoCategorie(category) + sumPromoCategorie(subcategory);
+  //     if (!promoState.isDirty || promo > promoValue) {
+  //       form.setValue("promotion", promo);
+  //     }
+  //   },
+  //   [form],
+  // );
   return (
     <>
+      {PromptDialog}
       <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <FormCategorySubcategoryFields
@@ -232,7 +245,6 @@ export const ManualItemForm = ({
           </Grid>
         </Grid>
       </form>
-      {PromptDialog}
     </>
   );
 };

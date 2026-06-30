@@ -34,23 +34,24 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
+import { AutoPrintToggle } from "../components/AutoPrintToggle";
 import { useLabelPrint } from "../components/LabelPrint";
 import { Loading } from "../components/Loading";
 import { StatCard } from "../components/StatCard";
-import { LabelFiltersForm, type Filters } from "../components/forms/LabelFiltersForm";
+import { LabelFiltersForm } from "../components/forms/LabelFiltersForm";
 import {
   LabeledItemForm,
-  type Schema,
 } from "../components/forms/LabeledItemForm";
-import type { LabeledItemModel } from "../interfaces/Models";
+import type { LabeledItemSchema } from "../components/forms/itemCoreSchema";
+import { filterSchema, parseFilters, type FilterInput } from "../components/forms/labelFiltersSchema";
 import {
   getLabeledItemConditionColor,
   getLabeledItemConditionLabel,
@@ -59,6 +60,7 @@ import {
   getLabeledItemStatusColor,
   getLabeledItemStatusLabel,
 } from "../constants/labeledItemStatuses";
+import type { LabeledItemModel } from "../interfaces/Models";
 import { fetchCategories as fcat } from "../services/api/categories";
 import {
   createLabeledItem,
@@ -74,9 +76,10 @@ const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LabeledItemModel | null>(null);
+  const [autoPrint, setAutoPrint] = useState(true);
 
 
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState<FilterInput>({
     status: "",
     category_id: "",
     search: "",
@@ -87,14 +90,15 @@ const Labels = () => {
   const items = useQuery({
     queryKey: ["items", { filters }, page],
     queryFn: () => {
-      const params = new URLSearchParams();
+      const applied = filterSchema.parse(filters);
+      // const applied = parseFilters(filters);
 
-      if (filters.status) params.append("status", filters.status);
-      if (filters.category_id)
-        params.append("category_id", filters.category_id);
-      if (filters.search) params.append("search", filters.search);
-      params.append("page", page.toString());
-      return getLabeledItems(params).then((response) => response.data);
+      return getLabeledItems({
+        ...(applied.status && { status: applied.status }),
+        ...(applied.category_id != null && { category_id: applied.category_id }),
+        ...(applied.search && { search: applied.search }),
+        page,
+      }).then((response) => response.data);
     },
   });
   useQueryErrorToast(items.error, "Erreur lors du chargement des articles");
@@ -102,14 +106,14 @@ const Labels = () => {
   const itemStats = useQuery({
     queryKey: ["itemStats", "items", { filters }],
     queryFn: () => {
-      const params = new URLSearchParams();
+      const applied = parseFilters(filters);
 
-      if (filters.status) params.append("status", filters.status);
-      if (filters.category_id)
-        params.append("category_id", filters.category_id);
-      if (filters.search) params.append("search", filters.search);
-      params.append("page", page.toString());
-      return getItemStats(params).then((response) => response.data.stats)
+      return getItemStats({
+        ...(applied.status && { status: applied.status }),
+        ...(applied.category_id != null && { category_id: applied.category_id }),
+        ...(applied.search && { search: applied.search }),
+        page,
+      }).then((response) => response.data.stats)
     },
   })
 
@@ -125,18 +129,17 @@ const Labels = () => {
   });
 
   const addItem = useMutation({
-    mutationFn: (data: Schema) => createLabeledItem(data),
-    onSuccess: (data, variables) => {
-      saved(data, variables);
+    mutationFn: (data: LabeledItemSchema) => createLabeledItem(data),
+    onSuccess: (data) => {
+      saved(data);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editItem = useMutation({
-    mutationFn: (data: { id: number; data: Schema }) =>
+    mutationFn: (data: { id: number; data: LabeledItemSchema }) =>
       updateLabeledItem(data.id, data.data),
-    onSuccess: (data, variables, context) => {
-      console.log(context, data, variables);
-      return saved(data, variables.data);
+    onSuccess: (data) => {
+      return saved(data);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
@@ -168,9 +171,8 @@ const Labels = () => {
       unknown,
       object
     >,
-    variables: Schema,
   ) => {
-    if (variables.autoPrint && data.data.item) {
+    if (autoPrint && data.data.item) {
       const item = data.data.item;
       if (!item.category && item.category_id && categories.data) {
         const cat = categories.data.find((c) => c.id === item.category_id);
@@ -201,6 +203,7 @@ const Labels = () => {
 
   const handleOpenDialog = (item: LabeledItemModel | null = null) => {
     setEditingItem(item);
+    setAutoPrint(true);
     setDialogOpen(true);
   };
 
@@ -209,7 +212,7 @@ const Labels = () => {
     setEditingItem(null);
   };
 
-  const handleSave = async (data: Schema) => {
+  const handleSave = async (data: LabeledItemSchema) => {
     if (editingItem?.id) editItem.mutate({ id: editingItem.id, data });
     else addItem.mutate(data);
   };
@@ -440,12 +443,13 @@ const Labels = () => {
         </DialogTitle>
         <DialogContent>
           <LabeledItemForm
-          key={editingItem?.id ?? "new"}
+            key={editingItem?.id ?? "new"}
             formId="labelItemForm"
             categories={categories.data || []}
             onSubmit={handleSave}
             defaultValues={editingItem}
           />
+          <AutoPrintToggle checked={autoPrint} onChange={setAutoPrint} />
         </DialogContent>
 
         <DialogActions>

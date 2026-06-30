@@ -1,7 +1,7 @@
 import type { AxiosResponse } from "axios";
 import type { LabeledItemModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/LabeledItemForm";
+import type { LabeledItemPayload } from "../../components/forms/itemCoreSchema";
 
 
 export interface itemsFilters {
@@ -23,9 +23,9 @@ interface ItemStats {
 export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[], total: number }>> => axiosInstance.get("/api/labeled-items", { params: filters })
 export const findItem = (id: string | number) => axiosInstance.get("/api/labeled-items/" + id)
 
-export const updateLabeledItem = (id: number, data: Schema): Promise<AxiosResponse<{ success: true, message: string }>> => axiosInstance.put(`/api/labeled-items/${id}`, data)
+export const updateLabeledItem = (id: number, data: LabeledItemPayload): Promise<AxiosResponse<{ success: true, message: string }>> => axiosInstance.put(`/api/labeled-items/${id}`, data)
 
-export const createLabeledItem = (data: Schema): Promise<AxiosResponse<{ success: true, message: string, item: LabeledItemModel }>> => axiosInstance.post("/api/labeled-items", data)
+export const createLabeledItem = (data: LabeledItemPayload): Promise<AxiosResponse<{ success: true, message: string, item: LabeledItemModel }>> => axiosInstance.post("/api/labeled-items", data)
 
 export const deleteLabeledItem = (id: number) => axiosInstance.delete(`/api/labeled-items/${id}`)
 

@@ -1,50 +1,32 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Euro, Print, Scale } from "@mui/icons-material";
-import { Box, Grid, MenuItem, Typography } from "@mui/material";
+import { Euro, Scale } from "@mui/icons-material";
+import { Grid, MenuItem } from "@mui/material";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  LABELED_ITEM_CONDITIONS,
+} from "../../constants/labeledItemConditions";
 import type { CategoryModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
+import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
   FormSelect,
-  FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import { idSchema } from "../../interfaces/ZodTypes";
 import {
-  LABELED_ITEM_CONDITIONS,
-  LABELED_ITEM_CONDITION_VALUES,
-} from "../../constants/labeledItemConditions";
-import { usePrompt } from "../Prompt";
-import { useEffect } from "react";
+  labeledItemSchema,
+  type LabeledItemSchema,
+} from "./itemCoreSchema";
 
-interface LabeledFormProps extends BaseFormProps<Schema> {
+
+type FormValues = z.input<ReturnType<typeof labeledItemSchema>>;
+
+interface LabeledFormProps extends BaseFormProps<LabeledItemSchema> {
   categories: CategoryModel[];
 }
-const schema = (categories: CategoryModel[]) => z.object({
-  category_id: idSchema("category requis"),
-  subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  weight: z.coerce.number().positive(),
-  price: z.coerce.number().positive("prix requis"),
-  condition_state: z.enum(LABELED_ITEM_CONDITION_VALUES),
-  location: z.string().transform((v) => (v == "" ? null : v)),
-  description: z.string().transform((v) => (v == "" ? null : v)),
-  autoPrint: z.boolean().default(true),
-}).superRefine((data, ctx) => {
-  const selectedCategory = categories.find((c) => c.id === data.category_id);
-  const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
-  if (hasSubcategories && !data.subcategory_id) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["subcategory_id"],
-      message: "Sous-categorie requise",
-    });
-  }
-});
-
-export type Schema = z.infer<ReturnType<typeof schema>>;
 
 export const LabeledItemForm = ({
   formId,
@@ -55,19 +37,18 @@ export const LabeledItemForm = ({
   const { prompt, PromptDialog } = usePrompt();
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
 
-  const form = useForm({
+  const form = useForm<FormValues, unknown, LabeledItemSchema>({
     defaultValues: {
       category_id: "",
       subcategory_id: "",
       weight: 0,
       price: 0,
-      condition_state: "excellent",
+      condition_state: "excellent" as const,
       location: "",
       description: "",
-      autoPrint: true,
       ...data,
     },
-    resolver: zodResolver(schema(categories)),
+    resolver: zodResolver(labeledItemSchema(categories)),
   });
   const categoryId = form.watch("category_id");
   const subcategoryId = form.watch("subcategory_id");
@@ -227,30 +208,6 @@ export const LabeledItemForm = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                p: 2,
-                backgroundColor: "#f8f9fa",
-                borderRadius: 1,
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <Print sx={{ color: "primary.main" }} />
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" fontWeight="medium">
-                  Impression automatique
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Imprimer l'étiquette automatiquement après la sauvegarde
-                </Typography>
-              </Box>
-              <FormSwitch control={form.control} name="autoPrint" label="" />
-            </Box>
-          </Grid>
         </Grid>
       </form>
     </>

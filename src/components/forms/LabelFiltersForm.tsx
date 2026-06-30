@@ -4,33 +4,35 @@ import { Grid, MenuItem, Paper } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import {
   LABELED_ITEM_STATUSES,
-  LABELED_ITEM_STATUS_FILTER_VALUES,
 } from "../../constants/labeledItemStatuses";
 import { FormCategorySelect, FormInput, FormSelect } from "./FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
+import {
+  filterSchema,
+  type FilterInput,
+  type Filters,
+} from "./labelFiltersSchema";
 
-const filterSchema = z.object({
-    category_id: z.union([idSchema(), nullString()]),
-    search: z.string().trim().optional(),
-    status: z.enum(LABELED_ITEM_STATUS_FILTER_VALUES),
+// const filterSchema = z.object({
+//     category_id: z.union([idSchema(), nullString()]),
+//     search: z.string().trim().optional(),
+//     status: z.enum(LABELED_ITEM_STATUS_FILTER_VALUES),
 
-});
-export type Filters = z.infer<typeof filterSchema>;
+// });
+// export type Filters = z.infer<typeof filterSchema>;
 
 interface FilterFormProps {
-    defaultValues: Filters;
+    defaultValues: FilterInput;
     onChange: (values: Filters) => void;
     categories: CategoryModel[]
 }
 
 export const LabelFiltersForm = ({ defaultValues, onChange, categories }: FilterFormProps) => {
 
-    const filters = useForm({
+    const filters = useForm<FilterInput, unknown, Filters>({
         defaultValues,
         resolver: zodResolver(filterSchema),
     });

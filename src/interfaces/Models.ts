@@ -144,9 +144,9 @@ export interface LabeledItemModel extends BaseModel {
   cost: number | null;
   condition_state: "excellent" | "good" | "fair" | "poor";
   status: "available" | "sold";
-  category?: Pick<CategoryModel, "name">;
-  subcategory?: Pick<CategoryModel, "name"> | null;
-  createdBy?: Pick<UserModel, "username">;
+  category?: CategoryModel;
+  subcategory?: CategoryModel | null;
+  createdBy?: UserModel;
   recyclery?: StoreModel;
   SalesTransaction?: TransactionModel;
   transactionItem?: TransactionItem;

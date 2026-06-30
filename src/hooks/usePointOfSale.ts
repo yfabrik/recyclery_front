@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import type { Schema as ManualItemSchema } from "../components/forms/ManualItemForm";
+import {
+  type CartFormValues,
+  type CartItem,
+  type Schema as CartSchema,
+} from "../components/forms/cartSchema";
 import type {
   CashSession,
   CategoryModel,
@@ -19,14 +23,10 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-import type { ReceiptSale } from "../utils/transactionReceipt";
-import {
-  type CartFormValues,
-  type CartItem,
-  type Schema as CartSchema,
-} from "../components/forms/cartSchema";
-import { useCheckoutFormCore } from "./useCheckoutFormCore";
 import { buildTransactionBody } from "../utils/transactionBody";
+import type { ReceiptSale } from "../utils/transactionReceipt";
+import { useCheckoutFormCore } from "./useCheckoutFormCore";
+import type { ManualItemSchema } from "../components/forms/itemCoreSchema";
 
 const defaultFormValues: CartFormValues = {
   cart: [],
