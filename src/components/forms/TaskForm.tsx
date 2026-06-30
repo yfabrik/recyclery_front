@@ -147,8 +147,8 @@ export const TaskForm = ({
 
   const requiredSkills = form.watch("required_skills") || [];
   const equipmentNeeded = form.watch("equipment_needed") || [];
-  const isRecurring = form.watch("is_recurring");
-  const pattern = form.watch("recurrence_pattern");
+  // const isRecurring = form.watch("is_recurring");
+  // const pattern = form.watch("recurrence_pattern");
 
   const toggleArrayField = (
     field: "required_skills" | "equipment_needed",

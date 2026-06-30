@@ -69,6 +69,41 @@ import {
   updateTask,
 } from "../services/api/tasks";
 
+type TaskStatus =
+  | "new"
+  | "planned"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+type StatusOption = {
+  value: TaskStatus;
+  label: string;
+  color: string;
+  icon: React.ReactNode;
+};
+
+type HasUniqueValues<
+  T extends readonly StatusOption[],
+  Seen = never,
+> = T extends readonly [infer Head, ...infer Tail]
+  ? Head extends { value: infer V }
+    ? V extends Seen
+      ? false
+      : Tail extends readonly StatusOption[]
+        ? HasUniqueValues<Tail, Seen | V>
+        : false
+    : false
+  : true;
+
+function defineStatusOptions<const T extends readonly StatusOption[]>(
+  options: T &
+    (TaskStatus extends T[number]["value"] ? unknown : never) &
+    (HasUniqueValues<T> extends true ? unknown : never),
+): T {
+  return options;
+}
+
 const Planning = () => {
   const navigate = useNavigate();
   // Fonction pour générer une couleur basée sur le nom de l'employé
@@ -129,7 +164,7 @@ const Planning = () => {
   // const [showWorkdayWarning, setShowWorkdayWarning] = useState(false);
   // const [workdayWarningInfo, setWorkdayWarningInfo] = useState(null);
 
-  const statusOptions = [
+  const statusOptions = defineStatusOptions([
     { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
     { value: "planned", label: "Planifié", color: "primary", icon: <Task /> },
     {
@@ -140,7 +175,7 @@ const Planning = () => {
     },
     { value: "completed", label: "Terminé", color: "success", icon: <Save /> },
     { value: "cancelled", label: "Annulé", color: "error", icon: <Stop /> },
-  ];
+  ] as const);
 
   const date_from = () => {
     if (viewMode == "week") {
@@ -604,7 +639,9 @@ const Planning = () => {
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           onNewTask={() => handleOpenDialog()}
-          statusFilters={viewMode === "calendar" ? statusOptions : undefined}
+          statusFilters={
+            viewMode === "calendar" ? [...statusOptions] : undefined
+          }
           filterStatus={viewMode === "calendar" ? filterStatus : undefined}
           onFilterStatusChange={
             viewMode === "calendar" ? setFilterStatus : undefined

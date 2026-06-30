@@ -16,7 +16,7 @@ import {
 } from "react-hook-form";
 import z from "zod";
 import { FormTime, type BaseFormProps } from "./FormBase";
-import type { WorkdaysModel } from "../../interfaces/Models";
+import type { WorkdaysModelTransformed } from "../../services/api/users";
 import {
   WORKDAY_TIME_SLOT_VALUES,
   getWorkdayTimeSlotLabel,
@@ -42,16 +42,18 @@ const schema = z.object({
   week2: z.array(workdaySchema),
 });
 
-export type Workday = z.infer<typeof workdaySchema>;
+export type Workday = z.output<typeof workdaySchema>;
+export type WorkdayInput = z.input<typeof workdaySchema>;
 
-export type Schema = z.infer<typeof schema>;
+export type Schema = z.output<typeof schema>;
+export type FormValues = z.input<typeof schema>;
 
 export const EmployeeWorkdaysForm = ({
   formId,
   onSubmit,
   defaultValues,
   defaults,
-}: BaseFormProps<Schema> & { defaults?: WorkdaysModel[] }) => {
+}: BaseFormProps<Schema> & { defaults?: WorkdaysModelTransformed[] }) => {
   const [tabValue, setTabValue] = useState(0);
 
   // const workdays: z.infer<typeof workdaySchema>[] = [
@@ -76,8 +78,8 @@ export const EmployeeWorkdaysForm = ({
   // });
 
   const fillWithDefault = (
-    def?: WorkdaysModel[],
-  ): Workday[] => {
+    def?: WorkdaysModelTransformed[],
+  ): WorkdayInput[] => {
     return [1, 2, 3, 4, 5, 6, 0].flatMap((day) => {
       return WORKDAY_TIME_SLOT_VALUES.map((slot) => {
         const today = new Intl.DateTimeFormat("fr", {
@@ -100,7 +102,7 @@ export const EmployeeWorkdaysForm = ({
     });
   };
 
-  const form = useForm({
+  const form = useForm<FormValues, unknown, Schema>({
     defaultValues: {
       week1: [
         ...fillWithDefault(
@@ -195,7 +197,7 @@ const Horaires = ({
   control,
   name,
 }: {
-  control: Control<Schema, unknown, Schema>;
+  control: Control<FormValues, unknown, Schema>;
   name: `week1.${number}` | `week2.${number}`;
 }) => {
   const isWorking = useWatch({
@@ -224,7 +226,7 @@ const Horaires = ({
 };
 
 interface HalfDayProps {
-  control: Control<Schema, unknown, Schema>;
+  control: Control<FormValues, unknown, Schema>;
   name: `week1.${number}` | `week2.${number}`;
   slot: Workday["time_slot"];
   day: string;

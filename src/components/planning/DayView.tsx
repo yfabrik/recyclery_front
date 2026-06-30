@@ -17,6 +17,7 @@ import {
   IconButton,
   Stack,
   Typography,
+  type ChipProps,
 } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
 import { getTaskVariant, taskCardStyles } from "./planningTaskStyles";
@@ -28,7 +29,7 @@ interface StatusInfo {
 
 interface PriorityInfo {
   label: string;
-  color: string;
+  color: NonNullable<ChipProps["color"]>;
 }
 
 interface DayViewProps {
@@ -41,7 +42,7 @@ interface DayViewProps {
   getPriorityInfo: (priority: string) => PriorityInfo;
   isManuallyCreatedTask?: (t: TaskModel) => boolean;
 }
-
+//TODO fixme repetition of code
 export const DayView = ({
   handleOpenDialog,
   handleDeleteTask,
@@ -84,14 +85,14 @@ export const DayView = ({
                     label={`${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0",
+                          s.start_time.toString().split(":")[0] || "0",
                         );
                         return startHour >= 8 && startHour < 12;
                       }).length
                     } tâche${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0",
+                          s.start_time.toString().split(":")[0] || "0",
                         );
                         return startHour >= 8 && startHour < 12;
                       }).length > 1
@@ -122,20 +123,20 @@ export const DayView = ({
               <Stack spacing={2}>
                 {daySchedules.filter((schedule) => {
                   const startHour = parseInt(
-                    schedule.start_time?.split(":")[0] || "0",
+                    schedule.start_time.toString().split(":")[0] || "0",
                   );
                   return startHour >= 8 && startHour < 12;
                 }).length > 0 ? (
                   daySchedules
                     .filter((schedule) => {
                       const startHour = parseInt(
-                        schedule.start_time?.split(":")[0] || "0",
+                        schedule.start_time.toString().split(":")[0] || "0",
                       );
                       return startHour >= 8 && startHour < 12;
                     })
                     .map((schedule, index) => {
                       const statusInfo = getStatusInfo(schedule.status);
-                      const priorityInfo = getPriorityInfo(schedule.priority);
+                      const priorityInfo = getPriorityInfo(schedule.priority||"");
 
                       return (
                         <Card
@@ -274,15 +275,15 @@ export const DayView = ({
                               sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
                               <Store sx={{ fontSize: 14 }} />
-                              {schedule.store_name || "Magasin non assigné"}
+                              {schedule.Recyclery?.name || "Magasin non assigné"}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
                               display="block"
                             >
-                              {formatTime(schedule.start_time)} -{" "}
-                              {formatTime(schedule.end_time)}
+                              {formatTime(schedule.start_time.toString())} -{" "}
+                              {formatTime(schedule.end_time.toString())}
                             </Typography>
                             <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                               <Chip
@@ -345,14 +346,14 @@ export const DayView = ({
                     label={`${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0",
+                          s.start_time.toString().split(":")[0] || "0",
                         );
                         return startHour >= 13 && startHour < 17;
                       }).length
                     } tâche${
                       daySchedules.filter((s) => {
                         const startHour = parseInt(
-                          s.start_time?.split(":")[0] || "0",
+                          s.start_time.toString().split(":")[0] || "0",
                         );
                         return startHour >= 13 && startHour < 17;
                       }).length > 1
@@ -383,20 +384,20 @@ export const DayView = ({
               <Stack spacing={2}>
                 {daySchedules.filter((schedule) => {
                   const startHour = parseInt(
-                    schedule.start_time?.split(":")[0] || "0",
+                    schedule.start_time.toString().split(":")[0] || "0",
                   );
                   return startHour >= 13 && startHour < 17;
                 }).length > 0 ? (
                   daySchedules
                     .filter((schedule) => {
                       const startHour = parseInt(
-                        schedule.start_time?.split(":")[0] || "0",
+                        schedule.start_time.toString().split(":")[0] || "0",
                       );
                       return startHour >= 13 && startHour < 17;
                     })
                     .map((schedule, index) => {
                       const statusInfo = getStatusInfo(schedule.status);
-                      const priorityInfo = getPriorityInfo(schedule.priority);
+                      const priorityInfo = getPriorityInfo(schedule.priority||"");
 
                       return (
                         <Card
@@ -535,15 +536,15 @@ export const DayView = ({
                               sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
                             >
                               <Store sx={{ fontSize: 14 }} />
-                              {schedule.store_name || "Magasin non assigné"}
+                              {schedule.Recyclery?.name || "Magasin non assigné"}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
                               display="block"
                             >
-                              {formatTime(schedule.start_time)} -{" "}
-                              {formatTime(schedule.end_time)}
+                              {formatTime(schedule.start_time.toString())} -{" "}
+                              {formatTime(schedule.end_time.toString())}
                             </Typography>
                             <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                               <Chip

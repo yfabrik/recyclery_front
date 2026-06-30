@@ -26,9 +26,9 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, type ElementType } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, type PermissionAction, type PermissionModule } from '../contexts/AuthContext';
 import { getUserRoleLabel } from '../constants/userRoles';
 
 interface NavBarProps {
@@ -58,6 +58,12 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
   };
 
 
+  type NavItem = {
+    label: string;
+    path: string;
+    icon: ElementType;
+    permission: `${PermissionModule}.${PermissionAction}` | "";
+  }
 
   const mainMenuItems = [
     { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, permission: 'dashboard.read' },
@@ -67,17 +73,20 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
     { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'waste.read' },
     { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: "" },
     { label: 'Administration', path: '/admin', icon: AdminPanelSettings, permission: "administration.read" },
-  ] as const;
+    ] as const satisfies readonly NavItem[];
 
-  const otherMenuItems = [
-    { label: 'Ventes', path: '/sales', icon: PointOfSale, permission: 'reports.sales' },
-    { label: 'Recycleries', path: '/recycleries', icon: Store, permission: 'admin.stores' },
-    { label: 'Paramètres', path: '/settings', icon: Settings, permission: 'admin.users' },
-  ];
+  // const otherMenuItems = [
+  //   { label: 'Ventes', path: '/sales', icon: PointOfSale, permission: 'reports.sales' },
+  //   { label: 'Recycleries', path: '/recycleries', icon: Store, permission: 'admin.stores' },
+  //   { label: 'Paramètres', path: '/settings', icon: Settings, permission: 'admin.users' },
+  // ] as const satisfies readonly NavItem[];
 
   const filteredMainMenuItems = mainMenuItems.filter(item => {
     if (!item.permission) return true;
-    const [module, action] = item.permission.split('.');
+    const [module, action] = item.permission.split('.') as [
+      PermissionModule,
+      PermissionAction,
+    ];
     return hasModuleAccess(module, action);
   });
 

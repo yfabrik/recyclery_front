@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 
 // Fonction pour obtenir l'icône par nom
 // const getIconByName = (iconName) => {
@@ -73,6 +73,9 @@ import {
 import { formatCurrency, formatPercentage } from "../services/cartService";
 import { Loading } from "../components/Loading";
 
+const ALL_STORES = "all" as const;
+type ViewStoreFilter = StoreModel["id"] | typeof ALL_STORES;
+
 const Dashboard = () => {
   const { user } = useAuth();
 
@@ -86,13 +89,12 @@ const Dashboard = () => {
       setView(newView);
     }
   };
-  const [viewStore, setViewStore] = React.useState<StoreModel["id"] | null>(
-    null,
-  );
+  const [viewStore, setViewStore] =
+    useState<ViewStoreFilter>(ALL_STORES);
 
   const handleStatsFilter = (): transactionsFilters => {
     const saleFilter: transactionsFilters = {};
-    if (viewStore) saleFilter.store_id = viewStore;
+    if (viewStore !== ALL_STORES) saleFilter.store_id = viewStore;
     switch (view) {
       case "week":
         saleFilter.date_from = dayjs().startOf("week").toISOString();
@@ -112,9 +114,11 @@ const Dashboard = () => {
 
   const handleViewStoreChange = (
     event: React.MouseEvent<HTMLElement>,
-    newView: StoreModel["id"] | null,
+    newView: ViewStoreFilter | null,
   ) => {
-    setViewStore(newView);
+    if (newView !== null) {
+      setViewStore(newView);
+    }
   };
 
   // Données simulées réalistes pour la démonstration
@@ -239,8 +243,8 @@ const Dashboard = () => {
         ),
     });
   };
-
-  const calculateTrend = (current: number = 0, previous: number = 0) => {
+  type TrendDirection = "up" | "down";
+  const calculateTrend = (current: number = 0, previous: number = 0):{direction: TrendDirection , value: string} | null => {
     if (!previous) return null;
     const percentage = formatPercentage((current - previous) / previous);
     return {
@@ -498,7 +502,7 @@ const Dashboard = () => {
               exclusive
               onChange={handleViewStoreChange}
             >
-              <ToggleButton value={null}>TOUT</ToggleButton>
+              <ToggleButton value={ALL_STORES}>TOUT</ToggleButton>
               {storesStats.data?.map((store) => (
                 <ToggleButton value={store.id}>{store.name}</ToggleButton>
               ))}

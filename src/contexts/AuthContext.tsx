@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: AuthProps) => {
   //   }
   // }, [user]);
   // Configuration d'axios avec le token
-  const setupAxiosInterceptors = (token: string) => {
+  const setupAxiosInterceptors = (token: string | null) => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
