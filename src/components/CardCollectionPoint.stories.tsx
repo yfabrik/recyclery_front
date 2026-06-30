@@ -24,6 +24,7 @@ const schedule: ScheduleModel = {
   scheduled_date: "2026-02-10T12:55:17.500Z",
   start_time: "2026-02-06T08:00:13.017Z",
   end_time: "2026-02-06T16:00:13.017Z",
+  schedule_id: 5,
   collection_point_id: 1,
   store_id: null,
 };

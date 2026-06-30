@@ -21,6 +21,7 @@ const sampleSchedules: TaskModel[] = [
     end_time: "2026-01-12T12:00:00.000Z",
     notes: null,
     status: null,
+    schedule_id: 60,
     day_of_week: "lundi",
   },
   {
@@ -39,6 +40,7 @@ const sampleSchedules: TaskModel[] = [
     end_time: "2026-01-13T17:00:00.000Z",
     notes: null,
     status: null,
+    schedule_id: 61,
     day_of_week: "mardi",
   },
 ];

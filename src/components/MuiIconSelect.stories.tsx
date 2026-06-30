@@ -30,6 +30,10 @@ const meta = {
       },
     },
   },
+  args: {
+    value: null,
+    onChange: () => {},
+  },
 } satisfies Meta<typeof MuiIconSelect>;
 
 export default meta;

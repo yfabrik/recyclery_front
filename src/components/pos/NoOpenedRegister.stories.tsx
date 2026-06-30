@@ -88,6 +88,7 @@ function StoryWrapper() {
         },
       }),
   );
+  const [mocksReady, setMocksReady] = useState(false);
 
   useEffect(() => {
     const originalGet = axiosInstance.get.bind(axiosInstance);
@@ -118,12 +119,19 @@ function StoryWrapper() {
     return () => {
       axiosInstance.get = originalGet;
       axiosInstance.post = originalPost;
+      setMocksReady(false);
     };
+  }, []);
+
+  useEffect(() => {
+    // Allow the component to render only after axios mocks are installed,
+    // so React Query doesn't start requests against the real API.
+    setMocksReady(true);
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NoOpenedRegister />
+      {mocksReady ? <NoOpenedRegister /> : null}
     </QueryClientProvider>
   );
 }
@@ -150,8 +158,20 @@ export const Default: Story = {};
 
 export const HistoryDialogOpened: Story = {
   play: async ({ canvasElement }) => {
-    const historyButtons = canvasElement.querySelectorAll('button[title="Voir historique"]');
-    if (!historyButtons.length) throw new Error("History button not found");
-    (historyButtons[0] as HTMLButtonElement).click();
+    const deadline = Date.now() + 10_000;
+
+    while (Date.now() < deadline) {
+      const historyButtons = canvasElement.querySelectorAll(
+        'button[title="Voir historique"]',
+      );
+      if (historyButtons.length) {
+        (historyButtons[0] as HTMLButtonElement).click();
+        return;
+      }
+
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
+    throw new Error("History button not found");
   },
 };

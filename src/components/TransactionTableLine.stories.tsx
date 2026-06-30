@@ -14,6 +14,8 @@ const baseTransaction: TransactionModel = {
   transactionType: "sell",
   payment_amount: 45.5,
   status: "completed",
+  created_by: 1,
+  total_amount_before_promotion: 45.5,
   cash_session_id: 1,
   CashSession: {
     id: 1,

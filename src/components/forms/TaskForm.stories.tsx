@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { noopSubmit } from "../../stories/fixtures";
 import { TaskForm } from "./TaskForm";
 
+const nowIso = new Date().toISOString();
+
 const meta = {
   title: "Forms/TaskForm",
   component: TaskForm,
@@ -17,8 +19,8 @@ const meta = {
   args: {
     formId: "task-form",
     employees: [
-      { id: 1, fullName: "Marie Dupont", nom: "Dupont", prenom: "Marie", isActive: true },
-      { id: 2, fullName: "Jean Martin", nom: "Martin", prenom: "Jean", isActive: true },
+      { id: 1, createdAt: nowIso, fullName: "Marie Dupont", nom: "Dupont", prenom: "Marie", isActive: true },
+      { id: 2, createdAt: nowIso, fullName: "Jean Martin", nom: "Martin", prenom: "Jean", isActive: true },
     ],
     onSubmit: noopSubmit,
   },

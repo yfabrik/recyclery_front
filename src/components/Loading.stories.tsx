@@ -23,6 +23,10 @@ const meta = {
       },
     },
   },
+  args: {
+    isLoading: false,
+    children: null,
+  },
 } satisfies Meta<typeof Loading>;
 
 export default meta;

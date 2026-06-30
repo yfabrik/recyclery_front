@@ -23,6 +23,7 @@ const meta = {
     formId: "arrival-form",
     categories: mockCategories,
     collectionPoints: mockCollectionPoints,
+    loading: false,
     onSubmit: noopSubmit,
   },
 } satisfies Meta<typeof ArrivalForm>;

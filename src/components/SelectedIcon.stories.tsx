@@ -26,6 +26,9 @@ const meta = {
       },
     },
   },
+  args: {
+    iconName: "Category",
+  },
 } satisfies Meta<typeof SelectedIcon>;
 
 export default meta;
