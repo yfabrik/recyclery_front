@@ -174,7 +174,7 @@ export const SalesHistory = ({
 
   const handleSubmitRefund = async (data: RefundSchema) => {
     if (!selectedTransaction) return;
-
+    return toast.error("Cette fonctionnalité n'est pas encore disponible")
     addRefund.mutate({
       id: selectedTransaction.id,
       data: buildCreateRefundBody(data, activeSession.id),
