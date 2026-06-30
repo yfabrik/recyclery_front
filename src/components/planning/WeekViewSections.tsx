@@ -240,8 +240,8 @@ const WeekViewSections = ({
         chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
         cardColor="#2196f3"
         borderColor="#2196f3"
-        showAddButton
-        onAddClick={(day) => handleOpenDialog(null, day)}
+        // showAddButton
+        // onAddClick={(day) => handleOpenDialog(null, day)}
         rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day, index) => {

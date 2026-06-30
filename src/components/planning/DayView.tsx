@@ -16,21 +16,13 @@ import {
   Grid,
   IconButton,
   Stack,
-  Typography,
-  type ChipProps,
+  Typography
 } from "@mui/material";
+import type { TaskPriority } from "../../constants/taskPriorities";
 import type { TaskModel } from "../../interfaces/Models";
+import type { StatusOption } from "../../pages/Planning";
 import { getTaskVariant, taskCardStyles } from "./planningTaskStyles";
 
-interface StatusInfo {
-  label: string;
-  color: string;
-}
-
-interface PriorityInfo {
-  label: string;
-  color: NonNullable<ChipProps["color"]>;
-}
 
 interface DayViewProps {
   filteredSchedules: TaskModel[];
@@ -38,8 +30,8 @@ interface DayViewProps {
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
   formatTime: (s: string) => string;
-  getStatusInfo: (status: string | null) => StatusInfo;
-  getPriorityInfo: (priority: string) => PriorityInfo;
+  getStatusInfo: (status: string | null) => StatusOption;
+  getPriorityInfo: (priority: string |null) => TaskPriority;
   isManuallyCreatedTask?: (t: TaskModel) => boolean;
 }
 //TODO fixme repetition of code

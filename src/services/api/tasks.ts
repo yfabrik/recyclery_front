@@ -9,11 +9,8 @@ interface filterTask {
   date_to?: string | Date;
   category?: TaskModel["category"];
 }
-export const getTasks = (filter?: filterTask): Promise<AxiosResponse<{ message: string, tasks: TaskModel[] }>> => {
-  if (filter?.include)
-    filter = { ...filter, include: filter.include.toString() }
-  return axiosInstance.get("/api/tasks", { params: filter });
-}
+export const getTasks = (filter?: filterTask): Promise<AxiosResponse<{ message: string, tasks: TaskModel[] }>> =>
+  axiosInstance.get("/api/tasks", { params: { ...filter, include: filter?.include?.toString() } });
 
 export const getEmployeesForTask = (id: number): Promise<AxiosResponse<{
   message: string, employees: EmployeeModel []

@@ -30,13 +30,13 @@ export const fetchCaisses = (storeId: number): Promise<AxiosResponse<{ message: 
 export const createCaisse = (storeId: number, data: { name: string }) =>
   axiosInstance.post(`/api/stores/${storeId}/cash-registers`, data);
 
-export const fetchCaisses2 = (storeId: number) =>
-  axiosInstance.get(`/api/cash-registers/store/${storeId}`); //TODO store en param
+// export const fetchCaisses2 = (storeId: number) =>
+//   axiosInstance.get(`/api/cash-registers/store/${storeId}`); //TODO store en param
 
-export const updateCaisse = (id: number, data) =>
-  axiosInstance.put(`/api/cash-registers/${id}`, data);
-export const createCaisse2 = (data) =>
-  axiosInstance.post("/api/cash-registers", data);
+// export const updateCaisse = (id: number, data) =>
+//   axiosInstance.put(`/api/cash-registers/${id}`, data);
+// export const createCaisse2 = (data) =>
+//   axiosInstance.post("/api/cash-registers", data);
 export const getActiveCaisses = (): Promise<AxiosResponse<{ message: string, session?: CashSession }>> =>
   axiosInstance.get("/api/cash-sessions/active"); //TODO params
 export const deleteCaisse = (id: number) =>
