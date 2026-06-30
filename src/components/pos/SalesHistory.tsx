@@ -166,7 +166,7 @@ export const SalesHistory = ({
   })
 
   const handleRemoveTransaction = (data: TransactionModel["id"]) => {
-   return toast.error("Cette fonctionnalité n'est pas encore disponible")
+  //  return toast.error("Cette fonctionnalité n'est pas encore disponible")
     if (window.confirm("supprimer la transaction ?")) {
       removeTransaction.mutate(data)
     }
@@ -183,6 +183,7 @@ export const SalesHistory = ({
 
   const handleSaveTransaction = (data: EditTransactionSchema) => {
     if (!selectedTransaction) return;
+    return toast.error("Cette fonctionnalité n'est pas encore disponible")
 
     editTransaction.mutate({
       id: selectedTransaction.id,
