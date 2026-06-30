@@ -1,18 +1,15 @@
 import {
   Add,
   Assignment,
-  Flag,
-  FlagOutlined,
   Person,
   PersonAdd,
   PlayArrow,
   Print,
-  PriorityHigh,
   Save,
   Settings,
   Stop,
   Task,
-  Warning,
+  Warning
 } from "@mui/icons-material";
 import {
   Alert,
@@ -37,17 +34,11 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { TASK_PRIORITIES } from "../constants/taskPriorities";
-import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../utils/apiToastMessage";
-import {
   PlaningForm,
-  type Schema as TaskFormSchema,
+  type Schema as PlanningFormSchema,
 } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
@@ -55,6 +46,8 @@ import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
 import { EmployeePresenceSchedule } from "../components/planning/PresenceEmployees";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
+import { TASK_PRIORITIES } from "../constants/taskPriorities";
+import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import type {
   EmployeeModel,
   StoreModel,
@@ -68,6 +61,10 @@ import {
   getTasks,
   updateTask,
 } from "../services/api/tasks";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../utils/apiToastMessage";
 
 type TaskStatus =
   | "new"
@@ -76,7 +73,7 @@ type TaskStatus =
   | "completed"
   | "cancelled";
 
-type StatusOption = {
+export type StatusOption = {
   value: TaskStatus;
   label: string;
   color: string;
@@ -102,6 +99,19 @@ function defineStatusOptions<const T extends readonly StatusOption[]>(
     (HasUniqueValues<T> extends true ? unknown : never),
 ): T {
   return options;
+}
+
+function taskToFormValues(task: Partial<TaskModel>): Partial<PlanningFormSchema> {
+  return {
+    name: task.name,
+    category: task.category,
+    priority: task.priority ?? "medium",
+    scheduled_date: task.scheduled_date ? new Date(task.scheduled_date) : undefined,
+    start_time: task.start_time ? new Date(task.start_time) : undefined,
+    end_time: task.end_time ? new Date(task.end_time) : undefined,
+    notes: task.notes ?? "",
+    store_id: task.store_id ?? "",
+  };
 }
 
 const Planning = () => {
@@ -138,8 +148,9 @@ const Planning = () => {
   };
   const [selectedStore, setSelectedStore] = useState<StoreModel | null>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingSchedule, setEditingSchedule] =
-    useState<Partial<TaskModel> | null>(null);
+  const [editingScheduleId, setEditingScheduleId] = useState<number | null>(null);
+  const [formDefaults, setFormDefaults] =
+    useState<Partial<PlanningFormSchema> | null>(null);
 
   // États pour l'assignation des employés depuis le planning
   const [openTaskAssignmentDialog, setOpenTaskAssignmentDialog] =
@@ -255,7 +266,8 @@ const Planning = () => {
   });
 
   const addTask = useMutation({
-    mutationFn: (data: TaskFormSchema) => createTask(data),
+    //TODO faudra fix quand on changera les api non lié au form
+    mutationFn: (data: Parameters<typeof createTask>[0]) => createTask(data),
 
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Planning créé avec succès"));
@@ -266,7 +278,7 @@ const Planning = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editTask = useMutation({
-    mutationFn: (data: { id: number; data: TaskFormSchema }) =>
+    mutationFn: (data: { id: number; data: Parameters<typeof updateTask>[1] }) =>
       updateTask(data.id, data.data),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Planning mis à jour avec succès"));
@@ -353,7 +365,7 @@ const Planning = () => {
 
     const newYear = new Date(selectedDate.getFullYear(), 0, 1);
     const dayNumber = Math.floor(
-      (selectedDate - newYear) / (24 * 60 * 60 * 1000),
+      (selectedDate.getTime() - newYear.getTime()) / (24 * 60 * 60 * 1000),
     );
     const weekNumber = Math.ceil((selectedDate.getDay() + dayNumber + 1) / 7);
     const weekToProcess =
@@ -426,8 +438,11 @@ const Planning = () => {
     schedule: TaskModel | null = null,
     selectedDate: Date | null = null,
   ) => {
-    setEditingSchedule(
-      schedule || { scheduled_date: selectedDate || new Date() },
+    setEditingScheduleId(schedule?.id ?? null);
+    setFormDefaults(
+      schedule
+        ? taskToFormValues(schedule)
+        : { scheduled_date: selectedDate || new Date() },
     );
 
     setOpenDialog(true);
@@ -435,12 +450,26 @@ const Planning = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setEditingSchedule(null);
+    setEditingScheduleId(null);
+    setFormDefaults(null);
   };
 
-  const handleSave = async (data: TaskFormSchema) => {
-    if (editingSchedule?.id) editTask.mutate({ id: editingSchedule.id, data });
-    else addTask.mutate(data);
+  const handleSave = async (data: PlanningFormSchema) => {
+    const { store_id, recurrence_pattern, notes, ...rest } = data;
+    const result = {
+      ...rest,
+      notes: notes || null,
+      recurrence_pattern: recurrence_pattern === "" ? null : recurrence_pattern,
+      store_id: store_id === "" ? null : store_id,
+      description: null,
+      location: null,
+      required_skills: [] as string[],
+      equipment_needed: [] as string[],
+      is_recurring: recurrence_pattern !== "",
+    };
+    if (editingScheduleId)
+      editTask.mutate({ id: editingScheduleId, data: result });
+    else addTask.mutate(result);
   };
 
   const handleDeleteTask = async (schedule: TaskModel) => {
@@ -559,20 +588,16 @@ const Planning = () => {
   //   setPendingScheduleData(null);
   // };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("fr-FR");
-  };
-
-  const formatTime = (timeString) => {
+  const formatTime = (timeString: string) => {
     if (!timeString) return "";
     return timeString.substring(0, 5);
   };
-  const getStatusInfo = (status) => {
+  const getStatusInfo = (status: string | null) => {
     return statusOptions.find((s) => s.value === status) || statusOptions[1]; // Utiliser 'planned' par défaut
   };
 
 
-  const getPriorityInfo = (priority: string) => {
+  const getPriorityInfo = (priority: string | null) => {
     return (
       TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1]
     );
@@ -590,10 +615,11 @@ const Planning = () => {
               <Select
                 value={selectedStore?.id || ""}
                 onChange={(e) => {
-                  if (e.target.value == "") setSelectedStore(null);
+                  const value = e.target.value;
+                  if (!value) setSelectedStore(null);
                   else
                     setSelectedStore(
-                      stores.data?.find((s) => s.id == e.target.value),
+                      stores.data?.find((s) => s.id === Number(value)),
                     );
                   // setSelectedLocation(""); // Reset location when store changes
                 }}
@@ -703,13 +729,13 @@ const Planning = () => {
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Assignment />
-            {editingSchedule ? "Modifier la tâche" : "Nouvelle tâche"}
+            {editingScheduleId ? "Modifier la tâche" : "Nouvelle tâche"}
           </Box>
         </DialogTitle>
         <DialogContent>
           <PlaningForm
             formId="planningForm"
-            defaultValues={editingSchedule}
+            defaultValues={formDefaults}
             onSubmit={handleSave}
             stores={stores.data || []}
           />
@@ -723,7 +749,7 @@ const Planning = () => {
             variant="contained"
             startIcon={<Save />}
           >
-            {editingSchedule?.id ? "Mettre à jour" : "Créer"}
+            {editingScheduleId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>

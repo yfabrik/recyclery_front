@@ -13,12 +13,7 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-import { emptyStringToNull } from "../../services/zodTransform";
-
-type StoreOption = {
-  id: number;
-  name: string;
-};
+import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
   name: noEmptyStr("name requis"),
@@ -30,18 +25,15 @@ const schema = z.object({
   start_time: z.coerce.date("L'heure de début est requise"),
   end_time: z.coerce.date("L'heure de fin est requise"),
   priority: z.string().trim().nonempty("La priorité est requise"),
-  store_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  recurrence_pattern: z
-    .enum(["", "daily", "weekly", "monthly"])
-    .transform((v) => (v === "" ? null : v)),
-  // .transform((v) => (v == "" ? null : v)),
-  notes: z.string().transform((v) => (v == "" ? null : v)),
+  store_id: z.union([idSchema(), z.literal("")]),
+  recurrence_pattern: z.enum(["", "daily", "weekly", "monthly"]),
+  notes: z.string(),
 });
 
 export type Schema = z.infer<typeof schema>;
 
 type ScheduleFormProps = BaseFormProps<Schema> & {
-  stores: StoreOption[];
+  stores: Pick<StoreModel, "id" | "name">[];
 };
 
 export const PlaningForm = ({
@@ -50,7 +42,6 @@ export const PlaningForm = ({
   defaultValues,
   stores,
 }: ScheduleFormProps) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,7 +55,7 @@ export const PlaningForm = ({
       scheduled_date: new Date(),
       store_id: "",
 
-      ...data,
+      ...defaultValues ?? {},
     },
   });
 

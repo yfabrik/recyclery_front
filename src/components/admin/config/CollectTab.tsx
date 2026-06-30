@@ -38,17 +38,27 @@ import {
 import { CollecteForm, type Schema } from "../../forms/CollecteForm";
 import { Loading } from "../../Loading";
 
+function scheduleToFormValues(collecte: ScheduleModel): Partial<Schema> {
+  return {
+    day_of_week: collecte.day_of_week,
+    is_active: collecte.is_recurring,
+    start_time: new Date(collecte.start_time),
+    end_time: new Date(collecte.end_time),
+    notes: collecte.notes ?? "",
+    store_id: collecte.store_id ?? "",
+    location: collecte.location ? collecte.location.split(",") : [],
+  };
+}
+
 export const CollectTab = () => {
   const queryClient = useQueryClient();
 
-  const [editingCollecte, setEditingCollecte] = useState<ScheduleModel | null>(
-    null,
-  );
+  const [editingCollecteId, setEditingCollecteId] = useState<number | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<Schema> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const {
     isLoading,
-    isPending,
     error,
     data: collectes,
   } = useQuery({
@@ -99,27 +109,30 @@ export const CollectTab = () => {
 
   const removeCollecte = useMutation({
     mutationFn: (id: number) => deletePlanning(id),
-    onSuccess: (deleted) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
   });
 
   const handleOpenDialog = (collecte: ScheduleModel | null = null) => {
-    const tmp = { ...collecte, location: collecte?.location ? collecte.location.split(",") : [] }
-
-    setEditingCollecte(tmp);
+    setEditingCollecteId(collecte?.id ?? null);
+    setFormDefaults(collecte ? scheduleToFormValues(collecte) : null);
     setDialogOpen(true);
   };
   const handleCloseDialog = () => {
-    setEditingCollecte(null);
+    setEditingCollecteId(null);
+    setFormDefaults(null);
     setDialogOpen(false);
   };
 
   const handleSave = async (data: Schema) => {
+    const { is_active, location, store_id, ...rest } = data;
     const result: Partial<ScheduleModel> = {
-      ...data,
-      location: data.location.join(",") ?? "",
+      ...rest,
+      is_recurring: is_active,
+      location: location.join(","),
+      store_id: store_id === "" ? null : store_id,
       name: "collecte",
       category: "collection",
       recurrence_pattern: "weekly",
@@ -148,8 +161,8 @@ export const CollectTab = () => {
         i++;
       }
     })();
-    if (editingCollecte?.id) {
-      editCollecte.mutate({ id: editingCollecte.id, data: result });
+    if (editingCollecteId) {
+      editCollecte.mutate({ id: editingCollecteId, data: result });
     } else {
       addCollecte.mutate(result);
     }
@@ -272,7 +285,7 @@ export const CollectTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingCollecte ? "Modifier la collecte" : "Nouvelle Collecte"}
+          {editingCollecteId ? "Modifier la collecte" : "Nouvelle Collecte"}
         </DialogTitle>
         <DialogContent>
           <CollecteForm
@@ -280,13 +293,13 @@ export const CollectTab = () => {
             stores={stores.data ?? []}
             collectionPoints={collectionPoints.data ?? []}
             onSubmit={handleSave}
-            defaultValues={editingCollecte}
+            defaultValues={formDefaults}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type="submit" form="createLogistic" variant="contained" loading={addCollecte.isPending || editCollecte.isPending}>
-            {editingCollecte ? "Mettre à jour" : "Créer"}
+            {editingCollecteId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>
