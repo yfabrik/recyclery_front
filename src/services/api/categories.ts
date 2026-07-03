@@ -1,57 +1,45 @@
 import type { AxiosResponse } from "axios";
-import type { CategoryModel } from "../../interfaces/Models";
+import type { CategoryListFilter, CategoryPatch } from "@recyclerie/api/schemas/categories";
+import type {
+  ListCategoriesResponse,
+  CreateCategoryResponse,
+  UpdateCategoryResponse,
+  DeleteCategoryResponse,
+  PatchCategoryResponse,
+} from "@recyclerie/api/responses/categories";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/CategorieForm";
 
-type include = "category" | "parent" | "promo"
-interface filters {
-  include?: include | include[];
-  only_category?: boolean;
-  only_sub?: boolean;
-  in?: boolean;
-  out?: boolean;
-  sell?: boolean;
-  store_id?: number
-}
+export type { CategoryListFilter, CategoryPatch };
 
-interface axiosReturn {
-  message: string;
-  categories: CategoryModel[];
-}
 export const fetchCategoryIcons = () =>
   axiosInstance.get("/api/categories/icons");
 
 export const fetchCategories = (
-  filters?: filters,
-): Promise<AxiosResponse<axiosReturn>> => {
-  return axiosInstance.get("/api/categories", {
+  filters?: Partial<CategoryListFilter>,
+): Promise<AxiosResponse<ListCategoriesResponse>> =>
+  axiosInstance.get<ListCategoriesResponse>("/api/categories", {
     params: { ...filters, include: filters?.include?.toString() },
   });
-}
 
 export const createCategory = (
   data: Schema,
-): Promise<
-  AxiosResponse<{
-    message: string;
-    category: CategoryModel;
-  }>
-> => axiosInstance.post("/api/categories", data);
+): Promise<AxiosResponse<CreateCategoryResponse>> =>
+  axiosInstance.post<CreateCategoryResponse>("/api/categories", data);
 
 export const updateCategory = (
   id: number,
   data: Schema,
-): Promise<
-  AxiosResponse<{
-    message: string;
-    category: CategoryModel;
-  }>
-> => axiosInstance.put(`/api/categories/${id}`, data);
+): Promise<AxiosResponse<UpdateCategoryResponse>> =>
+  axiosInstance.put<UpdateCategoryResponse>(`/api/categories/${id}`, data);
 
-export const deleteCategory = (id: number) =>
-  axiosInstance.delete(`/api/categories/${id}`);
+export const deleteCategory = (
+  id: number,
+): Promise<AxiosResponse<DeleteCategoryResponse>> =>
+  axiosInstance.delete<DeleteCategoryResponse>(`/api/categories/${id}`);
 
 export const patchCategory = (
   id: number,
-  data: { in?: boolean; out?: boolean; sell?: boolean },
-) => axiosInstance.patch(`/api/categories/${id}`, data);
+  data: CategoryPatch,
+): Promise<AxiosResponse<PatchCategoryResponse>> =>
+  axiosInstance.patch<PatchCategoryResponse>(`/api/categories/${id}`, data);

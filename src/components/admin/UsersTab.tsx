@@ -75,14 +75,14 @@ export const UsersTab = () => {
     queryKey: ["users", { include: "managedStores" }],
     queryFn: () =>
       fUsers({ include: "managedStores" }).then(
-        (response) => response.data.users,
+        (response) => response.data.data,
       ),
   });
   useQueryErrorToast(users.error, "Erreur lors du chargement des utilisateurs");
 
   const userStats = useQuery({
     queryKey: ["userStats"],
-    queryFn: () => getUsersStats().then((response) => response.data.stats),
+    queryFn: () => getUsersStats().then((response) => response.data.data),
     placeholderData: {
       totalUsers: 0,
       usersByRole: [],
@@ -148,7 +148,7 @@ export const UsersTab = () => {
   const stores = useQuery({
     queryKey: ["stores", "active"],
     queryFn: () =>
-      fStores({ active: true }).then((response) => response.data.stores),
+      fStores({ active: true }).then((response) => response.data.data),
   });
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
@@ -185,7 +185,7 @@ export const UsersTab = () => {
     removeUser.mutate(user.id);
   };
 
-  const formatLastLogin = (lastLogin: string) => {
+  const formatLastLogin = (lastLogin?: string | null) => {
     if (!lastLogin) return "Jamais connecté";
     return new Date(lastLogin).toLocaleDateString("fr-FR", {
       day: "2-digit",

@@ -1,127 +1,70 @@
 import type { AxiosResponse } from "axios";
+import type {
+  GiftCardIssueBody,
+  GiftCardMovementBody,
+  giftCardListFilterSchema,
+} from "@recyclerie/api/schemas/giftCards";
+import type * as z from "zod";
+import type {
+  GiftCardDto,
+  GiftCardBalanceDto,
+  ListGiftCardsResponse,
+  CreateGiftCardResponse,
+  DetailGiftCardResponse,
+  GiftCardBalanceResponse,
+  CreateGiftCardMovementResponse,
+} from "@recyclerie/api/responses/giftCards";
+import type { GiftCardStatus } from "@recyclerie/api/enums";
 import axiosInstance from "./axios";
-import type { PaginationMeta } from "./pagination";
 
-// =========================
-// Shared GiftCard Types
-// =========================
+export type GiftCardListFilter = z.infer<typeof giftCardListFilterSchema>;
 
-export type GiftCardStatus =
-  | "active"
-  | "partially_used"
-  | "redeemed"
-  | "expired"
-  | "cancelled";
-
-export type GiftCardDto = {
-  id: number;
-  code: string;
-  initial_value: number | string;
-  expires_at: string | Date | null;
-  status: GiftCardStatus;
-  currency: string;
-  issued_at: string | Date;
-  issued_transaction_id: number | null;
-  issued_refund_transaction_id: number | null;
-  created_by: number | null;
-  note: string | null;
-  recipient_name: string | null;
-  recipient_email: string | null;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  current_value: number;
+export type {
+  GiftCardDto,
+  GiftCardBalanceDto,
+  GiftCardStatus,
+  GiftCardIssueBody,
+  GiftCardMovementBody,
 };
 
-export type GetGiftCardByCodeResponse = {
-  success: true;
-  data: GiftCardDto;
-};
-
-export type PaginationDto = PaginationMeta;
-
-export type ApiErrorResponse = {
-  success: false;
-  message: string;
-  errors?: unknown;
-};
-
-// =========================
-// GET GiftCard by code
-// GET /v1/gift-cards/code/:code
-// =========================
-
-export type GetGiftCardByCodeParams = {
-  code: string;
-};
-
-export type GetGiftCardByCodeApiResponse =
-  | GetGiftCardByCodeResponse
-  | ApiErrorResponse;
-
-// =========================
-// CREATE GiftCard
-// POST /v1/gift-cards
-// =========================
-
-export type CreateGiftCardRequestBody = {
-  code: string;
-  initial_value: number;
-  expires_at?: string | Date | null;
-  issued_transaction_id?: number | null;
-  issued_refund_transaction_id?: number | null;
-  note?: string | null;
-  recipient_name?: string | null;
-  recipient_email?: string | null;
-  metadata?: Record<string, unknown> | null;
-};
-
-export type CreateGiftCardResponse = {
-  success: true;
-  message: string; // "Gift card creee"
-  data: GiftCardDto;
-};
-
-export type CreateGiftCardApiResponse =
-  | CreateGiftCardResponse
-  | ApiErrorResponse;
-
-// =========================
-// GET GiftCards (list)
-// GET /v1/gift-cards
-// =========================
-
-export type GetGiftCardsQuery = {
-  status?: GiftCardStatus;
-  code?: string;
-  limit?: number;
-  offset?: number;
-};
-
-export type GetGiftCardsResponse = {
-  success: true;
-  data: GiftCardDto[];
-  pagination: PaginationMeta;
-};
-
-export type GetGiftCardsApiResponse = GetGiftCardsResponse | ApiErrorResponse;
-
-// =========================
-// API functions
-// =========================
+export type CreateGiftCardRequestBody = GiftCardIssueBody;
 
 export const getGiftCardByCode = (
-  code: GetGiftCardByCodeParams["code"],
-): Promise<AxiosResponse<GetGiftCardByCodeApiResponse>> =>
-  // Keep current working path in your frontend; shape is aligned with your types.
-  axiosInstance.get(`/api/gift-cards/code/${code}`);
+  code: string,
+): Promise<AxiosResponse<DetailGiftCardResponse>> =>
+  axiosInstance.get<DetailGiftCardResponse>(`/api/gift-cards/code/${code}`);
 
 export const listGiftCards = (
-  query: GetGiftCardsQuery = {},
-): Promise<AxiosResponse<GetGiftCardsApiResponse>> =>
-  axiosInstance.get<GetGiftCardsApiResponse>("/api/gift-cards", { params: query });
+  filters?: Partial<GiftCardListFilter>,
+): Promise<AxiosResponse<ListGiftCardsResponse>> =>
+  axiosInstance.get<ListGiftCardsResponse>("/api/gift-cards", {
+    params: filters,
+  });
 
 export const createGiftCard = (
-  data: CreateGiftCardRequestBody,
-): Promise<AxiosResponse<CreateGiftCardApiResponse>> =>
-  axiosInstance.post("/api/gift-cards", data);
+  data: GiftCardIssueBody,
+): Promise<AxiosResponse<CreateGiftCardResponse>> =>
+  axiosInstance.post<CreateGiftCardResponse>("/api/gift-cards", data);
 
+export const getGiftCardBalance = (
+  id: number,
+): Promise<AxiosResponse<GiftCardBalanceResponse>> =>
+  axiosInstance.get<GiftCardBalanceResponse>(`/api/gift-cards/${id}/balance`);
+
+export const chargeGiftCard = (
+  id: number,
+  data: GiftCardMovementBody,
+): Promise<AxiosResponse<CreateGiftCardMovementResponse>> =>
+  axiosInstance.post<CreateGiftCardMovementResponse>(
+    `/api/gift-cards/${id}/charge`,
+    data,
+  );
+
+export const recreditGiftCard = (
+  id: number,
+  data: GiftCardMovementBody,
+): Promise<AxiosResponse<CreateGiftCardMovementResponse>> =>
+  axiosInstance.post<CreateGiftCardMovementResponse>(
+    `/api/gift-cards/${id}/recredit`,
+    data,
+  );

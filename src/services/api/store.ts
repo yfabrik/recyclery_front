@@ -1,55 +1,124 @@
 import type { AxiosResponse } from "axios";
+import type { RecycleryFilter } from "@recyclerie/api/schemas/recycleries";
+import type {
+  OpenCashSessionBody,
+  CloseCashSessionBody,
+} from "@recyclerie/api/schemas/cashSession";
+import type {
+  ListRecycleriesResponse,
+  DetailRecycleryResponse,
+  CreateRecycleryResponse,
+  UpdateRecycleryResponse,
+  DeleteRecycleryResponse,
+  ListRecycleryCashRegistersResponse,
+} from "@recyclerie/api/responses/recycleries";
+import type {
+  DetailCashRegisterResponse,
+  CreateCashRegisterResponse,
+  DeleteCashRegisterResponse,
+} from "@recyclerie/api/responses/cashRegister";
+import type {
+  ActiveCashSessionResponse,
+  OpenCashSessionResponse,
+  CloseCashSessionResponse,
+  DetailCashSessionResponse,
+} from "@recyclerie/api/responses/cashSession";
 import axiosInstance from "./axios";
-import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import type { Schema } from "../../components/forms/StoreForm";
 
-interface StoreFilters {
-  active?: boolean;
-  include?: Array<"employees" | "caisses" | "manager" | "horaires"> | string;
-}
+export type StorePayload = Omit<
+  Schema,
+  "manager_id" | "postal_code" | "phone" | "email"
+> & {
+  manager_id: number | null;
+  postal_code: string | null;
+  phone: string | null;
+  email: string | null;
+};
 
-export const fetchStores = (filters?: StoreFilters): Promise<AxiosResponse<{ message: string, stores: StoreModel[] }>> => {
-  if (filters?.include)
-    filters = { ...filters, include: filters.include.toString() }
+export type { RecycleryFilter };
 
-  return axiosInstance.get("/api/recycleries", { params: filters });
+type RecycleryQuery = Partial<RecycleryFilter> & {
+  include?: RecycleryFilter["include"] | ("manager" | "caisses" | "employees" | "horaires")[];
+};
 
-}
+const withIncludeParam = (filters?: RecycleryQuery) => ({
+  ...filters,
+  include: filters?.include?.toString(),
+});
 
-export const updateStore = (id: number, data: Schema) =>
-  axiosInstance.put(`/api/stores/${id}`, data);
+export const fetchStores = (
+  filters?: RecycleryQuery,
+): Promise<AxiosResponse<ListRecycleriesResponse>> =>
+  axiosInstance.get<ListRecycleriesResponse>("/api/recycleries", {
+    params: withIncludeParam(filters),
+  });
 
-export const createStore = (data: Schema) => axiosInstance.post("/api/stores", data);
+export const updateStore = (
+  id: number,
+  data: StorePayload,
+): Promise<AxiosResponse<UpdateRecycleryResponse>> =>
+  axiosInstance.put<UpdateRecycleryResponse>(`/api/stores/${id}`, data);
 
-export const deleteStore = (id: number) =>
-  axiosInstance.delete(`/api/stores/${id}`);
+export const createStore = (
+  data: StorePayload,
+): Promise<AxiosResponse<CreateRecycleryResponse>> =>
+  axiosInstance.post<CreateRecycleryResponse>("/api/stores", data);
 
-export const fetchCaisses = (storeId: number): Promise<AxiosResponse<{ message: string, cash_registers: CaisseModel[] }>> =>
-  axiosInstance.get(`/api/stores/${storeId}/cash-registers`);
+export const deleteStore = (
+  id: number,
+): Promise<AxiosResponse<DeleteRecycleryResponse>> =>
+  axiosInstance.delete<DeleteRecycleryResponse>(`/api/stores/${id}`);
 
-export const createCaisse = (storeId: number, data: { name: string }) =>
-  axiosInstance.post(`/api/stores/${storeId}/cash-registers`, data);
+export const fetchCaisses = (
+  storeId: number,
+): Promise<AxiosResponse<ListRecycleryCashRegistersResponse>> =>
+  axiosInstance.get<ListRecycleryCashRegistersResponse>(
+    `/api/stores/${storeId}/cash-registers`,
+  );
 
-// export const fetchCaisses2 = (storeId: number) =>
-//   axiosInstance.get(`/api/cash-registers/store/${storeId}`); //TODO store en param
+export const createCaisse = (
+  storeId: number,
+  data: { name: string },
+): Promise<AxiosResponse<CreateCashRegisterResponse>> =>
+  axiosInstance.post<CreateCashRegisterResponse>(
+    `/api/stores/${storeId}/cash-registers`,
+    { ...data, store_id: storeId },
+  );
 
-// export const updateCaisse = (id: number, data) =>
-//   axiosInstance.put(`/api/cash-registers/${id}`, data);
-// export const createCaisse2 = (data) =>
-//   axiosInstance.post("/api/cash-registers", data);
-export const getActiveCaisses = (): Promise<AxiosResponse<{ message: string, session?: CashSession }>> =>
-  axiosInstance.get("/api/cash-sessions/active"); //TODO params
-export const deleteCaisse = (id: number) =>
-  axiosInstance.delete(`/api/cash-registers/${id}`);
+export const getActiveCaisses = (): Promise<
+  AxiosResponse<ActiveCashSessionResponse>
+> => axiosInstance.get<ActiveCashSessionResponse>("/api/cash-sessions/active");
 
-export const OpenCaisse = (data: { store_id: number, opening_amount: number, cash_register_id: number }): Promise<AxiosResponse<{ message: string, session: CashSession }>> =>
-  axiosInstance.post("/api/cash-sessions/open", data);
-export const closeCaisse = (id: number, data: { closing_amount: number }): Promise<AxiosResponse<{ message: string, expected_amount: number, difference_amount: number }>> =>
-  axiosInstance.put(`/api/cash-sessions/${id}/close`, data);
+export const deleteCaisse = (
+  id: number,
+): Promise<AxiosResponse<DeleteCashRegisterResponse>> =>
+  axiosInstance.delete<DeleteCashRegisterResponse>(`/api/cash-registers/${id}`);
 
+export const OpenCaisse = (
+  data: OpenCashSessionBody,
+): Promise<AxiosResponse<OpenCashSessionResponse>> =>
+  axiosInstance.post<OpenCashSessionResponse>("/api/cash-sessions/open", data);
 
-export const getCaisseDetails = (registerId: number): Promise<AxiosResponse<{ message: string, data: { store_name: string, total_sessions: number, last_session: Date, sessions: CashSession[] } }>> =>
-  axiosInstance.get(`/api/cash-registers/${registerId}`);
+export const closeCaisse = (
+  id: number,
+  data: CloseCashSessionBody,
+): Promise<AxiosResponse<CloseCashSessionResponse>> =>
+  axiosInstance.put<CloseCashSessionResponse>(
+    `/api/cash-sessions/${id}/close`,
+    data,
+  );
 
-export const getSessionDetails = (sessionId: number): Promise<AxiosResponse<{ message: string, session: CashSession }>> =>
-  axiosInstance.get(`/api/cash-sessions/${sessionId}`);
+export const getCaisseDetails = (
+  registerId: number,
+): Promise<AxiosResponse<DetailCashRegisterResponse>> =>
+  axiosInstance.get<DetailCashRegisterResponse>(
+    `/api/cash-registers/${registerId}`,
+  );
+
+export const getSessionDetails = (
+  sessionId: number,
+): Promise<AxiosResponse<DetailCashSessionResponse>> =>
+  axiosInstance.get<DetailCashSessionResponse>(
+    `/api/cash-sessions/${sessionId}`,
+  );

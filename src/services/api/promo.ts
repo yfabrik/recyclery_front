@@ -1,14 +1,24 @@
 import type { AxiosResponse } from "axios";
-import type { PromoModel } from "../../interfaces/Models";
+import type { PromotionData } from "@recyclerie/api/schemas/promotions";
+import type {
+  ListPromotionsResponse,
+  CreatePromotionResponse,
+  UpdatePromotionResponse,
+} from "@recyclerie/api/responses/promotions";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/PromoForm";
 
-interface PromoFilter {
+export type { PromotionData as PromoPayload };
 
-}
-export const listPromos = (filters?: PromoFilter): Promise<AxiosResponse<{ success: true, data: PromoModel[] }>> => axiosInstance.get("/api/promotions", filters)
+export const listPromos = (): Promise<AxiosResponse<ListPromotionsResponse>> =>
+  axiosInstance.get<ListPromotionsResponse>("/api/promotions");
 
-export const createPromo = (data: Schema): Promise<AxiosResponse<{ success: true, message: string, data: PromoModel }>> => axiosInstance.post("/api/promotions", data)
+export const createPromo = (
+  data: PromotionData,
+): Promise<AxiosResponse<CreatePromotionResponse>> =>
+  axiosInstance.post<CreatePromotionResponse>("/api/promotions", data);
 
-export const updatePromo = (id: number, data: Schema): Promise<AxiosResponse<{ success: true, message: string, data: PromoModel }>> =>
-    axiosInstance.put(`/api/promotions/${id}`, data);
+export const updatePromo = (
+  id: number,
+  data: PromotionData,
+): Promise<AxiosResponse<UpdatePromotionResponse>> =>
+  axiosInstance.put<UpdatePromotionResponse>(`/api/promotions/${id}`, data);

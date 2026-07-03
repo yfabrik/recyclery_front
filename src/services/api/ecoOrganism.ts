@@ -1,75 +1,71 @@
 import type { AxiosResponse } from "axios";
-import type { ArrivalModel, EcoOrgModel } from "../../interfaces/Models";
+import type { EcoOrganismFilter } from "@recyclerie/api/schemas/ecoOrganism";
+import type {
+  ListEcoOrganismsResponse,
+  CreateEcoOrganismResponse,
+  UpdateEcoOrganismResponse,
+  DeleteEcoOrganismResponse,
+  EcoOrganismStatsResponse,
+  EcoOrgQuarterStatsResponse,
+  EcoOrgQuarterStatsDto,
+  EcoOrgQuarterLabel,
+} from "@recyclerie/api/responses/ecoOrganism";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/EcoOrganismForm";
 
-interface EcoOrgFilters {
-  active?: boolean;
-  include?: ("waste" | "inCategories" | "sellCategories")[];
-}
+export type { EcoOrganismFilter };
+export type EcoOrganismQuarterStat = EcoOrgQuarterStatsDto;
+export type { EcoOrgQuarterStatsDto, EcoOrgQuarterLabel };
 
-type cat = {
-  id: number;
-  name: string;
-  weight_kg: number,
-}
-type quarterStat = {
-  total_weight_kg: number;
-  categories: (cat & { subcategories: cat[] })[]
-}
-type quarterInBySourceType = Record<ArrivalModel["source_type"], quarterStat>;
-/** Quarter stat for eco-organism: label (e.g. "Q4 2024") and value (e.g. weight_kg or count) */
+export const formatEcoOrgQuarterLabel = (quarter: EcoOrgQuarterLabel | string): string => {
+  const match = String(quarter).match(/^(\d{4})-T([1-4])$/);
+  if (match) return `Q${match[2]} ${match[1]}`;
+  return String(quarter);
+};
 
-export interface EcoOrganismQuarterStat extends Pick<
-  EcoOrgModel,
-  "id" | "name" | "description" | "is_active"
-> {
-  quarters: ({
-    quarter: string;//TODO XXXX-T{1-4} 
-    // label: string;
-    quarterIn: quarterStat & {
-      by_source_type: quarterInBySourceType 
-    }
-
-    quarterSell: Omit<quarterStat, 'categories'> & {
-      categories: (cat & { quantity: number, subcategories: (cat & { quantity: number })[] })[];
-      quantity:number
-    },
-    quarterOut: quarterStat
-  })[];
-}
-
-/** Stats array: one item per eco-organism with its quarter data */
-export type EcoOrganismQuarterStatsResponse = EcoOrganismQuarterStat[];
+export const parseEcoOrgQuarterKey = (value?: string) => {
+  if (!value) return null;
+  const apiMatch = value.match(/^(\d{4})-T([1-4])$/);
+  if (apiMatch) {
+    return { quarterNumber: Number(apiMatch[2]), year: Number(apiMatch[1]) };
+  }
+  const legacyMatch = value.match(/Q([1-4])\s*(\d{4})/i);
+  if (legacyMatch) {
+    return { quarterNumber: Number(legacyMatch[1]), year: Number(legacyMatch[2]) };
+  }
+  return null;
+};
 
 export const getEcoOrganisms = (
-  filters?: EcoOrgFilters,
-): Promise<AxiosResponse<{ message: string; eco_organisms: EcoOrgModel[] }>> =>
-  axiosInstance.get("/api/eco-organisms", { params: { ...filters, include: filters?.include?.toString() } });
+  filters?: EcoOrganismFilter,
+): Promise<AxiosResponse<ListEcoOrganismsResponse>> =>
+  axiosInstance.get<ListEcoOrganismsResponse>("/api/eco-organisms", {
+    params: { ...filters, include: filters?.include?.toString() },
+  });
 
 export const fetchEcoOrganismsStats = (): Promise<
-  AxiosResponse<{
-    stats: {
-      total_eco_organisms: number;
-      active_eco_organisms: number;
-      inactive_eco_organisms: number;
-    };
-  }>
-> => axiosInstance.get("/api/eco-organisms/stats/summary");
+  AxiosResponse<EcoOrganismStatsResponse>
+> => axiosInstance.get<EcoOrganismStatsResponse>("/api/eco-organisms/stats/summary");
 
-/** Fetches last 4 quarters stats per eco-organism (weight_kg per quarter). */
 export const fetchEcoOrganismQuarterStats = (): Promise<
-  AxiosResponse<{ stats: EcoOrganismQuarterStatsResponse }>
-> => axiosInstance.get("/api/eco-organisms/stats/quarters");
+  AxiosResponse<EcoOrgQuarterStatsResponse>
+> =>
+  axiosInstance.get<EcoOrgQuarterStatsResponse>(
+    "/api/eco-organisms/stats/quarters",
+  );
 
 export const createEcoOrganism = (
   data: Schema,
-): Promise<AxiosResponse<{ message: string; eco_organism_id: number }>> =>
-  axiosInstance.post("/api/eco-organisms", data);
+): Promise<AxiosResponse<CreateEcoOrganismResponse>> =>
+  axiosInstance.post<CreateEcoOrganismResponse>("/api/eco-organisms", data);
+
 export const updateEcoOrganism = (
   id: number,
   data: Schema,
-): Promise<AxiosResponse<{ message: string; eco_organism: EcoOrgModel }>> =>
-  axiosInstance.put(`/api/eco-organisms/${id}`, data);
-export const deleteEcoOrganism = (id: number) =>
-  axiosInstance.delete(`/api/eco-organisms/${id}`);
+): Promise<AxiosResponse<UpdateEcoOrganismResponse>> =>
+  axiosInstance.put<UpdateEcoOrganismResponse>(`/api/eco-organisms/${id}`, data);
+
+export const deleteEcoOrganism = (
+  id: number,
+): Promise<AxiosResponse<DeleteEcoOrganismResponse>> =>
+  axiosInstance.delete<DeleteEcoOrganismResponse>(`/api/eco-organisms/${id}`);

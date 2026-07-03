@@ -1,55 +1,88 @@
 import type { AxiosResponse } from "axios";
-import type { StoreModel, UserModel, WorkdaysModel } from "../../interfaces/Models";
+import type {
+  ListUsersResponse,
+  CreateUserResponse,
+  UpdateUserResponse,
+  DeleteUserResponse,
+  UserStatsResponse,
+  UpdateUserPasswordResponse,
+} from "@recyclerie/api/responses/users";
+import type {
+  CreateEmployeeWorkdaysResponse,
+  ListEmployeeWorkdaysResponse,
+} from "@recyclerie/api/responses/employeeWorkdays";
+import type { AssignEmployeeStoreBody } from "@recyclerie/api/schemas/employeeStore";
+import type {
+  EmployeeStoreByEmployeeResponse,
+  AssignEmployeeStoreResponse,
+  RemoveEmployeeStoreResponse,
+} from "@recyclerie/api/responses/employeeStore";
+import type { WorkdaysModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/UserForm";
 import type { Schema as PasswordSchema } from "../../components/forms/PasswordChangeForm";
 
-
 interface UserFilters {
-  role?: "employee" | "admin";
+  role?: "employee" | "admin" | "manager";
   store_id?: number;
   active?: boolean;
   include?: string;
 }
+export type { UserFilters };
 
-interface UserStats {
-  totalUsers: number
-  usersByRole: { role: UserModel["role"], count: number }[]
-  recentLogins: number
-  activeEmployees: number
-}
+export const fetchUsers = (
+  filters?: UserFilters,
+): Promise<AxiosResponse<ListUsersResponse>> =>
+  axiosInstance.get<ListUsersResponse>("/api/users", { params: filters });
 
-export const fetchUsers = (filters?: UserFilters): Promise<AxiosResponse<{ users: UserModel[] ,success:true}>> =>
-  axiosInstance.get("/api/users", { params: filters }); //TODO faut que role devienne un array
-// export const getEmployees = () => axiosInstance.get("/api/users/employees")
+export const createUser = (
+  data: Schema,
+): Promise<AxiosResponse<CreateUserResponse>> =>
+  axiosInstance.post<CreateUserResponse>("/api/users", data);
 
-export const createUser = (data: Schema): Promise<AxiosResponse<{ message: string, user: UserModel[] }>> =>
-  axiosInstance.post("/api/users", data);
-export const updateUser = (id: number, data: Schema): Promise<AxiosResponse<{ message: string, user: UserModel[] }>> =>
-  axiosInstance.put(`/api/users/${id}`, data);
-export const deleteUser = (id: number) =>
-  axiosInstance.delete(`/api/users/${id}`);
+export const updateUser = (
+  id: number,
+  data: Schema,
+): Promise<AxiosResponse<UpdateUserResponse>> =>
+  axiosInstance.put<UpdateUserResponse>(`/api/users/${id}`, data);
 
-export const updateUserPassword = (id: number, data: PasswordSchema) =>
-  axiosInstance.patch(`/api/users/${id}/password`, data);
+export const deleteUser = (
+  id: number,
+): Promise<AxiosResponse<DeleteUserResponse>> =>
+  axiosInstance.delete<DeleteUserResponse>(`/api/users/${id}`);
+
+export const updateUserPassword = (
+  id: number,
+  data: PasswordSchema,
+): Promise<AxiosResponse<UpdateUserPasswordResponse>> =>
+  axiosInstance.patch<UpdateUserPasswordResponse>(
+    `/api/users/${id}/password`,
+    data,
+  );
 
 export const getRoles = () => axiosInstance.get("/api/users/roles");
-export const getUsersStats = (): Promise<AxiosResponse<{ message: string, stats: UserStats }>> => axiosInstance.get("/api/users/stats");
 
-interface EmployeeStoreModel {
-  employee_id: number;
-  store_id: number;
-  is_primary: boolean;
-}
+export const getUsersStats = (): Promise<AxiosResponse<UserStatsResponse>> =>
+  axiosInstance.get<UserStatsResponse>("/api/users/stats");
 
+export const getAssignedStores = (
+  employee_id: number,
+): Promise<AxiosResponse<EmployeeStoreByEmployeeResponse>> =>
+  axiosInstance.get<EmployeeStoreByEmployeeResponse>(
+    `/api/employee-stores/employee/${employee_id}`,
+  );
 
-export const getAssignedStores = (employee_id: number): Promise<AxiosResponse<{ message: string, assignments: (StoreModel & { is_primary: boolean, EmployeeStore: { is_primary: boolean } })[] }>> =>
-  axiosInstance.get(`/api/employee-stores/employee/${employee_id}`);
+export const removeAssignedStores = (
+  employee_id: number,
+): Promise<AxiosResponse<RemoveEmployeeStoreResponse>> =>
+  axiosInstance.delete<RemoveEmployeeStoreResponse>(
+    `/api/employee-stores/employee/${employee_id}`,
+  );
 
-export const removeAssignedStores = (employee_id: number) =>
-  axiosInstance.delete(`/api/employee-stores/employee/${employee_id}`);
-export const addAssignedStore = (data: EmployeeStoreModel) =>
-  axiosInstance.post("/api/employee-stores", data);
+export const addAssignedStore = (
+  data: AssignEmployeeStoreBody,
+): Promise<AxiosResponse<AssignEmployeeStoreResponse>> =>
+  axiosInstance.post<AssignEmployeeStoreResponse>("/api/employee-stores", data);
 
 const DAY_OF_WEEK_FR = new Map([
   ["monday", "lundi"],
@@ -77,37 +110,39 @@ function parseTimeToDate(timeStr: string): Date {
 }
 
 /** Workday from API with start_time/end_time as Date and day_of_week in French */
-export type WorkdaysModelTransformed = Omit<WorkdaysModel, "start_time" | "end_time"> & {
+export type WorkdaysModelTransformed = Omit<
+  WorkdaysModel,
+  "start_time" | "end_time" | "day_of_week"
+> & {
   start_time: Date;
   end_time: Date;
+  time_slot: "morning" | "afternoon";
+  day_of_week: string;
 };
 
 interface GetUserWorkdaysResponse {
   workdays?: WorkdaysModelTransformed[];
 }
 
-interface GetUserWorkdaysRawResponse {
-  workdays?: WorkdaysModel[];
-}
-
 function transformWorkdaysResponse(
-  data: GetUserWorkdaysRawResponse | string,
+  data: ListEmployeeWorkdaysResponse | string,
 ): GetUserWorkdaysResponse {
-  const parsed: GetUserWorkdaysRawResponse =
+  const parsed: ListEmployeeWorkdaysResponse =
     typeof data === "string" ? JSON.parse(data) : data;
-  const raw = parsed?.workdays ?? [];
+  const raw = parsed?.data ?? [];
   const workdays: WorkdaysModelTransformed[] = raw.map((w) => ({
     ...w,
-    day_of_week: DAY_OF_WEEK_FR.get(w.day_of_week) ?? "lundi",
+    day_of_week: DAY_OF_WEEK_FR.get(w.day_of_week) ?? w.day_of_week,
+    time_slot: w.time_slot === "afternoon" ? "afternoon" : "morning",
     start_time: parseTimeToDate(w.start_time),
     end_time: parseTimeToDate(w.end_time),
   }));
-  return { ...parsed, workdays };
+  return { workdays };
 }
 
 export const getUserWorkdays = (id: number) =>
   axiosInstance.get<GetUserWorkdaysResponse>(`/api/employee-workdays/employee/${id}`, {
-    transformResponse: [(data: GetUserWorkdaysRawResponse | string) => transformWorkdaysResponse(data)],
+    transformResponse: [(data: ListEmployeeWorkdaysResponse | string) => transformWorkdaysResponse(data)],
   });
 
 /** Form payload shape: { week1: Workday[], week2: Workday[] } */
@@ -156,7 +191,14 @@ function transformWorkdaysRequest(data: WorkdaysFormPayload): string {
   return JSON.stringify(transformWorkdaysPayload(data));
 }
 
-export const addWorkdaysToUser = (id: number, data: WorkdaysFormPayload) =>
-  axiosInstance.post(`/api/employee-workdays/employee/${id}`, data, {
-    transformRequest: [(body: WorkdaysFormPayload) => transformWorkdaysRequest(body)],
-  });
+export const addWorkdaysToUser = (
+  id: number,
+  data: WorkdaysFormPayload,
+): Promise<AxiosResponse<CreateEmployeeWorkdaysResponse>> =>
+  axiosInstance.post<CreateEmployeeWorkdaysResponse>(
+    `/api/employee-workdays/employee/${id}`,
+    data,
+    {
+      transformRequest: [(body: WorkdaysFormPayload) => transformWorkdaysRequest(body)],
+    },
+  );

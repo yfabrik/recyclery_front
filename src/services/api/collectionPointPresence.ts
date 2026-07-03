@@ -1,7 +1,13 @@
 import type { AxiosResponse } from "axios";
-import type { Schema } from "../../components/forms/PresencePointForm";
+import type {
+  ListTaskSchedulesResponse,
+  DetailTaskScheduleResponse,
+  CreateCollectionPointPresenceResponse,
+  UpdateTaskScheduleResponse,
+  DeleteTaskScheduleResponse,
+} from "@recyclerie/api/responses/taskSchedule";
 import axiosInstance from "./axios";
-import type { ScheduleModel } from "../../interfaces/Models";
+import type { Schema } from "../../components/forms/PresencePointForm";
 
 /** 0 = Dimanche, 1 = Lundi, … (JS getDay order). API expects "Lundi", "Mardi", … */
 const DAY_OF_WEEK_FR: Record<number, string> = {
@@ -23,17 +29,49 @@ function presencePayloadToApi(body: Schema & { day_of_week?: number | string }):
   return JSON.stringify(payload);
 }
 
-export const fetchCollectionPointPresence = (): Promise<AxiosResponse<{ message: string, schedules: ScheduleModel[] }>> => axiosInstance.get('/api/collection-point-presence')
+export const fetchCollectionPointPresence = (): Promise<
+  AxiosResponse<ListTaskSchedulesResponse>
+> => axiosInstance.get<ListTaskSchedulesResponse>("/api/collection-point-presence");
 
-export const fetchPresenceForPoint = (id: number) => axiosInstance.get(`/api/collection-point-presence/collection-point/${id}`)
+export const fetchPresenceForPoint = (
+  id: number,
+): Promise<AxiosResponse<DetailTaskScheduleResponse>> =>
+  axiosInstance.get<DetailTaskScheduleResponse>(
+    `/api/collection-point-presence/collection-point/${id}`,
+  );
 
-export const createPointPresence = (data: Schema) =>
-  axiosInstance.post("/api/collection-point-presence", data, {
-    transformRequest: [(body: Schema & { day_of_week?: number | string }) => presencePayloadToApi(body)],
-  });
+export const createPointPresence = (
+  data: Schema,
+): Promise<AxiosResponse<CreateCollectionPointPresenceResponse>> =>
+  axiosInstance.post<CreateCollectionPointPresenceResponse>(
+    "/api/collection-point-presence",
+    data,
+    {
+      transformRequest: [
+        (body: Schema & { day_of_week?: number | string }) =>
+          presencePayloadToApi(body),
+      ],
+    },
+  );
 
-export const updatePointPresence = (id: number, data: Schema) =>
-  axiosInstance.put(`/api/collection-point-presence/${id}`, data, {
-    transformRequest: [(body: Schema & { day_of_week?: number | string }) => presencePayloadToApi(body)],
-  });
-export const deletePointPresence = (id: number) => axiosInstance.delete(`/api/collection-point-presence/${id}`)
+export const updatePointPresence = (
+  id: number,
+  data: Schema,
+): Promise<AxiosResponse<UpdateTaskScheduleResponse>> =>
+  axiosInstance.put<UpdateTaskScheduleResponse>(
+    `/api/collection-point-presence/${id}`,
+    data,
+    {
+      transformRequest: [
+        (body: Schema & { day_of_week?: number | string }) =>
+          presencePayloadToApi(body),
+      ],
+    },
+  );
+
+export const deletePointPresence = (
+  id: number,
+): Promise<AxiosResponse<DeleteTaskScheduleResponse>> =>
+  axiosInstance.delete<DeleteTaskScheduleResponse>(
+    `/api/collection-point-presence/${id}`,
+  );

@@ -1,25 +1,42 @@
 import type { AxiosResponse } from "axios";
-import type { Schema } from "../../components/forms/EmployeeForm";
-import type { EmployeeModel } from "../../interfaces/Models";
+import type {
+  ListEmployeesResponse,
+  DetailEmployeeResponse,
+  CreateEmployeeResponse,
+  UpdateEmployeeResponse,
+  DeleteEmployeeResponse,
+} from "@recyclerie/api/responses/employees";
 import axiosInstance from "./axios";
+import type { Schema } from "../../components/forms/EmployeeForm";
 
-interface UserFilters {
+interface EmployeeFilters {
   store_id?: number;
   active?: boolean;
   include?: string;
 }
 
-export const getEmployees = (filters?: UserFilters): Promise<AxiosResponse<{ message: string, data: EmployeeModel[] }>> =>
-  axiosInstance.get("/api/employees", { params: filters });
+export const getEmployees = (
+  filters?: EmployeeFilters,
+): Promise<AxiosResponse<ListEmployeesResponse>> =>
+  axiosInstance.get<ListEmployeesResponse>("/api/employees", { params: filters });
 
-export const detailEmployee = (id: number): Promise<AxiosResponse<{ message: string, data: EmployeeModel }>> =>
-  axiosInstance.get(`/api/employees/${id}`);
+export const detailEmployee = (
+  id: number,
+): Promise<AxiosResponse<DetailEmployeeResponse>> =>
+  axiosInstance.get<DetailEmployeeResponse>(`/api/employees/${id}`);
 
-export const createEmployees = (data: Schema) =>
-  axiosInstance.post("/api/employees", data);
+export const createEmployees = (
+  data: Schema,
+): Promise<AxiosResponse<CreateEmployeeResponse>> =>
+  axiosInstance.post<CreateEmployeeResponse>("/api/employees", data);
 
-export const updateEmployee = (id: number, data: Schema) =>
-  axiosInstance.put(`/api/employees/${id}`, data);
+export const updateEmployee = (
+  id: number,
+  data: Schema,
+): Promise<AxiosResponse<UpdateEmployeeResponse>> =>
+  axiosInstance.put<UpdateEmployeeResponse>(`/api/employees/${id}`, data);
 
-export const deleteEmployee = (id: number) =>
-  axiosInstance.delete(`/api/employees/${id}`);
+export const deleteEmployee = (
+  id: number,
+): Promise<AxiosResponse<DeleteEmployeeResponse>> =>
+  axiosInstance.delete<DeleteEmployeeResponse>(`/api/employees/${id}`);

@@ -48,7 +48,7 @@ export const NoOpenedRegister = () => {
     const queryClient = useQueryClient()
     const stores = useQuery({
         queryKey: ["stores", { active: true, include: ["caisses"] }],
-        queryFn: () => fetchStores({ active: true, include: ["caisses"] }).then((response) => response.data.stores),
+        queryFn: () => fetchStores({ active: true, include: ["caisses"] }).then((response) => response.data.data),
         // enabled: !storesData,
     });
 
@@ -244,14 +244,14 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
     const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
     const sessions = useQuery({
         queryKey: ["sessions", { registerId: register.id }],
-        queryFn: () => getCaisseDetails(register.id).then((response) => response.data),
+        queryFn: () => getCaisseDetails(register.id).then((response) => response.data.data),
         enabled: !!register.id,
     });
 
     const handleReprintSummary = async (session: CashSession) => {
         try {
             setIsPrinting(true);
-            const detail = await getSessionDetails(session.id).then((response) => response.data.session);
+            const detail = await getSessionDetails(session.id).then((response) => response.data.data);
             triggerPrintBilanCaisse({
                 session: detail,
                 transactions: (detail.SalesTransactions ?? []).map(
@@ -280,18 +280,22 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
             <DialogTitle>Historique des sessions - {register.name}</DialogTitle>
             <DialogContent>
                 <Loading isLoading={sessions.isLoading}>
-                    {sessions.data?.data.sessions.length === 0 ? (
+                    {sessions.data?.sessions?.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
                             Aucune session trouvée pour cette caisse.
                         </Typography>
                     ) : (
                         <List dense>
-                            {sessions.data?.data?.sessions?.map((session) => (
+                            {sessions.data?.sessions?.map((session) => (
                                 <ListItem key={session.id} divider>
                                     <ListItemText
                                         primary={
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <span>{`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")} -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
+                                                <span>{`Session #${session.id} - ${
+                                                  session.createdAt
+                                                    ? new Date(session.createdAt).toLocaleString("fr-FR")
+                                                    : "—"
+                                                } -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
                                                 <Chip
                                                     size="small"
                                                     label={getCashSessionStatusLabel(session.status)}

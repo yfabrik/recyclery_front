@@ -427,13 +427,13 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       width: 16,
                       height: 16,
                       fontSize: taskCss.fontSize,
-                      bgcolor: getEmployeeColor(emp.fullName),
+                      bgcolor: getEmployeeColor(emp.fullName||""),
                       color: "white",
                       fontWeight: "bold",
                     }}
                     title={emp.fullName}
                   >
-                    {getEmployeeInitials(emp.fullName)}
+                    {getEmployeeInitials(emp.fullName||"")}
                   </Avatar>
                   <Typography
                     variant="caption"

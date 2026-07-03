@@ -1,36 +1,79 @@
 import type { AxiosResponse } from "axios";
-import type { LabeledItemModel } from "../../interfaces/Models";
+import type { LabeledItemFilter } from "@recyclerie/api/schemas/items";
+import type {
+  ListLabeledItemsResponse,
+  DetailLabeledItemResponse,
+  CreateLabeledItemResponse,
+  UpdateLabeledItemResponse,
+  DeleteLabeledItemResponse,
+  TagLabeledItemSoldResponse,
+  LabeledItemStatsResponse,
+} from "@recyclerie/api/responses/items";
 import axiosInstance from "./axios";
 import type { LabeledItemPayload } from "../../components/forms/itemCoreSchema";
 
+export type { LabeledItemFilter as LabeledItemFilters };
 
-export interface itemsFilters {
-    status?: string
-    category_id?: number
-    search?: string
-    page?: number
+const CATEGORY_SUBCATEGORIES_INCLUDE = "category.subcategories";
 
-}
+const withCategoryInclude = <T extends LabeledItemFilter | undefined>(filters?: T) => ({
+  ...filters,
+  include: (filters?.include?.length
+    ? filters.include
+    : [CATEGORY_SUBCATEGORIES_INCLUDE]
+  ).join(","),
+});
 
-interface ItemStats {
-    total_items: number
-    available_items: number
-    sold_items: number
-    reserved_items: number
-    total_value: number
-}
+export const getLabeledItems = (
+  filters?: LabeledItemFilter & { page?: number },
+): Promise<AxiosResponse<ListLabeledItemsResponse>> =>
+  axiosInstance.get<ListLabeledItemsResponse>("/api/labeled-items", {
+    params: withCategoryInclude(filters),
+  });
 
-export const getLabeledItems = (filters?: itemsFilters): Promise<AxiosResponse<{ message: string, items: LabeledItemModel[], total: number }>> => axiosInstance.get("/api/labeled-items", { params: filters })
-export const findItem = (id: string | number) => axiosInstance.get("/api/labeled-items/" + id)
+export const findItem = (
+  id: string | number,
+): Promise<AxiosResponse<DetailLabeledItemResponse>> =>
+  axiosInstance.get<DetailLabeledItemResponse>(`/api/labeled-items/${id}`, {
+    params: { include: CATEGORY_SUBCATEGORIES_INCLUDE },
+  });
 
-export const updateLabeledItem = (id: number, data: LabeledItemPayload): Promise<AxiosResponse<{ success: true, message: string }>> => axiosInstance.put(`/api/labeled-items/${id}`, data)
+export const updateLabeledItem = (
+  id: number,
+  data: LabeledItemPayload,
+): Promise<AxiosResponse<UpdateLabeledItemResponse>> =>
+  axiosInstance.put<UpdateLabeledItemResponse>(`/api/labeled-items/${id}`, data, {
+    params: { include: CATEGORY_SUBCATEGORIES_INCLUDE },
+  });
 
-export const createLabeledItem = (data: LabeledItemPayload): Promise<AxiosResponse<{ success: true, message: string, item: LabeledItemModel }>> => axiosInstance.post("/api/labeled-items", data)
+export const createLabeledItem = (
+  data: LabeledItemPayload,
+): Promise<AxiosResponse<CreateLabeledItemResponse>> =>
+  axiosInstance.post<CreateLabeledItemResponse>("/api/labeled-items", data, {
+    params: { include: CATEGORY_SUBCATEGORIES_INCLUDE },
+  });
 
-export const deleteLabeledItem = (id: number) => axiosInstance.delete(`/api/labeled-items/${id}`)
+export const deleteLabeledItem = (
+  id: number,
+): Promise<AxiosResponse<DeleteLabeledItemResponse>> =>
+  axiosInstance.delete<DeleteLabeledItemResponse>(`/api/labeled-items/${id}`);
 
-export const sellItem = (id: number) => axiosInstance.post(`/api/labeled-items/${id}/sell`)
+export const sellItem = (
+  id: number,
+): Promise<AxiosResponse<TagLabeledItemSoldResponse>> =>
+  axiosInstance.post<TagLabeledItemSoldResponse>(`/api/labeled-items/${id}/sell`);
 
-export const getItemFromBarcode = (barcode: string): Promise<AxiosResponse<{ success: boolean, item: LabeledItemModel }>> => axiosInstance.get(`/api/labeled-items/barcode/${barcode}`)
+export const getItemFromBarcode = (
+  barcode: string,
+): Promise<AxiosResponse<DetailLabeledItemResponse>> =>
+  axiosInstance.get<DetailLabeledItemResponse>(
+    `/api/labeled-items/barcode/${barcode}`,
+    { params: { include: CATEGORY_SUBCATEGORIES_INCLUDE } },
+  );
 
-export const getItemStats = (filters?: itemsFilters): Promise<AxiosResponse<{ success: boolean, stats: ItemStats }>> => axiosInstance.get(`/api/labeled-items/stats`, { params: filters })
+export const getItemStats = (
+  filters?: LabeledItemFilter & { page?: number },
+): Promise<AxiosResponse<LabeledItemStatsResponse>> =>
+  axiosInstance.get<LabeledItemStatsResponse>("/api/labeled-items/stats", {
+    params: withCategoryInclude(filters),
+  });
