@@ -18,6 +18,8 @@ import {
 } from "../components/forms/EcoOrgStatsFilters";
 import {
   fetchEcoOrganismQuarterStats,
+  formatEcoOrgQuarterLabel,
+  parseEcoOrgQuarterKey,
   type EcoOrganismQuarterStat,
 } from "../services/api/ecoOrganism";
 
@@ -33,17 +35,7 @@ const getDefaultFilters = (): Filters => {
   };
 };
 
-const parseQuarterKey = (value?: string) => {
-  if (!value) return null;
-  const match = value.match(/Q([1-4])\s*(\d{4})/i);
-  if (!match) return null;
-  return { quarterNumber: Number(match[1]), year: Number(match[2]) };
-};
-
-const monthToQuarterLabel = (date: Date) => {
-  const quarterNumber = Math.floor(date.getMonth() / 3) + 1;
-  return `Q${quarterNumber} ${date.getFullYear()}`;
-};
+const parseQuarterKey = parseEcoOrgQuarterKey;
 
 const sortQuarterDesc = (a: string, b: string) => {
   const aKey = parseQuarterKey(a);
@@ -53,8 +45,13 @@ const sortQuarterDesc = (a: string, b: string) => {
   return bKey.quarterNumber - aKey.quarterNumber;
 };
 
-const makeQuarterLabel = (quarter: { quarter?: string; label?: string }) =>
-  quarter.label || quarter.quarter || "N/A";
+const makeQuarterLabel = (quarter: EcoOrganismQuarterStat["quarters"][number]) =>
+  formatEcoOrgQuarterLabel(quarter.quarter);
+
+const monthToQuarterLabel = (date: Date) => {
+  const quarterNumber = Math.floor(date.getMonth() / 3) + 1;
+  return formatEcoOrgQuarterLabel(`${date.getFullYear()}-T${quarterNumber}` as const);
+};
 
 const getMetricRows = (
   stat: EcoOrganismQuarterStat,
@@ -65,12 +62,9 @@ const getMetricRows = (
   const quarterLabel = makeQuarterLabel(quarter);
 
   if (metricSource === "quarterIn") {
-    const bySourceRaw = quarter.quarterIn.by_source_type;
-    const bySourceArray = [bySourceRaw];
+    const bySourceType = quarter.quarterIn.by_source_type;
 
-    bySourceArray.forEach((sourceRecord) => {
-      if (!sourceRecord) return;
-      Object.entries(sourceRecord).forEach(([sourceType, sourceData]) => {
+    Object.entries(bySourceType).forEach(([sourceType, sourceData]) => {
         if (!sourceData) return;
         const categories = sourceData.categories || [];
         if (categories.length === 0) {
@@ -110,13 +104,57 @@ const getMetricRows = (
             });
           });
         });
-      });
     });
     return rows;
   }
 
-  const metric = quarter[metricSource];
-  const categories = metric?.categories || [];
+  if (metricSource === "quarterSell") {
+    const metric = quarter.quarterSell;
+    const categories = metric.categories || [];
+
+    if (categories.length === 0) {
+      rows.push({
+        ecoOrganism: stat.name,
+        quarter: quarterLabel,
+        category: "Toutes",
+        subcategory: "",
+        weightKg: metric.total_weight_kg || 0,
+        quantity: 0,
+      });
+      return rows;
+    }
+
+    categories.forEach((category) => {
+      const subcategories = category.subcategories || [];
+      if (subcategories.length === 0) {
+        rows.push({
+          ecoOrganism: stat.name,
+          quarter: quarterLabel,
+          category: category.name,
+          subcategory: "",
+          weightKg: category.weight_kg || 0,
+          quantity: category.quantity || 0,
+        });
+        return;
+      }
+
+      subcategories.forEach((subcategory) => {
+        rows.push({
+          ecoOrganism: stat.name,
+          quarter: quarterLabel,
+          category: category.name,
+          subcategory: subcategory.name,
+          weightKg: subcategory.weight_kg || 0,
+          quantity: subcategory.quantity || 0,
+        });
+      });
+    });
+
+    return rows;
+  }
+
+  const metric = quarter.quarterOut;
+  const categories = metric.categories || [];
 
   if (categories.length === 0) {
     rows.push({
@@ -124,8 +162,7 @@ const getMetricRows = (
       quarter: quarterLabel,
       category: "Toutes",
       subcategory: "",
-      weightKg: metric?.total_weight_kg || 0,
-      quantity: metricSource === "quarterSell" ? 0 : undefined,
+      weightKg: metric.total_weight_kg || 0,
     });
     return rows;
   }
@@ -139,7 +176,6 @@ const getMetricRows = (
         category: category.name,
         subcategory: "",
         weightKg: category.weight_kg || 0,
-        quantity: metricSource === "quarterSell" ? category.quantity || 0 : undefined,
       });
       return;
     }
@@ -151,7 +187,6 @@ const getMetricRows = (
         category: category.name,
         subcategory: subcategory.name,
         weightKg: subcategory.weight_kg || 0,
-        quantity: metricSource === "quarterSell" ? subcategory.quantity || 0 : undefined,
       });
     });
   });
@@ -188,8 +223,8 @@ const EcoOrganismStatsPage = () => {
   // }, [watch, debouncer]);
 
   const ecoStats = useQuery({
-    queryKey: ["ecoOrganismQuarterStats"],
-    queryFn: () => fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
+    queryKey: ["ecoOrganismQuarterStats",filters.collection_point_id],
+    queryFn: () => fetchEcoOrganismQuarterStats(filters.collection_point_id !=""?{point:filters.collection_point_id}:{}).then((response) => response.data.data),
   });
 
   // const ecoOrganismOptions = useMemo(() => {

@@ -253,7 +253,7 @@ const Planning = () => {
         include: ["user", "store"],
         date_from: date_from().date_from,
         date_to: date_from().date_to,
-      }).then((response) => response.data.tasks),
+      }).then((response) => response.data.data),
   });
   useQueryErrorToast(schedules.error, "Erreur lors du chargement des plannings");
 
@@ -261,7 +261,7 @@ const Planning = () => {
     queryKey: ["stores", { include: ["employees"] }],
     queryFn: () =>
       fstore({ include: ["employees"] }).then(
-        (response) => response.data.stores,
+        (response) => response.data.data,
       ),
   });
 

@@ -50,8 +50,8 @@ export const CategoriesTab = () => {
 
   const categories = useQuery({
     queryFn: () =>
-      fCat({ only_category: true, include: "category" }).then(
-        (result) => result.data.categories || [],
+      fCat({ only_category: true, include: ["category"] }).then(
+        (result) => result.data.data || [],
       ),
     queryKey: ["categorie", { only_category: true, include: "Category" }],
   });

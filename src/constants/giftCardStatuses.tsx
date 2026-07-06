@@ -7,7 +7,7 @@ import {
 } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { GiftCardStatus } from "../services/api/giftCards";
+import type { GiftCardStatus } from "@recyclerie/api/enums";
 
 export type GiftCardStatusValue = GiftCardStatus;
 
@@ -74,5 +74,6 @@ export const getGiftCardStatusColor = (
 ): NonNullable<ChipProps["color"]> =>
   getGiftCardStatus(status)?.color ?? "default";
 
+  //TODO remove string and reverse the function == usable only if  active or partially used
 export const isGiftCardUnusable = (status: GiftCardStatusValue | string) =>
   status === "redeemed" || status === "expired" || status === "cancelled";

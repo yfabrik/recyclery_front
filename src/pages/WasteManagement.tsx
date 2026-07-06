@@ -29,6 +29,7 @@ import {
   Typography
 } from "@mui/material";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreateWasteResponse, UpdateWasteResponse } from "@recyclerie/api/responses/waste";
 import type { AxiosResponse } from "axios";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -52,15 +53,36 @@ import {
   getWastes,
   getWasteStats,
   updateWaste,
-  type wasteFilter,
+  type WasteFilter,
+  type WastePayload,
 } from "../services/api/wasteDisposal";
 import { StatCard } from "../components/StatCard";
+
+function wasteToFormValues(disposal: WasteModel): Partial<Schema> {
+  return {
+    disposal_date: new Date(disposal.disposal_date),
+    disposal_type:
+      disposal.disposal_type === "recycling"
+        ? "other"
+        : disposal.disposal_type,
+    category_id: disposal.category_id,
+    subcategory_id: disposal.subcategory_id ?? "",
+    eco_organism_id: disposal.eco_organism_id ?? "",
+    weight_kg: Number(disposal.weight_kg),
+    volume_m3: Number(disposal.volume_m3 ?? 0),
+    transport_method: disposal.transport_method ?? "",
+    transport_company: disposal.transport_company ?? "",
+    transport_cost: Number(disposal.transport_cost ?? 0),
+    notes: disposal.notes ?? "",
+  };
+}
 
 const WasteManagement = () => {
 
   // États pour les dialogues
   const [disposalDialog, setDisposalDialog] = useState(false);
-  const [editingDisposal, setEditingDisposal] = useState<WasteModel | null>(null);
+  const [editingDisposalId, setEditingDisposalId] = useState<number | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<Schema> | null>(null);
 
 
   // // États pour la pagination
@@ -83,57 +105,55 @@ const WasteManagement = () => {
   const categories = useQuery({
     queryKey: ["categories", {
       only_category: true,
-      include: "category",
+      include: ["category"],
       out: true,
     }],
     queryFn: () => fcat({
       only_category: true,
-      include: "category",
+      include: ["category"],
       out: true,
-    }).then(response => response.data.categories)
+    }).then(response => response.data.data)
   })
 
   const ecoOrganisms = useQuery({
     queryKey: ["ecoOrganisms", { active: true }],
-    queryFn: () => getEcoOrganisms({ active: true }).then(response => response.data.eco_organisms)
+    queryFn: () => getEcoOrganisms({ active: true }).then(response => response.data.data)
   })
 
   const disposals = useQuery({
     queryKey: ["disposals", { filters }],
     queryFn: () => {
-      const o: wasteFilter = Object.fromEntries(Object.entries(filters).filter(([_, v]) => !!v));
-      return getWastes(o).then(response => response.data.disposals)
+      const o: WasteFilter = Object.fromEntries(Object.entries(filters).filter(([, v]) => !!v));
+      return getWastes(o).then(response => response.data.data)
     },
     placeholderData: keepPreviousData
   })
 
   const stats = useQuery({
     queryKey: ["wasteStats"],
-    queryFn: () => getWasteStats().then(response => response.data.stats)
+    queryFn: () => getWasteStats().then(response => response.data.data)
   })
 
 
   const addWaste = useMutation({
-    mutationFn: (data: Schema) => createWaste(data),
+    mutationFn: (data: WastePayload) => createWaste(data),
     onSuccess: (data) => {
       save(data)
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const editWaste = useMutation({
-    mutationFn: (data: { id: number, data: Schema }) => updateWaste(data.id, data.data),
+    mutationFn: (data: { id: number, data: WastePayload }) => updateWaste(data.id, data.data),
     onSuccess: (data) => {
       save(data)
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
-  const save = (data: AxiosResponse<{
-    message: string;
-  }, unknown, object>) => {
+  const save = (data: AxiosResponse<UpdateWasteResponse | CreateWasteResponse>) => {
     toast.success(
       getApiSuccessMessage(
         data,
-        editingDisposal?.id
+        editingDisposalId
           ? "Sortie de déchets mise à jour avec succès"
           : "Sortie de déchets créée avec succès",
       ),
@@ -154,22 +174,31 @@ const WasteManagement = () => {
   })
 
   const handleOpenDisposalDialog = (disposal: WasteModel | null = null) => {
-    setEditingDisposal(disposal);
+    setEditingDisposalId(disposal?.id ?? null);
+    setFormDefaults(disposal ? wasteToFormValues(disposal) : null);
     setDisposalDialog(true);
   };
 
   const handleCloseDisposalDialog = () => {
     setDisposalDialog(false);
-    setEditingDisposal(null);
+    setEditingDisposalId(null);
+    setFormDefaults(null);
   };
 
   const handleSaveDisposal = async (data: Schema) => {
-    if (editingDisposal?.id) {
-      editWaste.mutate({ id: editingDisposal.id, data })
+    const payload: WastePayload = {
+      ...data,
+      subcategory_id: data.subcategory_id === "" ? null : data.subcategory_id,
+      eco_organism_id: data.eco_organism_id === "" ? null : data.eco_organism_id,
+      transport_method: data.transport_method === "" ? null : data.transport_method,
+      transport_company: data.transport_company === "" ? null : data.transport_company,
+      notes: data.notes === "" ? null : data.notes,
+    };
+    if (editingDisposalId) {
+      editWaste.mutate({ id: editingDisposalId, data: payload });
     } else {
-      addWaste.mutate(data)
+      addWaste.mutate(payload);
     }
-
   };
 
   const handleDeleteDisposal = async (id: number) => {
@@ -184,32 +213,13 @@ const WasteManagement = () => {
   };
 
 
-  const formatWeight = (weight: NonNullable<WasteModel["weight_kg"]>) => {
-    if (weight >= 1000) {
-      return `${(weight / 1000).toFixed(2)} t`;
+  const formatWeight = (weight: number | string) => {
+    const kg = Number(weight);
+    if (kg >= 1000) {
+      return `${(kg / 1000).toFixed(2)} t`;
     }
-    return `${weight} kg`;
+    return `${kg} kg`;
   };
-
-  const wasteFormDefaults: Partial<Schema> | null = editingDisposal
-    ? {
-      disposal_date: new Date(editingDisposal.disposal_date),
-      disposal_type:
-          editingDisposal.disposal_type === "recycling"
-            ? "other"
-            : editingDisposal.disposal_type,
-      category_id: editingDisposal.category_id,
-      subcategory_id: editingDisposal.subcategory_id,
-      eco_organism_id: editingDisposal.eco_organism_id,
-      weight_kg: editingDisposal.weight_kg ?? 0,
-      volume_m3: editingDisposal.volume_m3 ?? 0,
-      transport_method: editingDisposal.transport_method,
-      transport_company: editingDisposal.transport_company,
-      transport_cost: editingDisposal.transport_cost ?? 0,
-      notes: editingDisposal.notes,
-    }
-    : null;
-
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -247,7 +257,7 @@ const WasteManagement = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title="Total Sorties"
-                value={stats.data?.total_disposals || 0}
+                value={Number(stats.data?.total_disposals ?? 0)}
                 icon={<Assessment />}
                 color="primary"
               />
@@ -265,7 +275,7 @@ const WasteManagement = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title="Éco-organismes"
-                value={stats.data?.eco_organism_disposals || 0}
+                value={Number(stats.data?.eco_organism_disposals ?? 0)}
                 icon={<Nature />}
                 color="success"
               />
@@ -274,7 +284,7 @@ const WasteManagement = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title="Déchetterie"
-                value={stats.data?.landfill_disposals || 0}
+                value={Number(stats.data?.landfill_disposals ?? 0)}
                 icon={<DeleteSweep />}
                 color="warning"
               />
@@ -384,14 +394,14 @@ const WasteManagement = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingDisposal
+          {editingDisposalId
             ? "Modifier la Sortie de Déchets"
             : "Nouvelle Sortie de Déchets"}
         </DialogTitle>
         <DialogContent>
           <WasteForm
             formId="wasteForm"
-            defaultValues={wasteFormDefaults}
+            defaultValues={formDefaults}
             onSubmit={handleSaveDisposal}
             categories={categories.data || []}
             ecoOrganisms={ecoOrganisms.data || []}
@@ -402,7 +412,7 @@ const WasteManagement = () => {
         <DialogActions>
           <Button onClick={handleCloseDisposalDialog}>Annuler</Button>
           <Button type="submit" form="wasteForm" variant="contained">
-            {editingDisposal ? "Mettre à jour" : "Créer"}
+            {editingDisposalId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>

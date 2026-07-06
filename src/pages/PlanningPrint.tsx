@@ -53,7 +53,7 @@ export default function PlanningPrint() {
 
   const storesQuery = useQuery({
     queryKey: ["stores"],
-    queryFn: () => fstore({ include: ["employees"] }).then((r) => r.data.stores),
+    queryFn: () => fstore({ include: ["employees"] }).then((r) => r.data.data),
   });
 
   const storeName =

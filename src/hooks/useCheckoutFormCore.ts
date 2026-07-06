@@ -134,12 +134,7 @@ export const useCheckoutFormCore = ({
 
     try {
       const response = await getGiftCardByCode(barcode);
-      const payload = response.data;
-      if (!payload.success) {
-        toast.error(payload.message || "Avoir non trouvé");
-        return;
-      }
-      const giftCard = payload.data;
+      const giftCard = response.data.data;
 
       if (isGiftCardUnusable(giftCard.status)) {
         toast.error("Cet avoir n'est pas utilisable");

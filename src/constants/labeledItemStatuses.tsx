@@ -1,9 +1,9 @@
 import { CheckCircle, Sell } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { LabeledItemModel } from "../interfaces/Models";
+import type { LabeledItemStatus as ApiLabeledItemStatus } from "@recyclerie/api/enums";
 
-export type LabeledItemStatusValue = LabeledItemModel["status"];
+export type LabeledItemStatusValue = ApiLabeledItemStatus;
 
 export type LabeledItemStatus = {
   [K in LabeledItemStatusValue]: {

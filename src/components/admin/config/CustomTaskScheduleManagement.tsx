@@ -66,14 +66,14 @@ const CustomTaskScheduleManagement = () => {
 
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
-    queryFn: () => fetchStores({ active: true }).then((res) => res.data.stores),
+    queryFn: () => fetchStores({ active: true }).then((res) => res.data.data),
   });
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const schedulesQuery = useQuery({
     queryKey: CUSTOM_SCHEDULES_KEY,
     queryFn: () =>
-      getPlanning({ category: "custom" }).then((res) => res.data.schedules),
+      getPlanning({ category: "custom" }).then((res) => res.data.data),
   });
   useQueryErrorToast(
     schedulesQuery.error,

@@ -6,9 +6,9 @@ import {
 } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { LabeledItemModel } from "../interfaces/Models";
+import type { ConditionState } from "@recyclerie/api/enums";
 
-export type LabeledItemConditionValue = LabeledItemModel["condition_state"];
+export type LabeledItemConditionValue = ConditionState;
 
 export type LabeledItemCondition = {
   [K in LabeledItemConditionValue]: {

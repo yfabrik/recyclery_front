@@ -2,7 +2,8 @@
 import { Box, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { CashSession, UserModel } from "../interfaces/Models";
+import type { CashSession, AuthUserModel, UserModel } from "../interfaces/Models";
+import type { SalesTransactionDto } from "@recyclerie/api/responses/salesTransactions";
 import type { CartItem } from "./forms/cartSchema";
 import {
   formatWeight,
@@ -16,15 +17,14 @@ import {
   roundCurrency,
   type GlobalPromotionInput,
 } from "../services/cartService";
-import type { CreateTransactionResponse } from "../services/api/transactions";
 
-type ReceiptSale = CreateTransactionResponse["data"]["sale"];
+type ReceiptSale = SalesTransactionDto;
 
 interface ReceiptPrintPayload {
   sale: ReceiptSale;
   items: CartItem[];
   cashSession: CashSession;
-  user: UserModel;
+  user:  AuthUserModel;
   global_promotion?: GlobalPromotionInput | null;
 }
 

@@ -10,7 +10,7 @@ import type {
   CashSession,
   CategoryModel,
   LabeledItemModel,
-  UserModel,
+  AuthUserModel,
 } from "../interfaces/Models";
 import {
   createSell,
@@ -38,12 +38,12 @@ const defaultFormValues: CartFormValues = {
 interface UsePointOfSaleOptions {
   categories?: CategoryModel[];
   activeSession: CashSession | null;
-  user: UserModel | null;
+  user: AuthUserModel | null;
   triggerPrintReceipt: (payload: {
     sale: ReceiptSale;
     items: CartItem[];
     cashSession: CashSession;
-    user: UserModel;
+    user: AuthUserModel ;
     global_promotion: CartSchema["global_promotion"];
   }) => void;
   onManualItemAdded?: () => void;
@@ -173,7 +173,8 @@ export const usePointOfSale = ({
   ): item is LabeledItemModel => "barcode" in item;
 
   const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
-    const barcode = isLabeledItem(item) ? item.barcode : `MANUAL${Date.now()}`;
+    const barcode =
+      (isLabeledItem(item) ? item.barcode : undefined) ?? `MANUAL${Date.now()}`;
 
     const selectedCategory = categories?.find(
       (cat) => cat.id == item.category_id,
@@ -254,8 +255,8 @@ export const usePointOfSale = ({
       if (window.confirm("Imprimer le ticket de caisse ?")) {
         if (activeSession && user) {
           const saleWithSplitPayments = {
-            ...data.data.data.sale,
-            payments: data.data.data.payments,
+            ...data.data.data.transaction,
+            payments: data.data.data.transaction.payments ?? [],
           } as ReceiptSale;
           triggerPrintReceipt({
             sale: saleWithSplitPayments,

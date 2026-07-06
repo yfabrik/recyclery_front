@@ -6,19 +6,21 @@ import type { ScheduleModel } from "../interfaces/Models";
 export type RecurrencePatternValue = ScheduleModel["recurrence_pattern"];
 
 export type RecurrencePattern = {
-  [K in RecurrencePatternValue]: {
+  [K in NonNullable<RecurrencePatternValue>]: {
     value: K;
     label: string;
     icon: ReactElement;
     color: NonNullable<ChipProps["color"]>;
   };
-}[RecurrencePatternValue];
+}[NonNullable<RecurrencePatternValue>];
 
 function defineRecurrencePatterns<
   const T extends readonly RecurrencePattern[],
 >(
   patterns: T &
-    (RecurrencePatternValue extends T[number]["value"] ? T : never),
+    (NonNullable<RecurrencePatternValue> extends T[number]["value"]
+      ? T
+      : never),
 ): T {
   return patterns;
 }
@@ -72,6 +74,6 @@ export const getRecurrencePatternLabel = (
 };
 
 export const getRecurrencePatternColor = (
-  pattern: RecurrencePatternValue | string,
+  pattern: NonNullable<RecurrencePatternValue> | string,
 ): NonNullable<ChipProps["color"]> =>
   getRecurrencePattern(pattern)?.color ?? "default";

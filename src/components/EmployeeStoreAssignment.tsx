@@ -36,12 +36,12 @@ const EmployeeStoreAssignment = ({
   const queryClient = useQueryClient()
   const stores = useQuery({
     queryKey: ["stores"],
-    queryFn: () => fetchStores().then(response => response.data.stores)
+    queryFn: () => fetchStores().then(response => response.data.data)
   })
 
   const assignments = useQuery({
     queryKey: ["assignments", employeeId],
-    queryFn: () => getAssignedStores(employeeId).then(response => response.data.assignments)
+    queryFn: () => getAssignedStores(employeeId).then(response => response.data.data)
   })
   useQueryErrorToast(stores.error, "Erreur lors du chargement des données");
   useQueryErrorToast(assignments.error, "Erreur lors du chargement des données");

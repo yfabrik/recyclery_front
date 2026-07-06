@@ -2,6 +2,8 @@ import {
   Assessment,
   Category,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Inventory,
   LocalShipping,
   People,
@@ -32,7 +34,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 // Fonction pour obtenir l'icône par nom
 // const getIconByName = (iconName) => {
@@ -65,7 +67,10 @@ import {
   type Activity,
   type Stats,
 } from "../services/api/dashboard";
-import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
+import {
+  fetchEcoOrganismQuarterStats,
+  formatEcoOrgQuarterLabel,
+} from "../services/api/ecoOrganism";
 import {
   getTranscationStats,
   type transactionsFilters,
@@ -75,42 +80,78 @@ import { Loading } from "../components/Loading";
 
 const ALL_STORES = "all" as const;
 type ViewStoreFilter = StoreModel["id"] | typeof ALL_STORES;
+type StatsView = "week" | "month" | "year";
+
+const getStatsDateRange = (view: StatsView, offset: number) => {
+  const base = dayjs().add(offset, view);
+  switch (view) {
+    case "week":
+      return {
+        date_from: base.startOf("week").toISOString(),
+        date_to: base.endOf("week").toISOString(),
+      };
+    case "month":
+      return {
+        date_from: base.startOf("month").toISOString(),
+        date_to: base.endOf("month").toISOString(),
+      };
+    case "year":
+      return {
+        date_from: base.startOf("year").toISOString(),
+        date_to: base.endOf("year").toISOString(),
+      };
+  }
+};
+
+const formatPeriodLabel = (view: StatsView, offset: number) => {
+  const { date_from, date_to } = getStatsDateRange(view, offset);
+  const from = dayjs(date_from);
+  const to = dayjs(date_to);
+  const shortDate = (date: dayjs.Dayjs) =>
+    date.toDate().toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
+    });
+
+  switch (view) {
+    case "week":
+      return `${shortDate(from)} – ${shortDate(to)} ${to.year()}`;
+    case "month":
+      return from.toDate().toLocaleDateString("fr-FR", {
+        month: "long",
+        year: "numeric",
+      });
+    case "year":
+      return String(from.year());
+  }
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
 
-  type ViewType = "week" | "month" | "year";
+  type ViewType = StatsView;
   const [view, setView] = React.useState<ViewType>("week");
+  const [periodOffset, setPeriodOffset] = useState(0);
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
     newView: ViewType,
   ) => {
     if (newView !== null) {
       setView(newView);
+      setPeriodOffset(0);
     }
   };
   const [viewStore, setViewStore] =
     useState<ViewStoreFilter>(ALL_STORES);
 
-  const handleStatsFilter = (): transactionsFilters => {
+  const statsFilters = useMemo((): transactionsFilters => {
     const saleFilter: transactionsFilters = {};
     if (viewStore !== ALL_STORES) saleFilter.store_id = viewStore;
-    switch (view) {
-      case "week":
-        saleFilter.date_from = dayjs().startOf("week").toISOString();
-        break;
-      case "month":
-        saleFilter.date_from = dayjs().startOf("month").toISOString();
-        break;
-      case "year":
-        saleFilter.date_from = dayjs().startOf("year").toISOString();
-        break;
-      default:
-        view satisfies never;
-        break;
-    }
+    const { date_from, date_to } = getStatsDateRange(view, periodOffset);
+    saleFilter.date_from = date_from;
+    saleFilter.date_to = date_to;
     return saleFilter;
-  };
+  }, [view, viewStore, periodOffset]);
 
   const handleViewStoreChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -139,7 +180,7 @@ const Dashboard = () => {
 
   const mockActivities = [
     {
-      id: 1,
+      id: "1",
       type: "sale",
       description: "Vente d'un réfrigérateur Samsung",
       amount: "150€",
@@ -150,7 +191,7 @@ const Dashboard = () => {
       statusColor: "success",
     },
     {
-      id: 2,
+      id: "2",
       type: "donation",
       description: "Nouveau don de mobilier",
       amount: "5 articles",
@@ -161,7 +202,7 @@ const Dashboard = () => {
       statusColor: "warning",
     },
     {
-      id: 3,
+      id: "3",
       type: "collection",
       description: "Collecte programmée",
       amount: "Demain 9h",
@@ -172,7 +213,7 @@ const Dashboard = () => {
       statusColor: "info",
     },
     {
-      id: 4,
+      id: "4",
       type: "inventory",
       description: "Ajout de 12 articles électroniques",
       amount: "Catégorie: Électronique",
@@ -183,7 +224,7 @@ const Dashboard = () => {
       statusColor: "success",
     },
     {
-      id: 5,
+      id: "5",
       type: "user",
       description: "Nouvel employé ajouté",
       amount: "Marie Dubois",
@@ -222,17 +263,18 @@ const Dashboard = () => {
   });
   const storesStats = useQuery({
     queryKey: ["storesStats"],
-    queryFn: () => getStoreStats().then((response) => response.data.stores),
+    queryFn: () => getStoreStats().then((response) => response.data.data),
   });
   const ecoOrganismQuarterStats = useQuery({
     queryKey: ["ecoOrganismQuarterStats"],
     queryFn: () =>
-      fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
+      fetchEcoOrganismQuarterStats().then((response) => response.data.data),
   });
 
   const salesStats = useQuery({
-    queryKey: ["salesStats", handleStatsFilter()],
-    queryFn: () => getTranscationStats(handleStatsFilter()),
+    queryKey: ["salesStats", statsFilters],
+    queryFn: () =>
+      getTranscationStats(statsFilters).then((response) => response.data.data),
   });
 
   const handleRefresh = async () => {
@@ -508,6 +550,43 @@ const Dashboard = () => {
               ))}
             </ToggleButtonGroup>
           </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 1,
+              mb: 2,
+            }}
+          >
+            <Tooltip title="Période précédente">
+              <IconButton
+                size="small"
+                onClick={() => setPeriodOffset((offset) => offset - 1)}
+                aria-label="Période précédente"
+              >
+                <ChevronLeft />
+              </IconButton>
+            </Tooltip>
+            <Typography
+              variant="body2"
+              sx={{ minWidth: 180, textAlign: "center", fontWeight: 500 }}
+            >
+              {formatPeriodLabel(view, periodOffset)}
+            </Typography>
+            <Tooltip title="Période suivante">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => setPeriodOffset((offset) => offset + 1)}
+                  disabled={periodOffset >= 0}
+                  aria-label="Période suivante"
+                >
+                  <ChevronRight />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
           {salesStats.isSuccess && (
             <Box
               sx={{
@@ -523,7 +602,7 @@ const Dashboard = () => {
                   series={[
                     {
                       data:
-                        salesStats.data?.data.stats.by_day.map(
+                        salesStats.data?.by_day.map(
                           (cat) => cat.total_amount,
                         ) ?? [],
                       label: "Chiffre d'affaires",
@@ -531,7 +610,7 @@ const Dashboard = () => {
                     },
                     {
                       data:
-                        salesStats.data?.data.stats.by_day.map(
+                        salesStats.data?.by_day.map(
                           (cat) => cat.transaction_count,
                         ) ?? [],
                       label: "nombre de transactions",
@@ -540,7 +619,7 @@ const Dashboard = () => {
                   ]}
                   xAxis={[
                     {
-                      data: salesStats.data?.data.stats.by_day.map(
+                      data: salesStats.data?.by_day.map(
                         (cat) => cat.date,
                       ),
                       height: 28,
@@ -566,10 +645,10 @@ const Dashboard = () => {
                   series={[
                     {
                       data:
-                        salesStats.data?.data.stats.by_category.map(
+                        salesStats.data?.by_category.map(
                           (cat, index) => ({
                             id: index,
-                            label: cat.category_name,
+                            label: cat.category_name ?? "",
                             value: cat.total_quantity,
                           }),
                         ) || [],
@@ -596,10 +675,10 @@ const Dashboard = () => {
                   series={[
                     {
                       data:
-                        salesStats.data?.data.stats.by_category.map(
+                        salesStats.data?.by_category.map(
                           (cat, index) => ({
                             id: index,
-                            label: cat.category_name,
+                            label: cat.category_name ?? "",
                             value: cat.total_price_sum,
                           }),
                         ) || [],

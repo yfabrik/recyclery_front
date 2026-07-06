@@ -12,7 +12,7 @@ export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
     const statistics = useQuery({
         queryKey: ["transactionsStats", filters],
         queryFn: () =>
-            getTranscationStats(filters).then((response) => response.data.stats),
+            getTranscationStats(filters).then((response) => response.data.data),
         placeholderData: {
             total_transactions: 0,
             total_sales: 0,
@@ -25,7 +25,7 @@ export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
             by_category: [],
         } as Awaited<
             ReturnType<typeof getTranscationStats>
-        >["data"]["stats"],
+        >["data"]["data"],
     });
     return (
         <Card>
@@ -44,13 +44,17 @@ export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
                                 }}
                             >
                                 <Typography variant="body2">
-                                    {getPaymentMethodLabel(method.payment_method)}
+                                    {getPaymentMethodLabel(
+                                    method.payment_method as Parameters<
+                                      typeof getPaymentMethodLabel
+                                    >[0],
+                                  )}
                                 </Typography>
                                 <Typography variant="body2" fontWeight="bold">
-                                    {method.count} (
+                                    {Number(method.count)} (
                                     {(
-                                        (method.count /
-                                            statistics.data?.total_transactions) *
+                                        (Number(method.count) /
+                                            Number(statistics.data?.total_transactions || 1)) *
                                         100
                                     ).toFixed(1)}
                                     %)
@@ -70,7 +74,7 @@ export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
                                     color="success.main"
                                     fontWeight="bold"
                                 >
-                                    {formatCurrency(method.total)}
+                                    {formatCurrency(Number(method.total))}
                                 </Typography>
                             </Box>
                             <Divider sx={{ mt: 1 }} />

@@ -26,7 +26,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState, type ElementType } from 'react';
+import { useState, type ElementType, type MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth, type PermissionAction, type PermissionModule } from '../contexts/AuthContext';
 import { getUserRoleLabel } from '../constants/userRoles';
@@ -39,9 +39,9 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated, hasModuleAccess } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  const handleUserMenuOpen = (event) => {
+  const handleUserMenuOpen = (event: MouseEvent<HTMLElement>) => {
     console.log("useropen",event)
     setAnchorEl(event.currentTarget);
   };

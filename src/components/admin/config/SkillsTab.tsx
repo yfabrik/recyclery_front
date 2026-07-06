@@ -28,15 +28,9 @@ import {
   fetchSkills,
   updateSkill,
 } from "../../../services/api/skills";
+import { Loading } from "../../Loading";
 
 const SKILLS_QUERY_KEY = ["skills"];
-
-const normalizeSkills = (
-  data: { skills?: SkillModel[] } | SkillModel[] | undefined
-): SkillModel[] => {
-  if (!data) return [];
-  return Array.isArray(data) ? data : data.skills ?? [];
-};
 
 export const SkillsTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -47,11 +41,7 @@ export const SkillsTab = () => {
 
   const skillsQuery = useQuery({
     queryKey: SKILLS_QUERY_KEY,
-    queryFn: async () => {
-      const res = await fetchSkills();
-      const data = res.data as { skills?: SkillModel[] } | SkillModel[];
-      return normalizeSkills(data);
-    },
+    queryFn: () => fetchSkills().then((res) => res.data.data),
   });
 
   const createMutation = useMutation({
@@ -124,9 +114,7 @@ export const SkillsTab = () => {
   const skills = skillsQuery.data ?? [];
   const isLoading = skillsQuery.isLoading;
 
-  if (isLoading) {
-    return <Typography>Chargement...</Typography>;
-  }
+
 
   return (
     <Box>
@@ -149,49 +137,49 @@ export const SkillsTab = () => {
           Ajouter une compétence
         </Button>
       </Box>
-
-      {skills.length === 0 ? (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          Aucune compétence. Ajoutez une compétence pour commencer.
-        </Alert>
-      ) : (
-        <List
-          sx={{
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          {skills.map((skill) => (
-            <ListItem
-              key={skill.id}
-              secondaryAction={
-                <Box component="span" sx={{ display: "flex", gap: 0.5 }}>
-                  <IconButton
-                    edge="end"
-                    aria-label="Modifier"
-                    onClick={() => handleOpenDialog(skill)}
-                    color="primary"
-                  >
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    aria-label="Supprimer"
-                    onClick={() => handleDelete(skill)}
-                    color="error"
-                  >
-                    <Delete />
-                  </IconButton>
-                </Box>
-              }
-            >
-              <ListItemText primary={skill.name} />
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <Loading isLoading={isLoading}>
+        {skills.length === 0 ? (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Aucune compétence. Ajoutez une compétence pour commencer.
+          </Alert>
+        ) : (
+          <List
+            sx={{
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            {skills.map((skill) => (
+              <ListItem
+                key={skill.id}
+                secondaryAction={
+                  <Box component="span" sx={{ display: "flex", gap: 0.5 }}>
+                    <IconButton
+                      edge="end"
+                      aria-label="Modifier"
+                      onClick={() => handleOpenDialog(skill)}
+                      color="primary"
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="Supprimer"
+                      onClick={() => handleDelete(skill)}
+                      color="error"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                }
+              >
+                <ListItemText primary={skill.name} />
+              </ListItem>
+            ))}
+          </List>
+        )} </Loading>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>

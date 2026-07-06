@@ -18,12 +18,12 @@ export const PromoTab = () => {
     const queryClient = useQueryClient()
     const stores = useQuery({
         queryKey: ["stores", { active: true }],
-        queryFn: () => fetchStores({ active: true }).then(response => response.data.stores),
+        queryFn: () => fetchStores({ active: true }).then(response => response.data.data),
     });
     const categories = useQuery({
         queryFn: () =>
-            fetchCategories({ only_category: true, include: "category", sell: true }).then(
-                (result) => result.data.categories || [],
+            fetchCategories({ only_category: true, include: ["category"], sell: true }).then(
+                (result) => result.data.data || [],
             ),
         queryKey: ["categorie", { only_category: true, include: "Category", sell: true }],
     });

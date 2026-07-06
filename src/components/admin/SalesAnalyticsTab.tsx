@@ -35,6 +35,7 @@ import {
   getTransactions,
   getTranscationStats,
   type CreateRefundBody,
+  type transactionsFilters,
 } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
@@ -48,6 +49,18 @@ import { useReceiptPrint } from "../ReceiptPrint";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { StatCard } from "../StatCard";
+
+const toTransactionFilters = ({
+  store_id,
+  period,
+  date_from,
+  date_to,
+}: Filters): transactionsFilters => ({
+  store_id: store_id || undefined,
+  period,
+  date_from,
+  date_to,
+});
 
 export const SalesAnalyticsTab = () => {
   const [page, setPage] = useState(1);
@@ -73,7 +86,7 @@ export const SalesAnalyticsTab = () => {
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
     queryFn: () =>
-      fStore({ active: true }).then((response) => response.data.stores),
+      fStore({ active: true }).then((response) => response.data.data),
   });
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
@@ -81,8 +94,7 @@ export const SalesAnalyticsTab = () => {
     queryKey: ["transactions", filters, page],
     queryFn: () =>
       getTransactions({
-        ...filters,
-        store_id: filters.store_id ? +filters.store_id : undefined,
+        ...toTransactionFilters(filters),
         include: ["refund", "items"],
         page,
       }).then((response) => response.data),
@@ -90,7 +102,9 @@ export const SalesAnalyticsTab = () => {
   const statistics = useQuery({
     queryKey: ["transactionsStats", filters],
     queryFn: () =>
-      getTranscationStats(filters).then((response) => response.data.stats),
+      getTranscationStats(toTransactionFilters(filters)).then(
+        (response) => response.data.data,
+      ),
     placeholderData: {
       total_transactions: 0,
       total_sales: 0,
@@ -101,7 +115,7 @@ export const SalesAnalyticsTab = () => {
       payment_methods: [],
       by_day: [],
       by_category: [],
-    } as Awaited<ReturnType<typeof getTranscationStats>>["data"]["stats"],
+    } as Awaited<ReturnType<typeof getTranscationStats>>["data"]["data"],
   });
 
   const categories = useQuery({
@@ -114,7 +128,7 @@ export const SalesAnalyticsTab = () => {
         include: ["category", "promo"],
         only_category: true,
         sell: true,
-      }).then((response) => response.data.categories),
+      }).then((response) => response.data.data),
   });
 
   const addRefund = useMutation({
@@ -174,7 +188,7 @@ export const SalesAnalyticsTab = () => {
     setSelectedTransaction(null);
   };
 
-  const transactionList = transactions.data?.transactions ?? [];
+  const transactionList = transactions.data?.data ?? [];
 
   return (
     <Box>
@@ -234,16 +248,18 @@ export const SalesAnalyticsTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Chiffre d'affaires net"
-            value={formatCurrency(statistics.data?.total_sales || 0)}
+            value={formatCurrency(Number(statistics.data?.total_sales || 0))}
             icon={<TrendingUp />}
             color="success"
             subtitle={
               statistics.data?.total_refunded
                 ? `Brut: ${formatCurrency(
-                    statistics.data.total_sales_before_refunds ||
-                      statistics.data.total_sales ||
-                      0,
-                  )} · Remboursé: -${formatCurrency(statistics.data.total_refunded || 0)}`
+                    Number(
+                      statistics.data.total_sales_before_refunds ||
+                        statistics.data.total_sales ||
+                        0,
+                    ),
+                  )} · Remboursé: -${formatCurrency(Number(statistics.data.total_refunded || 0))}`
                 : undefined
             }
           />
@@ -252,7 +268,7 @@ export const SalesAnalyticsTab = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Panier moyen"
-            value={formatCurrency(statistics.data?.average_transaction || 0)}
+            value={formatCurrency(Number(statistics.data?.average_transaction || 0))}
             icon={<ShoppingCart />}
             color="info"
           />
@@ -272,15 +288,12 @@ export const SalesAnalyticsTab = () => {
         {statistics.data?.payment_methods &&
           statistics.data?.payment_methods.length > 0 && (
             <Grid size={{ xs: 12, md: 6 }}>
-              <SalePaymentStats
-                filters={filters}
-                statistics={statistics.data}
-              />
+              <SalePaymentStats filters={toTransactionFilters(filters)} />
             </Grid>
           )}
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <SalePostalStats filters={filters} />
+          <SalePostalStats filters={toTransactionFilters(filters)} />
         </Grid>
       </Grid>
 

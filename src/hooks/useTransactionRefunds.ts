@@ -5,7 +5,9 @@ export const useTransactionRefunds = (transactionId: number) => {
   const refundsQuery = useQuery({
     queryKey: ["refunds", { id: transactionId }],
     queryFn: () =>
-      getRefundForTransaction(transactionId).then((response) => response.data.refunds),
+      getRefundForTransaction(transactionId).then(
+        (response) => response.data.data.refunds,
+      ),
     placeholderData: [],
   });
 

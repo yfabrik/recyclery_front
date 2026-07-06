@@ -64,18 +64,18 @@ export const CollectTab = () => {
   } = useQuery({
     queryKey: ["collectes"],
     queryFn: () =>
-      getPlanning({ category: "collection" }).then((res) => res.data.schedules),
+      getPlanning({ category: "collection" }).then((res) => res.data.data),
   });
   useQueryErrorToast(error, "Erreur lors de la recupération des collectes");
 
 
   const collectionPoints = useQuery({
     queryKey: ["collectionPoints"],
-    queryFn: () => fetchCollectionPoints().then(res => res.data.collection_points),
+    queryFn: () => fetchCollectionPoints().then(res => res.data.data),
   });
   const stores = useQuery({
     queryKey: ["stores"],
-    queryFn: () => fetchStores({ active: true }).then(res => res.data.stores),
+    queryFn: () => fetchStores({ active: true }).then(res => res.data.data),
   });
 
   const addCollecte = useMutation({

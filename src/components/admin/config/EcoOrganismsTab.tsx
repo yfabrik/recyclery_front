@@ -57,8 +57,8 @@ export const EcoOrganismsTab = () => {
 
   const queryClient = useQueryClient()
   const ecoOrganisms = useQuery({
-    queryKey: ["ecoOrganism", { include: ["inCategories","sellCategories"] }],
-    queryFn: () => getEcoOrganisms({ include: ["inCategories","sellCategories"] }).then(response => response.data.eco_organisms)
+    queryKey: ["ecoOrganism", { include: ["incategories", "sellcategories"] }],
+    queryFn: () => getEcoOrganisms({ include: ["incategories", "sellcategories"] }).then(response => response.data.data)
   })
   useQueryErrorToast(
     ecoOrganisms.error,
@@ -67,7 +67,7 @@ export const EcoOrganismsTab = () => {
 
   const ecoOrganismStats = useQuery({
     queryKey: ["ecoStats"],
-    queryFn: () => fetchEcoOrganismsStats().then(response => response.data.stats)
+    queryFn: () => fetchEcoOrganismsStats().then(response => response.data.data)
   })
   useQueryErrorToast(
     ecoOrganismStats.error,

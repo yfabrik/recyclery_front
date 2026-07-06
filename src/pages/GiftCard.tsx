@@ -24,7 +24,7 @@ import {
 import {
   createGiftCard,
   listGiftCards,
-  type CreateGiftCardRequestBody,
+  type GiftCardIssueBody,
 } from "../services/api/giftCards";
 import {
   getGiftCardStatusColor,
@@ -56,15 +56,11 @@ const GiftCard = () => {
 
   const giftCards = useQuery({
     queryKey: ["giftCards"],
-    queryFn: async () => {
-      const response = await listGiftCards();
-      if (!response.data.success) throw new Error(response.data.message);
-      return response.data.data;
-    },
+    queryFn: () => listGiftCards().then((response) => response.data.data),
   });
 
   const addGiftCard = useMutation({
-    mutationFn: (payload: CreateGiftCardRequestBody) => createGiftCard(payload),
+    mutationFn: (payload: GiftCardIssueBody) => createGiftCard(payload),
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);
@@ -181,7 +177,10 @@ const GiftCard = () => {
                       : "Aucune"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Créé le {new Date(giftCard.createdAt).toLocaleDateString("fr-FR")}
+                    Créé le{" "}
+                    {giftCard.createdAt
+                      ? new Date(giftCard.createdAt).toLocaleDateString("fr-FR")
+                      : "—"}
                   </Typography>
                 </CardContent>
               </Card>

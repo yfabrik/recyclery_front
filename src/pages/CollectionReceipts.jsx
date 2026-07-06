@@ -70,7 +70,7 @@ const CollectionReceipts = () => {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
       
-      const schedulesWithReceipts = (response.data.schedules || []).filter(schedule => 
+      const schedulesWithReceipts = (response.data.data || []).filter(schedule =>
         schedule.status === 'completed' || schedule.receipt_number
       );
       
@@ -90,7 +90,7 @@ const CollectionReceipts = () => {
       //  await axios.get('/api/users', {
       //   headers: { Authorization: `Bearer ${token}` }
       // });
-      const filteredEmployees = (response.data.users || []).filter(emp => 
+      const filteredEmployees = (response.data.data || []).filter(emp =>
         emp.role === 'employee' || emp.role === 'manager'
       );
       setEmployees(filteredEmployees);

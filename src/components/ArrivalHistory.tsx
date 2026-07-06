@@ -30,7 +30,10 @@ export const ArrivalHistory = () => {
                     ...(filters.source_type !== "" ? { source_type: filters.source_type } : {}),
                     ...(filters.collection_point_id !== "" ? { collection_point_id: filters.collection_point_id } : {}),
                     page,
-                }).then((result) => result.data ?? []),
+                }).then((result) => ({
+                    arrivals: result.data.data,
+                    pagination: result.data.pagination,
+                })),
         });
     const getSourceTypeLabel = (type: ArrivalModel["source_type"]): string => {
         const types: Record<ArrivalModel["source_type"], string> = {

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { RemakeMe, StoreStat } from "../services/api/dashboard";
+import type { StoreHistory, StoreStat } from "../services/api/dashboard";
 import axiosInstance from "../services/api/axios";
 import StoreStats from "./StoreStats";
 
@@ -18,8 +18,15 @@ const mockStoreStats: StoreStat[] = [
         revenue: 12450,
         averageTransaction: 36.4,
         sessions: 28,
+        start: "2026-06-01",
+        end: "2026-06-30",
       },
-      lastMonth: { transaction: 298, revenue: 10800 },
+      lastMonth: {
+        transactions: 298,
+        revenue: 10800,
+        start: "2026-05-01",
+        end: "2026-05-31",
+      },
       items: { available: 1204, sold: 89 },
       growth: { revenue: 15.3 },
     },
@@ -36,15 +43,22 @@ const mockStoreStats: StoreStat[] = [
         revenue: 7200,
         averageTransaction: 36.4,
         sessions: 22,
+        start: "2026-06-01",
+        end: "2026-06-30",
       },
-      lastMonth: { transaction: 210, revenue: 7600 },
+      lastMonth: {
+        transactions: 210,
+        revenue: 7600,
+        start: "2026-05-01",
+        end: "2026-05-31",
+      },
       items: { available: 890, sold: 54 },
       growth: { revenue: -5.3 },
     },
   },
 ];
 
-const mockStoreHistory: RemakeMe = {
+const mockStoreHistory: StoreHistory = {
   id: 1,
   name: "Recyclerie Centre",
   address: "12 rue de la Recyclerie",
@@ -60,7 +74,12 @@ const mockStoreHistory: RemakeMe = {
         start: "2026-06-01",
         end: "2026-06-30",
       },
-      lastMonth: { transaction: 298, revenue: 10800, start: "2026-05-01", end: "2026-05-31" },
+      lastMonth: {
+        transactions: 298,
+        revenue: 10800,
+        start: "2026-05-01",
+        end: "2026-05-31",
+      },
       items: { available: 1204, sold: 89 },
       growth: { revenue: 15.3 },
     },
@@ -73,7 +92,12 @@ const mockStoreHistory: RemakeMe = {
         start: "2026-05-01",
         end: "2026-05-31",
       },
-      lastMonth: { transaction: 275, revenue: 9900, start: "2026-04-01", end: "2026-04-30" },
+      lastMonth: {
+        transactions: 275,
+        revenue: 9900,
+        start: "2026-04-01",
+        end: "2026-04-30",
+      },
       items: { available: 1150, sold: 76 },
       growth: { revenue: 9.1 },
     },
@@ -86,7 +110,12 @@ const mockStoreHistory: RemakeMe = {
         start: "2026-04-01",
         end: "2026-04-30",
       },
-      lastMonth: { transaction: 260, revenue: 9200, start: "2026-03-01", end: "2026-03-31" },
+      lastMonth: {
+        transactions: 260,
+        revenue: 9200,
+        start: "2026-03-01",
+        end: "2026-03-31",
+      },
       items: { available: 1080, sold: 71 },
       growth: { revenue: 7.6 },
     },

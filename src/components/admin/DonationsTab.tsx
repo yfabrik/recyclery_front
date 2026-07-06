@@ -66,7 +66,7 @@ export const DonationsTab = () => {
 
   const donationStats = useQuery({
     queryKey: ["donStats"],
-    queryFn: () => getDonationsStats().then(response => response.data.stats)
+    queryFn: () => getDonationsStats().then(response => response.data.data)
   })
 
 

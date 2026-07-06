@@ -45,7 +45,10 @@ export const ArrivalAdd = ({
       getArrivals({
         date_from: todayKey(),
         date_to: todayKey(),
-      }).then((result) => result.data ?? []),
+      }).then((result) => ({
+        arrivals: result.data.data,
+        pagination: result.data.pagination,
+      })),
   });
 
   const createMutation = useMutation({
@@ -54,7 +57,7 @@ export const ArrivalAdd = ({
       toast.success(
         getApiSuccessMessage(
           response,
-          `Arrivage ${response.data.arrival?.id} enregistré avec succès`,
+          `Arrivage ${response.data.data?.id} enregistré avec succès`,
         ),
       );
 

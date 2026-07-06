@@ -72,7 +72,7 @@ const EmployeeManagement = () => {
 
   const skills = useQuery({
     queryKey: ["skills"],
-    queryFn: () => fetchSkills().then(response => response.data.skills || [])
+    queryFn: () => fetchSkills().then(response => response.data.data ?? [])
   });
   useQueryErrorToast(skills.error, "Erreur lors du chargement des compétences");
 
@@ -99,7 +99,7 @@ const EmployeeManagement = () => {
 
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
-    queryFn: () => fetchStores({ active: true }).then(response => response.data.stores)
+    queryFn: () => fetchStores({ active: true }).then(response => response.data.data)
   })
   useQueryErrorToast(stores.error, "Erreur lors du chargement des stores");
 

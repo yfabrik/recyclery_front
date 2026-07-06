@@ -1,8 +1,8 @@
 import { Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";
 import type { ReactElement } from "react";
-import type { ArrivalModel } from "../interfaces/Models";
+import type { ArrivalSourceType as ApiArrivalSourceType } from "@recyclerie/api/enums";
 
-export type ArrivalSourceTypeValue = ArrivalModel["source_type"];
+export type ArrivalSourceTypeValue = ApiArrivalSourceType;
 
 export type ArrivalSourceType = {
   [K in ArrivalSourceTypeValue]: {

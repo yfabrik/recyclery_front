@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { EcoOrgQuarterLabel } from "@recyclerie/api/responses/ecoOrganism";
 import type { EcoOrganismQuarterStat } from "../services/api/ecoOrganism";
 import { EcoOrganismStats } from "./EcoOrganismStats";
 
@@ -34,7 +35,7 @@ type RawWeightCategoryStat = {
   subcategories?: RawSubCategory[];
 };
 type RawQuarterStat = {
-  quarter: string;
+  quarter: EcoOrgQuarterLabel;
   label?: string;
   total_weight_kg: number;
   categories: RawWeightCategoryStat[];
@@ -129,7 +130,7 @@ const rawMockStats = [
     is_active: true,
     quarters: [
       {
-        quarter: "Q1 2025",
+        quarter: "2025-T1",
         label: "01/2025 - 03/2025",
         total_weight_kg: 1250,
         categories: [
@@ -154,7 +155,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q4 2024",
+        quarter: "2024-T4",
         label: "10/2024 - 12/2024",
         total_weight_kg: 1180,
         categories: [
@@ -163,7 +164,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q3 2024",
+        quarter: "2024-T3",
         label: "07/2024 - 09/2024",
         total_weight_kg: 1420,
         categories: [
@@ -172,7 +173,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q2 2024",
+        quarter: "2024-T2",
         label: "04/2024 - 06/2024",
         total_weight_kg: 990,
         categories: [
@@ -189,7 +190,7 @@ const rawMockStats = [
     is_active: true,
     quarters: [
       {
-        quarter: "Q1 2025",
+        quarter: "2025-T1",
         label: "01/2025 - 03/2025",
         total_weight_kg: 3420,
         categories: [
@@ -214,7 +215,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q4 2024",
+        quarter: "2024-T4",
         label: "10/2024 - 12/2024",
         total_weight_kg: 3100,
         categories: [
@@ -223,7 +224,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q3 2024",
+        quarter: "2024-T3",
         label: "07/2024 - 09/2024",
         total_weight_kg: 2890,
         categories: [
@@ -232,7 +233,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q2 2024",
+        quarter: "2024-T2",
         label: "04/2024 - 06/2024",
         total_weight_kg: 2650,
         categories: [
@@ -249,7 +250,7 @@ const rawMockStats = [
     is_active: true,
     quarters: [
       {
-        quarter: "Q1 2025",
+        quarter: "2025-T1",
         label: "01/2025 - 03/2025",
         total_weight_kg: 580,
         categories: [
@@ -274,7 +275,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q4 2024",
+        quarter: "2024-T4",
         label: "10/2024 - 12/2024",
         total_weight_kg: 620,
         categories: [
@@ -283,7 +284,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q3 2024",
+        quarter: "2024-T3",
         label: "07/2024 - 09/2024",
         total_weight_kg: 510,
         categories: [
@@ -292,7 +293,7 @@ const rawMockStats = [
         ],
       },
       {
-        quarter: "Q2 2024",
+        quarter: "2024-T2",
         label: "04/2024 - 06/2024",
         total_weight_kg: 490,
         categories: [
@@ -306,7 +307,7 @@ const rawMockStats = [
 
 const mockStats: EcoOrganismQuarterStat[] = rawMockStats.map((stat) => ({
   ...stat,
-  quarters: stat.quarters.map(normalizeQuarter),
+  quarters: stat.quarters.map((quarter) => normalizeQuarter(quarter as RawQuarterStat)),
 }));
 
 export const Default: Story = {

@@ -2,6 +2,13 @@ import type { CartItem } from "../components/forms/cartSchema";
 import type { CategoryModel, TransactionModel } from "../interfaces/Models";
 import { getPaymentMethodLabel as getPaymentMethodLabelFromConstants } from "../constants/paymentMethods";
 
+type CashInTransaction = {
+  payment_method: string;
+  transactionType: string;
+  total_amount: number;
+  payments?: Array<{ method: string; amount: number }>;
+};
+
 export type GlobalPromotionType = "percent" | "fixed";
 
 export interface GlobalPromotionInput {
@@ -75,7 +82,7 @@ export const getPaymentMethodLabel = (
 
 export const getTransactionStoreName = (
   transaction: Pick<TransactionModel, "CashSession">,
-) => transaction.CashSession?.Recyclery?.name ?? transaction.CashSession?.CashRegister?.Recyclery?.name ?? "N/A";
+) => transaction.CashSession?.CashRegister?.Recyclery?.name ?? "N/A";
 
 export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("fr-FR", {
@@ -162,7 +169,7 @@ export const sumPromoCategorie = (categorie?: CategoryModel) => {
   return categorie?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
 }
 //same calcul in backend
-export const sumCashInPayments = (transactions: TransactionModel[], openingAmount: number = 0) => {
+export const sumCashInPayments = (transactions: CashInTransaction[], openingAmount: number = 0) => {
     return transactions.reduce((prev, current) => {
     if (current.payment_method == "cash")
       return current.transactionType == "sell" ?

@@ -10,8 +10,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { CashSession } from "../interfaces/Models";
-import type { TransactionModel } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
+import type { ListSalesTransactionsResponse } from "@recyclerie/api/responses/salesTransactions";
 import { useBilanCaissePrint } from "./BilanCaissePrint";
 import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
 import { formatCurrency, roundCurrency, sumCashInPayments } from "../services/cartService";
@@ -37,18 +37,23 @@ export const DialogCloseCaisse = ({
         include: ["payments"],
       }).then((response) => response.data),
     placeholderData: {
-      success: true as const,
-      message: "",
+      success: true,
       data: [],
-      transactions: [] as TransactionModel[],
-    },
+      pagination: {
+        total: 0,
+        perPage: 50,
+        totalPages: 1,
+        page: 1,
+        hasNext: false,
+        hasPrevious: false,
+      },
+    } satisfies ListSalesTransactionsResponse,
   });
-  //Recup total argent transaction type cash and session==sesion
   const [state, setState] = useState<"prepare" | "valid">("prepare");
   const [closingAmount, setClosingAmount] = useState(0);
   const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
   const expectedCashAmount = sumCashInPayments(
-    transactions.data?.transactions || [],
+    transactions.data?.data || [],
     currentSession.opening_amount,
   );
   return (
@@ -90,7 +95,7 @@ export const DialogCloseCaisse = ({
               onClick={() =>
                 triggerPrintBilanCaisse({
                   session: currentSession,
-                  transactions: (transactions.data?.transactions ?? []).map(
+                  transactions: (transactions.data?.data ?? []).map(
                     (transaction) => ({
                       ...transaction,
                       payments: transaction.payments ?? [],

@@ -91,7 +91,7 @@ export const SalesHistoryExport = ({
       const allTransactions = await fetchAllPages<
         TransactionModel,
         {
-          transactions?: TransactionModel[];
+          data?: TransactionModel[];
           pagination?: Partial<PaginationMeta>;
         }
       >({
@@ -102,7 +102,7 @@ export const SalesHistoryExport = ({
           return response.data;
         },
         getItems: (data) =>
-          (data.transactions || []).filter(
+          (data.data || []).filter(
             (transaction) =>
               transaction.CashSession?.cash_register_id ===
                 activeSession.cash_register_id ||

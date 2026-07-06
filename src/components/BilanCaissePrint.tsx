@@ -1,20 +1,24 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type {
-  CashSession,
-  TransactionModel,
-  TransactionPayment,
-} from "../interfaces/Models";
+import type { CashSession, TransactionModel, TransactionPayment } from "../interfaces/Models";
 import {
   formatCurrency,
   getCashSessionBalance,
   sumCashInPayments,
 } from "../services/cartService";
-
-type BilanCaisseTransaction = TransactionModel & {
-  payments: TransactionPayment[];
+import type { PaymentMethod } from "@recyclerie/api/enums";
+type BilanCaisseTransaction = TransactionModel&{
+  payments: Array<TransactionPayment>;
 };
+// type BilanCaisseTransaction = {
+//   payment_method: string;
+//   transactionType: string;
+//   total_amount: number;
+//   payments: Array<{ method: string; amount: number }>;
+//   global_promotion?: number | null;
+//   global_promotion_type?: string | null;
+// };
 
 interface BilanCaisseProps {
   session: CashSession;
@@ -59,13 +63,8 @@ export const BilanCaissePrint = ({
     [transactions, session.opening_amount],
   );
 
-  type transacStats = Record<
-    Exclude<TransactionModel["payment_method"], "mixed">,
-    {
-      amount: number;
-      count: number;
-    }
-  >;
+  type PaymentStatKey = PaymentMethod;
+  type transacStats = Record<PaymentStatKey, { amount: number; count: number }>;
 
   const saleDatas: transacStats = useMemo(() => {
     return transactions.reduce(
@@ -89,10 +88,13 @@ export const BilanCaissePrint = ({
             prev["giftcard"].count++;
             break;
           case "mixed":
-            current.payments.forEach(payment => {
-              prev[payment.method].amount += payment.amount;
-              prev[payment.method].count++;
-            })
+            current.payments.forEach((payment) => {
+              const key = payment.method;
+              if (key in prev) {
+                prev[key].amount += payment.amount;
+                prev[key].count++;
+              }
+            });
             break;
           case "transfer":
             prev["transfer"].amount += current.total_amount;
@@ -155,10 +157,9 @@ export const BilanCaissePrint = ({
             prev["transfer"].amount += current.total_amount;
             prev["transfer"].count++;
             break;
-          default: 
+          default:
             current.payment_method satisfies "mixed"
             break;
-          
         }
         return prev;
       },
@@ -312,7 +313,9 @@ export const BilanCaissePrint = ({
                 Ouverture
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
-                {new Date(session.createdAt).toLocaleString()}
+                {session.createdAt
+                  ? new Date(session.createdAt).toLocaleString()
+                  : "—"}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem" }}>
                 Fond de caisse : {formatCurrency(session.opening_amount)}

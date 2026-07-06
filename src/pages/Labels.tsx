@@ -40,6 +40,10 @@ import {
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
 
+import type {
+  CreateLabeledItemResponse,
+  UpdateLabeledItemResponse,
+} from "@recyclerie/api/responses/items";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
 import { AutoPrintToggle } from "../components/AutoPrintToggle";
@@ -49,6 +53,7 @@ import { StatCard } from "../components/StatCard";
 import { LabelFiltersForm } from "../components/forms/LabelFiltersForm";
 import {
   LabeledItemForm,
+  type LabeledItemFormValues,
 } from "../components/forms/LabeledItemForm";
 import type { LabeledItemSchema } from "../components/forms/itemCoreSchema";
 import { filterSchema, parseFilters, type FilterInput } from "../components/forms/labelFiltersSchema";
@@ -98,7 +103,11 @@ const Labels = () => {
         ...(applied.category_id != null && { category_id: applied.category_id }),
         ...(applied.search && { search: applied.search }),
         page,
-      }).then((response) => response.data);
+      }).then((response) => ({
+        items: response.data.data,
+        pagination: response.data.pagination,
+        total: response.data.pagination.total,
+      }));
     },
   });
   useQueryErrorToast(items.error, "Erreur lors du chargement des articles");
@@ -113,18 +122,18 @@ const Labels = () => {
         ...(applied.category_id != null && { category_id: applied.category_id }),
         ...(applied.search && { search: applied.search }),
         page,
-      }).then((response) => response.data.stats)
+      }).then((response) => response.data.data)
     },
   })
 
   const categories = useQuery({
     queryKey: [
       "categories",
-      { only_category: true, include: "category", sell: true },
+      { only_category: true, include: ["category"], sell: true },
     ],
     queryFn: () =>
-      fcat({ only_category: true, include: "category", sell: true }).then(
-        (response) => response.data.categories,
+      fcat({ only_category: true, include: ["category"], sell: true }).then(
+        (response) => response.data.data,
       ),
   });
 
