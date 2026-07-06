@@ -11,6 +11,7 @@ import { Grid, MenuItem } from "@mui/material";
 import { FormDate, FormSelect } from "./FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../services/api/collectionPoint";
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 
 const filterSchema = z.object({
   eco_organism_id: z.union([idSchema(), z.literal("")]),
@@ -222,9 +223,9 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
                 label="Source"
               >
                 <MenuItem value="">Toutes les sources</MenuItem>
-                {sourceTypeOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
+                {ARRIVAL_SOURCE_TYPES.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
                   </MenuItem>
                 ))}
               </FormSelect>
