@@ -10,14 +10,16 @@ export const itemCoreFieldsSchema = (categories: CategoryModel[]) =>
     .object({
       category_id: idSchema("category requis"),
       subcategory_id: z.union([
-        idSchema(),
         nullString(),
+        idSchema(),
       ]),
       weight: z.coerce.number().positive(),
       price: z.coerce.number().positive("prix requis"),
-      description: z.string().transform((v) => (v === "" ? null : v)),
+      description: z.string().transform((v) => (v === "" ? null : v)),//TODO recheck the description field
+      // description: z.string().optional(),
     })
     .superRefine((data, ctx) => {
+      //TODO existe aussi en copy pasted dans arrival form
       const selectedCategory = categories.find((c) => c.id === data.category_id);
       const hasSubcategories =
         (selectedCategory?.subcategories?.length ?? 0) > 0;
@@ -35,7 +37,8 @@ export type ItemCoreFields = z.infer<ReturnType<typeof itemCoreFieldsSchema>>;
 export const labeledItemSchema = (categories: CategoryModel[]) =>
   itemCoreFieldsSchema(categories).extend({
     condition_state: z.enum(LABELED_ITEM_CONDITION_VALUES),
-    location: z.string().transform((v) => (v === "" ? null : v)),
+    location: z.string().transform((v) => (v === "" ? null : v)),//TODO recheck the location field
+    // location: z.string().optional(),
   });
 
 export type LabeledItemSchema = z.infer<ReturnType<typeof labeledItemSchema>>;

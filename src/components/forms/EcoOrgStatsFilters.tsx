@@ -1,5 +1,6 @@
 import z from "zod";
-import type { EcoOrganismQuarterStatsResponse } from "../../services/api/ecoOrganism";
+import type { EcoOrganismQuarterStat } from "../../services/api/ecoOrganism";
+import { parseEcoOrgQuarterKey } from "../../services/api/ecoOrganism";
 import type { EcoOrganismStatsRow } from "../admin/EcoOrganismStatsTable";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { useForm } from "react-hook-form";
@@ -11,18 +12,23 @@ import { Grid, MenuItem } from "@mui/material";
 import { FormDate, FormSelect } from "./FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../services/api/collectionPoint";
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 
+
+const METRIC_SOURCES = ["quarterIn", "quarterOut", "quarterSell"] as const;
+const SOURCE_TYPES = ARRIVAL_SOURCE_TYPES.map(s=>s.value);
 const filterSchema = z.object({
   eco_organism_id: z.union([idSchema(), z.literal("")]),
-  metric_source: z.enum(["quarterIn", "quarterOut", "quarterSell"]),
+  metric_source: z.enum(METRIC_SOURCES),
   quarter: z.string(),
   month_year: z.date().nullable(),
-  source_type: z.string(),
+  source_type: z.enum([...SOURCE_TYPES, ""]),
   collection_point_id: z.union([idSchema(), z.literal("")]),
   category: z.string(),
 });
 
 export type Filters = z.infer<typeof filterSchema>;
+export type EcoOrgStatsFiltersValues = z.input<typeof filterSchema>;
 
 const getDefaultFilters = (): Filters => {
   return {
@@ -36,12 +42,7 @@ const getDefaultFilters = (): Filters => {
   };
 };
 
-const parseQuarterKey = (value?: string) => {
-  if (!value) return null;
-  const match = value.match(/Q([1-4])\s*(\d{4})/i);
-  if (!match) return null;
-  return { quarterNumber: Number(match[1]), year: Number(match[2]) };
-};
+const parseQuarterKey = parseEcoOrgQuarterKey;
 
 const sortQuarterDesc = (a: string, b: string) => {
   const aKey = parseQuarterKey(a);
@@ -53,18 +54,15 @@ const sortQuarterDesc = (a: string, b: string) => {
 
 
 interface EcoOrgoStatsFiltersProps {
-  defaultValues: Filters;
+  defaultValues: EcoOrgStatsFiltersValues;
   onChange: (values: Filters) => void;
-  statsRows: EcoOrganismQuarterStatsResponse
+  statsRows: EcoOrganismQuarterStat[]
   allRows: EcoOrganismStatsRow[]
 }
 export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange }: EcoOrgoStatsFiltersProps) => {
 
   const form = useForm<
-    Omit<Filters, "eco_organism_id" | "collection_point_id"> & {
-      eco_organism_id: unknown;
-      collection_point_id: unknown;
-    },
+    EcoOrgStatsFiltersValues,
     unknown,
     Filters
   >({
@@ -77,7 +75,7 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
 
   const collectionPoints = useQuery({
     queryKey: ["collectionPoints"],
-    queryFn: () => fetchCollectionPoints(),
+    queryFn: () => fetchCollectionPoints().then((response) => response.data.data),
   });
 
   // const SourceType = ({ control }: { control: typeof form.control }) => {
@@ -222,9 +220,9 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
                 label="Source"
               >
                 <MenuItem value="">Toutes les sources</MenuItem>
-                {sourceTypeOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
+                {ARRIVAL_SOURCE_TYPES.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
                   </MenuItem>
                 ))}
               </FormSelect>
@@ -233,7 +231,7 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
               <Grid size={{ xs: 12, md: 3 }}>
                 <FormSelect control={form.control} name="collection_point_id" label="Point de collecte">
                   <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
-                  {collectionPoints.data?.data.collection_points.map((point) => (
+                  {collectionPoints.data?.map((point) => (
                     <MenuItem key={`point.${point.id}`} value={point.id}>{point.name}</MenuItem>
                   ))}
                 </FormSelect>

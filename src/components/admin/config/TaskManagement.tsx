@@ -6,7 +6,6 @@ import {
   LocationOn,
   Person,
   Refresh,
-  Schedule,
   Search,
   Timer,
 } from "@mui/icons-material";
@@ -36,41 +35,47 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { TASK_CATEGORIES } from "../../../constants/taskCategories";
 import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
-import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
+import type { EmployeeModel } from "../../../interfaces/Models";
 import {
   addEmployeeToTask,
   createTask,
   deleteTask,
   getEmployeesForTask,
   getTasks,
+  normalizeTaskForDisplay,
   removeEmployeeFromTask,
+  taskToFormValues,
   updateTask,
+  type TaskDisplay,
 } from "../../../services/api/tasks";
-import { fetchUsers } from "../../../services/api/users";
+import { getEmployees } from "../../../services/api/employee";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
-import { TaskForm } from "../../forms/TaskForm";
+import { TaskForm, type TaskFormSchema } from "../../forms/TaskForm";
 
 /**
  * @deprecated
  * @returns
  */
 const TaskManagement = () => {
-  const [tasks, setTasks] = useState<Array<TaskModel&{assigned_employees?:EmployeeModel[]}>>([]);
+  const [tasks, setTasks] = useState<TaskDisplay[]>([]);
   const [employees, setEmployees] = useState<EmployeeModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingTask, setEditingTask] = useState<TaskModel | null>(null);
+  const [editingTask, setEditingTask] = useState<Partial<TaskFormSchema> | null>(
+    null,
+  );
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
 
   // États pour l'assignation des employés
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskModel | null>(null); //TODO pareil que editingtask ?
-  const [taskEmployees, setTaskEmployees] = useState([]);
+  const [selectedTask, setSelectedTask] = useState<TaskDisplay | null>(null);
+  const [taskEmployees, setTaskEmployees] = useState<EmployeeModel[]>([]);
   const [availableEmployees, setAvailableEmployees] = useState<EmployeeModel[]>(
     [],
   );
@@ -89,19 +94,7 @@ const TaskManagement = () => {
       setLoading(true);
       const response = await getTasks();
       // S'assurer que les champs JSON sont correctement parsés
-      const baseTasks = (response.data.tasks || []).map((task) => ({
-        ...task,
-        required_skills: Array.isArray(task.required_skills)
-          ? task.required_skills
-          : typeof task.required_skills === "string"
-            ? JSON.parse(task.required_skills)
-            : [],
-        equipment_needed: Array.isArray(task.equipment_needed)
-          ? task.equipment_needed
-          : typeof task.equipment_needed === "string"
-            ? JSON.parse(task.equipment_needed)
-            : [],
-      }));
+      const baseTasks = (response.data.data || []).map(normalizeTaskForDisplay);
 
       // Pour chaque tâche, récupérer les employés assignés
       const tasksWithEmployees = await Promise.all(
@@ -110,7 +103,7 @@ const TaskManagement = () => {
             const employeesResponse = await getEmployeesForTask(task.id);
             return {
               ...task,
-              assigned_employees: employeesResponse.data.employees || [],
+              assigned_employees: employeesResponse.data.data || [],
             };
           } catch (error) {
             console.error(
@@ -138,10 +131,10 @@ const TaskManagement = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetchUsers({ role: "employee" });
+      const response = await getEmployees();
 
       if (response.data.success) {
-        setEmployees(response.data.users || []);
+        setEmployees(response.data.data || []);
       } else {
         setEmployees([]);
       }
@@ -151,20 +144,22 @@ const TaskManagement = () => {
     }
   };
 
-  const handleOpenDialog = (task: TaskModel | null = null) => {
-    setEditingTask(task);
+  const handleOpenDialog = (task: TaskDisplay | null = null) => {
+    setEditingTaskId(task?.id ?? null);
+    setEditingTask(task ? taskToFormValues(task) : null);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingTask(null);
+    setEditingTaskId(null);
   };
 
-  const handleSave = async (data) => {
+  const handleSave = async (data: TaskFormSchema) => {
     try {
-      if (editingTask) {
-        const response = await updateTask(editingTask.id, data);
+      if (editingTaskId) {
+        const response = await updateTask(editingTaskId, data);
         toast.success(
           getApiSuccessMessage(response, "Tâche mise à jour avec succès"),
         );
@@ -201,17 +196,17 @@ const TaskManagement = () => {
   };
 
   // Fonction pour ouvrir le dialogue d'assignation des employés
-  const handleAssignEmployees = async (task: TaskModel) => {
+  const handleAssignEmployees = async (task: TaskDisplay) => {
     setSelectedTask(task);
     try {
       // Récupérer les employés assignés à cette tâche
       const assignedResponse = await getEmployeesForTask(task.id);
 
-      setTaskEmployees(assignedResponse.data.employees || []);
+      setTaskEmployees(assignedResponse.data.data || []);
 
       // Récupérer tous les employés disponibles
-      const employeesResponse = await fetchUsers();
-      setAvailableEmployees(employeesResponse.data.users || []);
+      const employeesResponse = await getEmployees();
+      setAvailableEmployees(employeesResponse.data.data || []);
 
       setOpenAssignmentDialog(true);
     } catch (error) {
@@ -272,24 +267,12 @@ const TaskManagement = () => {
     }
   };
 
-  const getCategoryInfo = (category:TaskModel["category"]) => {
+  const getCategoryInfo = (category: TaskDisplay["category"]) => {
     return categories.find((cat) => cat.value === category) || categories[0];
   };
 
-  const getPriorityInfo = (priority:TaskModel["priority"]) => {
+  const getPriorityInfo = (priority: TaskDisplay["priority"]) => {
     return priorities.find((pri) => pri.value === priority) || priorities[1];
-  };
-
-  const formatDuration = (minutes:number) => {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours}h`;
-    }
-    return `${hours}h ${remainingMinutes}min`;
   };
 
   const filteredTasks = tasks.filter((task) => {
@@ -497,15 +480,19 @@ const TaskManagement = () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Timer fontSize="small" color="action" />
                       <Typography variant="body2">
-                        {new Date(task.start_time).toLocaleString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
+                        {task.start_time
+                          ? new Date(task.start_time).toLocaleString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}{" "}
                         -{" "}
-                        {new Date(task.end_time).toLocaleString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {task.end_time
+                          ? new Date(task.end_time).toLocaleString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
                       </Typography>
                     </Box>
 
@@ -611,16 +598,6 @@ const TaskManagement = () => {
                         </Box>
                       )}
 
-                    {task.is_recurring && (
-                      <Chip
-                        label="Récurrente"
-                        size="small"
-                        color="info"
-                        variant="outlined"
-                        icon={<Schedule />}
-                      />
-                    )}
-
                     {/* Affichage des employés assignés */}
                     {task.assigned_employees &&
                       task.assigned_employees.length > 0 && (
@@ -645,7 +622,10 @@ const TaskManagement = () => {
                               .map((employee, index) => (
                                 <Chip
                                   key={index}
-                                  label={employee.username}
+                                  label={
+                                    employee.fullName ??
+                                    `${employee.prenom} ${employee.nom}`
+                                  }
                                   size="small"
                                   color="success"
                                   variant="outlined"
@@ -690,7 +670,7 @@ const TaskManagement = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingTask ? "Modifier la tâche" : "Nouvelle tâche"}
+          {editingTaskId ? "Modifier la tâche" : "Nouvelle tâche"}
         </DialogTitle>
         <DialogContent>
           <TaskForm
@@ -805,7 +785,8 @@ const TaskManagement = () => {
                   {employees && employees.length > 0 ? (
                     employees.map((employee) => (
                       <MenuItem key={employee.id} value={employee.id}>
-                        {employee.username} ({employee.role})
+                        {employee.fullName ??
+                          `${employee.prenom} ${employee.nom}`}
                       </MenuItem>
                     ))
                   ) : (
@@ -954,14 +935,9 @@ const TaskManagement = () => {
                             >
                               <Person color="success" />
                               <Typography variant="body2" fontWeight="medium">
-                                {employee.username}
+                                {employee.fullName ??
+                                  `${employee.prenom} ${employee.nom}`}
                               </Typography>
-                              <Chip
-                                label={employee.role}
-                                size="small"
-                                color="info"
-                                variant="outlined"
-                              />
                             </Box>
                             <IconButton
                               size="small"
@@ -1019,10 +995,10 @@ const TaskManagement = () => {
                           >
                             <Person color="action" />
                             <Typography variant="body2" fontWeight="medium">
-                              {employee.username}
+                              {employee.fullName ?? `${employee.prenom} ${employee.nom}`}
                             </Typography>
                             <Chip
-                              label={employee.role}
+                              label="Employé"
                               size="small"
                               color="info"
                               variant="outlined"

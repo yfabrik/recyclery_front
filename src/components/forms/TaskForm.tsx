@@ -20,16 +20,18 @@ import {
 import type { EmployeeModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { TASK_CATEGORIES } from "../../constants/taskCategories";
-
+import { noEmptyStr, nullString } from "../../interfaces/ZodTypes";
+import { RECURRENCE_PATTERNS } from "@recyclerie/api/enums";
+const recurrencePatternEnum = z.enum(RECURRENCE_PATTERNS);
 const schema = z.object({
-  name: z.string().trim().nonempty("Le nom de la tâche est requis"),
+  name: noEmptyStr("Le nom de la tâche est requis"),
   hourly_rate: z.coerce.number().optional(),
   description: z
     .string()
     .trim()
     .transform((v) => (v == "" ? null : v)),
-  category: z.string().nonempty("La catégorie est requise"),
-  priority: z.string().nonempty("La priorité est requise"),
+  category: noEmptyStr("La catégorie est requise"),
+  priority: noEmptyStr("La priorité est requise"),
   // estimated_duration: z.coerce
   //   .number()
   //   .min(15, "Minimum 15 minutes")
@@ -43,8 +45,8 @@ const schema = z.object({
   equipment_needed: z.array(z.string()).default([]),
   is_recurring: z.boolean().default(false),
   recurrence_pattern: z.union([
-    z.enum(["daily", "weekly", "monthly"]),
-    z.literal("").transform(() => null),
+    nullString(),
+    recurrencePatternEnum,
   ]),
   notes: z
     .string()

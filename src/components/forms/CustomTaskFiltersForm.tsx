@@ -5,20 +5,19 @@ import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import type { StoreModel } from "../../interfaces/Models";
-import { PRIORITY_FILTER_VALUES } from "../../constants/taskPriorities";
-import { TASK_PRIORITIES } from "../../constants/taskPriorities";
 import {
   RECURRENCE_FILTER_VALUES,
   RECURRENCE_PATTERNS,
 } from "../../constants/recurrencePatterns";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import { PRIORITY_FILTER_VALUES, TASK_PRIORITIES } from "../../constants/taskPriorities";
+import type { StoreModel } from "../../interfaces/Models";
+import { idSchema } from "../../interfaces/ZodTypes";
 import { FormInput, FormSelect } from "./FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({
   search: z.string().trim().optional(),
-  store_id: z.union([idSchema(), nullString()]),
+  store_id: z.union([idSchema(), z.literal("")]),
   priority: z.enum(PRIORITY_FILTER_VALUES),
   recurrence: z.enum(RECURRENCE_FILTER_VALUES),
 });
@@ -27,7 +26,7 @@ export type CustomTaskFilters = z.infer<typeof filterSchema>;
 
 export const CUSTOM_TASK_FILTER_DEFAULTS: CustomTaskFilters = {
   search: "",
-  store_id: null,
+  store_id: "",
   priority: "all",
   recurrence: "all",
 };

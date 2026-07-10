@@ -63,6 +63,7 @@ import {
 } from "../forms/PasswordChangeForm";
 import { UserForm, type Schema } from "../forms/UserForm";
 import { StatCard } from "../StatCard";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 
 export const UsersTab = () => {
   const [userDialog, setUserDialog] = useState(false);
@@ -91,9 +92,10 @@ export const UsersTab = () => {
     },
   });
 
+  const updateUserPayloadFromForm = (data: Schema): UserUpdateInput => ({...data});
   const editUser = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
-      updateUser(id, data),
+    mutationFn: ({ id, data }: { id: UserModel["id"]; data: Schema }) =>
+      updateUser(id, updateUserPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -103,8 +105,9 @@ export const UsersTab = () => {
       );
     },
   });
+  const createUserPayloadFromForm = (data: Schema): UserCreateInput => ({...data});
   const addUser = useMutation({
-    mutationFn: (data: Schema) => createUser(data),
+    mutationFn: (data: Schema) => createUser(createUserPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -119,7 +122,7 @@ export const UsersTab = () => {
   };
 
   const removeUser = useMutation({
-    mutationFn: (data: number) => deleteUser(data),
+    mutationFn: (data: UserModel["id"]) => deleteUser(data),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
@@ -131,9 +134,10 @@ export const UsersTab = () => {
     },
   });
 
+  const updateUserPasswordPayloadFromForm = (data: PasswordSchema): UserAdminUpdatePasswordInput => ({...data});
   const changePassword = useMutation({
-    mutationFn: (data: { id: number; data: PasswordSchema }) =>
-      updateUserPassword(data.id, data.data),
+    mutationFn: (data: { id: UserModel["id"]; data: PasswordSchema }) =>
+      updateUserPassword(data.id, updateUserPasswordPayloadFromForm(data.data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"),

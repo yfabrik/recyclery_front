@@ -1,16 +1,15 @@
-import type { AxiosResponse } from "axios";
-import type { CategoryListFilter, CategoryPatch } from "@recyclerie/api/schemas/categories";
 import type {
-  ListCategoriesResponse,
   CreateCategoryResponse,
-  UpdateCategoryResponse,
   DeleteCategoryResponse,
+  ListCategoriesResponse,
   PatchCategoryResponse,
+  UpdateCategoryResponse,
 } from "@recyclerie/api/responses/categories";
+import type { CategoryDataInput, CategoryListFilter, CategoryPatchInput } from "@recyclerie/api/schemas/categories";
+import type { AxiosResponse } from "axios";
+import type { CategoryModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/CategorieForm";
 
-export type { CategoryListFilter, CategoryPatch };
 
 export const fetchCategoryIcons = () =>
   axiosInstance.get("/api/categories/icons");
@@ -23,23 +22,23 @@ export const fetchCategories = (
   });
 
 export const createCategory = (
-  data: Schema,
+  data: CategoryDataInput,
 ): Promise<AxiosResponse<CreateCategoryResponse>> =>
   axiosInstance.post<CreateCategoryResponse>("/api/categories", data);
 
 export const updateCategory = (
-  id: number,
-  data: Schema,
+  id: CategoryModel["id"],
+  data: CategoryDataInput,
 ): Promise<AxiosResponse<UpdateCategoryResponse>> =>
   axiosInstance.put<UpdateCategoryResponse>(`/api/categories/${id}`, data);
 
 export const deleteCategory = (
-  id: number,
+  id: CategoryModel["id"],
 ): Promise<AxiosResponse<DeleteCategoryResponse>> =>
   axiosInstance.delete<DeleteCategoryResponse>(`/api/categories/${id}`);
 
 export const patchCategory = (
-  id: number,
-  data: CategoryPatch,
+  id: CategoryModel["id"],
+  data: CategoryPatchInput,
 ): Promise<AxiosResponse<PatchCategoryResponse>> =>
   axiosInstance.patch<PatchCategoryResponse>(`/api/categories/${id}`, data);

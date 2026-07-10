@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
+import type { TaskScheduleDataInput } from "@recyclerie/api/schemas/taskSchedule";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -35,13 +36,13 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
-import { CollecteForm, type Schema } from "../../forms/CollecteForm";
+import { CollecteForm, type CollecteFormValues, type Schema } from "../../forms/CollecteForm";
 import { Loading } from "../../Loading";
 
-function scheduleToFormValues(collecte: ScheduleModel): Partial<Schema> {
+function scheduleToFormValues(collecte: ScheduleModel): Partial<CollecteFormValues> {
   return {
-    day_of_week: collecte.day_of_week,
-    is_active: collecte.is_recurring,
+    day_of_week: collecte.day_of_week ?? "",
+    is_active: collecte.is_recurring ?? false,
     start_time: new Date(collecte.start_time),
     end_time: new Date(collecte.end_time),
     notes: collecte.notes ?? "",
@@ -53,8 +54,8 @@ function scheduleToFormValues(collecte: ScheduleModel): Partial<Schema> {
 export const CollectTab = () => {
   const queryClient = useQueryClient();
 
-  const [editingCollecteId, setEditingCollecteId] = useState<number | null>(null);
-  const [formDefaults, setFormDefaults] = useState<Partial<Schema> | null>(null);
+  const [editingCollecteId, setEditingCollecteId] = useState<ScheduleModel["id"] | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<CollecteFormValues> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const {
@@ -78,9 +79,39 @@ export const CollectTab = () => {
     queryFn: () => fetchStores({ active: true }).then(res => res.data.data),
   });
 
+  const schedulePayloadFromForm = (data: Schema): TaskScheduleDataInput => {
+    const { is_active, location, store_id, day_of_week: _day, ...rest } = data;
+    //TODO FIXME BEUUUUUUURK
+    const scheduled_date = (() => {
+      const today = new Date();
+      let i = 0;
+      while (i < 7) {
+        const jour = new Intl.DateTimeFormat("fr-FR", {
+          weekday: "long",
+        }).format(today.setDate(today.getDate() + 1));
+        if (jour == data.day_of_week.toLowerCase()) {
+          return today;
+        }
+        i++;
+      }
+      return new Date();
+    })();
+
+    return {
+      ...rest,
+      scheduled_date,
+      is_recurring: is_active,
+      location: location.length > 0 ? location.join(",") : null,
+      store_id: store_id,
+      name: "collecte",
+      category: "collection",
+      recurrence_pattern: "weekly",
+      collection_point_id: null,
+    };
+  }
   const addCollecte = useMutation({
-    mutationFn: (formData: Partial<ScheduleModel>) => {
-      return createPlanning(formData);
+    mutationFn: (formData: Schema) => {
+      return createPlanning(schedulePayloadFromForm(formData));
     },
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Collecte créé avec succès"));
@@ -92,8 +123,8 @@ export const CollectTab = () => {
   });
 
   const editCollecte = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Partial<ScheduleModel> }) => {
-      return updatePlanning(id, data);
+    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: Schema }) => {
+      return updatePlanning(id, schedulePayloadFromForm(data));
     },
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Collecte mise à jour avec succès"));
@@ -108,7 +139,7 @@ export const CollectTab = () => {
   });
 
   const removeCollecte = useMutation({
-    mutationFn: (id: number) => deletePlanning(id),
+    mutationFn: (id: ScheduleModel["id"]) => deletePlanning(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collectes"] });
     },
@@ -127,44 +158,11 @@ export const CollectTab = () => {
   };
 
   const handleSave = async (data: Schema) => {
-    const { is_active, location, store_id, ...rest } = data;
-    const result: Partial<ScheduleModel> = {
-      ...rest,
-      is_recurring: is_active,
-      location: location.join(","),
-      store_id: store_id === "" ? null : store_id,
-      name: "collecte",
-      category: "collection",
-      recurrence_pattern: "weekly",
-      collection_point_id: undefined,
-    };
 
-    // const [type, id] = data.location2?.split(".") ?? [];
-    // if (type === "point") {
-    //   result.collection_point_id = +id;
-    //   result.name += ` - déchet ${collectionPoints.data?.find(point => point.id === +id)?.name}`;
-    // } else if (type === "store") {
-    //   result.store_id = +id;
-    //   result.name += ` - magasin ${stores.data?.find(store => store.id === +id)?.name}`;
-    // }
-    //TODO FIXME BEUUUUUUURK
-    result.scheduled_date = (() => {
-      const today = new Date();
-      let i = 0;
-      while (i < 7) {
-        const jour = new Intl.DateTimeFormat("fr-FR", {
-          weekday: "long",
-        }).format(today.setDate(today.getDate() + 1));
-        if (jour == data.day_of_week.toLowerCase()) {
-          return today;
-        }
-        i++;
-      }
-    })();
     if (editingCollecteId) {
-      editCollecte.mutate({ id: editingCollecteId, data: result });
+      editCollecte.mutate({ id: editingCollecteId, data });
     } else {
-      addCollecte.mutate(result);
+      addCollecte.mutate(data);
     }
   };
 
@@ -212,7 +210,7 @@ export const CollectTab = () => {
             </TableHead>
             <TableBody>
               <Loading isLoading={isLoading} tableCols={6}>
-              
+
                 {collectes?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center">

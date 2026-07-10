@@ -1,42 +1,38 @@
-import type { AxiosResponse } from "axios";
 import type {
-  ListEmployeesResponse,
-  DetailEmployeeResponse,
   CreateEmployeeResponse,
-  UpdateEmployeeResponse,
   DeleteEmployeeResponse,
+  DetailEmployeeResponse,
+  ListEmployeesResponse,
+  UpdateEmployeeResponse,
 } from "@recyclerie/api/responses/employees";
+import type { EmployeeDataInput, EmployeeFilterInput } from "@recyclerie/api/schemas/employees";
+import type { AxiosResponse } from "axios";
+import type { EmployeeModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/EmployeeForm";
 
-interface EmployeeFilters {
-  store_id?: number;
-  active?: boolean;
-  include?: string;
-}
 
 export const getEmployees = (
-  filters?: EmployeeFilters,
+  filters?: EmployeeFilterInput,
 ): Promise<AxiosResponse<ListEmployeesResponse>> =>
   axiosInstance.get<ListEmployeesResponse>("/api/employees", { params: filters });
 
 export const detailEmployee = (
-  id: number,
+  id: EmployeeModel["id"],
 ): Promise<AxiosResponse<DetailEmployeeResponse>> =>
   axiosInstance.get<DetailEmployeeResponse>(`/api/employees/${id}`);
 
 export const createEmployees = (
-  data: Schema,
+  data: EmployeeDataInput,
 ): Promise<AxiosResponse<CreateEmployeeResponse>> =>
   axiosInstance.post<CreateEmployeeResponse>("/api/employees", data);
 
 export const updateEmployee = (
-  id: number,
-  data: Schema,
+  id: EmployeeModel["id"],
+  data: EmployeeDataInput,
 ): Promise<AxiosResponse<UpdateEmployeeResponse>> =>
   axiosInstance.put<UpdateEmployeeResponse>(`/api/employees/${id}`, data);
 
 export const deleteEmployee = (
-  id: number,
+  id: EmployeeModel["id"],
 ): Promise<AxiosResponse<DeleteEmployeeResponse>> =>
   axiosInstance.delete<DeleteEmployeeResponse>(`/api/employees/${id}`);

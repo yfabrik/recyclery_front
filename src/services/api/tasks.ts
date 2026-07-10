@@ -1,19 +1,19 @@
-import type { AxiosResponse } from "axios";
-import type { TaskListFilter } from "@recyclerie/api/schemas/tasks";
 import type {
-  ListTasksResponse,
-  CreateTaskResponse,
-  UpdateTaskResponse,
-  DeleteTaskResponse,
-  TaskEmployeesResponse,
   AssignEmployeeTaskResponse,
+  CreateTaskResponse,
+  DeleteTaskResponse,
+  ListTasksResponse,
   RemoveEmployeeTaskResponse,
+  TaskEmployeesResponse,
+  UpdateTaskResponse,
 } from "@recyclerie/api/responses/tasks";
-import axiosInstance from "./axios";
+import type { TaskDataInput, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
+import type { AxiosResponse } from "axios";
 import type { TaskFormSchema } from "../../components/forms/TaskForm";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import axiosInstance from "./axios";
 
-export type { TaskListFilter };
+// export type { TaskListFilter };
 
 export function parseTaskJsonArray(
   value: string | string[] | null | undefined,
@@ -67,44 +67,44 @@ export function taskToFormValues(
 }
 
 export const getTasks = (
-  filter?: Partial<TaskListFilter>,
+  filter?: TaskListFilterInput,
 ): Promise<AxiosResponse<ListTasksResponse>> =>
   axiosInstance.get<ListTasksResponse>("/api/tasks", {
     params: { ...filter, include: filter?.include?.toString() },
   });
 
 export const getEmployeesForTask = (
-  id: number,
+  id: TaskModel["id"],
 ): Promise<AxiosResponse<TaskEmployeesResponse>> =>
   axiosInstance.get<TaskEmployeesResponse>(`/api/tasks/${id}/employees`);
 
 export const updateTask = (
-  id: number,
-  data: TaskFormSchema,
+  id: TaskModel["id"],
+  data: TaskDataInput,
 ): Promise<AxiosResponse<UpdateTaskResponse>> =>
   axiosInstance.put<UpdateTaskResponse>(`/api/tasks/${id}`, data);
 
 export const createTask = (
-  data: TaskFormSchema,
+  data: TaskDataInput,
 ): Promise<AxiosResponse<CreateTaskResponse>> =>
   axiosInstance.post<CreateTaskResponse>("/api/tasks", data);
 
 export const deleteTask = (
-  id: number,
+  id: TaskModel["id"],
 ): Promise<AxiosResponse<DeleteTaskResponse>> =>
   axiosInstance.delete<DeleteTaskResponse>(`/api/tasks/${id}`);
 
 export const addEmployeeToTask = (
-  id: number,
-  employee_id: number,
+  id: TaskModel["id"],
+  employee_id: EmployeeModel["id"],
 ): Promise<AxiosResponse<AssignEmployeeTaskResponse>> =>
   axiosInstance.post<AssignEmployeeTaskResponse>(`/api/tasks/${id}/employees`, {
     employee_id,
   });
 
 export const removeEmployeeFromTask = (
-  id: number,
-  employee_id: number,
+  id: TaskModel["id"],
+  employee_id: EmployeeModel["id"],
 ): Promise<AxiosResponse<RemoveEmployeeTaskResponse>> =>
   axiosInstance.delete<RemoveEmployeeTaskResponse>(
     `/api/tasks/${id}/employees/${employee_id}`,

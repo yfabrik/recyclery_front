@@ -9,11 +9,12 @@ import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCollectionPoints } from "../../services/api/collectionPoint";
 import { idSchema } from "../../interfaces/ZodTypes";
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 
 const filterSchema = z.object({
     date_from: z.coerce.date(),
     date_to: z.coerce.date(),
-    source_type: z.union([z.enum(["point", "apport", "house_clearance"]), z.literal("")]),
+    source_type: z.union([z.enum(ARRIVAL_SOURCE_TYPES.map(s=>s.value)), z.literal("")]),
     collection_point_id: z.union([idSchema(), z.literal("")]),
 });
 export type Filters = z.infer<typeof filterSchema>;
@@ -34,7 +35,7 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
     };
     const collectionPoints = useQuery({
         queryKey: ["collectionPoints"],
-        queryFn: () => fetchCollectionPoints(),
+        queryFn: () => fetchCollectionPoints().then((response) => response.data.data),
     });
 
     const sourceType = filters.watch("source_type");
@@ -63,21 +64,14 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
             <Grid container spacing={2} alignItems="center">
-                {/* Filtre par magasin */}
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormSelect control={filters.control} name="source_type" label="Type de provenance">
                         <MenuItem key="all-stores" value="">
                             Tous les types
                         </MenuItem>
-                        <MenuItem key="point" value="point">
-                            Point de collecte
-                        </MenuItem>
-                        <MenuItem key="apport" value="apport">
-                            Apport volontaire
-                        </MenuItem>
-                        <MenuItem key="house_clearance" value="house_clearance">
-                            Vide maison
-                        </MenuItem>
+                    {ARRIVAL_SOURCE_TYPES.map(s=>(
+                        <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+                    ))}
                     </FormSelect>
                 </Grid>
                 { sourceType === "point" && (
@@ -85,7 +79,7 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
                         
                         <FormSelect control={filters.control} name="collection_point_id" label="Point de collecte">
                             <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
-                            {collectionPoints.data &&collectionPoints.data.data.collection_points.map((point) => (
+                            {collectionPoints.data?.map((point) => (
                                 <MenuItem key={`point.${point.id}`} value={point.id}>{point.name}</MenuItem>
                             ))}
                         </FormSelect>

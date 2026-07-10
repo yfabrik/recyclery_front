@@ -37,7 +37,6 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
     });
     const onSubmit = (data: Filters) => {
         onChange(data);
-        console.log("data");
     };
 
     const period = filters.watch("period");
@@ -66,7 +65,6 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
 
     const watch = filters.watch
     const debouncer = useDebouncer(() => {
-        console.log("debouncing")
         filters.handleSubmit(onSubmit, (e) => console.error(e))()
     }, { wait: 1000 })
     useEffect(() => {

@@ -8,52 +8,48 @@ import {
 } from "./FormBase";
 
 import * as z from "zod";
-import { phoneSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
+import { noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
 import {
   DONATION_STATUSES,
   DONATION_STATUS_VALUES,
 } from "../../constants/donationStatuses";
 
 const schema = z.object({
-  donor_name: z.string().trim().nonempty(),
-  donor_email: z.union([z.email(), z.literal("").transform(() => null)]),
-  donor_phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
+  donor_name: noEmptyStr("nom requis"),
+  donor_email: z.union([nullString(),z.email()]),
+  donor_phone: z.union([nullString(),phoneSchema()]),
   // donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(() => null)]),
-  item_description: z.string().trim().nonempty(),
+  item_description: noEmptyStr("description requise"),
   estimated_value: z.coerce.number().min(0),
   weight: z.preprocess(
     (v) => (v === "" ? undefined : v),
-    z.union([
-      z.undefined().refine(() => false, { message: "Poids requis" }),
-      z.coerce.number().min(0),
-    ])
+    // z.union([
+      // z.undefined().refine(() => false, { message: "Poids requis" }),
+      z.coerce.number("poids requis").min(0),
+    // ])
   ) as z.ZodType<number>,//TODO remake
   status: z.enum(DONATION_STATUS_VALUES),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type DonFormValues = z.input<typeof schema>;
 
 export const DonForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<Schema>) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
-
-  const form = useForm({
+}: BaseFormProps<DonFormValues,Schema>) => {
+  const form = useForm<DonFormValues,unknown,Schema>({
     resolver: zodResolver(schema),
     defaultValues: {
       donor_name: "",
       donor_email: "",
       donor_phone: "",
-      // donor_contact: "",
       item_description: "",
       estimated_value: "",
       weight: "",
       status: "pending",
-      ...data
-      // ...(defaultValues ?? {}),
+      ...defaultValues ?? {},
     },
   });
 

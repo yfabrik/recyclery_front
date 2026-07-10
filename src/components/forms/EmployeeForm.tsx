@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
 import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
 import {
   FormInput,
   FormSelect,
@@ -15,22 +14,22 @@ import {
 const schema = z.object({
   prenom: noEmptyStr("prenom requis"),
   nom: noEmptyStr("nom requis"),
-  phone: z.union([phoneSchema(), nullString()]),
-  recyclery_id: z.union([idSchema(), nullString()]),
+  phone: z.union([nullString(),phoneSchema()]),
+  recyclery_id: z.union([nullString(),idSchema()]),
   isActive: z.boolean().default(true),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type EmployeeFormValues = z.input<typeof schema>;
 
 export const EmployeeForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<EmployeeFormValues,Schema> & {
   stores: StoreModel[];
 }) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
     defaultValues: {
       prenom: "",
@@ -38,7 +37,7 @@ export const EmployeeForm = ({
       phone: "",
       isActive: true,
       recyclery_id: "",
-      ...data,
+      ...defaultValues ?? {},
     },
     resolver: zodResolver(schema),
   });

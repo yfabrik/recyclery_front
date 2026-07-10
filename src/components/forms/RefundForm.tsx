@@ -1,23 +1,23 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, Grid, MenuItem, Typography } from "@mui/material";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import z from "zod";
+import { REFUND_PAYMENT_METHODS } from "../../constants/paymentMethods";
+import {
+  REFUND_REASONS,
+  REFUND_REASON_VALUES,
+} from "../../constants/refundReasons";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import {
   formatCurrency,
   getCartLinePrice,
   getPaymentMethodLabel,
 } from "../../services/cartService";
-import { REFUND_PAYMENT_METHODS } from "../../constants/paymentMethods";
-import {
-  REFUND_REASONS,
-  REFUND_REASON_VALUES,
-} from "../../constants/refundReasons";
-import { itemSchema } from "./cartSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
 import { type CartItem } from "../forms/cartSchema";
 import { CartTable } from "../pos/CartTable";
-
+import { itemSchema } from "./cartSchema";
+  
 const sumRefundPrice = (
   cart: Schema["cart"],
   transaction: TransactionModel,
@@ -27,7 +27,7 @@ const sumRefundPrice = (
     transaction.total_amount_before_promotion - transaction.total_amount;
   const totalItems =
     transaction.items?.reduce(
-      (prev, current) => (prev += current.TransactionItem.quantity),
+      (prev, current) => (prev += current.TransactionItem?.quantity ?? 0),
       0,
     ) || 0;
   const totalPromoPerItem = totalPromo / totalItems;
@@ -94,9 +94,7 @@ export const RefundForm = ({
     );
     const alreadyRefunded = selectedTransaction.refunds?.reduce(
       (prev, current) => {
-        const items = current.items?.filter((i) => i.barcode == item.barcode);
-        prev +=
-          items?.reduce((p, v) => (p += v.TransactionItem.quantity), 0) || 0;
+        prev += current.items?.filter((i) => i.barcode === item.barcode).reduce((p, v) => p + (v.TransactionItem?.quantity ?? 0), 0) ?? 0;
         return prev;
       },
       0,
@@ -107,11 +105,11 @@ export const RefundForm = ({
       ...item.TransactionItem,
       category_name: category?.name || "",
       subcategory_name: subcategory?.name || "",
-      promotion: item.TransactionItem.promotionValue,
+      promotion: item.TransactionItem?.promotionValue ?? 0,
       refundQuantity: alreadyRefunded || 0,
       description: "",
     } satisfies ItemToRefund;
-  });
+  }) as ItemToRefund[];
 
   const form = useForm<FormValues, unknown, Schema>({
     defaultValues: {

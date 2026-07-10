@@ -11,7 +11,7 @@ import {
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import { idSchema, phoneSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { useEffect } from "react";
@@ -21,7 +21,7 @@ import {
 } from "../../constants/userRoles";
 
 const schema = z.object({
-  username: z.string().trim().nonempty("username requis"),
+  username: noEmptyStr("username requis"),
   email: z.email("email requis"),
   first_name: z
     .string()
@@ -31,18 +31,19 @@ const schema = z.object({
     .string()
     .trim()
     .transform((val) => (val == "" ? null : val)),
-  phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
+  phone: z.union([nullString(),phoneSchema()]),
   password: z.string(),
   role: z.enum(USER_ROLE_VALUES, "role requis"),
-  recyclery_id: z.union([idSchema(), z.literal("").transform(() => null)]),
+  recyclery_id: z.union([nullString(),idSchema()]),
   isActive: z.boolean().default(true),
   managedStores: z.array(idSchema())
 });
 
 export type Schema = z.infer<typeof schema>;
 
-export interface UserFormProps extends BaseFormProps<Schema> {
+export interface UserFormProps extends Omit<BaseFormProps<Schema>, "defaultValues"> {
   stores: StoreModel[];
+  defaultValues?: (Partial<Schema> & { id?: number }) | null;
 }
 
 export const UserForm = ({

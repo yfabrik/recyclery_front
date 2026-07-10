@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { CollectionPointModel } from "../../interfaces/Models";
 import { idSchema, weekDays } from "../../interfaces/ZodTypes";
 import { weekDaysArray } from "../../services/dateService";
-import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   collection_point_id: idSchema("un point de collecte est requis"),
@@ -22,32 +21,39 @@ const schema = z.object({
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
   // is_24h: z.boolean(),
-  notes: z.string(),
+  notes: z.string().transform(v=>v==""?null:v),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type PresencePointFormValues = z.input<typeof schema>;
 
 export const PresencePointForm = ({
   formId,
   onSubmit,
   collectionPoints,
   defaultValues,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<PresencePointFormValues,Schema> & {
   collectionPoints: CollectionPointModel[];
 }) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
-  const form = useForm({
+  // const scheduledDate =
+  //   defaultValues && "scheduled_date" in defaultValues
+  //     ? defaultValues.scheduled_date
+  //     : undefined;
+  // const dayOfWeek =
+  //   defaultValues?.day_of_week ??
+  //   (scheduledDate != null ? new Date(scheduledDate).getDay() : undefined);
+
+  const form = useForm<PresencePointFormValues,unknown,Schema>({
     resolver: zodResolver(schema),
     defaultValues: {
       collection_point_id: "",
       is_present: true,
-      start_time: new Date().setHours(9, 0),//TODO j'aime pas la date null
-      end_time: new Date().setHours(17, 0),
-      // is_24h: false,
+      start_time: new Date(new Date().setHours(9, 0)),
+      end_time: new Date(new Date().setHours(17, 0)),
       notes: "",
-      ...data,
-      day_of_week: data.scheduled_date ? new Date(data.scheduled_date).getDay() : "",
-
+      day_of_week: "",
+      ...defaultValues,
+      // ...(dayOfWeek !== undefined ? { day_of_week: dayOfWeek } : {}),
     },
   });
   return (
@@ -59,6 +65,7 @@ export const PresencePointForm = ({
             label="Point de collecte"
             name="collection_point_id"
           >
+            <MenuItem key="all-points" value=""></MenuItem>
             {collectionPoints.map((point) => (
               <MenuItem key={point.id} value={point.id}>
                 {point.name}
@@ -73,6 +80,7 @@ export const PresencePointForm = ({
             control={form.control}
             name="day_of_week"
           >
+             <MenuItem key="all-days" value="">choisissez un jour</MenuItem>
             {weekDaysArray().map((day) => (
               <MenuItem
                 key={day.key}

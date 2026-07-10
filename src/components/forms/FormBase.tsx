@@ -65,10 +65,10 @@ import {
 import {
   TRANSACTION_TYPES,
 } from "../../constants/transactionTypes";
-export interface BaseFormProps<T> {
+export interface BaseFormProps< TFieldValues extends FieldValues = FieldValues,TTransformedValues = TFieldValues> {
   formId: string;
-  defaultValues?: Partial<T> | null;
-  onSubmit: SubmitHandler<T>;
+  defaultValues?: Partial<TFieldValues> | null;
+  onSubmit: SubmitHandler<TTransformedValues>;
 }
 
 interface FormControlProps<

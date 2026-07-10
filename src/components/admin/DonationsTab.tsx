@@ -26,41 +26,55 @@ import {
   TableRow,
   Typography
 } from "@mui/material";
+import type { DonationDataInput } from "@recyclerie/api/schemas/donations";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../utils/apiToastMessage";
-import type { DonModel } from "../../interfaces/Models";
 import {
   getDonationStatusColor,
   getDonationStatusLabel,
 } from "../../constants/donationStatuses";
+import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
+import type { DonModel } from "../../interfaces/Models";
 import {
   createDonation,
   deleteDonation,
   getDonations,
   getDonationsStats,
-  updateDonation,
+  updateDonation
 } from "../../services/api/donations";
 import { formatCurrency } from "../../services/cartService";
-import { DonForm, type Schema } from "../forms/DonForm";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../utils/apiToastMessage";
+import { DonForm, type DonFormValues, type Schema } from "../forms/DonForm";
 import { Loading } from "../Loading";
 import { StatCard } from "../StatCard";
+
+function donationToFormValues(donation: DonModel): Partial<DonFormValues> {
+  return {
+    donor_name: donation.donor_name ?? "",
+    donor_email: donation.donor_email ?? "",
+    donor_phone: donation.donor_phone ?? "",
+    item_description: donation.item_description ?? "",
+    estimated_value: donation.estimated_value ?? 0,
+    weight: donation.weight ?? 0,
+    status: donation.status,
+  };
+}
 
 export const DonationsTab = () => {
 
   const [donationDialog, setDonationDialog] = useState(false);
-  const [editingDonation, setEditingDonation] = useState<DonModel | null>(null);
+  const [editingDonationId, setEditingDonationId] = useState<DonModel["id"] | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<DonFormValues> | null>(null);
 
   const queryClient = useQueryClient()
 
   const donations = useQuery({
     queryKey: ["dons"],
-    queryFn: () => getDonations().then(response => response.data.donations)
+    queryFn: () => getDonations().then(response => response.data.data)
   })
   useQueryErrorToast(donations.error, "Erreur lors du chargement des dons");
 
@@ -69,9 +83,9 @@ export const DonationsTab = () => {
     queryFn: () => getDonationsStats().then(response => response.data.data)
   })
 
-
+  const createDonationPayloadFromForm = (data: Schema): DonationDataInput => ({...data});
   const addDon = useMutation({
-    mutationFn: (data: Schema) => createDonation(data),
+    mutationFn: (data: Schema) => createDonation(createDonationPayloadFromForm(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Don enregistré avec succès"))
@@ -81,7 +95,7 @@ export const DonationsTab = () => {
   })
 
   const editDon = useMutation({
-    mutationFn: (data: { id: number, data: Schema }) => updateDonation(data.id, data.data),
+    mutationFn: ({ id, data }: { id: DonModel["id"], data: Schema }) => updateDonation(id, createDonationPayloadFromForm(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Don mis à jour avec succès"))
@@ -90,7 +104,7 @@ export const DonationsTab = () => {
 
   })
   const deleteDon = useMutation({
-    mutationFn: (id: number) => deleteDonation(id),
+    mutationFn: (id: DonModel["id"]) => deleteDonation(id),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Don supprimé avec succès"))
@@ -106,20 +120,23 @@ export const DonationsTab = () => {
   }
 
   const handleOpenDonationDialog = (donation: DonModel | null = null) => {
-    setEditingDonation(donation);
+    setEditingDonationId(donation?.id ?? null);
+    setFormDefaults(donation ? donationToFormValues(donation) : null);
     setDonationDialog(true);
   };
 
   const handleCloseDonationDialog = () => {
     setDonationDialog(false);
-    setEditingDonation(null);
+    setEditingDonationId(null);
+    setFormDefaults(null);
   };
 
   const handleSaveDonation = async (data: Schema) => {
-    if (editingDonation?.id) {
-      editDon.mutate({ id: editingDonation.id, data })
+    
+    if (editingDonationId) {
+      editDon.mutate({ id: editingDonationId, data });
     } else {
-      addDon.mutate(data)
+      addDon.mutate(data);
     }
   };
 
@@ -137,7 +154,7 @@ export const DonationsTab = () => {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="Total Dons"
-              value={donationStats.data?.total_donations || 0}
+                value={Number(donationStats.data?.total_donations ?? 0)}
               icon={<CardGiftcard />}
               color="primary"
             />
@@ -145,7 +162,7 @@ export const DonationsTab = () => {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="En Attente"
-              value={donationStats.data?.pending_donations || 0}
+                value={Number(donationStats.data?.pending_donations ?? 0)}
               icon={<Schedule />}
               color="warning"
             />
@@ -153,7 +170,7 @@ export const DonationsTab = () => {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="Acceptés"
-              value={donationStats.data?.accepted_donations || 0}
+                value={Number(donationStats.data?.accepted_donations ?? 0)}
               icon={<CheckCircle />}
               color="success"
             />
@@ -161,7 +178,7 @@ export const DonationsTab = () => {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="Valeur Estimée"
-              value={formatCurrency(donationStats.data?.total_estimated_value || 0)}
+                value={formatCurrency(Number(donationStats.data?.total_estimated_value ?? 0))}
               icon={<TrendingUp />}
               color="info"
             />
@@ -200,16 +217,20 @@ export const DonationsTab = () => {
               {donations.data?.map((donation) => (
                 <TableRow key={donation.id}>
                   <TableCell>
-                    {new Date(donation.createdAt).toLocaleDateString("fr-FR")}
+                    {donation.createdAt
+                      ? new Date(donation.createdAt).toLocaleDateString("fr-FR")
+                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="subtitle2">
                         {donation.donor_name}
                       </Typography>
-                      {donation.donor_contact && (
+                      {(donation.donor_phone || donation.donor_email) && (
                         <Typography variant="caption" color="text.secondary">
-                          {donation.donor_contact}
+                          {[donation.donor_phone, donation.donor_email]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </Typography>
                       )}
                     </Box>
@@ -221,7 +242,7 @@ export const DonationsTab = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatCurrency(donation.estimated_value)}
+                      {formatCurrency(donation.estimated_value ?? 0)}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -275,19 +296,19 @@ export const DonationsTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingDonation ? "Modifier le Don" : "Nouveau Don"}
+          {editingDonationId ? "Modifier le Don" : "Nouveau Don"}
         </DialogTitle>
         <DialogContent>
           <DonForm
             formId="donForm"
             onSubmit={handleSaveDonation}
-            defaultValues={editingDonation}
+            defaultValues={formDefaults ?? undefined}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDonationDialog}>Annuler</Button>
           <Button type="submit" form="donForm" variant="contained">
-            {editingDonation ? "Mettre à jour" : "Enregistrer"}
+            {editingDonationId ? "Mettre à jour" : "Enregistrer"}
           </Button>
         </DialogActions>
       </Dialog>

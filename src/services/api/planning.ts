@@ -1,48 +1,47 @@
-import type { AxiosResponse } from "axios";
-import type { TaskScheduleFilter } from "@recyclerie/api/schemas/taskSchedule";
 import type {
-  ListTaskSchedulesResponse,
-  DetailTaskScheduleResponse,
-  CreateTaskScheduleResponse,
-  UpdateTaskScheduleResponse,
-  DeleteTaskScheduleResponse,
   AvailableEmployeesResponse,
+  CreateTaskScheduleResponse,
+  DeleteTaskScheduleResponse,
+  ListTaskSchedulesResponse,
   PlanningStatsResponse,
+  UpdateTaskScheduleResponse
 } from "@recyclerie/api/responses/taskSchedule";
+import type { TaskScheduleDataInput, TaskScheduleFilterInput } from "@recyclerie/api/schemas/taskSchedule";
+import type { AxiosResponse } from "axios";
+import type { ScheduleModel, TaskModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { TaskScheduleData } from "@recyclerie/api/schemas/taskSchedule";
 
-export type { TaskScheduleFilter };
+// export type { TaskScheduleFilter };
 
-type PlanningFilters = Partial<TaskScheduleFilter> & {
-  category?: string;
-};
+// type PlanningFilters = Partial<TaskScheduleFilter> & {
+//   category?: string;
+// };
 
 export const getPlanning = (
-  filters?: PlanningFilters,
+  filters?: TaskScheduleFilterInput,
 ): Promise<AxiosResponse<ListTaskSchedulesResponse>> =>
   axiosInstance.get<ListTaskSchedulesResponse>("/api/planning", {
     params: filters,
   });
 
 export const updatePlanning = (
-  id: number,
-  data: Partial<TaskScheduleData>,
+  id: ScheduleModel["id"],
+  data: TaskScheduleDataInput,
 ): Promise<AxiosResponse<UpdateTaskScheduleResponse>> =>
   axiosInstance.put<UpdateTaskScheduleResponse>(`/api/planning/${id}`, data);
 
 export const createPlanning = (
-  data: Partial<TaskScheduleData>,
+  data: TaskScheduleDataInput,
 ): Promise<AxiosResponse<CreateTaskScheduleResponse>> =>
   axiosInstance.post<CreateTaskScheduleResponse>("/api/planning", data);
 
 export const deletePlanning = (
-  id: number,
+  id: ScheduleModel["id"],
 ): Promise<AxiosResponse<DeleteTaskScheduleResponse>> =>
   axiosInstance.delete<DeleteTaskScheduleResponse>(`/api/planning/${id}`);
 
 export const getAvailableUserForTask = (
-  id: number,
+  id: TaskModel["id"],
 ): Promise<AxiosResponse<AvailableEmployeesResponse>> =>
   axiosInstance.get<AvailableEmployeesResponse>(
     `/api/planning/${id}/available-employees`,

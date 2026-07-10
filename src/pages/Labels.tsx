@@ -77,10 +77,24 @@ import {
 } from "../services/api/labeledItems";
 import { formatCurrency, formatWeight } from "../services/cartService";
 
+function labeledItemToFormValues(item: LabeledItemModel): Partial<LabeledItemFormValues> {
+  return {
+    category_id: item.category_id,
+    subcategory_id: item.subcategory_id ?? "",
+    weight: item.weight,
+    price: item.price,
+    condition_state: item.condition_state,
+    description: item.description ?? "",
+    location: "",
+  };
+}
+
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<LabeledItemModel | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editingItemBarcode, setEditingItemBarcode] = useState<string | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<LabeledItemFormValues> | null>(null);
   const [autoPrint, setAutoPrint] = useState(true);
 
 
@@ -171,31 +185,23 @@ const Labels = () => {
   });
 
   const saved = (
-    data: AxiosResponse<
-      {
-        success: true;
-        message: string;
-        item?: LabeledItemModel;
-      },
-      unknown,
-      object
-    >,
+    data: AxiosResponse<CreateLabeledItemResponse | UpdateLabeledItemResponse>,
   ) => {
-    if (autoPrint && data.data.item) {
-      const item = data.data.item;
+    if (autoPrint && data.data.data) {
+      const item = data.data.data;
       if (!item.category && item.category_id && categories.data) {
         const cat = categories.data.find((c) => c.id === item.category_id);
         if (cat) item.category = cat;
       }
       if (
-        item.category &&
+        item.subcategory_id != null &&
         !item.subcategory &&
-        item.subcategory_id != null
+        item.category?.subcategories
       ) {
-        const sub = item.category?.subcategories?.find((c) => c.id === item.subcategory_id);
+        const sub = item.category.subcategories.find((c) => c.id === item.subcategory_id);
         if (sub) item.subcategory = sub;
       }
-      triggerPrintLabel(data.data.item);
+      triggerPrintLabel(data.data.data);
     }
     toast.success(
       getApiSuccessMessage(
@@ -211,18 +217,22 @@ const Labels = () => {
 
 
   const handleOpenDialog = (item: LabeledItemModel | null = null) => {
-    setEditingItem(item);
+    setEditingItemId(item?.id ?? null);
+    setEditingItemBarcode(item?.barcode ?? null);
+    setFormDefaults(item ? labeledItemToFormValues(item) : null);
     setAutoPrint(true);
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    setEditingItem(null);
+    setEditingItemId(null);
+    setEditingItemBarcode(null);
+    setFormDefaults(null);
   };
 
   const handleSave = async (data: LabeledItemSchema) => {
-    if (editingItem?.id) editItem.mutate({ id: editingItem.id, data });
+    if (editingItemId) editItem.mutate({ id: editingItemId, data });
     else addItem.mutate(data);
   };
 
@@ -273,7 +283,7 @@ const Labels = () => {
           <StatCard
             title="Articles disponibles"
             value={
-              itemStats.data?.available_items || 0
+              itemStats.data?.available_items ?? 0
             }
             icon={<Inventory2 />}
             color="primary"
@@ -302,7 +312,7 @@ const Labels = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Valeur totale stock"
-            value={formatCurrency(itemStats.data?.total_value || 0)}
+            value={formatCurrency(Number(itemStats.data?.total_value || 0))}
             icon={<Euro />}
             color="info"
           />
@@ -434,10 +444,10 @@ const Labels = () => {
       </TableContainer>
       <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
         <Pagination
-          count={Math.trunc((items.data?.total || 0) / 50 || 10) + 1}
+          count={Math.max(1, items.data?.pagination?.totalPages ?? 1)}
           color="primary"
           page={page}
-          onChange={(e, val) => setPage(val)}
+          onChange={(_, val) => setPage(val)}
         />
       </Box>
       {/* Dialog de création/édition */}
@@ -448,15 +458,15 @@ const Labels = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingItem ? `Modifier l'article ${editingItem.barcode}` : "Nouvel article"}
+          {editingItemId ? `Modifier l'article ${editingItemBarcode}` : "Nouvel article"}
         </DialogTitle>
         <DialogContent>
           <LabeledItemForm
-            key={editingItem?.id ?? "new"}
+            key={editingItemId ?? "new"}
             formId="labelItemForm"
             categories={categories.data || []}
             onSubmit={handleSave}
-            defaultValues={editingItem}
+            defaultValues={formDefaults}
           />
           <AutoPrintToggle checked={autoPrint} onChange={setAutoPrint} />
         </DialogContent>
@@ -464,7 +474,7 @@ const Labels = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type="submit" form="labelItemForm" variant="contained">
-            {editingItem ? "Mettre à jour" : "Créer"}
+            {editingItemId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>

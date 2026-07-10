@@ -11,13 +11,12 @@ import {
 
 import * as z from "zod";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
+import { idSchema, noEmptyStr } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
 
 const schema = z.object({
   store_id: idSchema("choississez un magasin"),
-  day_of_week: z.string().nonempty("choisissez un jour"),
+  day_of_week: noEmptyStr("choisissez un jour"),
   is_recurring: z.boolean(),
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
@@ -26,26 +25,24 @@ const schema = z.object({
 });
 
 export type Schema = z.infer<typeof schema>;
-
+export type StoreOpeningFormValues = z.input<typeof schema>;
 export const StoreOpeningForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores,
-}: BaseFormProps<Schema> & { stores: StoreModel[] }) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-
+}: BaseFormProps<StoreOpeningFormValues,Schema> & { stores: StoreModel[] }) => {
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       store_id: "",
       day_of_week: "",
       is_recurring: true,
-      start_time: new Date().setHours(9, 0),
-      end_time: new Date().setHours(17, 0),
+      start_time: new Date(new Date().setHours(9, 0)),
+      end_time: new Date(new Date().setHours(17, 0)),
       is_24h: false,
       notes: "",
-      ...data,
+      ...defaultValues ?? {},
     },
   });
 

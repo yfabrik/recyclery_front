@@ -13,19 +13,20 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CollectionPointModel, StoreModel } from "../../interfaces/Models";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr, nullString } from "../../interfaces/ZodTypes";
 
 const schema = z.object({
-  day_of_week: z.string().nonempty("choissisez un jour"),
+  day_of_week: noEmptyStr("choissisez un jour"),
   is_active: z.boolean(),
   start_time: z.coerce.date(),
   end_time: z.coerce.date(),
-  notes: z.string(),
-  store_id: z.union([idSchema(), z.literal("")]),
+  notes: z.string().transform(v=>v==""?null:v),
+  store_id: z.union([nullString(),idSchema()]),
   location: z.array(z.string()).default([]),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type CollecteFormValues =z.input<typeof schema>
 
 export const CollecteForm = ({
   formId,
@@ -33,7 +34,7 @@ export const CollecteForm = ({
   defaultValues,
   collectionPoints,
   stores,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<CollecteFormValues,Schema> & {
   collectionPoints: CollectionPointModel[];
   stores: StoreModel[];
 }) => {

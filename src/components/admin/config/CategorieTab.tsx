@@ -14,13 +14,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
+import type { CategoryDataInput, CategoryPatchInput } from "@recyclerie/api/schemas/categories";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import type { CategoryModel } from "../../../interfaces/Models";
 import {
@@ -31,14 +28,37 @@ import {
   patchCategory as patchCategoryApi,
   updateCategory,
 } from "../../../services/api/categories";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import { CategoryCard } from "../../CategoryCard";
-import { CategorieForm, type Schema } from "../../forms/CategorieForm";
+import { CategorieForm, type CategorieFormValues, type Schema } from "../../forms/CategorieForm";
 import { Loading } from "../../Loading";
+
+//TODO just ignore null values ?
+function categoryToFormValues(
+  category: Partial<CategoryModel>,
+): Partial<CategorieFormValues> {
+  return {
+    name: category.name ?? "",
+    description: category.description ?? "",
+    icon: category.icon ?? "",
+    defaultPrice: category.defaultPrice ?? 0,
+    defaultWeight: category.defaultWeight ?? 0,
+    parent_id: category.parent_id ?? null,
+    priceBasedOnWeight: category.priceBasedOnWeight ?? false,
+    bundlePrice: category.bundlePrice ?? "",
+    bundleQuantity: category.bundleQuantity ?? "",
+  };
+}
 
 export const CategoriesTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] =
-    useState<Partial<CategoryModel> | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<CategoryModel["id"] | null>(null);//TODO revenir au CategorieModel complet ?
+  const [formDefaults, setFormDefaults] = useState<Partial<CategorieFormValues> | null>(
+    null,
+  );
 
   const queryClient = useQueryClient();
 
@@ -57,9 +77,11 @@ export const CategoriesTab = () => {
   });
   useQueryErrorToast(categories.error, "Erreur lors du chargement des catégories");
 
+  const formDataToApi = (data: Schema): CategoryDataInput => ({...data})//TODO rename comme les autres?
+  
   const editCategory = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
-      updateCategory(id, data),
+    mutationFn: ({ id, data }: { id: CategoryModel["id"]; data: Schema }) =>
+      updateCategory(id, formDataToApi(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Catégorie mise à jour avec succès"));
@@ -70,7 +92,7 @@ export const CategoriesTab = () => {
     },
   });
   const addCategory = useMutation({
-    mutationFn: (data: Schema) => createCategory(data),
+    mutationFn: (data: Schema) => createCategory(formDataToApi(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Catégorie créée avec succès"));
@@ -82,7 +104,7 @@ export const CategoriesTab = () => {
   });
 
   const removeCategory = useMutation({
-    mutationFn: (id: number) => deleteCategory(id),
+    mutationFn: (id: CategoryModel["id"]) => deleteCategory(id),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Catégorie supprimée avec succès"));
@@ -97,8 +119,8 @@ export const CategoriesTab = () => {
       id,
       data,
     }: {
-      id: number;
-      data: { in?: boolean; out?: boolean; sell?: boolean };
+      id: CategoryModel["id"];
+      data:CategoryPatchInput;
     }) => patchCategoryApi(id, data),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour")),
     onSuccess: (data) => {
@@ -111,24 +133,27 @@ export const CategoriesTab = () => {
 
   const handleOpenDialog = (
     category: CategoryModel | null = null,
-    parent_id: number | null = null,
+    parent_id: CategoryModel["parent_id"] = null,
   ) => {
     if (category) {
-      setEditingCategory(category);
+      setEditingCategoryId(category.id);
+      setFormDefaults(categoryToFormValues(category));
     } else {
-      setEditingCategory(parent_id ? { parent_id: parent_id } : null);
+      setEditingCategoryId(null);
+      setFormDefaults(parent_id ? { parent_id } : null);
     }
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setEditingCategory(null);
+    setEditingCategoryId(null);
+    setFormDefaults(null);
   };
 
   const handleSave = async (formData: Schema) => {
-    if (editingCategory?.id)
-      editCategory.mutate({ id: editingCategory.id, data: formData });
+    if (editingCategoryId)
+      editCategory.mutate({ id: editingCategoryId, data: formData });
     else addCategory.mutate(formData);
   };
 
@@ -195,20 +220,20 @@ export const CategoriesTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingCategory?.id
+          {editingCategoryId
             ? "Modifier la catégorie"
-            : editingCategory?.parent_id
+            : formDefaults?.parent_id
               ? "Nouvelle sous-catégorie"
               : "Nouvelle catégorie"}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            {editingCategory?.parent_id && !editingCategory?.id && (
+            {formDefaults?.parent_id != null && !editingCategoryId && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 Cette catégorie sera créée comme sous-catégorie de :{" "}
                 <strong>
                   {categories.data?.find(
-                    (cat) => cat.id === editingCategory.parent_id,
+                    (cat) => cat.id === formDefaults.parent_id,
                   )?.name || "Catégorie parente"}
                 </strong>
               </Alert>
@@ -217,7 +242,7 @@ export const CategoriesTab = () => {
               formId="CategorieForm"
               icons={availableIcons.data || []}
               onSubmit={handleSave}
-              defaultValues={editingCategory}
+              defaultValues={formDefaults ?? undefined}
             />
           </Box>
         </DialogContent>

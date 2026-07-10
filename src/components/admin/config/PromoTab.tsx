@@ -1,25 +1,42 @@
-import { Add, Cancel, Category, CalendarMonth, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
+import { Add, CalendarMonth, Cancel, Category, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
 import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import type { PromoModel, StoreModel } from "../../../interfaces/Models"
+import type { PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
-import { PromoForm, type Schema } from "../../forms/PromoForm"
-import { Loading } from "../../Loading"
 import { fetchStores } from "../../../services/api/store"
+import { PromoForm, type PromoFormValues, type Schema } from "../../forms/PromoForm"
+import { Loading } from "../../Loading"
+import type { PromotionDataInput } from "@recyclerie/api/schemas/promotions"
+import { getApiErrorMessage, getApiSuccessMessage } from "../../../utils/apiToastMessage"
+
+type PromoEditModel = PromoModel & { subcategory_id?: number | null };
+
+function promoToFormValues(promo: PromoEditModel): Partial<PromoFormValues> {
+    return {
+        category_id: promo.category_id as PromoFormValues["category_id"],
+        subcategory_id: promo.subcategory_id ?? "",
+        promotionValue: promo.promotionValue,
+        startDate: new Date(promo.startDate),
+        endDate: promo.endDate ? new Date(promo.endDate) : "",
+        isActive: promo.isActive,
+        stores: promo.stores?.length ? promo.stores.map((store) => store.id) : [""],
+    };
+}
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
-    // PromoModel does not include `subcategory_id`, but PromoForm needs it to keep the
-    // user's subcategory selection when editing an existing promotion.
-    const [currentPromo, setCurrentPromo] = useState<(PromoModel & { subcategory_id?: number | null }) | null>(null)
+    const [editingPromoId, setEditingPromoId] = useState<PromoModel["id"] | null>(null)
+    const [formDefaults, setFormDefaults] = useState<Partial<PromoFormValues> | null>(null)
+
     const queryClient = useQueryClient()
     const stores = useQuery({
         queryKey: ["stores", { active: true }],
         queryFn: () => fetchStores({ active: true }).then(response => response.data.data),
     });
+    
     const categories = useQuery({
         queryFn: () =>
             fetchCategories({ only_category: true, include: ["category"], sell: true }).then(
@@ -38,8 +55,13 @@ export const PromoTab = () => {
         queryKey: ["promotions"],
     });
 
+    const createPromoPayloadFromForm = (data: Schema): PromotionDataInput => {
+        const category_id = data.subcategory_id ?? data.category_id
+        const result = { ...data, category_id }
+        return result
+    };
     const addPromo = useMutation({
-        mutationFn: (data: Schema) => createPromo(data),
+        mutationFn: (data: Schema) => createPromo(createPromoPayloadFromForm(data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
             toast.success(data.data.message)
@@ -50,49 +72,64 @@ export const PromoTab = () => {
         }
     })
     const editPromo = useMutation({
-        mutationFn: (data: { id: number, data: Schema }) => updatePromo(data.id, data.data),
+        mutationFn: (data: { id: PromoModel["id"], data: Schema }) => updatePromo(data.id, createPromoPayloadFromForm(data.data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
-            toast.success(data.data.message)
+            toast.success(getApiSuccessMessage(data, "Promotion mise à jour avec succès"))
             handleCloseDialog()
         },
-        onError: () => {
-
+        onError: (error) => {
+            toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour de la promotion"))
         }
-
     })
     const savePromo = (data: Schema) => {
-        const category = data.subcategory_id ?? data.category_id
-        const result = { ...data, category_id: category }
-        if (currentPromo?.id)
-            editPromo.mutate({ id: currentPromo.id, data: result })
+        if (editingPromoId)
+            editPromo.mutate({ id: editingPromoId, data })
         else
-            addPromo.mutate(result)
+            addPromo.mutate(data)
     }
 
     const handleOpenDialog = (promo: PromoModel) => {
-        const parentCategory = promo.Category?.parent ?? promo.Category
-        // If promo.Category has a parent, then promo.Category itself is a subcategory.
-        const subcategory_id = promo.Category?.parent ? promo.Category.id : null
-        setCurrentPromo({
+        //TODO peut aller directement dans le mapper ?
+        const category = promo.Category
+        const subcategory_id = category?.parent_id ? category.id : null
+        const editModel: PromoEditModel = {
             ...promo,
-            category_id: parentCategory?.id || promo.category_id,
+            category_id: category?.parent_id ?? promo.category_id,
             subcategory_id,
-        } as PromoModel & { subcategory_id?: number | null } | null)
+        }
+        setEditingPromoId(promo.id)
+        setFormDefaults(promoToFormValues(editModel))
+        SetIsModaleOpen(true)
+    }
+
+    const handleOpenCreateDialog = () => {
+        setEditingPromoId(null)
+        setFormDefaults(null)
         SetIsModaleOpen(true)
     }
 
     const handleCloseDialog = () => {
-        setCurrentPromo(null)
+        setEditingPromoId(null)
+        setFormDefaults(null)
         SetIsModaleOpen(false)
     }
 
     const getPromoCategories = (promo: PromoModel): { categorie: string, subcategorie: string | null } => {
-        const categorie = promo.Category?.parent ?? promo.Category
-        const subcategorie = promo.Category?.parent ? promo.Category : null
+        const category = promo.Category
+        if (!category) {
+            return { categorie: "", subcategorie: null }
+        }
+        if (category.parent_id) {
+            const parent = categories.data?.find((cat) => cat.id === category.parent_id)
+            return {
+                categorie: parent?.name || "",
+                subcategorie: category.name || null,
+            }
+        }
         return {
-            categorie: categorie?.name || "",
-            subcategorie: subcategorie?.name || null
+            categorie: category.name || "",
+            subcategorie: null,
         }
     }
     const getPromoStores = (promo: PromoModel): string => {
@@ -117,7 +154,7 @@ export const PromoTab = () => {
                 <Button
                     variant="contained"
                     startIcon={<Add />}
-                    onClick={() => SetIsModaleOpen(true)}
+                    onClick={handleOpenCreateDialog}
                 >
                     nouvelle Promotion
                 </Button>
@@ -240,23 +277,12 @@ export const PromoTab = () => {
                 fullWidth
                 maxWidth="lg"
             >
-                <DialogTitle>{currentPromo ? "Modifier la promotion" : "Nouvelle Promotion"}</DialogTitle>
+                <DialogTitle>{editingPromoId ? "Modifier la promotion" : "Nouvelle Promotion"}</DialogTitle>
                 <DialogContent>
                     <PromoForm
                         formId="PromoForm"
                         onSubmit={savePromo}
-                        defaultValues={
-                            currentPromo
-                                ? {
-                                    ...currentPromo,
-                                    startDate: new Date(currentPromo.startDate),
-                                    endDate: currentPromo.endDate
-                                        ? new Date(currentPromo.endDate)
-                                        : null,
-                                    stores: currentPromo.stores?.map((store: StoreModel) => store.id) ?? []
-                                }
-                                : undefined
-                        }
+                        defaultValues={formDefaults ?? undefined}
                         categories={categories.data || []}
                         stores={stores.data || []}
                     />

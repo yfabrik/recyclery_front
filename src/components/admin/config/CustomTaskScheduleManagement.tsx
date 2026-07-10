@@ -24,19 +24,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { TaskScheduleDataInput } from "@recyclerie/api/schemas/taskSchedule";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
-import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   getRecurrencePatternLabel,
 } from "../../../constants/recurrencePatterns";
 import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
+import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   createPlanning,
   deletePlanning,
@@ -45,12 +42,16 @@ import {
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
 import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
+import {
   CUSTOM_TASK_FILTER_DEFAULTS,
   CustomTaskFiltersForm,
   type CustomTaskFilters,
 } from "../../forms/CustomTaskFiltersForm";
+import { PlaningForm, type Schema, type SchemaInputValues } from "../../forms/planningForm";
 import { Loading } from "../../Loading";
-import { PlaningForm, type Schema } from "../../forms/planningForm";
 
 const CUSTOM_SCHEDULES_KEY = ["custom-schedules"] as const;
 
@@ -60,9 +61,21 @@ const CustomTaskScheduleManagement = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleModel | null>(
     null,
   );
+  const [formDefaults, setFormDefaults] = useState<Partial<SchemaInputValues> | null>(null);
   const [filters, setFilters] = useState<CustomTaskFilters>(
     CUSTOM_TASK_FILTER_DEFAULTS,
   );
+
+  const scheduleToFormValues = (schedule: ScheduleModel): Partial<SchemaInputValues> => ({
+    name: schedule.name,
+    category: schedule.category,
+    scheduled_date: new Date(schedule.scheduled_date),
+    start_time: new Date(schedule.start_time),
+    end_time: new Date(schedule.end_time),
+    ...(schedule.priority ? { priority: schedule.priority } : {}),
+    ...(schedule.store_id ? { store_id: schedule.store_id } : {}),
+    ...(schedule.notes ? { notes: schedule.notes } : {}),
+  });
 
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
@@ -80,8 +93,24 @@ const CustomTaskScheduleManagement = () => {
     "Erreur lors du chargement des tâches personnalisées",
   );
 
+  const schedulePayloadFromForm = (data: Schema): TaskScheduleDataInput => {
+    return {
+      name: data.name,
+      scheduled_date: data.scheduled_date,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      category: "custom",
+      notes: data.notes || null,
+      store_id: data.store_id,
+      is_recurring: !!data.recurrence_pattern,
+      recurrence_pattern: data.recurrence_pattern || null,
+    };
+    return {
+      ...data
+    }
+  };
   const addSchedule = useMutation({
-    mutationFn: (data: Partial<ScheduleModel>) => createPlanning(data),
+    mutationFn: (data: Schema) => createPlanning(schedulePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Tâche personnalisée créée avec succès"),
@@ -94,8 +123,8 @@ const CustomTaskScheduleManagement = () => {
   });
 
   const updateSchedule = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ScheduleModel> }) =>
-      updatePlanning(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
+      updatePlanning(id, schedulePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(
@@ -132,6 +161,7 @@ const CustomTaskScheduleManagement = () => {
 
   const handleOpenDialog = (schedule: ScheduleModel | null = null) => {
     setEditingSchedule(schedule);
+    setFormDefaults(schedule ? scheduleToFormValues(schedule) : null);
     setOpenDialog(true);
   };
 
@@ -141,21 +171,14 @@ const CustomTaskScheduleManagement = () => {
   };
 
   const handleSave = (data: Schema) => {
-    const result: Partial<ScheduleModel> = {
-      ...data,
-      category: "custom",
-      is_recurring: !!data.recurrence_pattern,
-      recurrence_pattern: data.recurrence_pattern ?? undefined,
-    };
-
     if (editingSchedule?.id) {
-      updateSchedule.mutate({ id: editingSchedule.id, data: result });
+      updateSchedule.mutate({ id: editingSchedule.id, data });
     } else {
-      addSchedule.mutate(result);
+      addSchedule.mutate(data);
     }
   };
 
-  const handleDelete = (scheduleId: number) => {
+  const handleDelete = (scheduleId: ScheduleModel["id"]) => {
     if (
       !window.confirm(
         "Êtes-vous sûr de vouloir supprimer cette tâche personnalisée ?",
@@ -166,12 +189,12 @@ const CustomTaskScheduleManagement = () => {
     deleteSchedule.mutate(scheduleId);
   };
 
-  const getPriorityInfo = (priority: string | null) => {
+  const getPriorityInfo = (priority: string | null | undefined) => {
     return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
   };
 
   const getRecurrenceLabel = (pattern: string | null) =>
-    getRecurrencePatternLabel(pattern);
+    getRecurrencePatternLabel(pattern);//FIXME
 
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
     if (schedule.day_of_week) {
@@ -328,9 +351,9 @@ const CustomTaskScheduleManagement = () => {
                           label={priorityInfo.label}
                           color={
                             priorityInfo.color as
-                              | "success"
-                              | "warning"
-                              | "error"
+                            | "success"
+                            | "warning"
+                            | "error"
                           }
                           size="small"
                           variant="outlined"
@@ -428,21 +451,7 @@ const CustomTaskScheduleManagement = () => {
           <PlaningForm
             formId="customScheduleForm"
             stores={(stores.data ?? []) as StoreModel[]}
-            defaultValues={
-              editingSchedule
-                ? {
-                    name: editingSchedule.name,
-                    category: "custom" as const,
-                    scheduled_date: new Date(editingSchedule.scheduled_date),
-                    start_time: new Date(editingSchedule.start_time),
-                    end_time: new Date(editingSchedule.end_time),
-                    priority: editingSchedule.priority ?? "medium",
-                    store_id: editingSchedule.store_id ?? null,
-                    recurrence_pattern: editingSchedule.recurrence_pattern ?? "",
-                    notes: editingSchedule.notes ?? "",
-                  }
-                : { category: "custom" as const }
-            }
+            defaultValues={formDefaults ?? undefined}
             onSubmit={handleSave}
           />
         </DialogContent>
