@@ -22,6 +22,10 @@ export const CardStore = ({
     handleOpenCashRegisters
 
 }: CardStoreProps) => {
+    const locationSecondary = [store.city, store.postal_code]
+        .filter((value): value is string => value != null && value !== "")
+        .join(" ");
+
     return (
         <Card>
             <CardHeader
@@ -79,7 +83,7 @@ export const CardStore = ({
                         </ListItemAvatar>
                         <ListItemText
                             primary={store.address}
-                            secondary={`${store.city} ${store.postal_code}`}
+                            secondary={locationSecondary}
                             slotProps={{
                                 primary: { variant: "body2" },
                                 secondary: { variant: "caption" }
