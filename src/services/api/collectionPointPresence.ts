@@ -1,13 +1,15 @@
-import type { AxiosResponse } from "axios";
 import type {
-  ListTaskSchedulesResponse,
-  DetailTaskScheduleResponse,
   CreateCollectionPointPresenceResponse,
-  UpdateTaskScheduleResponse,
   DeleteTaskScheduleResponse,
+  DetailTaskScheduleResponse,
+  ListTaskSchedulesResponse,
+  UpdateTaskScheduleResponse,
 } from "@recyclerie/api/responses/taskSchedule";
-import axiosInstance from "./axios";
+import type { AxiosResponse } from "axios";
 import type { Schema } from "../../components/forms/PresencePointForm";
+import axiosInstance from "./axios";
+import type { CollectionPointModel, ScheduleModel } from "../../interfaces/Models";
+import type { CreateCollectionPointPresenceDataInput } from "@recyclerie/api/schemas/schedules";
 
 /** 0 = Dimanche, 1 = Lundi, … (JS getDay order). API expects "Lundi", "Mardi", … */
 const DAY_OF_WEEK_FR: Record<number, string> = {
@@ -34,14 +36,14 @@ export const fetchCollectionPointPresence = (): Promise<
 > => axiosInstance.get<ListTaskSchedulesResponse>("/api/collection-point-presence");
 
 export const fetchPresenceForPoint = (
-  id: number,
+  id: CollectionPointModel["id"],
 ): Promise<AxiosResponse<DetailTaskScheduleResponse>> =>
   axiosInstance.get<DetailTaskScheduleResponse>(
     `/api/collection-point-presence/collection-point/${id}`,
   );
 
 export const createPointPresence = (
-  data: Schema,
+  data: CreateCollectionPointPresenceDataInput,
 ): Promise<AxiosResponse<CreateCollectionPointPresenceResponse>> =>
   axiosInstance.post<CreateCollectionPointPresenceResponse>(
     "/api/collection-point-presence",
@@ -55,8 +57,8 @@ export const createPointPresence = (
   );
 
 export const updatePointPresence = (
-  id: number,
-  data: Schema,
+  id: ScheduleModel["id"],
+  data: CreateCollectionPointPresenceDataInput,
 ): Promise<AxiosResponse<UpdateTaskScheduleResponse>> =>
   axiosInstance.put<UpdateTaskScheduleResponse>(
     `/api/collection-point-presence/${id}`,
@@ -70,7 +72,7 @@ export const updatePointPresence = (
   );
 
 export const deletePointPresence = (
-  id: number,
+  id: ScheduleModel["id"],
 ): Promise<AxiosResponse<DeleteTaskScheduleResponse>> =>
   axiosInstance.delete<DeleteTaskScheduleResponse>(
     `/api/collection-point-presence/${id}`,

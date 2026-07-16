@@ -3,7 +3,6 @@ import {
   Add,
   Delete,
   Edit,
-  LocationOn,
   Person,
   Phone,
   Quiz,
@@ -30,6 +29,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
+import type { EmployeeDataInput, EmployeeSkillsInput } from "@recyclerie/api/schemas/employees";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -53,16 +53,28 @@ import {
   EMPLOYEE_FILTER_DEFAULTS,
   EmployeeFilterForm,
   type EmployeeFilters,
-} from "../../forms/EmployeeFilterForm";
-import { EmployeeForm, type Schema } from "../../forms/EmployeeForm";
+} from "../../forms/filters/EmployeeFilterForm";
+import { EmployeeForm, type EmployeeFormValues, type Schema } from "../../forms/EmployeeForm";
 import { EmployeeSkillForm, type Schema as EmployeeSkillSchema } from "../../forms/EmployeeSkillForm";
 import { Loading } from "../../Loading";
 
+function employeeToFormValues(employee: EmployeeModel): Partial<EmployeeFormValues> {
+  return {
+    prenom: employee.prenom,
+    nom: employee.nom,
+    phone: employee.phone ?? "",
+    isActive: employee.isActive,
+    recyclery_id: employee.stores?.[0]?.id ?? "",
+  };
+}
+
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<EmployeeModel | null>(
+  // const [editingEmployeeId, setEditingEmployeeId] = useState<EmployeeModel["id"] | null>(null);
+  const [employeeFormDefaults, setEmployeeFormDefaults] = useState<Partial<EmployeeFormValues> | null>(
     null,
   );
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeModel | null>(null);
 
   // Nouveaux états pour les dialogs d'affectation et jours de travail
   const [openStoreAssignmentDialog, setOpenStoreAssignmentDialog] =
@@ -109,8 +121,9 @@ const EmployeeManagement = () => {
   })
   useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
+  const employeePayloadFromForm = (data: Schema): EmployeeDataInput => ({ ...data });
   const editEmployee = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEmployee(id, data),
+    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: Schema }) => updateEmployee(id, employeePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Employé mis à jour avec succès"));
       handleCloseDialog();
@@ -120,7 +133,7 @@ const EmployeeManagement = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const addEmployee = useMutation({
-    mutationFn: (data: Schema) => createEmployees(data),
+    mutationFn: (data: Schema) => createEmployees(employeePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Employé créé avec succès"));
       handleCloseDialog();
@@ -130,7 +143,7 @@ const EmployeeManagement = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const removeEmployee = useMutation({
-    mutationFn: (id: number) => deleteEmployee(id),
+    mutationFn: (id: EmployeeModel["id"]) => deleteEmployee(id),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Employé supprimé avec succès"));
       queryClient.invalidateQueries({ queryKey: ["employees"] })
@@ -141,52 +154,54 @@ const EmployeeManagement = () => {
   })
 
   const handleOpenDialog = (employee: EmployeeModel | null = null) => {
-    setEditingEmployee(employee);
+    setSelectedEmployee(employee ?? null);
+    setEmployeeFormDefaults(employee ? employeeToFormValues(employee) : null);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setEditingEmployee(null);
+    setSelectedEmployee(null);
+    setEmployeeFormDefaults(null);
   };
 
   const handleOpenStoreAssignment = (employee: EmployeeModel) => {
-    setEditingEmployee(employee);
+    setSelectedEmployee(employee);
     setOpenStoreAssignmentDialog(true);
   };
 
   const handleOpenWorkdays = (employee: EmployeeModel) => {
-    setEditingEmployee(employee);
+    setSelectedEmployee(employee);
     setOpenWorkdaysDialog(true);
   };
 
   const handleOpenSkills = (employee: EmployeeModel) => {
-    setEditingEmployee(employee);
+    setSelectedEmployee(employee);
     setOpenSkillsDialog(true);
   }
 
   const handleCloseStoreAssignment = () => {
     setOpenStoreAssignmentDialog(false);
-    setEditingEmployee(null);
+    setSelectedEmployee(null);
   };
 
   const handleCloseWorkdays = () => {
     setOpenWorkdaysDialog(false);
-    setEditingEmployee(null);
+    setSelectedEmployee(null);
   };
 
   const handleCloseSkills = () => {
     setOpenSkillsDialog(false)
-    setEditingEmployee(null);
+    setSelectedEmployee(null);
   };
 
 
   const handleSave = async (data: Schema) => {
-    if (editingEmployee?.id) editEmployee.mutate({ id: editingEmployee.id, data })
+    if (selectedEmployee?.id) editEmployee.mutate({ id: selectedEmployee.id, data })
     else addEmployee.mutate(data)
   };
 
-  const handleDelete = async (employeeId: number) => {
+  const handleDelete = async (employeeId: EmployeeModel["id"]) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet employé ?")) {
       return;
     }
@@ -226,16 +241,19 @@ const EmployeeManagement = () => {
       const matchesStatus =
         !filters.status ||
         (filters.status === "active" && employee.isActive !== false) ||
-        (filters.status === "inactive" && employee.isActive === false);
-
-      return matchesSearch && 
-      // matchesRole &&
-       matchesStatus;
+        (filters.status === "inactive" && employee.isActive === false)
+      const matchesStore =
+        !filters.store_id ||
+        (filters.store_id !== "" && employee.stores?.some(store => store.id === filters.store_id));
+      return matchesSearch &&
+        // matchesRole &&
+        matchesStatus &&
+        matchesStore;
     }) || [];
 
-
+  const updateEmployeeSkillsPayloadFromForm = (data: EmployeeSkillSchema): EmployeeSkillsInput => ({ ...data });
   const updateEmployeeSkillsMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: { skills: string[] } }) => updateEmployeeSkills(id, data),
+    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: EmployeeSkillSchema }) => updateEmployeeSkills(id, updateEmployeeSkillsPayloadFromForm(data)),
     onSuccess: (data) => {
       handleCloseSkills()
       toast.success(getApiSuccessMessage(data, "Compétences mises à jour avec succès"));
@@ -245,8 +263,7 @@ const EmployeeManagement = () => {
   })
 
   const handleSaveSkills = (data: EmployeeSkillSchema) => {
-    console.log(data)
-    if (editingEmployee?.id) updateEmployeeSkillsMutation.mutate({ id: editingEmployee.id, data: data })
+    if (selectedEmployee?.id) updateEmployeeSkillsMutation.mutate({ id: selectedEmployee.id, data: data })
   }
 
   return (
@@ -285,189 +302,20 @@ const EmployeeManagement = () => {
             onChange={(values) =>
               setFilters((prev) => ({ ...prev, ...values }))
             }
-            // roleOptions={roleOptions}
+            stores={stores.data || []}
+          // roleOptions={roleOptions}
           />
         </Paper>
         {/* Liste des employés */}
         <Grid container spacing={3}>
           {filteredEmployees.map((employee) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
-              <Card
-                sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
-                      <Person />
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" component="div" fontWeight="bold">
-                        {employee.nom} {employee.prenom}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {employee.email}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Tooltip title="Modifier">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(employee)}
-                          color="primary"
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(employee.id)}
-                          color="error"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-
-                  <Stack spacing={1}>
-                    {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Work fontSize="small" color="action" />
-                    <Chip
-                      label={
-                        roleOptions.find((r) => r.value === employee.role)
-                          ?.label || employee.role
-                      }
-                      color={getRoleColor(employee.role)}
-                      size="small"
-                    />
-                  </Box> */}
-
-                    {employee.phone && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Phone fontSize="small" color="action" />
-                        <Typography variant="body2">{employee.phone}</Typography>
-                      </Box>
-                    )}
-
-                    {employee.workTime && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <AccessTime fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {employee.workTime}h/semaine
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {employee.address && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <LocationOn fontSize="small" color="action" />
-                        <Typography variant="body2" noWrap>
-                          {employee.address}
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {/* {employee.availability && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <CalendarToday fontSize="small" color="action" />
-                        <Chip
-                          label={
-                            availabilityOptions.find(
-                              (a) => a.value === employee.availability,
-                            )?.label || employee.availability
-                          }
-                          color={getAvailabilityColor(
-                            employee.availability as keyof typeof AVAILABILITY_COLORS,
-                          )}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-                    )} */}
-
-                    {employee.skills && employee.skills.length > 0 && (
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="textSecondary"
-                          gutterBottom
-                        >
-                          Compétences:
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
-                            mt: 0.5,
-                          }}
-                        >
-                          {employee.skills.slice(0, 3).map((skill, index) => (
-                            <Chip
-                              key={index}
-                              label={skill}
-                              size="small"
-                              variant="outlined"
-                            />
-                          ))}
-                          {employee.skills.length > 3 && (
-                            <Chip
-                              label={`+${employee.skills.length - 3}`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-
-                    {employee.hourly_rate && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography variant="body2" fontWeight="bold">
-                          {employee.hourly_rate}€/h
-                        </Typography>
-                      </Box>
-                    )}
-                  </Stack>
-                </CardContent>
-                {/* Boutons d'action supplémentaires */}
-                <CardActions>
-                  <Tooltip title="Définir les compétences des employés">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Quiz />}
-                      onClick={() => handleOpenSkills(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Skills
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Gérer les affectations aux magasins">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Store />}
-                      onClick={() => handleOpenStoreAssignment(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Magasins
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Configurer les jours de travail">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Schedule />}
-                      onClick={() => handleOpenWorkdays(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Horaires
-                    </Button>
-                  </Tooltip>
-                </CardActions>
-              </Card>
+              <EmployeeCard employee={employee}
+                handleOpenDialog={handleOpenDialog}
+                handleDelete={handleDelete}
+                handleOpenSkills={handleOpenSkills}
+                handleOpenStoreAssignment={handleOpenStoreAssignment}
+                handleOpenWorkdays={handleOpenWorkdays} />
             </Grid>
           ))}
         </Grid>
@@ -478,7 +326,7 @@ const EmployeeManagement = () => {
             </Typography>
             <Typography variant="body2" color="textSecondary">
               {filters.search ||
-              //  filters.role ||
+                //  filters.role ||
                 filters.status
                 ? "Essayez de modifier vos critères de recherche"
                 : "Commencez par ajouter un employé"}
@@ -495,20 +343,20 @@ const EmployeeManagement = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingEmployee ? "Modifier l'employé" : "Nouvel employé"}
+          {selectedEmployee?.id ? "Modifier l'employé" : "Nouvel employé"}
         </DialogTitle>
         <DialogContent>
           <EmployeeForm
             formId="employeeForm"
             onSubmit={handleSave}
             stores={stores.data || []}
-            defaultValues={editingEmployee || undefined}
+            defaultValues={employeeFormDefaults ?? undefined}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type="submit" form="employeeForm" variant="contained">
-            {editingEmployee?.id ? "Mettre à jour" : "Créer"}
+            {selectedEmployee?.id ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -522,10 +370,10 @@ const EmployeeManagement = () => {
       >
         <DialogTitle>Affectation aux magasins</DialogTitle>
         <DialogContent>
-          {editingEmployee && (
+          {selectedEmployee && (
             <EmployeeStoreAssignment
-              employeeId={editingEmployee.id}
-              employeeName={editingEmployee.nom}
+              employeeId={selectedEmployee.id}
+              employeeName={selectedEmployee.nom}
               onClose={handleCloseStoreAssignment}
               onSave={() => {
                 queryClient.invalidateQueries({ queryKey: ["employees"] })
@@ -545,10 +393,10 @@ const EmployeeManagement = () => {
       >
         <DialogTitle>Jours de travail</DialogTitle>
         <DialogContent>
-          {editingEmployee && (
+          {selectedEmployee && (
             <EmployeeWorkdays
-              employeeId={editingEmployee.id}
-              employeeName={editingEmployee.nom}
+              employeeId={selectedEmployee.id}
+              employeeName={selectedEmployee.nom}
               onClose={handleCloseWorkdays}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés
@@ -569,9 +417,9 @@ const EmployeeManagement = () => {
       >
         <DialogTitle>Compétences</DialogTitle>
         <DialogContent>
-          {editingEmployee && (
+          {selectedEmployee && (
             <Box sx={{ mt: 2 }}>
-              <EmployeeSkillForm formId="employeeSkillsForm" onSubmit={handleSaveSkills} employee={editingEmployee} />
+              <EmployeeSkillForm formId="employeeSkillsForm" onSubmit={handleSaveSkills} employee={selectedEmployee} />
 
             </Box>
           )}
@@ -587,3 +435,146 @@ const EmployeeManagement = () => {
 };
 
 export default EmployeeManagement;
+
+interface EmployeeCardProps {
+  employee: EmployeeModel;
+  handleOpenDialog: (employee: EmployeeModel) => void;
+  handleDelete: (employeeId: EmployeeModel["id"]) => void;
+  handleOpenSkills: (employee: EmployeeModel) => void;
+  handleOpenStoreAssignment: (employee: EmployeeModel) => void;
+  handleOpenWorkdays: (employee: EmployeeModel) => void;
+}
+const EmployeeCard = ({ employee, handleOpenDialog, handleDelete, handleOpenSkills, handleOpenStoreAssignment, handleOpenWorkdays }: EmployeeCardProps) => {
+  return (
+    <Card
+      sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
+            <Person />
+          </Avatar>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" component="div" fontWeight="bold">
+              {employee.nom} {employee.prenom}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {employee.email}
+            </Typography>
+          </Box>
+          <Box>
+            <Tooltip title="Modifier">
+              <IconButton
+                size="small"
+                onClick={() => handleOpenDialog(employee)}
+                color="primary"
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Supprimer">
+              <IconButton
+                size="small"
+                onClick={() => handleDelete(employee.id)}
+                color="error"
+              >
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        <Stack spacing={1}>
+          {employee.phone && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Phone fontSize="small" color="action" />
+              <Typography variant="body2">{employee.phone}</Typography>
+            </Box>
+          )}
+
+          {employee.workTime && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AccessTime fontSize="small" color="action" />
+              <Typography variant="body2">
+                {employee.workTime}h/semaine
+              </Typography>
+            </Box>
+          )}
+
+          {employee.skills && employee.skills.length > 0 && (
+            <Box>
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                gutterBottom
+              >
+                Compétences:
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.5,
+                  mt: 0.5,
+                }}
+              >
+                {employee.skills.slice(0, 3).map((skill) => (
+                  <Chip
+                    key={skill.id}
+                    label={skill.name}
+                    size="small"
+                    variant="outlined"
+                  />
+                ))}
+                {employee.skills.length > 3 && (
+                  <Chip
+                    label={`+${employee.skills.length - 3}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+
+        </Stack>
+      </CardContent>
+      {/* Boutons d'action supplémentaires */}
+      <CardActions>
+        <Tooltip title="Définir les compétences des employés">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Quiz />}
+            onClick={() => handleOpenSkills(employee)}
+            sx={{ flex: 1 }}
+          >
+            Skills
+          </Button>
+        </Tooltip>
+        <Tooltip title="Gérer les affectations aux magasins">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Store />}
+            onClick={() => handleOpenStoreAssignment(employee)}
+            sx={{ flex: 1 }}
+          >
+            Magasins
+          </Button>
+        </Tooltip>
+        <Tooltip title="Configurer les jours de travail">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Schedule />}
+            onClick={() => handleOpenWorkdays(employee)}
+            sx={{ flex: 1 }}
+          >
+            Horaires
+          </Button>
+        </Tooltip>
+      </CardActions>
+    </Card>
+  )
+}

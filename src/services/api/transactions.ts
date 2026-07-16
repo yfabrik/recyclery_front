@@ -1,45 +1,44 @@
-import type { AxiosResponse } from "axios";
 import type {
-  RefundData,
-  SaleTransactionBase,
-  TransactionListFilter,
-  transactionStatsFilterSchema,
-} from "@recyclerie/api/schemas/salesTransactions";
-import type * as z from "zod";
-import type {
-  ListSalesTransactionsResponse,
-  DetailSalesTransactionResponse,
-  CreateSalesTransactionResponse,
   CreateRefundResponse,
-  ListRefundsResponse,
-  SalesTransactionStatsResponse,
-  PostalCodeStatsResponse,
-  UpdateSalesTransactionResponse,
+  CreateSalesTransactionResponse,
   DeleteSalesTransactionResponse,
-  SalesTransactionDto,
+  DetailSalesTransactionResponse,
+  ListRefundsResponse,
+  ListSalesTransactionsResponse,
+  PostalCodeStatsResponse,
+  SalesTransactionStatsResponse,
+  UpdateSalesTransactionResponse
 } from "@recyclerie/api/responses/salesTransactions";
+import type {
+  RefundDataInput,
+  SaleTransactionBaseInput,
+  TransactionListFilter,
+  TransactionStatsFilterInput
+} from "@recyclerie/api/schemas/salesTransactions";
+import type { AxiosResponse } from "axios";
+import type { TransactionModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
-export type { SalesTransactionDto };
+// export type { SalesTransactionDto };
 
 export type transactionsFilters = Partial<TransactionListFilter> & {
   page?: number;
 };
 
-export type CreateTransactionBody = SaleTransactionBase & {
-  payment_method?: Exclude<SalesTransactionDto["payment_method"], "mixed" | "giftcard">;
-  payment_amount?: number;
-};
+// export type CreateTransactionBody = SaleTransactionBase & {
+//   payment_method?: Exclude<SalesTransactionDto["payment_method"], "mixed" | "giftcard">;
+//   payment_amount?: number;
+// };
 
-export type UpdateTransactionBody = CreateTransactionBody;
-export type CreateRefundBody = RefundData;
+// export type UpdateTransactionBody = CreateTransactionBody;
+// export type CreateRefundBody = RefundData;
 
-type TransactionStatsFilter = z.infer<typeof transactionStatsFilterSchema>;
+// type TransactionStatsFilter = z.infer<typeof transactionStatsFilterSchema>;
 
-export type TransactionDetailsModel = SalesTransactionDto;
-export type RefundTransaction = SalesTransactionDto;
+// export type TransactionDetailsModel = SalesTransactionDto;
+// export type RefundTransaction = SalesTransactionDto;
 
-export type { CreateSalesTransactionResponse } from "@recyclerie/api/responses/salesTransactions";
+// export type { CreateSalesTransactionResponse } from "@recyclerie/api/responses/salesTransactions";
 
 export const getTransactions = (
   filters: transactionsFilters | null = null,
@@ -49,7 +48,7 @@ export const getTransactions = (
   });
 
 export const getTranscationStats = (
-  filters: Partial<TransactionStatsFilter> | null = null,
+  filters: TransactionStatsFilterInput,
 ): Promise<AxiosResponse<SalesTransactionStatsResponse>> =>
   axiosInstance.get<SalesTransactionStatsResponse>(
     "/api/sales-transactions/stats/summary",
@@ -57,7 +56,7 @@ export const getTranscationStats = (
   );
 
 export const getTranscationPostalStats = (
-  filters: Partial<TransactionStatsFilter> | null = null,
+  filters: TransactionStatsFilterInput,
 ): Promise<AxiosResponse<PostalCodeStatsResponse>> =>
   axiosInstance.get<PostalCodeStatsResponse>(
     "/api/sales-transactions/stats/postal-codes",
@@ -65,8 +64,8 @@ export const getTranscationPostalStats = (
   );
 
 export const createRefund = (
-  id: number,
-  data: CreateRefundBody,
+  id: TransactionModel["id"],
+  data: RefundDataInput,
 ): Promise<AxiosResponse<CreateRefundResponse>> =>
   axiosInstance.post<CreateRefundResponse>(
     `/api/sales-transactions/${id}/refunds`,
@@ -74,14 +73,14 @@ export const createRefund = (
   );
 
 export const getRefundForTransaction = (
-  id: number,
+  id: TransactionModel["id"],
 ): Promise<AxiosResponse<ListRefundsResponse>> =>
   axiosInstance.get<ListRefundsResponse>(
     `/api/sales-transactions/${id}/refunds`,
   );
 
 export const createSell = (
-  data: CreateTransactionBody,
+  data: SaleTransactionBaseInput,
 ): Promise<AxiosResponse<CreateSalesTransactionResponse>> =>
   axiosInstance.post<CreateSalesTransactionResponse>(
     "/api/sales-transactions",
@@ -89,8 +88,8 @@ export const createSell = (
   );
 
 export const updateTransaction = (
-  id: number,
-  data: UpdateTransactionBody,
+  id: TransactionModel["id"],
+  data: SaleTransactionBaseInput,
 ): Promise<AxiosResponse<UpdateSalesTransactionResponse>> =>
   axiosInstance.put<UpdateSalesTransactionResponse>(
     `/api/sales-transactions/${id}`,
@@ -98,14 +97,14 @@ export const updateTransaction = (
   );
 
 export const getTransactionDetails = (
-  id: number,
+  id: TransactionModel["id"],
 ): Promise<AxiosResponse<DetailSalesTransactionResponse>> =>
   axiosInstance.get<DetailSalesTransactionResponse>(
     `/api/sales-transactions/${id}`,
   );
 
 export const deleteTransaction = (
-  id: number,
+  id: TransactionModel["id"],
 ): Promise<AxiosResponse<DeleteSalesTransactionResponse>> =>
   axiosInstance.delete<DeleteSalesTransactionResponse>(
     `/api/sales-transactions/${id}`,

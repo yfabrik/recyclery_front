@@ -30,11 +30,12 @@ import {
   Typography
 } from "@mui/material";
 
+import type { EcoOrganismDataInput } from "@recyclerie/api/schemas/ecoOrganism";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import type { EcoOrgModel } from "../../../interfaces/Models";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
+import type { EcoOrgModel } from "../../../interfaces/Models";
 import {
   createEcoOrganism,
   deleteEcoOrganism,
@@ -46,14 +47,38 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
-import { EcoOrganismForm, type Schema } from "../../forms/EcoOrganismForm";
+import { EcoOrganismForm, type EcoOrganismFormValues, type Schema } from "../../forms/EcoOrganismForm";
 import { Loading } from "../../Loading";
 import { StatCard } from "../../StatCard";
 
+function ecoOrganismToFormValues(org: EcoOrgModel): Partial<EcoOrganismFormValues> {
+  const raw = org as EcoOrgModel & {
+    incategories?: Array<{ id: number }>;
+    sellcategories?: Array<{ id: number }>;
+    inCategories?: Array<{ id: number }>;
+    sellCategories?: Array<{ id: number }>;
+  };
+  const inCats = raw.inCategories ?? raw.incategories ?? [];
+  const sellCats = raw.sellCategories ?? raw.sellcategories ?? [];
+  return {
+    name: org.name,
+    description: org.description ?? "",
+    contact_email: org.contact_email ?? "",
+    contact_phone: org.contact_phone ?? "",
+    address: org.address ?? "",
+    website: org.website ?? "",
+    is_active: org.is_active,
+    inCategories: inCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
+    sellCategories: sellCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
+  };
+}
+
 export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
-  const [editingEcoOrganism, setEditingEcoOrganism] =
-    useState<EcoOrgModel | null>(null);
+  const [editingEcoOrganismId, setEditingEcoOrganismId] = useState<EcoOrgModel["id"] | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<EcoOrganismFormValues> | null>(
+    null,
+  );
 
   const queryClient = useQueryClient()
   const ecoOrganisms = useQuery({
@@ -74,8 +99,9 @@ export const EcoOrganismsTab = () => {
     "Erreur lors du chargement des statistiques",
   );
 
+  const ecoOrganismPayloadFromForm = (data: Schema): EcoOrganismDataInput => ({...data});
   const editEcoOrganism = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEcoOrganism(id, data),
+    mutationFn: ({ id, data }: { id: EcoOrgModel["id"], data: Schema }) => updateEcoOrganism(id, ecoOrganismPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Éco-organisme mis à jour avec succès"));
       handleCloseEcoOrganismDialog();
@@ -86,7 +112,7 @@ export const EcoOrganismsTab = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"))
   })
   const addEcoOrganism = useMutation({
-    mutationFn: (data: Schema) => createEcoOrganism(data),
+    mutationFn: (data: Schema) => createEcoOrganism(ecoOrganismPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Éco-organisme créé avec succès"));
       handleCloseEcoOrganismDialog();
@@ -131,18 +157,20 @@ export const EcoOrganismsTab = () => {
   const handleOpenEcoOrganismDialog = (
     ecoOrganism: EcoOrgModel | null = null
   ) => {
-    setEditingEcoOrganism(ecoOrganism);
+    setEditingEcoOrganismId(ecoOrganism?.id ?? null);
+    setFormDefaults(ecoOrganism ? ecoOrganismToFormValues(ecoOrganism) : null);
     setEcoOrganismDialog(true);
   };
 
   const handleCloseEcoOrganismDialog = () => {
     setEcoOrganismDialog(false);
-    setEditingEcoOrganism(null);
+    setEditingEcoOrganismId(null);
+    setFormDefaults(null);
   };
 
   const handleSaveEcoOrganism = async (data: Schema) => {
-    if (editingEcoOrganism?.id) {
-      editEcoOrganism.mutate({ id: editingEcoOrganism.id, data })
+    if (editingEcoOrganismId) {
+      editEcoOrganism.mutate({ id: editingEcoOrganismId, data })
     } else {
       addEcoOrganism.mutate(data)
     }
@@ -181,7 +209,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title=" Total Éco-organismes"
-              value={ecoOrganismStats.data?.total_eco_organisms || 0}
+              value={Number(ecoOrganismStats.data?.total_eco_organisms ?? 0)}
               icon={<Nature />}
               color="primary"
             />
@@ -190,7 +218,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title=" Actifs"
-              value={ecoOrganismStats.data?.active_eco_organisms || 0}
+              value={Number(ecoOrganismStats.data?.active_eco_organisms ?? 0)}
               icon={<CheckCircle />}
               color="success"
             />
@@ -199,7 +227,7 @@ export const EcoOrganismsTab = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <StatCard
               title="Inactifs"
-              value={ecoOrganismStats.data?.inactive_eco_organisms || 0}
+              value={Number(ecoOrganismStats.data?.inactive_eco_organisms ?? 0)}
               icon={<Block />}
               color="error"
             />
@@ -309,7 +337,7 @@ export const EcoOrganismsTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingEcoOrganism
+          {editingEcoOrganismId
             ? "Modifier l'Éco-organisme"
             : "Nouvel Éco-organisme"}
         </DialogTitle>
@@ -317,14 +345,14 @@ export const EcoOrganismsTab = () => {
           <EcoOrganismForm
             formId="ecoOrgForm"
             onSubmit={handleSaveEcoOrganism}
-            defaultValues={editingEcoOrganism}
+            defaultValues={formDefaults ?? undefined}
           />
 
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEcoOrganismDialog}>Annuler</Button>
           <Button form="ecoOrgForm" variant="contained" type="submit" loading={addEcoOrganism.isPending || editEcoOrganism.isPending}>
-            {editingEcoOrganism ? "Mettre à jour" : "Créer"}
+            {editingEcoOrganismId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>

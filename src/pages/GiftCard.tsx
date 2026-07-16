@@ -24,7 +24,6 @@ import {
 import {
   createGiftCard,
   listGiftCards,
-  type GiftCardIssueBody,
 } from "../services/api/giftCards";
 import {
   getGiftCardStatusColor,
@@ -32,6 +31,7 @@ import {
 } from "../constants/giftCardStatuses";
 import { formatCurrency } from "../services/cartService";
 import { Loading } from "../components/Loading";
+import type { GiftCardIssueInput } from "@recyclerie/api/schemas/giftCards";
 
 type CreateGiftCardForm = {
   initial_value: string;
@@ -60,7 +60,7 @@ const GiftCard = () => {
   });
 
   const addGiftCard = useMutation({
-    mutationFn: (payload: GiftCardIssueBody) => createGiftCard(payload),
+    mutationFn: (payload: GiftCardIssueInput) => createGiftCard(payload),
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);

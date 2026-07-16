@@ -28,6 +28,7 @@ import {
   hasSignificantCashDifference,
   roundCurrency,
 } from "../services/cartService";
+import type { CashSession } from "../interfaces/Models";
 
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -72,7 +73,7 @@ const PointOfSale = () => {
 
   const closeSession = useMutation({
     mutationFn: (data: {
-      id: number;
+      id: CashSession["id"];
       data: { closing_amount: number; notes: string | null };
     }) => closeCaisse(data.id, data.data),
     onSuccess: (response) => {

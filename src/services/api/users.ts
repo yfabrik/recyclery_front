@@ -1,59 +1,58 @@
-import type { AxiosResponse } from "axios";
 import type {
-  ListUsersResponse,
-  CreateUserResponse,
-  UpdateUserResponse,
-  DeleteUserResponse,
-  UserStatsResponse,
-  UpdateUserPasswordResponse,
-} from "@recyclerie/api/responses/users";
+  AssignEmployeeStoreResponse,
+  EmployeeStoreByEmployeeResponse,
+  RemoveEmployeeStoreResponse,
+} from "@recyclerie/api/responses/employeeStore";
 import type {
   CreateEmployeeWorkdaysResponse,
   ListEmployeeWorkdaysResponse,
 } from "@recyclerie/api/responses/employeeWorkdays";
-import type { AssignEmployeeStoreBody } from "@recyclerie/api/schemas/employeeStore";
 import type {
-  EmployeeStoreByEmployeeResponse,
-  AssignEmployeeStoreResponse,
-  RemoveEmployeeStoreResponse,
-} from "@recyclerie/api/responses/employeeStore";
-import type { WorkdaysModel } from "../../interfaces/Models";
+  CreateUserResponse,
+  DeleteUserResponse,
+  ListUsersResponse,
+  UpdateUserPasswordResponse,
+  UpdateUserResponse,
+  UserStatsResponse,
+} from "@recyclerie/api/responses/users";
+import type { AssignEmployeeStoreInput } from "@recyclerie/api/schemas/employeeStore";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserListFilterInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
+import type { AxiosResponse } from "axios";
+import type { EmployeeModel, UserModel, WorkdaysModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/UserForm";
-import type { Schema as PasswordSchema } from "../../components/forms/PasswordChangeForm";
 
-interface UserFilters {
-  role?: "employee" | "admin" | "manager";
-  store_id?: number;
-  active?: boolean;
-  include?: string;
-}
-export type { UserFilters };
+// interface UserFilters {
+//   role?: UserRole;
+//   store_id?: number;
+//   active?: boolean;
+//   include?: string;
+// }
+// export type { UserListFilter as UserFilters };
 
 export const fetchUsers = (
-  filters?: UserFilters,
+  filters?: UserListFilterInput,
 ): Promise<AxiosResponse<ListUsersResponse>> =>
   axiosInstance.get<ListUsersResponse>("/api/users", { params: filters });
 
 export const createUser = (
-  data: Schema,
+  data: UserCreateInput,
 ): Promise<AxiosResponse<CreateUserResponse>> =>
   axiosInstance.post<CreateUserResponse>("/api/users", data);
 
 export const updateUser = (
-  id: number,
-  data: Schema,
+  id: UserModel["id"],
+  data: UserUpdateInput,
 ): Promise<AxiosResponse<UpdateUserResponse>> =>
   axiosInstance.put<UpdateUserResponse>(`/api/users/${id}`, data);
 
 export const deleteUser = (
-  id: number,
+  id: UserModel["id"],
 ): Promise<AxiosResponse<DeleteUserResponse>> =>
   axiosInstance.delete<DeleteUserResponse>(`/api/users/${id}`);
 
 export const updateUserPassword = (
-  id: number,
-  data: PasswordSchema,
+  id: UserModel["id"],
+  data: UserAdminUpdatePasswordInput,
 ): Promise<AxiosResponse<UpdateUserPasswordResponse>> =>
   axiosInstance.patch<UpdateUserPasswordResponse>(
     `/api/users/${id}/password`,
@@ -65,22 +64,24 @@ export const getRoles = () => axiosInstance.get("/api/users/roles");
 export const getUsersStats = (): Promise<AxiosResponse<UserStatsResponse>> =>
   axiosInstance.get<UserStatsResponse>("/api/users/stats");
 
+//TODO c'est pas sa place ici
 export const getAssignedStores = (
-  employee_id: number,
+  employee_id: EmployeeModel["id"],
 ): Promise<AxiosResponse<EmployeeStoreByEmployeeResponse>> =>
   axiosInstance.get<EmployeeStoreByEmployeeResponse>(
     `/api/employee-stores/employee/${employee_id}`,
   );
-
+//TODO c'est pas sa place ici
 export const removeAssignedStores = (
-  employee_id: number,
+  employee_id: EmployeeModel["id"],
 ): Promise<AxiosResponse<RemoveEmployeeStoreResponse>> =>
   axiosInstance.delete<RemoveEmployeeStoreResponse>(
     `/api/employee-stores/employee/${employee_id}`,
   );
 
+//TODO c'est pas sa place ici
 export const addAssignedStore = (
-  data: AssignEmployeeStoreBody,
+  data: AssignEmployeeStoreInput,
 ): Promise<AxiosResponse<AssignEmployeeStoreResponse>> =>
   axiosInstance.post<AssignEmployeeStoreResponse>("/api/employee-stores", data);
 
@@ -140,7 +141,8 @@ function transformWorkdaysResponse(
   return { workdays };
 }
 
-export const getUserWorkdays = (id: number) =>
+//TODO rename
+export const getUserWorkdays = (id: EmployeeModel["id"]) =>
   axiosInstance.get<GetUserWorkdaysResponse>(`/api/employee-workdays/employee/${id}`, {
     transformResponse: [(data: ListEmployeeWorkdaysResponse | string) => transformWorkdaysResponse(data)],
   });
@@ -192,7 +194,7 @@ function transformWorkdaysRequest(data: WorkdaysFormPayload): string {
 }
 
 export const addWorkdaysToUser = (
-  id: number,
+  id: EmployeeModel["id"],
   data: WorkdaysFormPayload,
 ): Promise<AxiosResponse<CreateEmployeeWorkdaysResponse>> =>
   axiosInstance.post<CreateEmployeeWorkdaysResponse>(

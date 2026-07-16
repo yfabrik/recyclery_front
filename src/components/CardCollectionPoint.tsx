@@ -7,7 +7,6 @@ import {
   Phone,
   Schedule,
 } from "@mui/icons-material";
-
 import {
   Avatar,
   Box,
@@ -30,30 +29,20 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-
 import type { CollectionPointModel, ScheduleModel } from "../interfaces/Models";
-
+import { formatTime } from "../services/dateService";
 interface CardCollectionPointProps {
   point: CollectionPointModel;
-
   handleOpenHoursDialog: (n: null | ScheduleModel, id?: number) => void;
-
   handleDeleteHours: (id: number) => void;
-
   handleOpenDialog: (point: null | CollectionPointModel) => void;
-
   handleDeletePoint: (point: CollectionPointModel) => void;
 }
-
 export const CardCollectionPoint = ({
   point,
-
   handleOpenHoursDialog,
-
   handleDeleteHours,
-
   handleOpenDialog,
-
   handleDeletePoint,
 }: CardCollectionPointProps) => {
   return (
@@ -69,54 +58,40 @@ export const CardCollectionPoint = ({
             >
               <LocationOn />
             </Avatar>
-
             <Box>
               <Typography variant="h6" component="h2">
                 {point.name}
               </Typography>
-
               {point.is_active ? (
                 <Chip
                   label="Active"
-
                   color="success"
-
                   size="small"
-
                   variant="outlined"
                 />
               ) : (
                 <Chip
                   label="Inactive"
-
                   color="default"
-
                   size="small"
-
                   variant="filled"
                 />
               )}
             </Box>
           </Box>
         }
-
         action={
           <>
             <IconButton
               size="small"
-
               onClick={() => handleOpenDialog(point)}
-
               color="primary"
             >
               <Edit fontSize="small" />
             </IconButton>
-
             <IconButton
               size="small"
-
               onClick={() => handleDeletePoint(point)}
-
               color="error"
             >
               <Delete fontSize="small" />
@@ -124,52 +99,41 @@ export const CardCollectionPoint = ({
           </>
         }
       />
-
       <CardContent>
         <List dense>
           <ListItem disablePadding>
             <ListItemAvatar>
               <LocationOn color="action" />
             </ListItemAvatar>
-
             <ListItemText
               primary={point.address}
-
               secondary={`${point.city} ${point.postal_code}`}
-
               slotProps={{
                 primary: { variant: "body2" },
-
                 secondary: { variant: "caption" },
               }}
             />
           </ListItem>
-
           {point.contact_phone && (
             <ListItem disablePadding>
               <ListItemAvatar>
                 <Phone color="action" />
               </ListItemAvatar>
-
               <ListItemText
                 primary={point.contact_phone}
-
                 slotProps={{
                   primary: { variant: "body2" },
                 }}
               />
             </ListItem>
           )}
-
           {point.contact_email && (
             <ListItem disablePadding>
               <ListItemAvatar>
                 <Email color="action" />
               </ListItemAvatar>
-
               <ListItemText
                 primary={point.contact_email}
-
                 slotProps={{
                   primary: { variant: "body2" },
                 }}
@@ -177,7 +141,6 @@ export const CardCollectionPoint = ({
             </ListItem>
           )}
         </List>
-
         {point.TaskSchedules?.length === 0 ? (
           <Box
             display="flex"
@@ -188,7 +151,6 @@ export const CardCollectionPoint = ({
             py={2}
           >
             <Schedule fontSize="large" color="primary" sx={{ mx: "auto" }} />
-
             <Typography variant="body2" color="text.secondary" align="center">
               Aucun horaire de présence pour ce point de collecte
             </Typography>
@@ -199,22 +161,17 @@ export const CardCollectionPoint = ({
               <TableHead>
                 <TableRow>
                   <TableCell>Jour</TableCell>
-
                   <TableCell>Statut</TableCell>
-
                   <TableCell>Horaires</TableCell>
-
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
-
               <TableBody>
                 {point.TaskSchedules?.sort(
                   (a, b) =>
                     new Date(a.scheduled_date ?? 0).getDay() -
                     new Date(b.scheduled_date ?? 0).getDay(),
                 )
-
                   .map((hour) => (
                     <TableRow key={hour.id}>
                       <TableCell>
@@ -233,7 +190,6 @@ export const CardCollectionPoint = ({
                             : hour.name}
                         </Typography>
                       </TableCell>
-
                       <TableCell>
                         {!hour.is_recurring ? (
                           <Chip label="Inactif" color="error" size="small" />
@@ -241,51 +197,28 @@ export const CardCollectionPoint = ({
                           <Chip label="Présent" color="success" size="small" />
                         )}
                       </TableCell>
-
                       <TableCell>
                         <Typography variant="body2">
                           {!hour.is_recurring
                             ? "Inactif"
                             : hour.start_time && hour.end_time
-                              ? `${new Date(hour.start_time).toLocaleString(
-                                  "fr-FR",
-
-                                  {
-                                    hour: "2-digit",
-
-                                    minute: "2-digit",
-                                  },
-                                )} - ${new Date(hour.end_time).toLocaleString(
-                                  "fr-FR",
-
-                                  {
-                                    hour: "2-digit",
-
-                                    minute: "2-digit",
-                                  },
-                                )}`
+                              ? `${formatTime(new Date(hour.start_time))} - ${formatTime(new Date(hour.end_time))}`
                               : hour.name}
                         </Typography>
                       </TableCell>
-
                       <TableCell>
                         <IconButton
                           size="small"
-
                           onClick={() =>
                             handleOpenHoursDialog(hour as ScheduleModel)
                           }
-
                           color="primary"
                         >
                           <Edit fontSize="small" />
                         </IconButton>
-
                         <IconButton
                           size="small"
-
                           onClick={() => handleDeleteHours(hour.id)}
-
                           color="error"
                         >
                           <Delete fontSize="small" />
@@ -298,7 +231,6 @@ export const CardCollectionPoint = ({
           </TableContainer>
         )}
       </CardContent>
-
       <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           variant="contained"

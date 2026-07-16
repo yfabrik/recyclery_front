@@ -9,42 +9,44 @@ import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
 import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
 import { fetchCategories } from "../../services/api/categories";
-import { emptyStringToNull } from "../../services/zodTransform";
 
 const schema = z.object({
   name: noEmptyStr("nom requis"),
-  description: z.string().transform(v => v == '' ? null : v),
-  contact_email: z.union([z.email(), nullString()]),
+  description: z.string().transform(v=>v==""?null:v),
+  contact_email: z.union([nullString(),z.email()]),
   contact_phone: z.union([
-    phoneSchema(),
     nullString(),
+    phoneSchema(),
   ]),
-  address: z.string().transform(v => v == '' ? null : v),
-  website: z.union([
-    z.url(),
-    nullString()
-  ]),
+  address: z.string().transform(v=>v==""?null:v),
+  website: z.union([nullString(),z.url()]),
   inCategories: z.array(idSchema()).default([]),
   sellCategories: z.array(idSchema()).default([]),
   is_active: z.boolean(),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type EcoOrganismFormValues = z.input<typeof schema>;
 
 export const EcoOrganismForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<Schema>) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {}
+}: BaseFormProps<EcoOrganismFormValues,Schema>& {
+}) => {
+  const {
+    inCategories: rawInCategories,
+    sellCategories: rawSellCategories,
+    ...restDefaults
+  } = defaultValues ?? {};
 
   const categoriesQuery = useQuery({
     queryKey: ["categories", { in: true, only_category: true }],
-    queryFn: () => fetchCategories({ in: true, only_category: true }).then((response) => response.data.categories),
+    queryFn: () => fetchCategories({ in: true, only_category: true, include: ["category"] }).then((response) => response.data.data),
   });
   const categoriesSellQuery = useQuery({
     queryKey: ["categories", { sell: true, only_category: true }],
-    queryFn: () => fetchCategories({ sell: true, only_category: true }).then((response) => response.data.categories),
+    queryFn: () => fetchCategories({ sell: true, only_category: true, include: ["category"] }).then((response) => response.data.data),
   });
 
   const categoriesIn = categoriesQuery.data ?? [];
@@ -52,16 +54,23 @@ export const EcoOrganismForm = ({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "",
-      description: "",
-      contact_email: "",
-      contact_phone: "",
-      address: "",
-      website: "",
-      is_active: true,
-      ...data,
-      inCategories: data?.inCategories?.map((cat: CategoryModel) => cat.id) ?? [],
-      sellCategories: data?.sellCategories?.map((cat: CategoryModel) => cat.id) ?? [],
+      name: restDefaults.name ?? "",
+      description: restDefaults.description ?? "",
+      contact_email: restDefaults.contact_email ?? "",
+      contact_phone: restDefaults.contact_phone ?? "",
+      address: restDefaults.address ?? "",
+      website: restDefaults.website ?? "",
+      is_active: restDefaults.is_active ?? true,
+      inCategories: Array.isArray(rawInCategories)
+        ? (rawInCategories as Array<number | { id: number }>).map((cat) =>
+            typeof cat === "number" ? cat : cat.id,
+          )
+        : [],
+      sellCategories: Array.isArray(rawSellCategories)
+        ? (rawSellCategories as Array<number | { id: number }>).map((cat) =>
+            typeof cat === "number" ? cat : cat.id,
+          )
+        : [],
     },
   });
   return (

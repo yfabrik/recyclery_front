@@ -34,7 +34,6 @@ import {
   createRefund,
   getTransactions,
   getTranscationStats,
-  type CreateRefundBody,
   type transactionsFilters,
 } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
@@ -42,13 +41,14 @@ import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
 import type { Schema } from "../forms/RefundForm";
-import { SaleFiltersForm, type Filters } from "../forms/SaleFiltersForm";
+import { SaleFiltersForm, type Filters } from "../forms/filters/SaleFiltersForm";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { StatCard } from "../StatCard";
+import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
 
 const toTransactionFilters = ({
   store_id,
@@ -131,8 +131,9 @@ export const SalesAnalyticsTab = () => {
       }).then((response) => response.data.data),
   });
 
+  // const createRefundPayloadFromForm = (data: Schema): RefundDataInput => ({...data});
   const addRefund = useMutation({
-    mutationFn: (v: { id: number; data: CreateRefundBody }) =>
+    mutationFn: (v: { id: TransactionModel["id"]; data: RefundDataInput }) =>
       createRefund(v.id, v.data),
     onSuccess: (data) => {
       handleCloseRefundDialog();
@@ -152,19 +153,16 @@ export const SalesAnalyticsTab = () => {
       toast.error("Session de caisse introuvable pour ce remboursement.");
       return;
     }
-
+    const payload = buildCreateRefundBody(data, selectedTransaction.cash_session_id,);
     addRefund.mutate({
       id: selectedTransaction.id,
-      data: buildCreateRefundBody(
-        data,
-        selectedTransaction.cash_session_id,
-      ),
+      data: payload
     });
   };
 
   const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
 
-  const handleReprintReceipt = (transactionId: number) => {
+  const handleReprintReceipt = (transactionId: TransactionModel["id"]) => {
     reprintTransactionReceipt(transactionId, triggerPrintReceipt);
   };
 
@@ -254,12 +252,12 @@ export const SalesAnalyticsTab = () => {
             subtitle={
               statistics.data?.total_refunded
                 ? `Brut: ${formatCurrency(
-                    Number(
-                      statistics.data.total_sales_before_refunds ||
-                        statistics.data.total_sales ||
-                        0,
-                    ),
-                  )} · Remboursé: -${formatCurrency(Number(statistics.data.total_refunded || 0))}`
+                  Number(
+                    statistics.data.total_sales_before_refunds ||
+                    statistics.data.total_sales ||
+                    0,
+                  ),
+                )} · Remboursé: -${formatCurrency(Number(statistics.data.total_refunded || 0))}`
                 : undefined
             }
           />
@@ -332,7 +330,7 @@ export const SalesAnalyticsTab = () => {
             onPageChange={setPage}
             handleReprintReceipt={handleReprintReceipt}
             handleShowDetail={handleViewTransactionDetails}
-            // handleRefund={handleRefund}
+          // handleRefund={handleRefund}
           />
         </CardContent>
       </Card>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrivalFilterForm, type Filters } from "./forms/ArrivalFilterForm";
+import { ArrivalFilterForm, type Filters } from "./forms/filters/ArrivalFilterForm";
 import { getArrivals } from "../services/api/arrival";
 import { Box, Chip, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { Business, Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";

@@ -3,16 +3,16 @@ import { Grid } from "@mui/material";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { phoneSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
+import { phoneSchema } from "@recyclerie/api/primitives/zod";
 import { FormInput, type BaseFormProps } from "./FormBase";
+import { noEmptyStr, nullString } from "../../interfaces/ZodTypes";
 
 const schema = z.object({
-  username: z.string().trim().nonempty("Nom d'utilisateur requis"),
+  username: noEmptyStr("Nom d'utilisateur requis"),
   email: z.email("Email invalide"),
   phone: z.union([
+    nullString(),
     phoneSchema("Numéro de téléphone invalide"),
-    z.literal("").transform(() => null),
   ]),
 });
 
@@ -23,7 +23,6 @@ export const ProfileForm = ({
   onSubmit,
   defaultValues,
 }: BaseFormProps<Schema>) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -31,7 +30,6 @@ export const ProfileForm = ({
       username: defaultValues?.username ?? "",
       email: defaultValues?.email ?? "",
       phone: defaultValues?.phone ?? "",
-      ...data,
     },
   });
 

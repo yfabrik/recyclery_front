@@ -15,7 +15,7 @@ import EcoOrganismStatsTable, {
 import {
   EcoOrgStatsFilters,
   type Filters,
-} from "../components/forms/EcoOrgStatsFilters";
+} from "../components/forms/filters/EcoOrgStatsFilters";
 import {
   fetchEcoOrganismQuarterStats,
   formatEcoOrgQuarterLabel,

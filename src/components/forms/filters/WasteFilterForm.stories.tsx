@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { mockCategories } from "../../stories/fixtures";
+import { mockCategories } from "../../../stories/fixtures";
 import { WasteFilterForm } from "./WasteFilterForm";
 
 const today = new Date();

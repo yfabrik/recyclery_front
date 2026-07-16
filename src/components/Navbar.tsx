@@ -34,36 +34,21 @@ import { getUserRoleLabel } from '../constants/userRoles';
 interface NavBarProps {
   onMenuToggle: () => void
 }
+type NavItem = {
+  label: string;
+  path: string;
+  icon: ElementType;
+  permission: `${PermissionModule}.${PermissionAction}` | "";
+}
+
 
 const Navbar = ({ onMenuToggle }: NavBarProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout, isAuthenticated, hasModuleAccess } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-  const handleUserMenuOpen = (event: MouseEvent<HTMLElement>) => {
-    console.log("useropen",event)
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleUserMenuClose = () => {
-    setAnchorEl(null);
-  };
 
 
-  const handleLogout = () => {
-    logout();
-    handleUserMenuClose();
-    navigate('/login');
-  };
+  const { isAuthenticated, hasModuleAccess } = useAuth();
 
 
-  type NavItem = {
-    label: string;
-    path: string;
-    icon: ElementType;
-    permission: `${PermissionModule}.${PermissionAction}` | "";
-  }
+
 
   const mainMenuItems = [
     { label: 'Tableau de bord', path: '/dashboard', icon: Dashboard, permission: 'dashboard.read' },
@@ -73,7 +58,7 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
     { label: 'Gestion des déchets', path: '/waste-management', icon: DeleteSweep, permission: 'waste.read' },
     { label: 'Outils Salariés', path: '/employee-tools', icon: Build, permission: "" },
     { label: 'Administration', path: '/admin', icon: AdminPanelSettings, permission: "administration.read" },
-    ] as const satisfies readonly NavItem[];
+  ] as const satisfies readonly NavItem[];
 
   // const otherMenuItems = [
   //   { label: 'Ventes', path: '/sales', icon: PointOfSale, permission: 'reports.sales' },
@@ -134,56 +119,9 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
           {/* Navigation rapide */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
             {/* Éléments principaux */}
-            {filteredMainMenuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Tooltip key={item.path} title={item.label}>
-                  <Button
-                    color="inherit"
-                    onClick={() => navigate(item.path)}
-                    startIcon={<Icon />}
-                    sx={{
-                      backgroundColor: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-                      borderRadius: '8px',
-                      fontWeight: isActive ? 'bold' : 'normal',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.25)',
-                        transform: 'translateY(-1px)',
-                        boxShadow: '0 2px 8px rgba(255,255,255,0.2)',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                </Tooltip>
-              );
-            })}
-
-            {/* Administration - Lien direct */}
-            {/* <Tooltip title="Administration">
-              <Button
-                color="inherit"
-                onClick={() => navigate('/admin')}
-                startIcon={<AdminPanelSettings />}
-                sx={{
-                  backgroundColor: location.pathname === '/admin'
-                    ? 'rgba(255,255,255,0.15)'
-                    : 'transparent',
-                  borderRadius: '8px',
-                  fontWeight: location.pathname === '/admin' ? 'bold' : 'normal',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.25)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 2px 8px rgba(255,255,255,0.2)',
-                  },
-                  transition: 'all 0.2s ease-in-out',
-                }}
-              >
-                Administration
-              </Button>
-            </Tooltip> */}
+            {filteredMainMenuItems.map((item) => (
+              <NavbarItem key={item.path} item={item} />
+            ))}
           </Box>
 
           {/* Notifications */}
@@ -206,76 +144,7 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
           </Tooltip>
 
           {/* Menu utilisateur */}
-          <Tooltip title="Profil utilisateur">
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="compte utilisateur"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleUserMenuOpen}
-              color="inherit"
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease-in-out',
-                borderRadius: '50%',
-              }}
-            >
-              <Avatar sx={{
-                width: 32,
-                height: 32,
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                fontWeight: 'bold',
-                border: '2px solid rgba(255,255,255,0.3)',
-              }}>
-                {user?.username?.charAt(0).toUpperCase()}
-              </Avatar>
-            </IconButton>
-          </Tooltip>
-
-          <Menu
-            id="menu-appbar"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            open={Boolean(anchorEl)}
-            onClose={handleUserMenuClose}
-          >
-            <MenuItem disabled>
-              <Box>
-                <Typography variant="subtitle2">{user?.username}</Typography>
-                <Typography variant="caption" color="textSecondary">
-                  {getUserRoleLabel(user?.role ?? "employee")}
-                </Typography>
-              </Box>
-            </MenuItem>
-
-            <MenuItem onClick={() => { navigate('/profile'); handleUserMenuClose(); }}>
-              <AccountCircle sx={{ mr: 1 }} />
-              Mon profil
-            </MenuItem>
-
-            <MenuItem onClick={() => { navigate('/settings'); handleUserMenuClose(); }}>
-              <Settings sx={{ mr: 1 }} />
-              Paramètres
-            </MenuItem>
-
-            <MenuItem onClick={handleLogout}>
-              <ExitToApp sx={{ mr: 1 }} />
-              Déconnexion
-            </MenuItem>
-          </Menu>
+          <UserMenu />
         </Box>
       </Toolbar>
     </AppBar>
@@ -284,3 +153,132 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
 
 export default Navbar;
 
+
+const UserMenu = () => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { logout, user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  if (!isAuthenticated) return null;
+  if (!user) return null;//TODO isauthenticated should ensure user is not null
+  //TODO should logout redirect to login page?
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+    navigate('/login');
+  };
+
+
+  const handleUserMenuOpen = (event: MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (<>
+    <Tooltip title="Profil utilisateur">
+      <IconButton
+        size="large"
+        edge="end"
+        aria-label="compte utilisateur"
+        aria-controls="menu-appbar"
+        aria-haspopup="true"
+        onClick={handleUserMenuOpen}
+        color="inherit"
+        sx={{
+          '&:hover': {
+            backgroundColor: 'rgba(255,255,255,0.15)',
+            transform: 'scale(1.05)',
+          },
+          transition: 'all 0.2s ease-in-out',
+          borderRadius: '50%',
+        }}
+      >
+        <Avatar sx={{
+          width: 32,
+          height: 32,
+          bgcolor: 'rgba(255,255,255,0.2)',
+          color: 'white',
+          fontWeight: 'bold',
+          border: '2px solid rgba(255,255,255,0.3)',
+        }}>
+          {user.username.charAt(0).toUpperCase()}
+        </Avatar>
+      </IconButton>
+    </Tooltip>
+
+    <Menu
+      id="menu-appbar"
+      anchorEl={anchorEl}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      keepMounted
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      open={Boolean(anchorEl)}
+      onClose={handleUserMenuClose}
+    >
+      <MenuItem disabled>
+        <Box>
+          <Typography variant="subtitle2">{user.username}</Typography>
+          <Typography variant="caption" color="textSecondary">
+            {getUserRoleLabel(user.role)}
+          </Typography>
+        </Box>
+      </MenuItem>
+
+      <MenuItem onClick={() => { navigate('/profile'); handleUserMenuClose(); }}>
+        <AccountCircle sx={{ mr: 1 }} />
+        Mon profil
+      </MenuItem>
+
+      <MenuItem onClick={() => { navigate('/settings'); handleUserMenuClose(); }}>
+        <Settings sx={{ mr: 1 }} />
+        Paramètres
+      </MenuItem>
+
+      <MenuItem onClick={handleLogout}>
+        <ExitToApp sx={{ mr: 1 }} />
+        Déconnexion
+      </MenuItem>
+    </Menu>
+  </>
+
+  )
+}
+
+interface NavbarItemProps {
+  item: NavItem;
+}
+const NavbarItem = ({ item }: NavbarItemProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const Icon = item.icon;
+  const isActive = location.pathname === item.path;
+  return (
+    <Tooltip key={item.path} title={item.label}>
+      <Button
+        color="inherit"
+        onClick={() => navigate(item.path)}
+        startIcon={<Icon />}
+        sx={{
+          backgroundColor: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+          borderRadius: '8px',
+          fontWeight: isActive ? 'bold' : 'normal',
+          '&:hover': {
+            backgroundColor: 'rgba(255,255,255,0.25)',
+            transform: 'translateY(-1px)',
+            boxShadow: '0 2px 8px rgba(255,255,255,0.2)',
+          },
+          transition: 'all 0.2s ease-in-out',
+        }}
+      >
+        {item.label}
+      </Button>
+    </Tooltip>)
+}

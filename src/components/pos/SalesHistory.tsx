@@ -14,7 +14,6 @@ import {
   deleteTransaction,
   getTransactions,
   updateTransaction,
-  type CreateRefundBody,
   type transactionsFilters,
 } from "../../services/api/transactions";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
@@ -24,11 +23,12 @@ import type { Schema as RefundSchema } from "../forms/RefundForm";
 import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
-import { SaleHistoryFilter, type Filters } from "../forms/SaleHistoryFilter";
+import { SaleHistoryFilter, type Filters } from "../forms/filters/SaleHistoryFilter";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { buildUpdateTransactionBody } from "../../utils/editTransactionBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { SalesHistoryExport } from "./SalesHistoryExport";
+import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
 
 export const SalesHistory = ({
   activeSession,
@@ -100,7 +100,7 @@ export const SalesHistory = ({
   );
 
   const addRefund = useMutation({
-    mutationFn: (v: { id: number; data: CreateRefundBody }) =>
+    mutationFn: (v: { id: number; data: RefundDataInput }) =>
       createRefund(v.id, v.data),
     onSuccess: async (data, variables) => {
       handleCloseRefundDialog();

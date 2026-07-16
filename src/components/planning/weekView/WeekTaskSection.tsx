@@ -22,6 +22,7 @@ import {
   categoryStyles as sharedCategoryStyles,
   getCategoryKey,
 } from "../planningTaskStyles";
+import { formatTime } from "../../../services/dateService";
 
 // Extended schedule interface with additional fields used in the component
 // interface Schedule {
@@ -328,15 +329,9 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   handleOpenDialog,
   handleDeleteTask,
 }) => {
-  const periode = `${new Date(schedule.start_time).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })} - ${new Date(schedule.end_time).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })}`;
+        
+
+  const periode = `${formatTime(new Date(schedule.start_time))} - ${formatTime(new Date(schedule.end_time))}`
 
   const styles = sharedCategoryStyles[getCategoryKey(schedule)];
   const { card: cardSx, taskCss } = styles;

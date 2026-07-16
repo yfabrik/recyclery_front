@@ -1,25 +1,42 @@
-import { Add, Cancel, Category, CalendarMonth, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
+import { Add, CalendarMonth, Cancel, Category, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
 import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
+import type { PromotionDataInput } from "@recyclerie/api/schemas/promotions"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import type { PromoModel, StoreModel } from "../../../interfaces/Models"
+import type { PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
-import { PromoForm, type Schema } from "../../forms/PromoForm"
-import { Loading } from "../../Loading"
 import { fetchStores } from "../../../services/api/store"
+import { getApiErrorMessage, getApiSuccessMessage } from "../../../utils/apiToastMessage"
+import { PromoForm, type PromoFormValues, type Schema } from "../../forms/PromoForm"
+import { Loading } from "../../Loading"
+
+type PromoEditModel = PromoModel & { subcategory_id?: number | null };
+
+function promoToFormValues(promo: PromoEditModel): Partial<PromoFormValues> {
+    return {
+        category_id: promo.category_id as PromoFormValues["category_id"],
+        subcategory_id: promo.subcategory_id ?? "",
+        promotionValue: promo.promotionValue,
+        startDate: new Date(promo.startDate),
+        endDate: promo.endDate ? new Date(promo.endDate) : "",
+        isActive: promo.isActive,
+        stores: promo.stores?.length ? promo.stores.map((store) => store.id) : [""],
+    };
+}
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
-    // PromoModel does not include `subcategory_id`, but PromoForm needs it to keep the
-    // user's subcategory selection when editing an existing promotion.
-    const [currentPromo, setCurrentPromo] = useState<(PromoModel & { subcategory_id?: number | null }) | null>(null)
+    const [editingPromoId, setEditingPromoId] = useState<PromoModel["id"] | null>(null)
+    const [formDefaults, setFormDefaults] = useState<Partial<PromoFormValues> | null>(null)
+
     const queryClient = useQueryClient()
     const stores = useQuery({
         queryKey: ["stores", { active: true }],
         queryFn: () => fetchStores({ active: true }).then(response => response.data.data),
     });
+
     const categories = useQuery({
         queryFn: () =>
             fetchCategories({ only_category: true, include: ["category"], sell: true }).then(
@@ -38,8 +55,13 @@ export const PromoTab = () => {
         queryKey: ["promotions"],
     });
 
+    const createPromoPayloadFromForm = (data: Schema): PromotionDataInput => {
+        const category_id = data.subcategory_id ?? data.category_id
+        const result = { ...data, category_id }
+        return result
+    };
     const addPromo = useMutation({
-        mutationFn: (data: Schema) => createPromo(data),
+        mutationFn: (data: Schema) => createPromo(createPromoPayloadFromForm(data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
             toast.success(data.data.message)
@@ -50,49 +72,64 @@ export const PromoTab = () => {
         }
     })
     const editPromo = useMutation({
-        mutationFn: (data: { id: number, data: Schema }) => updatePromo(data.id, data.data),
+        mutationFn: (data: { id: PromoModel["id"], data: Schema }) => updatePromo(data.id, createPromoPayloadFromForm(data.data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
-            toast.success(data.data.message)
+            toast.success(getApiSuccessMessage(data, "Promotion mise à jour avec succès"))
             handleCloseDialog()
         },
-        onError: () => {
-
+        onError: (error) => {
+            toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour de la promotion"))
         }
-
     })
     const savePromo = (data: Schema) => {
-        const category = data.subcategory_id ?? data.category_id
-        const result = { ...data, category_id: category }
-        if (currentPromo?.id)
-            editPromo.mutate({ id: currentPromo.id, data: result })
+        if (editingPromoId)
+            editPromo.mutate({ id: editingPromoId, data })
         else
-            addPromo.mutate(result)
+            addPromo.mutate(data)
     }
 
     const handleOpenDialog = (promo: PromoModel) => {
-        const parentCategory = promo.Category?.parent ?? promo.Category
-        // If promo.Category has a parent, then promo.Category itself is a subcategory.
-        const subcategory_id = promo.Category?.parent ? promo.Category.id : null
-        setCurrentPromo({
+        //TODO peut aller directement dans le mapper ?
+        const category = promo.Category
+        const subcategory_id = category?.parent_id ? category.id : null
+        const editModel: PromoEditModel = {
             ...promo,
-            category_id: parentCategory?.id || promo.category_id,
+            category_id: category?.parent_id ?? promo.category_id,
             subcategory_id,
-        } as PromoModel & { subcategory_id?: number | null } | null)
+        }
+        setEditingPromoId(promo.id)
+        setFormDefaults(promoToFormValues(editModel))
+        SetIsModaleOpen(true)
+    }
+
+    const handleOpenCreateDialog = () => {
+        setEditingPromoId(null)
+        setFormDefaults(null)
         SetIsModaleOpen(true)
     }
 
     const handleCloseDialog = () => {
-        setCurrentPromo(null)
+        setEditingPromoId(null)
+        setFormDefaults(null)
         SetIsModaleOpen(false)
     }
 
     const getPromoCategories = (promo: PromoModel): { categorie: string, subcategorie: string | null } => {
-        const categorie = promo.Category?.parent ?? promo.Category
-        const subcategorie = promo.Category?.parent ? promo.Category : null
+        const category = promo.Category
+        if (!category) {
+            return { categorie: "", subcategorie: null }
+        }
+        if (category.parent_id) {
+            const parent = categories.data?.find((cat) => cat.id === category.parent_id)
+            return {
+                categorie: parent?.name || "",
+                subcategorie: category.name || null,
+            }
+        }
         return {
-            categorie: categorie?.name || "",
-            subcategorie: subcategorie?.name || null
+            categorie: category.name || "",
+            subcategorie: null,
         }
     }
     const getPromoStores = (promo: PromoModel): string => {
@@ -117,7 +154,7 @@ export const PromoTab = () => {
                 <Button
                     variant="contained"
                     startIcon={<Add />}
-                    onClick={() => SetIsModaleOpen(true)}
+                    onClick={handleOpenCreateDialog}
                 >
                     nouvelle Promotion
                 </Button>
@@ -127,7 +164,13 @@ export const PromoTab = () => {
                 <Grid container spacing={3}>
                     {promotions.data?.map((promo) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={promo.id}>
-                            <Card
+                            <PromoCard
+                                promo={promo}
+                                handleOpenDialog={handleOpenDialog}
+                                categories={getPromoCategories(promo)}
+                                stores={getPromoStores(promo)}
+                            />
+                            {/* <Card
                                 sx={{
                                     height: "100%",
                                     display: "flex",
@@ -227,7 +270,7 @@ export const PromoTab = () => {
                                         Modifier
                                     </Button>
                                 </CardActions>
-                            </Card>
+                            </Card> */}
                         </Grid>
                     ))}
                 </Grid>
@@ -240,23 +283,12 @@ export const PromoTab = () => {
                 fullWidth
                 maxWidth="lg"
             >
-                <DialogTitle>{currentPromo ? "Modifier la promotion" : "Nouvelle Promotion"}</DialogTitle>
+                <DialogTitle>{editingPromoId ? "Modifier la promotion" : "Nouvelle Promotion"}</DialogTitle>
                 <DialogContent>
                     <PromoForm
                         formId="PromoForm"
                         onSubmit={savePromo}
-                        defaultValues={
-                            currentPromo
-                                ? {
-                                    ...currentPromo,
-                                    startDate: new Date(currentPromo.startDate),
-                                    endDate: currentPromo.endDate
-                                        ? new Date(currentPromo.endDate)
-                                        : null,
-                                    stores: currentPromo.stores?.map((store: StoreModel) => store.id) ?? []
-                                }
-                                : undefined
-                        }
+                        defaultValues={formDefaults ?? undefined}
                         categories={categories.data || []}
                         stores={stores.data || []}
                     />
@@ -278,4 +310,121 @@ export const PromoTab = () => {
 
             </Dialog>
         </Box>)
+}
+
+interface PromoCardProps {
+    promo: PromoModel;
+    handleOpenDialog: (promo: PromoModel) => void;
+    categories: { categorie: string, subcategorie: string | null };
+    stores: string;
+}
+const PromoCard = ({ promo, handleOpenDialog, categories, stores }: PromoCardProps) => {
+    //TODO revoir categories et stores
+    const isDisabledPromo = !promo.isActive;
+
+    return (
+        <Card
+            sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 3,
+                boxShadow: 3,
+                opacity: isDisabledPromo ? 0.6 : 1,
+                filter: isDisabledPromo ? "grayscale(0.7)" : "none",
+                transition: "opacity 0.2s ease, filter 0.2s ease",
+            }}
+        >
+            <CardContent
+                sx={{
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                }}
+            >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <Category fontSize="small" color="primary" />
+                    <Box sx={{ ml: 1 }}>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {categories.categorie}
+                        </Typography>
+                        {categories.subcategorie && (
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <SubdirectoryArrowRight
+                                    fontSize="inherit"
+                                    sx={{ mr: 0.5, opacity: 0.7 }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                    {categories.subcategorie}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <CalendarMonth
+                            fontSize="small"
+                            sx={{ mr: 1, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            début : {new Date(promo.startDate).toLocaleDateString()}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <CalendarMonth
+                            fontSize="small"
+                            sx={{ mr: 1, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            fin :{" "}
+                            {promo.endDate
+                                ? new Date(promo.endDate).toLocaleDateString()
+                                : "jamais"}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+                        <Storefront
+                            fontSize="small"
+                            sx={{ mr: 1, mt: 0.2, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            magasins : {stores}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box
+                    sx={{
+                        mt: 1.5,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 999,
+                        bgcolor: isDisabledPromo ? "grey.300" : "success.light",
+                        color: isDisabledPromo ? "grey.700" : "success.dark",
+                        width: "fit-content",
+                        columnGap: 0.5,
+                    }}
+                >
+                    <Percent fontSize="small" />
+                    <Typography variant="body2" fontWeight={600}>
+                        Réduction {promo.promotionValue}%
+                    </Typography>
+                </Box>
+            </CardContent>
+            <CardActions sx={{ mt: "auto", justifyContent: "flex-end", px: 2, pb: 2 }}>
+                <Button
+                    startIcon={<Edit />}
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleOpenDialog(promo)}
+                >
+                    Modifier
+                </Button>
+            </CardActions>
+        </Card>)
 }

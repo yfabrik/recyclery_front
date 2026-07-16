@@ -15,6 +15,7 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import type { BaseFormProps } from "./FormBase";
 import type { StoreModel } from "../../interfaces/Models";
+import type { EmployeeStoreAssignmentDto } from "@recyclerie/api/responses/employeeStore";
 import { Place, Star, Store } from "@mui/icons-material";
 import { DevTool } from "@hookform/devtools";
 
@@ -25,16 +26,13 @@ const schema = z.object({
 
 export type Schema = z.infer<typeof schema>;
 
-type Assignment = StoreModel & {
-  is_primary: boolean;
-  EmployeeStore: { is_primary: boolean };
-};
+type Assignment = EmployeeStoreAssignmentDto;
 
 export const EmployeeStoresForm = ({
   formId,
   onSubmit,
   stores,
-  assignments = [],
+  assignments = [],//TODO use as default value
 }: BaseFormProps<Schema> & {
   stores: StoreModel[];
   assignments?: Assignment[];

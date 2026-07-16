@@ -35,15 +35,16 @@ import {
   getCashSessionStatusLabel,
 } from "../../constants/cashSessionStatuses";
 import { useBilanCaissePrint } from "../BilanCaissePrint";
-import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
+import { OpenCaisseForm, type OpenCaisseFormValues, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
 import { Loading } from "../Loading";
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
-    const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-    const [selectedCashRegisterId, setSelectedCashRegisterId] = useState<number | null>(null);
+    // const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+    // const [selectedCashRegisterId, setSelectedCashRegisterId] = useState<number | null>(null);
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [historyRegister, setHistoryRegister] = useState<CaisseModel | null>(null);
+    const [formDefaults,setFormDefaults] = useState<Partial<OpenCaisseFormValues>|null>(null)
 
     const queryClient = useQueryClient()
     const stores = useQuery({
@@ -79,8 +80,12 @@ export const NoOpenedRegister = () => {
     };
 
     const handleOpenClick = (storeId: number, cashRegisterId: number) => {
-        setSelectedStoreId(storeId);
-        setSelectedCashRegisterId(cashRegisterId);
+        setFormDefaults({
+            store_id: storeId,
+            cash_register_id: cashRegisterId,
+        })
+        // setSelectedStoreId(storeId);
+        // setSelectedCashRegisterId(cashRegisterId);
         setOpenSessionDialog(true);
     };
 
@@ -121,8 +126,9 @@ export const NoOpenedRegister = () => {
                 open={openSessionDialog}
                 onClose={() => {
                     setOpenSessionDialog(false);
-                    setSelectedStoreId(null);
-                    setSelectedCashRegisterId(null);
+                    setFormDefaults(null)
+                    // setSelectedStoreId(null);
+                    // setSelectedCashRegisterId(null);
                 }}
                 maxWidth="sm"
                 fullWidth
@@ -131,13 +137,14 @@ export const NoOpenedRegister = () => {
                 <DialogContent>
                     {openSessionDialog && (
                     <OpenCaisseForm
-                        key={`${selectedStoreId ?? ""}-${selectedCashRegisterId ?? ""}`}
+                        key={`${formDefaults?.store_id ?? ""}-${formDefaults?.cash_register_id ?? ""}`}
                         formId="OpenCaisseForm"
                         onSubmit={handleOpenSession}
                         stores={availableStores}
-                        defaultStoreId={selectedStoreId ?? undefined}
-                        defaultCashRegisterId={selectedCashRegisterId ?? undefined}
-                        lockStoreAndRegister={selectedStoreId !== null && selectedCashRegisterId !== null}
+                        defaultValues={formDefaults}
+                        // defaultStoreId={selectedStoreId ?? undefined}
+                        // defaultCashRegisterId={selectedCashRegisterId ?? undefined}
+                        // lockStoreAndRegister={formDefaults?.cash_register_id !== null && formDefaults?.store_id !== null}
                     />
                     )}
                 </DialogContent>
@@ -145,8 +152,9 @@ export const NoOpenedRegister = () => {
                     <Button
                         onClick={() => {
                             setOpenSessionDialog(false);
-                            setSelectedStoreId(null);
-                            setSelectedCashRegisterId(null);
+                            setFormDefaults(null)
+                            // setSelectedStoreId(null);
+                            // setSelectedCashRegisterId(null);
                         }}
                     >
                         Annuler
@@ -280,7 +288,7 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
             <DialogTitle>Historique des sessions - {register.name}</DialogTitle>
             <DialogContent>
                 <Loading isLoading={sessions.isLoading}>
-                    {sessions.data?.sessions?.length === 0 ? (
+                    {!sessions.data?.sessions?.length ? (
                         <Typography variant="body2" color="text.secondary">
                             Aucune session trouvée pour cette caisse.
                         </Typography>

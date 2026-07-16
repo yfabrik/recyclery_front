@@ -3,7 +3,7 @@ import {
   CheckCircle,
   PointOfSale,
   Schedule,
-  Store
+  Store,
 } from "@mui/icons-material";
 import {
   Box,
@@ -13,61 +13,97 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  Typography
+  Typography,
 } from "@mui/material";
+import type { RecycleryDataInput } from "@recyclerie/api/schemas/recycleries";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
-import type {
-  ScheduleModel,
-  StoreModel
-} from "../../../interfaces/Models";
+import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   createStore,
   deleteStore,
   fetchStores as fStore,
-  updateStore
+  updateStore,
 } from "../../../services/api/store";
 import {
   createStoreHours,
   deleteStoreHours,
-  updateStoreHours
+  updateStoreHours,
 } from "../../../services/api/storeHours";
 import { fetchUsers as fUsers } from "../../../services/api/users";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import { CardStore } from "../../CardStore";
 import { CreateCaisseDialog } from "../../CreateCaisseDialog";
-import { StatCard } from "../../StatCard";
-import { StoreForm, type Schema } from "../../forms/StoreForm";
-import type { Schema as HoraireSchema } from "../../forms/StoreOpeningForm";
+import { StoreForm, type Schema, type StoreFormValues } from "../../forms/StoreForm";
+import type { Schema as HoraireSchema, StoreOpeningFormValues } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
-import { emptyStringToNull } from "../../../services/zodTransform";
 import { Loading } from "../../Loading";
-
+import { StatCard } from "../../StatCard";
+import type { CreateStoreHoursDataInput } from "@recyclerie/api/schemas/schedules";
+function storeToFormValues(store: StoreModel): Partial<StoreFormValues> {
+  return {
+    name: store.name,
+    manager_id: store.manager_id ?? "",
+    ...(store.address ? { address: store.address } : {}),
+    city: store.city ?? "",
+    postal_code: store.postal_code ?? "",
+    phone: store.phone ?? "",
+    email: store.email ?? "",
+    is_active: store.is_active,
+  };
+}
+function storePayloadFromForm(data: Schema): RecycleryDataInput {
+  return {
+    ...data,
+  };
+}
+function storeHoursToFormValues(
+  hours: Partial<ScheduleModel>,
+): Partial<StoreOpeningFormValues> {
+  return {
+    store_id: hours.store_id != null ? hours.store_id : undefined,
+    day_of_week: hours.day_of_week ?? "",
+    is_recurring: hours.is_recurring ?? true,
+    start_time: hours.start_time ? new Date(hours.start_time) : undefined,
+    end_time: hours.end_time ? new Date(hours.end_time) : undefined,
+    is_24h: (hours as { is_24h?: boolean }).is_24h ?? false,
+    notes: hours.notes ?? "",
+  };
+}
+function storeHoursPayloadFromForm(data: HoraireSchema): CreateStoreHoursDataInput {
+  return {
+    ...data,
+  };
+}
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingStore, setEditingStore] = useState<StoreModel | null>(null);
-  const [cashRegistersDialog, setCashRegistersDialog] = useState(false);
-
-  const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
-  const [editingHours, setEditingHours] = useState<Partial<ScheduleModel> | null>(
+  const [editingStoreId, setEditingStoreId] = useState<StoreModel["id"] | null>(null);
+  const [storeFormDefaults, setStoreFormDefaults] =
+    useState<Partial<StoreFormValues> | null>(null);
+  const [cashRegisterStore, setCashRegisterStore] = useState<StoreModel | null>(
     null,
   );
-
-  const queryClient = useQueryClient()
-
+  const [cashRegistersDialog, setCashRegistersDialog] = useState(false);
+  const [hoursDialogOpen, setHoursDialogOpen] = useState(false);
+  const [editingHoursId, setEditingHoursId] = useState<ScheduleModel["id"] | null>(null);
+  const [hoursFormDefaults, setHoursFormDefaults] =
+    useState<Partial<StoreOpeningFormValues> | null>(null);
+  const queryClient = useQueryClient();
   const stores = useQuery({
     queryKey: ["stores", "horaires"],
-    queryFn: () => fStore({ include: ["horaires"] }).then(response => response.data.stores)
-  })
+    queryFn: () =>
+      fStore({ include: ["horaires"] }).then((response) => response.data.data),
+  });
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const editStore = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateStore(id, data),
+    mutationFn: ({ id, data }: { id: StoreModel["id"]; data: Schema }) =>
+      updateStore(id, storePayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -75,147 +111,131 @@ const StoresTab = () => {
         getApiSuccessMessage(data, "Magasin mis à jour avec succès"),
       );
       handleCloseDialog();
-      queryClient.invalidateQueries({ queryKey: ["stores"] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+    },
+  });
   const addStore = useMutation({
-    mutationFn: (data: Schema) => createStore(data),
+    mutationFn: (data: Schema) => createStore(storePayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Magasin créé avec succès"));
       handleCloseDialog();
-      queryClient.invalidateQueries({ queryKey: ["stores"] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+    },
+  });
   const removeStore = useMutation({
     mutationFn: (id: number) => deleteStore(id),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Magasin supprimé avec succès"));
-      queryClient.invalidateQueries({ queryKey: ["stores"] })
-    }
-  })
-
-
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+    },
+  });
   const users = useQuery({
     queryKey: ["users"],
-    queryFn: () => fUsers({ role: "admin" }).then(response => response.data.users)
-  })
+    queryFn: () =>
+      fUsers({ role: "admin" }).then((response) => response.data.data),
+  });
   useQueryErrorToast(users.error, "Erreur lors du chargement des utilisateurs");
 
 
   const saveHoraire = useMutation({
-    mutationFn: (data: HoraireSchema) => createStoreHours(data),
+    mutationFn: (data: HoraireSchema) => createStoreHours(storeHoursPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Horaires créés avec succès"));
-      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] });
       handleCloseHoursDialog();
     },
     onError: (error) =>
       toast.error(
         getApiErrorMessage(error, "Erreur lors de la sauvegarde des horaires"),
       ),
-  })
-
+  });
   const editHoraire = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: HoraireSchema }) => updateStoreHours(id, data),
+    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: CreateStoreHoursDataInput }) =>
+      updateStoreHours(id, storeHoursPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Horaires mis à jour avec succès"),
       );
-      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] });
       handleCloseHoursDialog();
     },
     onError: (error) =>
       toast.error(
         getApiErrorMessage(error, "Erreur lors de la sauvegarde des horaires"),
       ),
-  })
-
+  });
   const removeHoraire = useMutation({
-    mutationFn: (id: number) => deleteStoreHours(id),
+    mutationFn: (id: ScheduleModel["id"]) => deleteStoreHours(id),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Horaires supprimés avec succès"),
       );
-      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] })
-
+      queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] });
     },
     onError: (error) =>
       toast.error(
         getApiErrorMessage(error, "Erreur lors de la suppression des horaires"),
       ),
-  })
-
-
-
+  });
   const handleOpenDialog = (store: StoreModel | null = null) => {
-    setEditingStore(store);
+    setEditingStoreId(store?.id ?? null);
+    setStoreFormDefaults(store ? storeToFormValues(store) : null);
     setDialogOpen(true);
   };
-
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    setEditingStore(null);
+    setEditingStoreId(null);
+    setStoreFormDefaults(null);
   };
-
   const handleSave = async (data: Schema) => {
-    if (editingStore?.id) editStore.mutate({ id: editingStore.id, data })
-    else addStore.mutate(data)
-
+    if (editingStoreId) editStore.mutate({ id: editingStoreId, data });
+    else addStore.mutate(data);
   };
-
   const handleDelete = async (store: StoreModel) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce magasin ?")) {
       return;
     }
-    removeStore.mutate(store.id)
+    removeStore.mutate(store.id);
   };
-
   const handleOpenCashRegisters = (store: StoreModel) => {
-    setEditingStore(store);
+    setCashRegisterStore(store);
     setCashRegistersDialog(true);
   };
-
   const handleCloseCashRegisters = () => {
     setCashRegistersDialog(false);
-    setEditingStore(null);
+    setCashRegisterStore(null);
   };
-
-
-
   // Fonctions pour gérer les horaires d'ouverture
   const handleOpenHoursDialog = (
     hours: ScheduleModel | null = null,
     store_id: number | null = null,
   ) => {
+    setEditingHoursId(hours?.id ?? null);
     if (hours) {
-      setEditingHours(hours);
+      setHoursFormDefaults(storeHoursToFormValues(hours));
     } else {
-      setEditingHours(store_id ? { store_id } : null);
+      setHoursFormDefaults(store_id ? { store_id } : null);
     }
     setHoursDialogOpen(true);
   };
-
   const handleCloseHoursDialog = () => {
     setHoursDialogOpen(false);
-    setEditingHours(null);
+    setEditingHoursId(null);
+    setHoursFormDefaults(null);
   };
-
-
   const handleSaveHours = async (data: HoraireSchema) => {
-    if (!editingHours?.id) saveHoraire.mutate(data)
-    else editHoraire.mutate({ id: editingHours.id, data })
 
+    if (!editingHoursId) saveHoraire.mutate(data);
+    else editHoraire.mutate({ id: editingHoursId, data });
   };
-
-  const handleDeleteHours = async (id: number) => {
+  const handleDeleteHours = async (id: ScheduleModel["id"]) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ces horaires ?"))
-      removeHoraire.mutate(id)
+      removeHoraire.mutate(id);
   };
-
   return (
     <Box>
       <Box
@@ -226,7 +246,9 @@ const StoresTab = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight='bold'>Gestion des Magasins</Typography>
+        <Typography variant="h5" fontWeight="bold">
+          Gestion des Magasins
+        </Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -256,19 +278,18 @@ const StoresTab = () => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <StatCard
             title="Caisses total"
-            value={stores.data?.reduce(
-              (sum, store) => sum + (store.caisses?.length || 0),
-              0,
-            ) || 0}
+            value={
+              stores.data?.reduce(
+                (sum, store) => sum + (store.caisses?.length || 0),
+                0,
+              ) || 0
+            }
             icon={<PointOfSale />}
             color="info"
           />
         </Grid>
       </Grid>
-
-
       <Loading isLoading={stores.isLoading}>
-
         {/* Table des magasins */}
         <Grid container spacing={3}>
           {stores.data?.map((store) => (
@@ -285,14 +306,15 @@ const StoresTab = () => {
           ))}
         </Grid>
       </Loading>
-
-
       {/* Dialog de gestion des caisses */}
-      {editingStore &&
-        <CreateCaisseDialog store={editingStore} onClose={handleCloseCashRegisters} open={cashRegistersDialog} />
-      }
-
-      {/* Dialog de création/édition de magasin */}
+      {cashRegisterStore && (
+        <CreateCaisseDialog
+          store={cashRegisterStore}
+          onClose={handleCloseCashRegisters}
+          open={cashRegistersDialog}
+        />
+      )}
+      {/* Dialog de création/édition */}
       <Dialog
         open={dialogOpen}
         onClose={handleCloseDialog}
@@ -300,24 +322,23 @@ const StoresTab = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingStore ? "Modifier le magasin" : "Nouveau magasin"}
+          {editingStoreId ? "Modifier le magasin" : "Nouveau magasin"}
         </DialogTitle>
         <DialogContent>
           <StoreForm
             formId="createStore"
             onSubmit={handleSave}
             managers={users.data || []}
-            defaultValues={editingStore ? emptyStringToNull(editingStore) : undefined}
+            defaultValues={storeFormDefaults ?? undefined}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
           <Button type="submit" form="createStore" variant="contained">
-            {editingStore ? "Mettre à jour" : "Créer"}
+            {editingStoreId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Dialog de création/édition des horaires */}
       <Dialog
         open={hoursDialogOpen}
@@ -328,7 +349,7 @@ const StoresTab = () => {
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Schedule />
-            {editingHours ? "Modifier les horaires" : "Nouveaux horaires"}
+            {editingHoursId ? "Modifier les horaires" : "Nouveaux horaires"}
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -336,18 +357,17 @@ const StoresTab = () => {
             formId="openHours"
             onSubmit={handleSaveHours}
             stores={stores.data || []}
-            defaultValues={editingHours ? emptyStringToNull(editingHours) : undefined}
+            defaultValues={hoursFormDefaults ?? undefined}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseHoursDialog}>Annuler</Button>
           <Button type="submit" form="openHours" variant="contained">
-            {editingHours ? "Mettre à jour" : "Créer"}
+            {editingHoursId ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
-
 export default StoresTab;

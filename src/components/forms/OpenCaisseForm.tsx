@@ -8,47 +8,46 @@ import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
 import { idSchema } from "../../interfaces/ZodTypes";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
-import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
-interface OpenCaisseFormProps extends BaseFormProps<Schema> {
+interface OpenCaisseFormProps extends BaseFormProps<OpenCaisseFormValues,Schema> {
   /** Preloaded stores (e.g. from POS) so selects have options before async fetch. */
   stores?: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
-  defaultStoreId?: number;
-  defaultCashRegisterId?: number;
+  // defaultStoreId?: number;
+  // defaultCashRegisterId?: number;
   lockStoreAndRegister?: boolean;
 }
 
 const schema = z.object({
   store_id: idSchema("store requis"),
   cash_register_id: idSchema("caisse requis"),
-  opening_amount: z.coerce.number().positive(),
+  opening_amount: z.coerce.number().positive("solde requis"),
   notes: z.string().transform((val) => (val == "" ? null : val)),
 });
 
 export type Schema = z.infer<typeof schema>;
+export type OpenCaisseFormValues = z.input<typeof schema>;
 
 export const OpenCaisseForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores: storesProp,
-  defaultStoreId,
-  defaultCashRegisterId,
+  // defaultStoreId,//TODO use defualt
+  // defaultCashRegisterId,//TODO use defualt
   lockStoreAndRegister = false,
 }: OpenCaisseFormProps) => {
   const storesQuery = useQuery({
     queryKey: ["stores", { active: true }],
     queryFn: () =>
-      fetchStores({ active: true }).then((response) => response.data.stores),
+      fetchStores({ active: true }).then((response) => response.data.data),
     enabled: !storesProp,
   });
 
   const storeOptions = storesProp ?? storesQuery.data ?? [];
 
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const { prompt, PromptDialog } = usePrompt();
   const form = useForm({
     resolver: zodResolver(schema),
@@ -57,9 +56,13 @@ export const OpenCaisseForm = ({
       cash_register_id: "",
       opening_amount: "",
       notes: "",
-      ...data,
+      ...defaultValues ?? {},
     },
   });
+
+  //TODO ????? y'avait une error de chargement quand les store sont pas chargé mais qu'on donne des values
+  const defaultStoreId = defaultValues?.store_id
+  const defaultCashRegisterId = defaultValues?.cash_register_id
 
   const store = form.watch("store_id") as number;
   const selectedStore = storeOptions.find((s) => s.id == store);
@@ -87,7 +90,7 @@ export const OpenCaisseForm = ({
   const cashRegisters = useQuery({
     queryKey: ["cashRegisters", { store_id: store }],
     queryFn: () =>
-      fetchCaisses(store).then((response) => response.data.cash_registers),
+      fetchCaisses(store).then((response) => response.data.data),
     enabled: !!store && registersFromStore.length === 0,
   });
 

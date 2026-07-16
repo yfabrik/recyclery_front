@@ -17,7 +17,7 @@ import type {
   CollectionPointModel,
 } from "../../interfaces/Models";
 import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { idSchema, nullString } from "../../interfaces/ZodTypes";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
@@ -29,24 +29,23 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-import { emptyStringToNull } from "../../services/zodTransform";
-const sourceTypeEnum = z.enum(["point", "apport", "house_clearance"]);
+const sourceTypeEnum = z.enum(ARRIVAL_SOURCE_TYPES.map(s=>s.value));
 
 const schema = (categories: CategoryModel[]) =>
   z
     .object({
       category_id: idSchema("La catégorie est requise"),
       subcategory_id: z.union([
+        nullString(),
         idSchema(),
-        z.literal("").transform(() => null),
       ]),
       weight: z.coerce.number().positive("Le poids est requis"),
       arrival_date: z.coerce.date("La date est requise"),
       arrival_time: z.coerce.date("La date est requise"),
       source_type: sourceTypeEnum,
       collection_point_id: z.union([
+        nullString(),
         idSchema(),
-        z.literal("").transform(() => null),
       ]),
       source_details: z.string().transform((v) => (v == "" ? null : v)),
       notes: z.string().transform((v) => (v == "" ? null : v)),
@@ -85,13 +84,11 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
 export const ArrivalForm = ({
   formId,
   onSubmit,
-  defaultValues,
   categories,
   collectionPoints,
   loading = false,
   onReady,
 }: ArrivalFormProps) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm<ArrivalFormInput, unknown, ArrivalFormSchema>({
     resolver: zodResolver(schema(categories)),
     defaultValues: {
@@ -100,11 +97,10 @@ export const ArrivalForm = ({
       weight: "",
       arrival_date: new Date(),
       arrival_time: new Date(),
-      source_type: "point",
+      source_type: "point",//TODO pas supposé possible le undefined
       collection_point_id: "",
       source_details: "",
       notes: "",
-      ...data,
     },
   });
 

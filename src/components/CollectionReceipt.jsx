@@ -35,16 +35,15 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import axios from 'axios';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { createCollectionReceipt, getCollectionReceipt } from '../services/api/collectionSchedules';
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from '../utils/apiToastMessage';
-import { createCollectionReceipt, getCollectionReceipt } from '../services/api/collectionSchedules';
 
 /**
  * @deprecated

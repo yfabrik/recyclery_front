@@ -1,18 +1,18 @@
-import type { AxiosResponse } from "axios";
-import type { LabeledItemFilter } from "@recyclerie/api/schemas/items";
 import type {
-  ListLabeledItemsResponse,
-  DetailLabeledItemResponse,
   CreateLabeledItemResponse,
-  UpdateLabeledItemResponse,
   DeleteLabeledItemResponse,
-  TagLabeledItemSoldResponse,
+  DetailLabeledItemResponse,
   LabeledItemStatsResponse,
+  ListLabeledItemsResponse,
+  TagLabeledItemSoldResponse,
+  UpdateLabeledItemResponse,
 } from "@recyclerie/api/responses/items";
+import type { LabeledItemDataInput, LabeledItemFilter } from "@recyclerie/api/schemas/items";
+import type { AxiosResponse } from "axios";
+import type { LabeledItemModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { LabeledItemPayload } from "../../components/forms/itemCoreSchema";
 
-export type { LabeledItemFilter as LabeledItemFilters };
+// export type { LabeledItemFilter as LabeledItemFilters };
 
 const CATEGORY_SUBCATEGORIES_INCLUDE = "category.subcategories";
 
@@ -31,6 +31,8 @@ export const getLabeledItems = (
     params: withCategoryInclude(filters),
   });
 
+
+  //TODO revoir
 export const findItem = (
   id: string | number,
 ): Promise<AxiosResponse<DetailLabeledItemResponse>> =>
@@ -39,32 +41,32 @@ export const findItem = (
   });
 
 export const updateLabeledItem = (
-  id: number,
-  data: LabeledItemPayload,
+  id: LabeledItemModel["id"],
+  data: LabeledItemDataInput,
 ): Promise<AxiosResponse<UpdateLabeledItemResponse>> =>
   axiosInstance.put<UpdateLabeledItemResponse>(`/api/labeled-items/${id}`, data, {
     params: { include: CATEGORY_SUBCATEGORIES_INCLUDE },
   });
 
 export const createLabeledItem = (
-  data: LabeledItemPayload,
+  data: LabeledItemDataInput,
 ): Promise<AxiosResponse<CreateLabeledItemResponse>> =>
   axiosInstance.post<CreateLabeledItemResponse>("/api/labeled-items", data, {
     params: { include: CATEGORY_SUBCATEGORIES_INCLUDE },
   });
 
 export const deleteLabeledItem = (
-  id: number,
+  id: LabeledItemModel["id"],
 ): Promise<AxiosResponse<DeleteLabeledItemResponse>> =>
   axiosInstance.delete<DeleteLabeledItemResponse>(`/api/labeled-items/${id}`);
 
 export const sellItem = (
-  id: number,
+  id: LabeledItemModel["id"],
 ): Promise<AxiosResponse<TagLabeledItemSoldResponse>> =>
   axiosInstance.post<TagLabeledItemSoldResponse>(`/api/labeled-items/${id}/sell`);
 
 export const getItemFromBarcode = (
-  barcode: string,
+  barcode: LabeledItemModel["barcode"]|LabeledItemModel["id"],
 ): Promise<AxiosResponse<DetailLabeledItemResponse>> =>
   axiosInstance.get<DetailLabeledItemResponse>(
     `/api/labeled-items/barcode/${barcode}`,

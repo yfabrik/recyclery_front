@@ -12,6 +12,7 @@ import type {
   DashboardStoreHistoryResponse,
 } from "@recyclerie/api/responses/dashboard";
 import axiosInstance from "./axios";
+import type { StoreModel } from "../../interfaces/Models";
 
 export type Stats = DashboardStatsDto;
 export type Activity = DashboardActivityDto;
@@ -36,7 +37,7 @@ export const getStoreStats = (): Promise<
   axiosInstance.get<DashboardStoreStatsResponse>("/api/dashboard/stores-stats");
 
 export const getStoreHistoryStats = (
-  id: number,
+  id: StoreModel["id"],
 ): Promise<AxiosResponse<DashboardStoreHistoryResponse>> =>
   axiosInstance.get<DashboardStoreHistoryResponse>(
     `/api/dashboard/store-history/${id}`,

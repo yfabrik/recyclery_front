@@ -6,7 +6,7 @@ import {
   getTransactions,
   type transactionsFilters,
 } from "../../services/api/transactions";
-import type { Filters } from "../forms/SaleHistoryFilter";
+import type { Filters } from "../forms/filters/SaleHistoryFilter";
 import { ExportCsvButton, type ExportScope } from "../ExportCsvButton";
 import { downloadCsv, rowsToCsv, type CsvColumn } from "../../utils/csv";
 import { fetchAllPages } from "../../utils/fetchAllPages";

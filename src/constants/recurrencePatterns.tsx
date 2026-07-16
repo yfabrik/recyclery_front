@@ -70,7 +70,7 @@ export const getRecurrencePatternLabel = (
   pattern: RecurrencePatternValue | string | null | undefined,
 ) => {
   if (!pattern) return "Aucune";
-  return getRecurrencePattern(pattern)?.label ?? pattern;
+  return getRecurrencePattern(pattern)?.label ?? pattern;//FIXME
 };
 
 export const getRecurrencePatternColor = (

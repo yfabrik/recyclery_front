@@ -24,19 +24,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { TaskScheduleDataInput } from "@recyclerie/api/schemas/taskSchedule";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../../utils/apiToastMessage";
-import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   getRecurrencePatternLabel,
 } from "../../../constants/recurrencePatterns";
-import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { getTaskPriority, TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
+import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   createPlanning,
   deletePlanning,
@@ -44,13 +41,18 @@ import {
   updatePlanning,
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
+import { formatTime } from "../../../services/dateService";
+import {
+  getApiErrorMessage,
+  getApiSuccessMessage,
+} from "../../../utils/apiToastMessage";
 import {
   CUSTOM_TASK_FILTER_DEFAULTS,
   CustomTaskFiltersForm,
   type CustomTaskFilters,
-} from "../../forms/CustomTaskFiltersForm";
+} from "../../forms/filters/CustomTaskFiltersForm";
+import { PlaningForm, type Schema, type SchemaInputValues } from "../../forms/planningForm";
 import { Loading } from "../../Loading";
-import { PlaningForm, type Schema } from "../../forms/planningForm";
 
 const CUSTOM_SCHEDULES_KEY = ["custom-schedules"] as const;
 
@@ -60,9 +62,21 @@ const CustomTaskScheduleManagement = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleModel | null>(
     null,
   );
+  const [formDefaults, setFormDefaults] = useState<Partial<SchemaInputValues> | null>(null);
   const [filters, setFilters] = useState<CustomTaskFilters>(
     CUSTOM_TASK_FILTER_DEFAULTS,
   );
+
+  const scheduleToFormValues = (schedule: ScheduleModel): Partial<SchemaInputValues> => ({
+    name: schedule.name,
+    category: schedule.category,
+    scheduled_date: new Date(schedule.scheduled_date),
+    start_time: new Date(schedule.start_time),
+    end_time: new Date(schedule.end_time),
+    ...(schedule.priority ? { priority: schedule.priority } : {}),
+    ...(schedule.store_id ? { store_id: schedule.store_id } : {}),
+    ...(schedule.notes ? { notes: schedule.notes } : {}),
+  });
 
   const stores = useQuery({
     queryKey: ["stores", { active: true }],
@@ -80,8 +94,24 @@ const CustomTaskScheduleManagement = () => {
     "Erreur lors du chargement des tâches personnalisées",
   );
 
+  const schedulePayloadFromForm = (data: Schema): TaskScheduleDataInput => {
+    return {
+      name: data.name,
+      scheduled_date: data.scheduled_date,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      category: "custom",
+      notes: data.notes || null,
+      store_id: data.store_id,
+      is_recurring: !!data.recurrence_pattern,
+      recurrence_pattern: data.recurrence_pattern || null,
+    };
+    return {
+      ...data
+    }
+  };
   const addSchedule = useMutation({
-    mutationFn: (data: Partial<ScheduleModel>) => createPlanning(data),
+    mutationFn: (data: Schema) => createPlanning(schedulePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Tâche personnalisée créée avec succès"),
@@ -94,8 +124,8 @@ const CustomTaskScheduleManagement = () => {
   });
 
   const updateSchedule = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ScheduleModel> }) =>
-      updatePlanning(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
+      updatePlanning(id, schedulePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(
@@ -132,6 +162,7 @@ const CustomTaskScheduleManagement = () => {
 
   const handleOpenDialog = (schedule: ScheduleModel | null = null) => {
     setEditingSchedule(schedule);
+    setFormDefaults(schedule ? scheduleToFormValues(schedule) : null);
     setOpenDialog(true);
   };
 
@@ -141,21 +172,14 @@ const CustomTaskScheduleManagement = () => {
   };
 
   const handleSave = (data: Schema) => {
-    const result: Partial<ScheduleModel> = {
-      ...data,
-      category: "custom",
-      is_recurring: !!data.recurrence_pattern,
-      recurrence_pattern: data.recurrence_pattern ?? undefined,
-    };
-
     if (editingSchedule?.id) {
-      updateSchedule.mutate({ id: editingSchedule.id, data: result });
+      updateSchedule.mutate({ id: editingSchedule.id, data });
     } else {
-      addSchedule.mutate(result);
+      addSchedule.mutate(data);
     }
   };
 
-  const handleDelete = (scheduleId: number) => {
+  const handleDelete = (scheduleId: ScheduleModel["id"]) => {
     if (
       !window.confirm(
         "Êtes-vous sûr de vouloir supprimer cette tâche personnalisée ?",
@@ -166,12 +190,9 @@ const CustomTaskScheduleManagement = () => {
     deleteSchedule.mutate(scheduleId);
   };
 
-  const getPriorityInfo = (priority: string | null) => {
+  const getPriorityInfo = (priority: string | null | undefined) => {
     return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
   };
-
-  const getRecurrenceLabel = (pattern: string | null) =>
-    getRecurrencePatternLabel(pattern);
 
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
     if (schedule.day_of_week) {
@@ -260,143 +281,18 @@ const CustomTaskScheduleManagement = () => {
 
       <Loading isLoading={schedulesQuery.isLoading}>
         <Grid container spacing={3}>
-          {filteredSchedules.map((schedule) => {
-            const priorityInfo = getPriorityInfo(schedule.priority);
-            const storeName = getStoreName(schedule.store_id);
-            const weeklyDayLabel =
-              schedule.recurrence_pattern === "weekly"
-                ? getWeeklyDayLabel(schedule)
-                : null;
+          {filteredSchedules.map((schedule) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={schedule.id}>
+              <ScheduleCard
+                schedule={schedule}
+                disabled={deleteSchedule.isPending}
 
-            return (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={schedule.id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
-                    >
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          fontWeight="bold"
-                          gutterBottom
-                        >
-                          {schedule.name}
-                        </Typography>
-                        {schedule.notes && (
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            sx={{ mb: 1 }}
-                          >
-                            {schedule.notes}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(schedule)}
-                          color="primary"
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(schedule.id)}
-                          color="error"
-                          disabled={deleteSchedule.isPending}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    </Box>
-
-                    <Stack spacing={1}>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip label="Personnalisée" color="info" size="small" />
-                        <Chip
-                          label={priorityInfo.label}
-                          color={
-                            priorityInfo.color as
-                              | "success"
-                              | "warning"
-                              | "error"
-                          }
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Timer fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {new Date(schedule.start_time).toLocaleString(
-                            "fr-FR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            },
-                          )}{" "}
-                          -{" "}
-                          {new Date(schedule.end_time).toLocaleString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Typography>
-                      </Box>
-
-                      {storeName && (
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Store fontSize="small" color="action" />
-                          <Typography variant="body2" noWrap>
-                            {storeName}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {weeklyDayLabel && (
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <CalendarToday fontSize="small" color="action" />
-                          <Typography
-                            variant="body2"
-                            sx={{ textTransform: "capitalize" }}
-                          >
-                            {weeklyDayLabel}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {schedule.recurrence_pattern && (
-                        <Chip
-                          label={getRecurrenceLabel(schedule.recurrence_pattern)}
-                          size="small"
-                          color="info"
-                          variant="outlined"
-                          icon={<Schedule />}
-                        />
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
+                storeName={getStoreName(schedule.store_id) ?? "-"}
+                weeklyDayLabel={getWeeklyDayLabel(schedule) ?? "-"}
+                handleDelete={handleDelete}
+                handleOpenDialog={handleOpenDialog} />
+            </Grid>
+          ))}
         </Grid>
 
         {!schedulesQuery.isLoading && filteredSchedules.length === 0 && (
@@ -428,21 +324,7 @@ const CustomTaskScheduleManagement = () => {
           <PlaningForm
             formId="customScheduleForm"
             stores={(stores.data ?? []) as StoreModel[]}
-            defaultValues={
-              editingSchedule
-                ? {
-                    name: editingSchedule.name,
-                    category: "custom" as const,
-                    scheduled_date: new Date(editingSchedule.scheduled_date),
-                    start_time: new Date(editingSchedule.start_time),
-                    end_time: new Date(editingSchedule.end_time),
-                    priority: editingSchedule.priority ?? "medium",
-                    store_id: editingSchedule.store_id ?? null,
-                    recurrence_pattern: editingSchedule.recurrence_pattern ?? "",
-                    notes: editingSchedule.notes ?? "",
-                  }
-                : { category: "custom" as const }
-            }
+            defaultValues={formDefaults ?? undefined}
             onSubmit={handleSave}
           />
         </DialogContent>
@@ -463,3 +345,139 @@ const CustomTaskScheduleManagement = () => {
 };
 
 export default CustomTaskScheduleManagement;
+
+interface ScheduleCardProps {
+  schedule: ScheduleModel
+  handleOpenDialog: (s: ScheduleModel) => void
+  handleDelete: (id: ScheduleModel["id"]) => void
+  storeName: string
+  weeklyDayLabel: string
+  // getPriorityInfo: (p: ScheduleModel["priority"]) => string
+  // getStoreName: (id: StoreModel["id"]) => StoreModel["name"] | null
+  // getWeeklyDayLabel: (s: ScheduleModel) => string
+  // getRecurrencePatternLabel: (s: ScheduleModel) => string
+  disabled: boolean
+}
+const ScheduleCard = ({ schedule, handleDelete, handleOpenDialog, disabled, storeName, weeklyDayLabel
+  // getPriorityInfo, getStoreName, getWeeklyDayLabel, getRecurrencePatternLabel
+}: ScheduleCardProps) => {
+
+  const priorityInfo = getTaskPriority(schedule.priority ?? "medium");
+
+
+  return (
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box
+          sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              fontWeight="bold"
+              gutterBottom
+            >
+              {schedule.name}
+            </Typography>
+            {schedule.notes && (
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ mb: 1 }}
+              >
+                {schedule.notes}
+              </Typography>
+            )}
+          </Box>
+          <Box>
+            <IconButton
+              size="small"
+              onClick={() => handleOpenDialog(schedule)}
+              color="primary"
+            >
+              <Edit />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(schedule.id)}
+              color="error"
+              disabled={disabled}
+            >
+              <Delete />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Stack spacing={1}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Chip label="Personnalisée" color="info" size="small" />
+            {priorityInfo &&
+              <Chip
+                label={priorityInfo.label}
+                color={
+                  priorityInfo.color
+                }
+                size="small"
+                variant="outlined"
+              />}
+          </Box>
+
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Timer fontSize="small" color="action" />
+            <Typography variant="body2">
+              {
+                `${formatTime(new Date(schedule.start_time))} - ${formatTime(new Date(schedule.end_time))}`
+              }
+            </Typography>
+          </Box>
+
+          {storeName && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Store fontSize="small" color="action" />
+              <Typography variant="body2" noWrap>
+                {storeName}
+              </Typography>
+            </Box>
+          )}
+
+          {weeklyDayLabel && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <CalendarToday fontSize="small" color="action" />
+              <Typography
+                variant="body2"
+                sx={{ textTransform: "capitalize" }}
+              >
+                {weeklyDayLabel}
+              </Typography>
+            </Box>
+          )}
+
+          {schedule.recurrence_pattern && (
+            <Chip
+              label={getRecurrencePatternLabel(schedule.recurrence_pattern)}
+              size="small"
+              color="info"
+              variant="outlined"
+              icon={<Schedule />}
+            />
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}

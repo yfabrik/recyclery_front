@@ -8,7 +8,6 @@ import {
   LABELED_ITEM_CONDITIONS,
 } from "../../constants/labeledItemConditions";
 import type { CategoryModel } from "../../interfaces/Models";
-import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
@@ -21,10 +20,11 @@ import {
   type LabeledItemSchema,
 } from "./itemCoreSchema";
 
+export type LabeledItemFormValues = z.input<ReturnType<typeof labeledItemSchema>>;
 
-type FormValues = z.input<ReturnType<typeof labeledItemSchema>>;
+type FormValues = LabeledItemFormValues;
 
-interface LabeledFormProps extends BaseFormProps<LabeledItemSchema> {
+interface LabeledFormProps extends BaseFormProps<FormValues,LabeledItemSchema> {
   categories: CategoryModel[];
 }
 
@@ -35,7 +35,6 @@ export const LabeledItemForm = ({
   categories,
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
 
   const form = useForm<FormValues, unknown, LabeledItemSchema>({
     defaultValues: {
@@ -46,7 +45,7 @@ export const LabeledItemForm = ({
       condition_state: "excellent" as const,
       location: "",
       description: "",
-      ...data,
+      ...defaultValues ?? {},
     },
     resolver: zodResolver(labeledItemSchema(categories)),
   });

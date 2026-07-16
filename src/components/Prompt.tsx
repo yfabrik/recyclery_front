@@ -1,29 +1,29 @@
 import {
   Box,
   Button,
+  Card,
+  CardContent,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
-  Grid,
-  Typography,
-  IconButton,
-  TextField,
-  Stack,
-  Card,
-  CardContent,
   Divider,
-  Chip,
+  Grid,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  Add,
+  AttachMoney,
   Backspace,
   Check,
   Clear,
-  Add,
-  Remove,
-  AttachMoney,
   Euro,
+  Remove,
 } from "@mui/icons-material";
 import { formatCurrency } from "../services/cartService";
 
