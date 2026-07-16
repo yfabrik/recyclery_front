@@ -320,6 +320,8 @@ interface PromoCardProps {
 }
 const PromoCard = ({ promo, handleOpenDialog, categories, stores }: PromoCardProps) => {
     //TODO revoir categories et stores
+    const isDisabledPromo = !promo.isActive;
+
     return (
         <Card
             sx={{
@@ -328,6 +330,9 @@ const PromoCard = ({ promo, handleOpenDialog, categories, stores }: PromoCardPro
                 flexDirection: "column",
                 borderRadius: 3,
                 boxShadow: 3,
+                opacity: isDisabledPromo ? 0.6 : 1,
+                filter: isDisabledPromo ? "grayscale(0.7)" : "none",
+                transition: "opacity 0.2s ease, filter 0.2s ease",
             }}
         >
             <CardContent
@@ -399,8 +404,8 @@ const PromoCard = ({ promo, handleOpenDialog, categories, stores }: PromoCardPro
                         px: 1.5,
                         py: 0.5,
                         borderRadius: 999,
-                        bgcolor: "success.light",
-                        color: "success.dark",
+                        bgcolor: isDisabledPromo ? "grey.300" : "success.light",
+                        color: isDisabledPromo ? "grey.700" : "success.dark",
                         width: "fit-content",
                         columnGap: 0.5,
                     }}
