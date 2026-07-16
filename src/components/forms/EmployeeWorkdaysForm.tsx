@@ -26,12 +26,12 @@ const workdaySchema = z.object({
   start_time: z
     .date()
     .transform((val) =>
-      val.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" }),
+      formatTime(val)
     ),
   end_time: z
     .date()
     .transform((val) =>
-      val.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" }),
+      formatTime(val)
     ),
   is_working: z.boolean(),
   time_slot: z.enum(WORKDAY_TIME_SLOT_VALUES),

@@ -1,6 +1,7 @@
 import { AccountBalance, Add, Delete, Edit, Email, LocationOn, Person, Phone, Schedule, Store } from "@mui/icons-material"
 import { Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, IconButton, List, ListItem, ListItemAvatar, ListItemText, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
 import type { ScheduleModel, StoreModel } from "../interfaces/Models"
+import { formatTime } from "../services/dateService"
 
 
 interface CardStoreProps {
@@ -200,19 +201,9 @@ export const CardStore = ({
                                                 </TableCell>
                                                 <TableCell>
                                                     <Typography variant="body2">
-                                                        {`${new Date(hour.start_time).toLocaleString(
-                                                            "fr-FR",
-                                                            {
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            },
-                                                        )} - ${new Date(hour.end_time).toLocaleString(
-                                                            "fr-FR",
-                                                            {
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            },
-                                                        )}`}
+                                                        {
+                                                            `${formatTime(new Date(hour.start_time))} - ${formatTime(new Date(hour.end_time))}`
+                                                        }
                                                     </Typography>
                                                     {/* {hour.notes && (
                                                         <Typography

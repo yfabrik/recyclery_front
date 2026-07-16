@@ -38,6 +38,7 @@ import {
 } from "../../../utils/apiToastMessage";
 import { CollecteForm, type CollecteFormValues, type Schema } from "../../forms/CollecteForm";
 import { Loading } from "../../Loading";
+import { formatTime } from "../../../services/dateService";
 
 function scheduleToFormValues(collecte: ScheduleModel): Partial<CollecteFormValues> {
   return {
@@ -234,13 +235,9 @@ export const CollectTab = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {`${new Date(item.start_time).toLocaleString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })} - ${new Date(item.end_time).toLocaleString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`}
+                        {
+                        `${formatTime(new Date(item.start_time))} - ${formatTime(new Date(item.end_time))}`
+                        }
                       </TableCell>
                       <TableCell>
                         {item.collection_point_id && collectionPoints?.data?.find(point => point.id === item.collection_point_id)?.name}

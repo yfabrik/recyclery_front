@@ -54,6 +54,7 @@ import {
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
 import { TaskForm, type TaskFormSchema } from "../../forms/TaskForm";
+import { formatTime } from "../../../services/dateService";
 
 /**
  * @deprecated
@@ -480,18 +481,14 @@ const TaskManagement = () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Timer fontSize="small" color="action" />
                       <Typography variant="body2">
-                        {task.start_time
-                          ? new Date(task.start_time).toLocaleString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "—"}{" "}
+                        {
+                          task.start_time
+                            ?
+                            formatTime(new Date(task.start_time))
+                            : "—"}{" "}
                         -{" "}
                         {task.end_time
-                          ? new Date(task.end_time).toLocaleString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
+                          ? formatTime(new Date(task.end_time))
                           : "—"}
                       </Typography>
                     </Box>
