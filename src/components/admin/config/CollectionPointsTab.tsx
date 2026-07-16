@@ -76,8 +76,9 @@ function presenceToFormValues(
   | (Partial<PresencePointFormValues>)
   | null {
   if (!presence && !pointId) return null;
-  const dayOfWeek = presence?.scheduled_date ? new Date(presence.scheduled_date).getDay() : undefined
-  // const dayOfWeek = presence?.day_of_week ?? (scheduledDate != null ? new Date(scheduledDate).getDay() : undefined);
+  const dayOfWeek = presence?.scheduled_date
+    ? new Date(presence.scheduled_date).getDay()
+    : undefined;
   return {
     collection_point_id:
       presence?.collection_point_id != null
@@ -85,7 +86,9 @@ function presenceToFormValues(
         : (pointId ?? undefined),
     ...(typeof presence?.day_of_week === "number"
       ? { day_of_week: presence.day_of_week }
-      : dayOfWeek ? { day_of_week: dayOfWeek } : {}),
+      : dayOfWeek != undefined
+        ? { day_of_week: dayOfWeek }
+        : {}),
     is_present: presence?.is_recurring ?? true,
     start_time: presence?.start_time
       ? new Date(presence.start_time)
