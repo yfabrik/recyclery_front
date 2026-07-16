@@ -14,7 +14,6 @@ import type {
 } from "../interfaces/Models";
 import {
   createSell,
-  type CreateTransactionBody,
 } from "../services/api/transactions";
 import {
   sumPromoCategorie,
@@ -27,6 +26,7 @@ import { buildTransactionBody } from "../utils/transactionBody";
 import type { ReceiptSale } from "../utils/transactionReceipt";
 import { useCheckoutFormCore } from "./useCheckoutFormCore";
 import type { ManualItemSchema } from "../components/forms/itemCoreSchema";
+import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
 
 const defaultFormValues: CartFormValues = {
   cart: [],
@@ -43,7 +43,7 @@ interface UsePointOfSaleOptions {
     sale: ReceiptSale;
     items: CartItem[];
     cashSession: CashSession;
-    user: AuthUserModel ;
+    user: AuthUserModel;
     global_promotion: CartSchema["global_promotion"];
   }) => void;
   onManualItemAdded?: () => void;
@@ -194,7 +194,7 @@ export const usePointOfSale = ({
     const promotion = !isLabeledItem(item)
       ? item.promotion
       : sumPromoCategorie(selectedCategory) +
-        sumPromoCategorie(selectedSubcategory);
+      sumPromoCategorie(selectedSubcategory);
 
     return {
       barcode,
@@ -240,7 +240,7 @@ export const usePointOfSale = ({
   };
 
   const handleSell = useMutation({
-    mutationFn: (data: CreateTransactionBody) => createSell(data),
+    mutationFn: (data: SaleTransactionBaseInput) => createSell(data),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Vente enregistrée avec succès"),
@@ -276,13 +276,15 @@ export const usePointOfSale = ({
     },
   });
 
+  const cartPayloadToApi = (data: CartSchema): SaleTransactionBaseInput => {
+    return buildTransactionBody(data, activeSession!.id, {
+      normalizePostalCodeToNull: false,
+      includeTotalPrice: true,
+    })
+  }
   const handleValidateCart = (data: CartSchema) => {
     if (activeSession) {
-      const transactionData = buildTransactionBody(data, activeSession.id, {
-        normalizePostalCodeToNull: false,
-        includeTotalPrice: true,
-      }) as CreateTransactionBody;
-      handleSell.mutate(transactionData);
+      handleSell.mutate(cartPayloadToApi(data));
     }
   };
 

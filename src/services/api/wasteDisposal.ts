@@ -15,7 +15,9 @@ import axiosInstance from "./axios";
 export const getWastes = (
   filters?: ListWasteQueryInput,
 ): Promise<AxiosResponse<ListWasteResponse>> =>
-  axiosInstance.get<ListWasteResponse>("/api/waste-disposals", { params: filters });
+  axiosInstance.get<ListWasteResponse>("/api/waste-disposals", { params: {
+    filters
+  } });
 
 export const getWasteStats = (): Promise<AxiosResponse<WasteStatsResponse>> =>
   axiosInstance.get<WasteStatsResponse>("/api/waste-disposals/stats/summary");

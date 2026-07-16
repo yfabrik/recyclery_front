@@ -53,7 +53,7 @@ import {
   EMPLOYEE_FILTER_DEFAULTS,
   EmployeeFilterForm,
   type EmployeeFilters,
-} from "../../forms/EmployeeFilterForm";
+} from "../../forms/filters/EmployeeFilterForm";
 import { EmployeeForm, type EmployeeFormValues, type Schema } from "../../forms/EmployeeForm";
 import { EmployeeSkillForm, type Schema as EmployeeSkillSchema } from "../../forms/EmployeeSkillForm";
 import { Loading } from "../../Loading";
@@ -121,7 +121,7 @@ const EmployeeManagement = () => {
   })
   useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
-  const employeePayloadFromForm = (data: Schema): EmployeeDataInput => ({...data});
+  const employeePayloadFromForm = (data: Schema): EmployeeDataInput => ({ ...data });
   const editEmployee = useMutation({
     mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: Schema }) => updateEmployee(id, employeePayloadFromForm(data)),
     onSuccess: (data) => {
@@ -241,16 +241,19 @@ const EmployeeManagement = () => {
       const matchesStatus =
         !filters.status ||
         (filters.status === "active" && employee.isActive !== false) ||
-        (filters.status === "inactive" && employee.isActive === false);
-
-      return matchesSearch && 
-      // matchesRole &&
-       matchesStatus;
+        (filters.status === "inactive" && employee.isActive === false)
+      const matchesStore =
+        !filters.store_id ||
+        (filters.store_id !== "" && employee.stores?.some(store => store.id === filters.store_id));
+      return matchesSearch &&
+        // matchesRole &&
+        matchesStatus &&
+        matchesStore;
     }) || [];
 
- const updateEmployeeSkillsPayloadFromForm = (data: EmployeeSkillSchema):EmployeeSkillsInput => ({ ...data });
+  const updateEmployeeSkillsPayloadFromForm = (data: EmployeeSkillSchema): EmployeeSkillsInput => ({ ...data });
   const updateEmployeeSkillsMutation = useMutation({
-    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: EmployeeSkillSchema } ) => updateEmployeeSkills(id, updateEmployeeSkillsPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: EmployeeSkillSchema }) => updateEmployeeSkills(id, updateEmployeeSkillsPayloadFromForm(data)),
     onSuccess: (data) => {
       handleCloseSkills()
       toast.success(getApiSuccessMessage(data, "Compétences mises à jour avec succès"));
@@ -299,155 +302,20 @@ const EmployeeManagement = () => {
             onChange={(values) =>
               setFilters((prev) => ({ ...prev, ...values }))
             }
-            // roleOptions={roleOptions}
+            stores={stores.data || []}
+          // roleOptions={roleOptions}
           />
         </Paper>
         {/* Liste des employés */}
         <Grid container spacing={3}>
           {filteredEmployees.map((employee) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
-              <Card
-                sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
-                      <Person />
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" component="div" fontWeight="bold">
-                        {employee.nom} {employee.prenom}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {employee.email}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Tooltip title="Modifier">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(employee)}
-                          color="primary"
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(employee.id)}
-                          color="error"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-
-                  <Stack spacing={1}>
-                    {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Work fontSize="small" color="action" />
-                    <Chip
-                      label={
-                        roleOptions.find((r) => r.value === employee.role)
-                          ?.label || employee.role
-                      }
-                      color={getRoleColor(employee.role)}
-                      size="small"
-                    />
-                  </Box> */}
-
-                    {employee.phone && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Phone fontSize="small" color="action" />
-                        <Typography variant="body2">{employee.phone}</Typography>
-                      </Box>
-                    )}
-
-                    {employee.workTime && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <AccessTime fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {employee.workTime}h/semaine
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {employee.skills && employee.skills.length > 0 && (
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="textSecondary"
-                          gutterBottom
-                        >
-                          Compétences:
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
-                            mt: 0.5,
-                          }}
-                        >
-                          {employee.skills.slice(0, 3).map((skill) => (
-                            <Chip
-                              key={skill.id}
-                              label={skill.name}
-                              size="small"
-                              variant="outlined"
-                            />
-                          ))}
-                          {employee.skills.length > 3 && (
-                            <Chip
-                              label={`+${employee.skills.length - 3}`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-
-                  </Stack>
-                </CardContent>
-                {/* Boutons d'action supplémentaires */}
-                <CardActions>
-                  <Tooltip title="Définir les compétences des employés">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Quiz />}
-                      onClick={() => handleOpenSkills(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Skills
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Gérer les affectations aux magasins">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Store />}
-                      onClick={() => handleOpenStoreAssignment(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Magasins
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Configurer les jours de travail">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Schedule />}
-                      onClick={() => handleOpenWorkdays(employee)}
-                      sx={{ flex: 1 }}
-                    >
-                      Horaires
-                    </Button>
-                  </Tooltip>
-                </CardActions>
-              </Card>
+              <EmployeeCard employee={employee}
+                handleOpenDialog={handleOpenDialog}
+                handleDelete={handleDelete}
+                handleOpenSkills={handleOpenSkills}
+                handleOpenStoreAssignment={handleOpenStoreAssignment}
+                handleOpenWorkdays={handleOpenWorkdays} />
             </Grid>
           ))}
         </Grid>
@@ -458,7 +326,7 @@ const EmployeeManagement = () => {
             </Typography>
             <Typography variant="body2" color="textSecondary">
               {filters.search ||
-              //  filters.role ||
+                //  filters.role ||
                 filters.status
                 ? "Essayez de modifier vos critères de recherche"
                 : "Commencez par ajouter un employé"}
@@ -567,3 +435,146 @@ const EmployeeManagement = () => {
 };
 
 export default EmployeeManagement;
+
+interface EmployeeCardProps {
+  employee: EmployeeModel;
+  handleOpenDialog: (employee: EmployeeModel) => void;
+  handleDelete: (employeeId: EmployeeModel["id"]) => void;
+  handleOpenSkills: (employee: EmployeeModel) => void;
+  handleOpenStoreAssignment: (employee: EmployeeModel) => void;
+  handleOpenWorkdays: (employee: EmployeeModel) => void;
+}
+const EmployeeCard = ({ employee, handleOpenDialog, handleDelete, handleOpenSkills, handleOpenStoreAssignment, handleOpenWorkdays }: EmployeeCardProps) => {
+  return (
+    <Card
+      sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
+            <Person />
+          </Avatar>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" component="div" fontWeight="bold">
+              {employee.nom} {employee.prenom}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {employee.email}
+            </Typography>
+          </Box>
+          <Box>
+            <Tooltip title="Modifier">
+              <IconButton
+                size="small"
+                onClick={() => handleOpenDialog(employee)}
+                color="primary"
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Supprimer">
+              <IconButton
+                size="small"
+                onClick={() => handleDelete(employee.id)}
+                color="error"
+              >
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        <Stack spacing={1}>
+          {employee.phone && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Phone fontSize="small" color="action" />
+              <Typography variant="body2">{employee.phone}</Typography>
+            </Box>
+          )}
+
+          {employee.workTime && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AccessTime fontSize="small" color="action" />
+              <Typography variant="body2">
+                {employee.workTime}h/semaine
+              </Typography>
+            </Box>
+          )}
+
+          {employee.skills && employee.skills.length > 0 && (
+            <Box>
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                gutterBottom
+              >
+                Compétences:
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.5,
+                  mt: 0.5,
+                }}
+              >
+                {employee.skills.slice(0, 3).map((skill) => (
+                  <Chip
+                    key={skill.id}
+                    label={skill.name}
+                    size="small"
+                    variant="outlined"
+                  />
+                ))}
+                {employee.skills.length > 3 && (
+                  <Chip
+                    label={`+${employee.skills.length - 3}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+
+        </Stack>
+      </CardContent>
+      {/* Boutons d'action supplémentaires */}
+      <CardActions>
+        <Tooltip title="Définir les compétences des employés">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Quiz />}
+            onClick={() => handleOpenSkills(employee)}
+            sx={{ flex: 1 }}
+          >
+            Skills
+          </Button>
+        </Tooltip>
+        <Tooltip title="Gérer les affectations aux magasins">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Store />}
+            onClick={() => handleOpenStoreAssignment(employee)}
+            sx={{ flex: 1 }}
+          >
+            Magasins
+          </Button>
+        </Tooltip>
+        <Tooltip title="Configurer les jours de travail">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Schedule />}
+            onClick={() => handleOpenWorkdays(employee)}
+            sx={{ flex: 1 }}
+          >
+            Horaires
+          </Button>
+        </Tooltip>
+      </CardActions>
+    </Card>
+  )
+}

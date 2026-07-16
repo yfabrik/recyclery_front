@@ -8,13 +8,13 @@ import z from "zod";
 import {
     PAYMENT_METHOD_FILTER_VALUES,
     TRANSACTION_TYPE_FILTER_VALUES,
-} from "../../interfaces/transactionConstants";
+} from "../../../interfaces/transactionConstants";
 import {
     FormDate,
     FormInput,
     FormPaymentMethodSelect,
     FormTransactionTypeSelect,
-} from "./FormBase";
+} from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({

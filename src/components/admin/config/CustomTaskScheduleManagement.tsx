@@ -31,7 +31,7 @@ import { toast } from "react-toastify";
 import {
   getRecurrencePatternLabel,
 } from "../../../constants/recurrencePatterns";
-import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { getTaskPriority, TASK_PRIORITIES } from "../../../constants/taskPriorities";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
@@ -41,6 +41,7 @@ import {
   updatePlanning,
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
+import { formatTime } from "../../../services/dateService";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -49,7 +50,7 @@ import {
   CUSTOM_TASK_FILTER_DEFAULTS,
   CustomTaskFiltersForm,
   type CustomTaskFilters,
-} from "../../forms/CustomTaskFiltersForm";
+} from "../../forms/filters/CustomTaskFiltersForm";
 import { PlaningForm, type Schema, type SchemaInputValues } from "../../forms/planningForm";
 import { Loading } from "../../Loading";
 
@@ -193,9 +194,6 @@ const CustomTaskScheduleManagement = () => {
     return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
   };
 
-  const getRecurrenceLabel = (pattern: string | null) =>
-    getRecurrencePatternLabel(pattern);//FIXME
-
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
     if (schedule.day_of_week) {
       return schedule.day_of_week;
@@ -283,143 +281,18 @@ const CustomTaskScheduleManagement = () => {
 
       <Loading isLoading={schedulesQuery.isLoading}>
         <Grid container spacing={3}>
-          {filteredSchedules.map((schedule) => {
-            const priorityInfo = getPriorityInfo(schedule.priority);
-            const storeName = getStoreName(schedule.store_id);
-            const weeklyDayLabel =
-              schedule.recurrence_pattern === "weekly"
-                ? getWeeklyDayLabel(schedule)
-                : null;
+          {filteredSchedules.map((schedule) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={schedule.id}>
+              <ScheduleCard
+                schedule={schedule}
+                disabled={deleteSchedule.isPending}
 
-            return (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={schedule.id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
-                    >
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          fontWeight="bold"
-                          gutterBottom
-                        >
-                          {schedule.name}
-                        </Typography>
-                        {schedule.notes && (
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            sx={{ mb: 1 }}
-                          >
-                            {schedule.notes}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(schedule)}
-                          color="primary"
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(schedule.id)}
-                          color="error"
-                          disabled={deleteSchedule.isPending}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    </Box>
-
-                    <Stack spacing={1}>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip label="Personnalisée" color="info" size="small" />
-                        <Chip
-                          label={priorityInfo.label}
-                          color={
-                            priorityInfo.color as
-                            | "success"
-                            | "warning"
-                            | "error"
-                          }
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Timer fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {new Date(schedule.start_time).toLocaleString(
-                            "fr-FR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            },
-                          )}{" "}
-                          -{" "}
-                          {new Date(schedule.end_time).toLocaleString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Typography>
-                      </Box>
-
-                      {storeName && (
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Store fontSize="small" color="action" />
-                          <Typography variant="body2" noWrap>
-                            {storeName}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {weeklyDayLabel && (
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <CalendarToday fontSize="small" color="action" />
-                          <Typography
-                            variant="body2"
-                            sx={{ textTransform: "capitalize" }}
-                          >
-                            {weeklyDayLabel}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {schedule.recurrence_pattern && (
-                        <Chip
-                          label={getRecurrenceLabel(schedule.recurrence_pattern)}
-                          size="small"
-                          color="info"
-                          variant="outlined"
-                          icon={<Schedule />}
-                        />
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
+                storeName={getStoreName(schedule.store_id) ?? "-"}
+                weeklyDayLabel={getWeeklyDayLabel(schedule) ?? "-"}
+                handleDelete={handleDelete}
+                handleOpenDialog={handleOpenDialog} />
+            </Grid>
+          ))}
         </Grid>
 
         {!schedulesQuery.isLoading && filteredSchedules.length === 0 && (
@@ -472,3 +345,139 @@ const CustomTaskScheduleManagement = () => {
 };
 
 export default CustomTaskScheduleManagement;
+
+interface ScheduleCardProps {
+  schedule: ScheduleModel
+  handleOpenDialog: (s: ScheduleModel) => void
+  handleDelete: (id: ScheduleModel["id"]) => void
+  storeName: string
+  weeklyDayLabel: string
+  // getPriorityInfo: (p: ScheduleModel["priority"]) => string
+  // getStoreName: (id: StoreModel["id"]) => StoreModel["name"] | null
+  // getWeeklyDayLabel: (s: ScheduleModel) => string
+  // getRecurrencePatternLabel: (s: ScheduleModel) => string
+  disabled: boolean
+}
+const ScheduleCard = ({ schedule, handleDelete, handleOpenDialog, disabled, storeName, weeklyDayLabel
+  // getPriorityInfo, getStoreName, getWeeklyDayLabel, getRecurrencePatternLabel
+}: ScheduleCardProps) => {
+
+  const priorityInfo = getTaskPriority(schedule.priority ?? "medium");
+
+
+  return (
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box
+          sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              fontWeight="bold"
+              gutterBottom
+            >
+              {schedule.name}
+            </Typography>
+            {schedule.notes && (
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ mb: 1 }}
+              >
+                {schedule.notes}
+              </Typography>
+            )}
+          </Box>
+          <Box>
+            <IconButton
+              size="small"
+              onClick={() => handleOpenDialog(schedule)}
+              color="primary"
+            >
+              <Edit />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(schedule.id)}
+              color="error"
+              disabled={disabled}
+            >
+              <Delete />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Stack spacing={1}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Chip label="Personnalisée" color="info" size="small" />
+            {priorityInfo &&
+              <Chip
+                label={priorityInfo.label}
+                color={
+                  priorityInfo.color
+                }
+                size="small"
+                variant="outlined"
+              />}
+          </Box>
+
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Timer fontSize="small" color="action" />
+            <Typography variant="body2">
+              {
+                `${formatTime(new Date(schedule.start_time))} - ${formatTime(new Date(schedule.end_time))}`
+              }
+            </Typography>
+          </Box>
+
+          {storeName && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Store fontSize="small" color="action" />
+              <Typography variant="body2" noWrap>
+                {storeName}
+              </Typography>
+            </Box>
+          )}
+
+          {weeklyDayLabel && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <CalendarToday fontSize="small" color="action" />
+              <Typography
+                variant="body2"
+                sx={{ textTransform: "capitalize" }}
+              >
+                {weeklyDayLabel}
+              </Typography>
+            </Box>
+          )}
+
+          {schedule.recurrence_pattern && (
+            <Chip
+              label={getRecurrencePatternLabel(schedule.recurrence_pattern)}
+              size="small"
+              color="info"
+              variant="outlined"
+              icon={<Schedule />}
+            />
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}

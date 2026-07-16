@@ -38,8 +38,8 @@ import {
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
 import { Loading } from "../components/Loading";
-import { WasteFilterForm, type Filters } from "../components/forms/WasteFilterForm";
-import { WasteForm, type Schema } from "../components/forms/WasteForm";
+import { WasteFilterForm, type Filters } from "../components/forms/filters/WasteFilterForm";
+import { WasteForm, type Schema, type WasteFormValues } from "../components/forms/WasteForm";
 import type { WasteModel } from "../interfaces/Models";
 import {
   getDisposalTypeColor,
@@ -53,12 +53,11 @@ import {
   getWastes,
   getWasteStats,
   updateWaste,
-  type WasteFilter,
-  type WastePayload,
 } from "../services/api/wasteDisposal";
 import { StatCard } from "../components/StatCard";
+import type { WasteBodyInput } from "@recyclerie/api/schemas/waste";
 
-function wasteToFormValues(disposal: WasteModel): Partial<Schema> {
+function wasteToFormValues(disposal: WasteModel): Partial<WasteFormValues> {
   return {
     disposal_date: new Date(disposal.disposal_date),
     disposal_type:
@@ -81,8 +80,8 @@ const WasteManagement = () => {
 
   // États pour les dialogues
   const [disposalDialog, setDisposalDialog] = useState(false);
-  const [editingDisposalId, setEditingDisposalId] = useState<number | null>(null);
-  const [formDefaults, setFormDefaults] = useState<Partial<Schema> | null>(null);
+  const [editingDisposalId, setEditingDisposalId] = useState<WasteModel["id"] | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Partial<WasteFormValues> | null>(null);
 
 
   // // États pour la pagination
@@ -123,8 +122,12 @@ const WasteManagement = () => {
   const disposals = useQuery({
     queryKey: ["disposals", { filters }],
     queryFn: () => {
-      const o: WasteFilter = Object.fromEntries(Object.entries(filters).filter(([, v]) => !!v));
-      return getWastes(o).then(response => response.data.data)
+      return getWastes({
+        ...(filters.category_id != "" ? { category_id: filters.category_id } : {}),
+        ...(filters.disposal_type != "" ? { disposal_type: filters.disposal_type } : {}),
+        date_from: filters.date_from,
+        date_to: filters.date_to
+      }).then(response => response.data.data)
     },
     placeholderData: keepPreviousData
   })
@@ -135,15 +138,20 @@ const WasteManagement = () => {
   })
 
 
+  const wastePayloadFromForm = (data: Schema): WasteBodyInput => {
+    return {
+      ...data,
+    }
+  }
   const addWaste = useMutation({
-    mutationFn: (data: WastePayload) => createWaste(data),
+    mutationFn: (data: Schema) => createWaste(wastePayloadFromForm(data)),
     onSuccess: (data) => {
       save(data)
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const editWaste = useMutation({
-    mutationFn: (data: { id: number, data: WastePayload }) => updateWaste(data.id, data.data),
+    mutationFn: (data: { id: WasteModel["id"], data: Schema }) => updateWaste(data.id, wastePayloadFromForm(data.data)),
     onSuccess: (data) => {
       save(data)
     },
@@ -164,7 +172,7 @@ const WasteManagement = () => {
 
   }
   const removeWaste = useMutation({
-    mutationFn: (id: number) => deleteWaste(id),
+    mutationFn: (id: WasteModel["id"]) => deleteWaste(id),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Sortie de déchets supprimée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["wasteStats"] })
@@ -186,18 +194,11 @@ const WasteManagement = () => {
   };
 
   const handleSaveDisposal = async (data: Schema) => {
-    const payload: WastePayload = {
-      ...data,
-      subcategory_id: data.subcategory_id === "" ? null : data.subcategory_id,
-      eco_organism_id: data.eco_organism_id === "" ? null : data.eco_organism_id,
-      transport_method: data.transport_method === "" ? null : data.transport_method,
-      transport_company: data.transport_company === "" ? null : data.transport_company,
-      notes: data.notes === "" ? null : data.notes,
-    };
+
     if (editingDisposalId) {
-      editWaste.mutate({ id: editingDisposalId, data: payload });
+      editWaste.mutate({ id: editingDisposalId, data });
     } else {
-      addWaste.mutate(payload);
+      addWaste.mutate(data);
     }
   };
 

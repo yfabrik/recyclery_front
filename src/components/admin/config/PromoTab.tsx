@@ -1,5 +1,6 @@
 import { Add, CalendarMonth, Cancel, Category, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
 import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
+import type { PromotionDataInput } from "@recyclerie/api/schemas/promotions"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
@@ -7,10 +8,9 @@ import type { PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { fetchStores } from "../../../services/api/store"
+import { getApiErrorMessage, getApiSuccessMessage } from "../../../utils/apiToastMessage"
 import { PromoForm, type PromoFormValues, type Schema } from "../../forms/PromoForm"
 import { Loading } from "../../Loading"
-import type { PromotionDataInput } from "@recyclerie/api/schemas/promotions"
-import { getApiErrorMessage, getApiSuccessMessage } from "../../../utils/apiToastMessage"
 
 type PromoEditModel = PromoModel & { subcategory_id?: number | null };
 
@@ -36,7 +36,7 @@ export const PromoTab = () => {
         queryKey: ["stores", { active: true }],
         queryFn: () => fetchStores({ active: true }).then(response => response.data.data),
     });
-    
+
     const categories = useQuery({
         queryFn: () =>
             fetchCategories({ only_category: true, include: ["category"], sell: true }).then(
@@ -164,7 +164,13 @@ export const PromoTab = () => {
                 <Grid container spacing={3}>
                     {promotions.data?.map((promo) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={promo.id}>
-                            <Card
+                            <PromoCard
+                                promo={promo}
+                                handleOpenDialog={handleOpenDialog}
+                                categories={getPromoCategories(promo)}
+                                stores={getPromoStores(promo)}
+                            />
+                            {/* <Card
                                 sx={{
                                     height: "100%",
                                     display: "flex",
@@ -264,7 +270,7 @@ export const PromoTab = () => {
                                         Modifier
                                     </Button>
                                 </CardActions>
-                            </Card>
+                            </Card> */}
                         </Grid>
                     ))}
                 </Grid>
@@ -304,4 +310,116 @@ export const PromoTab = () => {
 
             </Dialog>
         </Box>)
+}
+
+interface PromoCardProps {
+    promo: PromoModel;
+    handleOpenDialog: (promo: PromoModel) => void;
+    categories: { categorie: string, subcategorie: string | null };
+    stores: string;
+}
+const PromoCard = ({ promo, handleOpenDialog, categories, stores }: PromoCardProps) => {
+    //TODO revoir categories et stores
+    return (
+        <Card
+            sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 3,
+                boxShadow: 3,
+            }}
+        >
+            <CardContent
+                sx={{
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                }}
+            >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <Category fontSize="small" color="primary" />
+                    <Box sx={{ ml: 1 }}>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {categories.categorie}
+                        </Typography>
+                        {categories.subcategorie && (
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <SubdirectoryArrowRight
+                                    fontSize="inherit"
+                                    sx={{ mr: 0.5, opacity: 0.7 }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                    {categories.subcategorie}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <CalendarMonth
+                            fontSize="small"
+                            sx={{ mr: 1, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            début : {new Date(promo.startDate).toLocaleDateString()}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <CalendarMonth
+                            fontSize="small"
+                            sx={{ mr: 1, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            fin :{" "}
+                            {promo.endDate
+                                ? new Date(promo.endDate).toLocaleDateString()
+                                : "jamais"}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+                        <Storefront
+                            fontSize="small"
+                            sx={{ mr: 1, mt: 0.2, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            magasins : {stores}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box
+                    sx={{
+                        mt: 1.5,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 999,
+                        bgcolor: "success.light",
+                        color: "success.dark",
+                        width: "fit-content",
+                        columnGap: 0.5,
+                    }}
+                >
+                    <Percent fontSize="small" />
+                    <Typography variant="body2" fontWeight={600}>
+                        Réduction {promo.promotionValue}%
+                    </Typography>
+                </Box>
+            </CardContent>
+            <CardActions sx={{ mt: "auto", justifyContent: "flex-end", px: 2, pb: 2 }}>
+                <Button
+                    startIcon={<Edit />}
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleOpenDialog(promo)}
+                >
+                    Modifier
+                </Button>
+            </CardActions>
+        </Card>)
 }

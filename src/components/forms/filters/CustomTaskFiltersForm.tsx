@@ -8,11 +8,11 @@ import z from "zod";
 import {
   RECURRENCE_FILTER_VALUES,
   RECURRENCE_PATTERNS,
-} from "../../constants/recurrencePatterns";
-import { PRIORITY_FILTER_VALUES, TASK_PRIORITIES } from "../../constants/taskPriorities";
-import type { StoreModel } from "../../interfaces/Models";
-import { idSchema } from "../../interfaces/ZodTypes";
-import { FormInput, FormSelect } from "./FormBase";
+} from "../../../constants/recurrencePatterns";
+import { PRIORITY_FILTER_VALUES, TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import type { StoreModel } from "../../../interfaces/Models";
+import { idSchema } from "../../../interfaces/ZodTypes";
+import { FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 
 const filterSchema = z.object({

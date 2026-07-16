@@ -41,7 +41,7 @@ import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
 import type { Schema } from "../forms/RefundForm";
-import { SaleFiltersForm, type Filters } from "../forms/SaleFiltersForm";
+import { SaleFiltersForm, type Filters } from "../forms/filters/SaleFiltersForm";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
 import { useReceiptPrint } from "../ReceiptPrint";

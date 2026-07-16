@@ -12,6 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import type { MuiIconName } from "../SelectedIcon";
+import type { ChipProps } from "@mui/material";
 import type { Activity } from "../../services/api/dashboard";
 import { SelectedIcon } from "../SelectedIcon";
 
@@ -21,14 +23,17 @@ interface ActivityItemProps {
   activity: Activity
 }
 export const ActivityItem = ({ activity }: ActivityItemProps) => {
+  const iconName = activity.icon as MuiIconName;
+  const statusColor = activity.statusColor as NonNullable<ChipProps["color"]>;
+  const color = activity.color as NonNullable<ChipProps["color"]>;
 
   return (
     <ListItem sx={{ px: 0 }}>
       <ListItemAvatar>
         <Avatar
-          sx={{ bgcolor: `${activity.color}.main`, width: 40, height: 40 }}
+          sx={{ bgcolor: `${color}.main`, width: 40, height: 40 }}
         >
-          <SelectedIcon iconName={activity.icon} />
+          <SelectedIcon iconName={iconName} />
         </Avatar>
       </ListItemAvatar>
       <ListItemText
@@ -40,7 +45,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
             <Chip
               label={activity.status}
               size="small"
-              color={activity.statusColor}
+              color={statusColor}
               variant="outlined"
             />
           </Box>

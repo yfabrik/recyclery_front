@@ -101,7 +101,7 @@ export const EcoOrganismsTab = () => {
 
   const ecoOrganismPayloadFromForm = (data: Schema): EcoOrganismDataInput => ({...data});
   const editEcoOrganism = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Schema }) => updateEcoOrganism(id, ecoOrganismPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: EcoOrgModel["id"], data: Schema }) => updateEcoOrganism(id, ecoOrganismPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Éco-organisme mis à jour avec succès"));
       handleCloseEcoOrganismDialog();
