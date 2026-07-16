@@ -50,13 +50,18 @@ import { AutoPrintToggle } from "../components/AutoPrintToggle";
 import { useLabelPrint } from "../components/LabelPrint";
 import { Loading } from "../components/Loading";
 import { StatCard } from "../components/StatCard";
-import { LabelFiltersForm } from "../components/forms/LabelFiltersForm";
+import { LabelFiltersForm } from "../components/forms/filters/LabelFiltersForm";
 import {
   LabeledItemForm,
   type LabeledItemFormValues,
 } from "../components/forms/LabeledItemForm";
 import type { LabeledItemSchema } from "../components/forms/itemCoreSchema";
-import { filterSchema, parseFilters, type FilterInput } from "../components/forms/labelFiltersSchema";
+import {
+  EMPTY_FILTER_INPUT,
+  parseFilters,
+  toFilterInput,
+  type FilterInput,
+} from "../components/forms/filters/labelFiltersSchema";
 import {
   getLabeledItemConditionColor,
   getLabeledItemConditionLabel,
@@ -98,24 +103,22 @@ const Labels = () => {
   const [autoPrint, setAutoPrint] = useState(true);
 
 
-  const [filters, setFilters] = useState<FilterInput>({
-    status: "",
-    category_id: "",
-    search: "",
-  });
+  const [filters, setFilters] = useState<FilterInput>(EMPTY_FILTER_INPUT);
   const [page, setPage] = useState(1);
 
   const queryClient = useQueryClient();
   const items = useQuery({
     queryKey: ["items", { filters }, page],
     queryFn: () => {
-      const applied = filterSchema.parse(filters);
-      // const applied = parseFilters(filters);
-
+      const applied = parseFilters(filters);
       return getLabeledItems({
         ...(applied.status && { status: applied.status }),
-        ...(applied.category_id != null && { category_id: applied.category_id }),
+        ...(typeof applied.category_id === "number" && {
+          category_id: applied.category_id,
+        }),
         ...(applied.search && { search: applied.search }),
+        ...(applied.date_from && { date_from: applied.date_from }),
+        ...(applied.date_to && { date_to: applied.date_to }),
         page,
       }).then((response) => ({
         items: response.data.data,
@@ -133,8 +136,12 @@ const Labels = () => {
 
       return getItemStats({
         ...(applied.status && { status: applied.status }),
-        ...(applied.category_id != null && { category_id: applied.category_id }),
+        ...(typeof applied.category_id === "number" && {
+          category_id: applied.category_id,
+        }),
         ...(applied.search && { search: applied.search }),
+        ...(applied.date_from && { date_from: applied.date_from }),
+        ...(applied.date_to && { date_to: applied.date_to }),
         page,
       }).then((response) => response.data.data)
     },
@@ -321,11 +328,7 @@ const Labels = () => {
       {/* Filtres */}
       <LabelFiltersForm
         defaultValues={filters}
-        onChange={(values) =>
-          setFilters((prev) => ({
-            ...prev,
-            ...values,
-          }))}
+        onChange={(values) => setFilters(toFilterInput(values))}
         categories={categories.data ?? []}
       />
       {/* Table des articles */}
@@ -340,14 +343,15 @@ const Labels = () => {
               <TableCell>Prix</TableCell>
               <TableCell>État</TableCell>
               <TableCell>Statut</TableCell>
+              <TableCell>Date de création</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            <Loading isLoading={items.isLoading} tableCols={8}>
+            <Loading isLoading={items.isLoading} tableCols={9}>
               {items.data?.items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     Aucun article trouvé
                   </TableCell>
                 </TableRow>
@@ -394,6 +398,11 @@ const Labels = () => {
                         label={getLabeledItemStatusLabel(item.status)}
                         color={getLabeledItemStatusColor(item.status)}
                       />
+                    </TableCell>
+                    <TableCell>
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString("fr-FR")
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: "flex", gap: 1 }}>
