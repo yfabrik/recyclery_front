@@ -81,8 +81,8 @@ export const NoOpenedRegister = () => {
 
     const handleOpenClick = (storeId: number, cashRegisterId: number) => {
         setFormDefaults({
-            cash_register_id:storeId,
-            store_id:cashRegisterId
+            store_id: storeId,
+            cash_register_id: cashRegisterId,
         })
         // setSelectedStoreId(storeId);
         // setSelectedCashRegisterId(cashRegisterId);
@@ -144,7 +144,7 @@ export const NoOpenedRegister = () => {
                         defaultValues={formDefaults}
                         // defaultStoreId={selectedStoreId ?? undefined}
                         // defaultCashRegisterId={selectedCashRegisterId ?? undefined}
-                        lockStoreAndRegister={formDefaults?.cash_register_id !== null && formDefaults?.store_id !== null}
+                        // lockStoreAndRegister={formDefaults?.cash_register_id !== null && formDefaults?.store_id !== null}
                     />
                     )}
                 </DialogContent>
@@ -288,7 +288,7 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
             <DialogTitle>Historique des sessions - {register.name}</DialogTitle>
             <DialogContent>
                 <Loading isLoading={sessions.isLoading}>
-                    {sessions.data?.sessions?.length === 0 ? (
+                    {!sessions.data?.sessions?.length ? (
                         <Typography variant="body2" color="text.secondary">
                             Aucune session trouvée pour cette caisse.
                         </Typography>
