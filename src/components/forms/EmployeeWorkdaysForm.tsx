@@ -6,7 +6,7 @@ import {
   WbTwilightOutlined,
 } from "@mui/icons-material";
 import { Box, Checkbox, Grid, Tab, Tabs, Typography } from "@mui/material";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   Controller,
   useFieldArray,
@@ -15,12 +15,13 @@ import {
   type Control,
 } from "react-hook-form";
 import z from "zod";
-import { FormTime, type BaseFormProps } from "./FormBase";
-import type { WorkdaysModelTransformed } from "../../services/api/users";
 import {
   WORKDAY_TIME_SLOT_VALUES,
   getWorkdayTimeSlotLabel,
 } from "../../constants/workdayTimeSlots";
+import type { WorkdaysModelTransformed } from "../../services/api/users";
+import { FormTime, type BaseFormProps } from "./FormBase";
+import { formatTime } from "../../services/dateService";
 
 const workdaySchema = z.object({
   start_time: z
@@ -52,7 +53,7 @@ export const EmployeeWorkdaysForm = ({
   formId,
   onSubmit,
   defaultValues,
-  defaults,
+  defaults,//TODO use as default value
 }: BaseFormProps<Schema> & { defaults?: WorkdaysModelTransformed[] }) => {
   const [tabValue, setTabValue] = useState(0);
 
@@ -117,7 +118,7 @@ export const EmployeeWorkdaysForm = ({
     resolver: zodResolver(schema),
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append:_append, remove:_remove } = useFieldArray({
     name: "week1",
     control: form.control,
   });
@@ -130,7 +131,7 @@ export const EmployeeWorkdaysForm = ({
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Tabs
         value={tabValue}
-        onChange={(e, val) => setTabValue(val)}
+        onChange={(_e, val) => setTabValue(val)}
         variant="fullWidth"
         sx={{ width: "100%", marginBottom: 2 }}
       >
@@ -140,9 +141,9 @@ export const EmployeeWorkdaysForm = ({
       <Grid container spacing={2} alignItems="center">
         {tabValue == 0 &&
           fields.map((field, index) => (
-            <>
+            <Fragment key={field.id}>
               {!(index % 2) && (
-                <Grid size={{ xs: 3  }}>
+                <Grid size={{ xs: 3 }} key={`week1-label-${field.day_of_week}`}>
                   <Typography
                     variant="body1"
                     fontWeight="medium"
@@ -152,7 +153,7 @@ export const EmployeeWorkdaysForm = ({
                   </Typography>
                 </Grid>
               )}
-              <Grid size={{ xs: 4.5 }} key={"week1"+field.id}>
+              <Grid size={{ xs: 4.5 }} key={`week1-slot-${field.id}`}>
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
@@ -160,15 +161,14 @@ export const EmployeeWorkdaysForm = ({
                   slot={field.time_slot}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
 
         {tabValue == 1 &&
           fields2.map((field, index) => (
-            <>
-              {" "}
+            <Fragment key={field.id}>
               {!(index % 2) && (
-                <Grid size={{ xs: 3 }}>
+                <Grid size={{ xs: 3 }} key={`week2-label-${field.day_of_week}`}>
                   <Typography
                     variant="body1"
                     fontWeight="medium"
@@ -178,7 +178,7 @@ export const EmployeeWorkdaysForm = ({
                   </Typography>
                 </Grid>
               )}
-              <Grid size={{ xs: 4.5 }} key={"week2"+field.id}>
+              <Grid size={{ xs: 4.5 }} key={`week2-slot-${field.id}`}>
                 <HalfDay
                   control={form.control}
                   day={field.day_of_week}
@@ -186,7 +186,7 @@ export const EmployeeWorkdaysForm = ({
                   slot={field.time_slot}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
       </Grid>
     </form>
