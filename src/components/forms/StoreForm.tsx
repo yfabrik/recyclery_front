@@ -14,12 +14,12 @@ import type { UserModel } from "../../interfaces/Models";
 
 const schema = z.object({
   name: noEmptyStr("nom requis"),
-  manager_id: z.union([nullString(),idSchema(), ]),
-  address: z.string().transform(v=>v==""?null:v),
-  city: z.string().transform(v=>v==""?null:v),
-  postal_code: z.union([nullString(),postalSchema()]),
-  phone: z.union([nullString(),phoneSchema()]),
-  email: z.union([nullString(),z.email()]),
+  manager_id: z.union([nullString(), idSchema(),]),
+  address: z.string().transform(v => v == "" ? null : v),
+  city: z.string().transform(v => v == "" ? null : v),
+  postal_code: z.union([nullString(), postalSchema()]),
+  phone: z.union([nullString(), phoneSchema()]),
+  email: z.union([nullString(), z.email()]),
   is_active: z.boolean(),
 });
 
@@ -30,14 +30,14 @@ export const StoreForm = ({
   onSubmit,
   managers,
   defaultValues,
-}: BaseFormProps<StoreFormValues,Schema> & {
+}: BaseFormProps<StoreFormValues, Schema> & {
   managers: UserModel[];
 }) => {
-  const form = useForm<StoreFormValues,unknown,Schema>({
+  const isManagerValid = defaultValues?.manager_id != "" && managers.some(user => user.id == defaultValues?.manager_id);
+  const form = useForm<StoreFormValues, unknown, Schema>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      manager_id: "",
       address: "",
       city: "",
       postal_code: "",
@@ -45,6 +45,7 @@ export const StoreForm = ({
       email: "",
       is_active: true,
       ...defaultValues ?? {},
+      ...({ manager_id: isManagerValid ? defaultValues?.manager_id : "" })
     },
   });
 
