@@ -188,8 +188,8 @@ const EcoOrganismStatsPage = () => {
   // }, [watch, debouncer]);
 
   const ecoStats = useQuery({
-    queryKey: ["ecoOrganismQuarterStats",{point:filters.collection_point_id}],
-    queryFn: () => fetchEcoOrganismQuarterStats(filters.collection_point_id!=""?{point:filters.collection_point_id}:{}).then((response) => response.data.stats),
+    queryKey: ["ecoOrganismQuarterStats"],
+    queryFn: () => fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
   });
 
   // const ecoOrganismOptions = useMemo(() => {

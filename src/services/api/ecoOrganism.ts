@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { ArrivalModel, EcoOrgModel,CollectionPointModel } from "../../interfaces/Models";
+import type { ArrivalModel, EcoOrgModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 import type { Schema } from "../../components/forms/EcoOrganismForm";
 
@@ -57,13 +57,10 @@ export const fetchEcoOrganismsStats = (): Promise<
   }>
 > => axiosInstance.get("/api/eco-organisms/stats/summary");
 
-type filtersQuarterStat={
-  point:CollectionPointModel["id"]
-}
 /** Fetches last 4 quarters stats per eco-organism (weight_kg per quarter). */
-export const fetchEcoOrganismQuarterStats = (filters?:filtersQuarterStat): Promise<
+export const fetchEcoOrganismQuarterStats = (): Promise<
   AxiosResponse<{ stats: EcoOrganismQuarterStatsResponse }>
-> => axiosInstance.get("/api/eco-organisms/stats/quarters",{params:{point:filters?.point}});
+> => axiosInstance.get("/api/eco-organisms/stats/quarters");
 
 export const createEcoOrganism = (
   data: Schema,
