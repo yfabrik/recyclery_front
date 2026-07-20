@@ -24,7 +24,6 @@ import {
 import {
   createGiftCard,
   listGiftCards,
-  type CreateGiftCardRequestBody,
 } from "../services/api/giftCards";
 import {
   getGiftCardStatusColor,
@@ -32,6 +31,7 @@ import {
 } from "../constants/giftCardStatuses";
 import { formatCurrency } from "../services/cartService";
 import { Loading } from "../components/Loading";
+import type { GiftCardIssueInput } from "@recyclerie/api/schemas/giftCards";
 
 type CreateGiftCardForm = {
   initial_value: string;
@@ -56,15 +56,11 @@ const GiftCard = () => {
 
   const giftCards = useQuery({
     queryKey: ["giftCards"],
-    queryFn: async () => {
-      const response = await listGiftCards();
-      if (!response.data.success) throw new Error(response.data.message);
-      return response.data.data;
-    },
+    queryFn: () => listGiftCards().then((response) => response.data.data),
   });
 
   const addGiftCard = useMutation({
-    mutationFn: (payload: CreateGiftCardRequestBody) => createGiftCard(payload),
+    mutationFn: (payload: GiftCardIssueInput) => createGiftCard(payload),
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);
@@ -181,7 +177,10 @@ const GiftCard = () => {
                       : "Aucune"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Créé le {new Date(giftCard.createdAt).toLocaleDateString("fr-FR")}
+                    Créé le{" "}
+                    {giftCard.createdAt
+                      ? new Date(giftCard.createdAt).toLocaleDateString("fr-FR")
+                      : "—"}
                   </Typography>
                 </CardContent>
               </Card>

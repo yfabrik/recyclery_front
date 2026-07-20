@@ -63,6 +63,8 @@ import {
 } from "../forms/PasswordChangeForm";
 import { UserForm, type Schema } from "../forms/UserForm";
 import { StatCard } from "../StatCard";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
+import { Loading } from "../Loading";
 
 export const UsersTab = () => {
   const [userDialog, setUserDialog] = useState(false);
@@ -75,14 +77,14 @@ export const UsersTab = () => {
     queryKey: ["users", { include: "managedStores" }],
     queryFn: () =>
       fUsers({ include: "managedStores" }).then(
-        (response) => response.data.users,
+        (response) => response.data.data,
       ),
   });
   useQueryErrorToast(users.error, "Erreur lors du chargement des utilisateurs");
 
   const userStats = useQuery({
     queryKey: ["userStats"],
-    queryFn: () => getUsersStats().then((response) => response.data.stats),
+    queryFn: () => getUsersStats().then((response) => response.data.data),
     placeholderData: {
       totalUsers: 0,
       usersByRole: [],
@@ -91,9 +93,10 @@ export const UsersTab = () => {
     },
   });
 
+  const updateUserPayloadFromForm = (data: Schema): UserUpdateInput => ({ ...data });
   const editUser = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
-      updateUser(id, data),
+    mutationFn: ({ id, data }: { id: UserModel["id"]; data: Schema }) =>
+      updateUser(id, updateUserPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -103,8 +106,9 @@ export const UsersTab = () => {
       );
     },
   });
+  const createUserPayloadFromForm = (data: Schema): UserCreateInput => ({ ...data });
   const addUser = useMutation({
-    mutationFn: (data: Schema) => createUser(data),
+    mutationFn: (data: Schema) => createUser(createUserPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -119,7 +123,7 @@ export const UsersTab = () => {
   };
 
   const removeUser = useMutation({
-    mutationFn: (data: number) => deleteUser(data),
+    mutationFn: (data: UserModel["id"]) => deleteUser(data),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
     onSuccess: (data) => {
@@ -131,9 +135,10 @@ export const UsersTab = () => {
     },
   });
 
+  const updateUserPasswordPayloadFromForm = (data: PasswordSchema): UserAdminUpdatePasswordInput => ({ ...data });
   const changePassword = useMutation({
-    mutationFn: (data: { id: number; data: PasswordSchema }) =>
-      updateUserPassword(data.id, data.data),
+    mutationFn: (data: { id: UserModel["id"]; data: PasswordSchema }) =>
+      updateUserPassword(data.id, updateUserPasswordPayloadFromForm(data.data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"),
@@ -148,7 +153,7 @@ export const UsersTab = () => {
   const stores = useQuery({
     queryKey: ["stores", "active"],
     queryFn: () =>
-      fStores({ active: true }).then((response) => response.data.stores),
+      fStores({ active: true }).then((response) => response.data.data),
   });
 
   const handleOpenUserDialog = (user: UserModel | null = null) => {
@@ -185,7 +190,7 @@ export const UsersTab = () => {
     removeUser.mutate(user.id);
   };
 
-  const formatLastLogin = (lastLogin: string) => {
+  const formatLastLogin = (lastLogin?: string | null) => {
     if (!lastLogin) return "Jamais connecté";
     return new Date(lastLogin).toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -196,309 +201,296 @@ export const UsersTab = () => {
     });
   };
 
-  if (users.isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: 400,
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+    <Loading isLoading={users.isLoading}>
+      <Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
         >
-          <Groups />
-          Gestion des Utilisateurs
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<PersonAdd />}
-          onClick={() => handleOpenUserDialog()}
-        >
-          Nouvel Utilisateur
-        </Button>
-      </Box>
-
-      {/* Statistiques des utilisateurs */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCard
-            title="Utilisateurs actifs"
-            value={userStats.data?.totalUsers || 0}
-            icon={<Person />}
-            color="primary"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCard
-            title=" Connectés (30j)"
-            value={userStats.data?.activeEmployees || 0}
-            icon={<CheckCircle />}
-            color="success"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <StatCard
-            title=" Rôles différents"
-            value={userStats.data?.usersByRole?.length || 0}
-            icon={<Groups />}
-            color="info"
-          />
-        </Grid>
-      </Grid>
-
-      {/* Répartition par rôles */}
-      {userStats.data?.usersByRole &&
-        userStats.data?.usersByRole.length > 0 && (
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <BarChart fontSize="small" />
-                Répartition par Rôles
-              </Typography>
-              <Grid container spacing={2}>
-                {userStats.data.usersByRole.map((rolestat) => (
-                  <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
-                    <Box sx={{ textAlign: "center" }}>
-                      <Chip
-                        icon={getUserRoleIcon(rolestat.role)}
-                        label={getUserRoleLabel(rolestat.role)}
-                        color={getUserRoleColor(rolestat.role)}
-                        sx={{ mb: 1 }}
-                      />
-                      <Typography variant="h6">{rolestat.count}</Typography>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        )}
-
-      {/* Liste des utilisateurs */}
-      <Card>
-        <CardContent>
           <Typography
-            variant="h6"
-            gutterBottom
+            variant="h5"
+            fontWeight="bold"
             sx={{ display: "flex", alignItems: "center", gap: 1 }}
           >
-            <Assignment fontSize="small" />
-            Liste des Utilisateurs ({users.data?.length || 0})
+            <Groups />
+            Gestion des Utilisateurs
           </Typography>
+          <Button
+            variant="contained"
+            startIcon={<PersonAdd />}
+            onClick={() => handleOpenUserDialog()}
+          >
+            Nouvel Utilisateur
+          </Button>
+        </Box>
 
-          {users.data?.length === 0 ? (
-            <Alert severity="info">Aucun utilisateur trouvé.</Alert>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Utilisateur</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Rôle</TableCell>
-                    <TableCell>Magasin</TableCell>
-                    <TableCell>Dernière connexion</TableCell>
-                    <TableCell>Statut</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.data?.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight="bold">
-                            {user.username}
-                          </Typography>
+        {/* Statistiques des utilisateurs */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <StatCard
+              title="Utilisateurs actifs"
+              value={userStats.data?.totalUsers || 0}
+              icon={<Person />}
+              color="primary"
+            />
+          </Grid>
 
-                          {user.phone && (
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              color="textSecondary"
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.5,
-                              }}
-                            >
-                              <Phone sx={{ fontSize: 14 }} />
-                              {user.phone}
-                            </Typography>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <StatCard
+              title=" Connectés (30j)"
+              value={userStats.data?.activeEmployees || 0}
+              icon={<CheckCircle />}
+              color="success"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <StatCard
+              title=" Rôles différents"
+              value={userStats.data?.usersByRole?.length || 0}
+              icon={<Groups />}
+              color="info"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Répartition par rôles */}
+        {userStats.data?.usersByRole &&
+          userStats.data?.usersByRole.length > 0 && (
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <BarChart fontSize="small" />
+                  Répartition par Rôles
+                </Typography>
+                <Grid container spacing={2}>
+                  {userStats.data.usersByRole.map((rolestat) => (
+                    <Grid size={{ xs: 6, sm: 4, md: 2 }} key={rolestat.role}>
+                      <Box sx={{ textAlign: "center" }}>
                         <Chip
-                          label={getUserRoleLabel(user.role)}
-                          color={getUserRoleColor(user.role)}
-                          size="small"
+                          icon={getUserRoleIcon(rolestat.role)}
+                          label={getUserRoleLabel(rolestat.role)}
+                          color={getUserRoleColor(rolestat.role)}
+                          sx={{ mb: 1 }}
                         />
-                      </TableCell>
-                      <TableCell>
-                        {user.managedStores?.map((s) => s.name).toString() ||
-                          "Non assigné"}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {formatLastLogin(user.last_login)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={user.isActive ? "Actif" : "Inactif"}
-                          color={user.isActive ? "success" : "default"}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Tooltip title="Modifier">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleOpenUserDialog(user)}
-                            >
-                              <Edit />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Changer le mot de passe">
-                            <IconButton
-                              size="small"
-                              color="warning"
-                              onClick={() => handleOpenPasswordDialog(user)}
-                            >
-                              <VpnKey />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="supprimer utilisateur">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteUser(user)}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
+                        <Typography variant="h6">{rolestat.count}</Typography>
+                      </Box>
+                    </Grid>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialog de création/modification d'utilisateur */}
-      <Dialog
-        open={userDialog}
-        onClose={handleCloseUserDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {editingUser ? (
-            <>
-              <Edit fontSize="small" />
-              Modifier l'utilisateur
-            </>
-          ) : (
-            <>
-              <Person fontSize="small" />
-              Nouvel utilisateur
-            </>
-          )}
-        </DialogTitle>
-        <DialogContent>
-          <UserForm
-            formId="UserForm"
-            stores={stores.data || []}
-            defaultValues={{
-              ...editingUser,
-              managedStores: editingUser?.managedStores?.map((s) => s.id),
-            }}
-            onSubmit={handleSaveUser}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseUserDialog}>Annuler</Button>
-          <Button
-            type="submit"
-            form="UserForm"
-            variant="contained"
-            loading={editUser.isPending || addUser.isPending}
-          >
-            {editingUser ? "Mettre à jour" : "Créer"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog de changement de mot de passe */}
-      <Dialog
-        open={passwordDialog}
-        onClose={handleClosePasswordDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Lock fontSize="small" />
-          Changer le mot de passe
-        </DialogTitle>
-        <DialogContent>
-          {editingUser && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Changement de mot de passe pour :{" "}
-              <strong>{editingUser.username}</strong>
-            </Alert>
+                </Grid>
+              </CardContent>
+            </Card>
           )}
 
-          <PasswordChangeForm
-            formId="passwordChange"
-            onSubmit={handleChangePassword}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClosePasswordDialog}>Annuler</Button>
-          <Button
-            variant="contained"
-            color="warning"
-            type="submit"
-            form="passwordChange"
-            loading={changePassword.isPending}
-          >
+        {/* Liste des utilisateurs */}
+        <Card>
+          <CardContent>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Assignment fontSize="small" />
+              Liste des Utilisateurs ({users.data?.length || 0})
+            </Typography>
+
+            {users.data?.length === 0 ? (
+              <Alert severity="info">Aucun utilisateur trouvé.</Alert>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Utilisateur</TableCell>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Rôle</TableCell>
+                      <TableCell>Magasin</TableCell>
+                      <TableCell>Dernière connexion</TableCell>
+                      <TableCell>Statut</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.data?.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {user.username}
+                            </Typography>
+
+                            {user.phone && (
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                color="textSecondary"
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                }}
+                              >
+                                <Phone sx={{ fontSize: 14 }} />
+                                {user.phone}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getUserRoleLabel(user.role)}
+                            color={getUserRoleColor(user.role)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {user.managedStores?.map((s) => s.name).toString() ||
+                            "Non assigné"}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatLastLogin(user.last_login)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.isActive ? "Actif" : "Inactif"}
+                            color={user.isActive ? "success" : "default"}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Tooltip title="Modifier">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleOpenUserDialog(user)}
+                              >
+                                <Edit />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Changer le mot de passe">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={() => handleOpenPasswordDialog(user)}
+                              >
+                                <VpnKey />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="supprimer utilisateur">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Dialog de création/modification d'utilisateur */}
+        <Dialog
+          open={userDialog}
+          onClose={handleCloseUserDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {editingUser ? (
+              <>
+                <Edit fontSize="small" />
+                Modifier l'utilisateur
+              </>
+            ) : (
+              <>
+                <Person fontSize="small" />
+                Nouvel utilisateur
+              </>
+            )}
+          </DialogTitle>
+          <DialogContent>
+            <UserForm
+              formId="UserForm"
+              stores={stores.data || []}
+              defaultValues={{
+                ...editingUser,
+                managedStores: editingUser?.managedStores?.map((s) => s.id),
+              }}
+              onSubmit={handleSaveUser}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseUserDialog}>Annuler</Button>
+            <Button
+              type="submit"
+              form="UserForm"
+              variant="contained"
+              loading={editUser.isPending || addUser.isPending}
+            >
+              {editingUser ? "Mettre à jour" : "Créer"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog de changement de mot de passe */}
+        <Dialog
+          open={passwordDialog}
+          onClose={handleClosePasswordDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Lock fontSize="small" />
             Changer le mot de passe
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          </DialogTitle>
+          <DialogContent>
+            {editingUser && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Changement de mot de passe pour :{" "}
+                <strong>{editingUser.username}</strong>
+              </Alert>
+            )}
+
+            <PasswordChangeForm
+              formId="passwordChange"
+              onSubmit={handleChangePassword}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePasswordDialog}>Annuler</Button>
+            <Button
+              variant="contained"
+              color="warning"
+              type="submit"
+              form="passwordChange"
+              loading={changePassword.isPending}
+            >
+              Changer le mot de passe
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </Loading>
   );
 };

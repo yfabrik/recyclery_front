@@ -10,11 +10,10 @@ import type {
   CashSession,
   CategoryModel,
   LabeledItemModel,
-  UserModel,
+  AuthUserModel,
 } from "../interfaces/Models";
 import {
   createSell,
-  type CreateTransactionBody,
 } from "../services/api/transactions";
 import {
   sumPromoCategorie,
@@ -27,6 +26,7 @@ import { buildTransactionBody } from "../utils/transactionBody";
 import type { ReceiptSale } from "../utils/transactionReceipt";
 import { useCheckoutFormCore } from "./useCheckoutFormCore";
 import type { ManualItemSchema } from "../components/forms/itemCoreSchema";
+import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
 
 const defaultFormValues: CartFormValues = {
   cart: [],
@@ -38,12 +38,12 @@ const defaultFormValues: CartFormValues = {
 interface UsePointOfSaleOptions {
   categories?: CategoryModel[];
   activeSession: CashSession | null;
-  user: UserModel | null;
+  user: AuthUserModel | null;
   triggerPrintReceipt: (payload: {
     sale: ReceiptSale;
     items: CartItem[];
     cashSession: CashSession;
-    user: UserModel;
+    user: AuthUserModel;
     global_promotion: CartSchema["global_promotion"];
   }) => void;
   onManualItemAdded?: () => void;
@@ -173,7 +173,8 @@ export const usePointOfSale = ({
   ): item is LabeledItemModel => "barcode" in item;
 
   const handleitem = (item: ManualItemSchema | LabeledItemModel) => {
-    const barcode = isLabeledItem(item) ? item.barcode : `MANUAL${Date.now()}`;
+    const barcode =
+      (isLabeledItem(item) ? item.barcode : undefined) ?? `MANUAL${Date.now()}`;
 
     const selectedCategory = categories?.find(
       (cat) => cat.id == item.category_id,
@@ -193,7 +194,7 @@ export const usePointOfSale = ({
     const promotion = !isLabeledItem(item)
       ? item.promotion
       : sumPromoCategorie(selectedCategory) +
-        sumPromoCategorie(selectedSubcategory);
+      sumPromoCategorie(selectedSubcategory);
 
     return {
       barcode,
@@ -239,7 +240,7 @@ export const usePointOfSale = ({
   };
 
   const handleSell = useMutation({
-    mutationFn: (data: CreateTransactionBody) => createSell(data),
+    mutationFn: (data: SaleTransactionBaseInput) => createSell(data),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Vente enregistrée avec succès"),
@@ -254,8 +255,8 @@ export const usePointOfSale = ({
       if (window.confirm("Imprimer le ticket de caisse ?")) {
         if (activeSession && user) {
           const saleWithSplitPayments = {
-            ...data.data.data.sale,
-            payments: data.data.data.payments,
+            ...data.data.data.transaction,
+            payments: data.data.data.transaction.payments ?? [],
           } as ReceiptSale;
           triggerPrintReceipt({
             sale: saleWithSplitPayments,
@@ -275,13 +276,15 @@ export const usePointOfSale = ({
     },
   });
 
+  const cartPayloadToApi = (data: CartSchema): SaleTransactionBaseInput => {
+    return buildTransactionBody(data, activeSession!.id, {
+      normalizePostalCodeToNull: false,
+      includeTotalPrice: true,
+    })
+  }
   const handleValidateCart = (data: CartSchema) => {
     if (activeSession) {
-      const transactionData = buildTransactionBody(data, activeSession.id, {
-        normalizePostalCodeToNull: false,
-        includeTotalPrice: true,
-      }) as CreateTransactionBody;
-      handleSell.mutate(transactionData);
+      handleSell.mutate(cartPayloadToApi(data));
     }
   };
 

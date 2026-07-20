@@ -1,32 +1,27 @@
+import type {
+  CreateArrivalResponse,
+  ListArrivalsResponse,
+} from "@recyclerie/api/responses/arrivals";
+import type { arrivalDataInput, ArrivalFilter, ArrivalFilterInput } from "@recyclerie/api/schemas/arrivals";
 import type { AxiosResponse } from "axios";
-import type { ArrivalModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { ArrivalFormSchema } from "../../components/forms/ArrivalForm";
-import type { PaginationMeta } from "./pagination";
 
-interface ArrivalFilters {
-  date_from?: string;
-  date_to?: string;
-  source_type?: ArrivalModel["source_type"];
-  collection_point_id?: number;
+export type { ArrivalFilter };
+
+
+//TODO arivalFIlter+paginaion ?
+export type ArrivalQuery = Omit<Partial<ArrivalFilter>, "date_from" | "date_to"> & {
   page?: number;
-}
-
-type GetArrivalsRawResponse = {
-  message: string;
-  arrivals: ArrivalModel[];
-  pagination: PaginationMeta;
-};
-
-type GetArrivalsResponse = {
-  message: string;
-  arrivals: ArrivalModel[];
-  pagination: PaginationMeta;
+  date_from?: Date | string;
+  date_to?: Date | string;
 };
 
 export const getArrivals = (
-  filters?: ArrivalFilters,
-): Promise<AxiosResponse<GetArrivalsResponse>> =>
-  axiosInstance.get<GetArrivalsRawResponse>("/api/arrivals", { params: filters });
+  filters?: ArrivalFilterInput,
+): Promise<AxiosResponse<ListArrivalsResponse>> =>
+  axiosInstance.get<ListArrivalsResponse>("/api/arrivals", { params: filters });
 
-export const createArrival = (data: ArrivalFormSchema): Promise<AxiosResponse<{success: boolean, message: string, arrival: ArrivalModel }>> => axiosInstance.post("/api/arrivals", data)
+export const createArrival = (
+  data: arrivalDataInput,
+): Promise<AxiosResponse<CreateArrivalResponse>> =>
+  axiosInstance.post<CreateArrivalResponse>("/api/arrivals", data);

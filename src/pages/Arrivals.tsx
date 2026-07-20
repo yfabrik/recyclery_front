@@ -29,17 +29,17 @@ const Arrivals = () => {
     queryKey: [
       "categories",
       {
-        include: "category",
+        include: ["category"],
         only_category: true,
         in: true,
       },
     ],
     queryFn: () =>
       fcat({
-        include: "category",
+        include: ["category"],
         only_category: true,
         in: true,
-      }).then((result) => result.data.categories ?? []),
+      }).then((result) => result.data.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -47,7 +47,7 @@ const Arrivals = () => {
     queryKey: ["collectionPoints", { active_only: "true" }],
     queryFn: () =>
       fCollP({ active_only: "true" }).then(
-        (result) => result.data.collection_points ?? [],
+        (result) => result.data.data ?? [],
       ),
     staleTime: 5 * 60 * 1000,
   });

@@ -22,7 +22,7 @@ export const ScanItem = ({ onManualItem, addToCart }: ScanItemProps) => {
 
     try {
       const response = await getItemFromBarcode(scanInput);
-      const item = response.data.item;
+      const item = response.data.data;
 
       if (item.status !== "available") {
         toast.error("Cet article n'est pas disponible à la vente");

@@ -9,44 +9,43 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import * as z from "zod";
-import { idSchema, noEmptyStr, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
+import { idSchema, noEmptyStr, nullString, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
 import type { UserModel } from "../../interfaces/Models";
 
 const schema = z.object({
   name: noEmptyStr("nom requis"),
-  manager_id: z.union([idSchema(), z.literal("").transform(() => null)]),
-  address: z.string(),
-  city: z.string(),
-  postal_code: z.union([postalSchema(), z.literal("").transform(() => null)]),
-  phone: z.union([phoneSchema(), z.literal("").transform(() => null)]),
-  email: z.union([z.email(), z.literal("").transform(() => null)]),
+  manager_id: z.union([nullString(), idSchema(),]),
+  address: z.string().transform(v => v == "" ? null : v),
+  city: z.string().transform(v => v == "" ? null : v),
+  postal_code: z.union([nullString(), postalSchema()]),
+  phone: z.union([nullString(), phoneSchema()]),
+  email: z.union([nullString(), z.email()]),
   is_active: z.boolean(),
 });
 
 export type Schema = z.infer<typeof schema>;
-
+export type StoreFormValues = z.input<typeof schema>;
 export const StoreForm = ({
   formId,
   onSubmit,
   managers,
   defaultValues,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<StoreFormValues, Schema> & {
   managers: UserModel[];
 }) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm({
+  const isManagerValid = defaultValues?.manager_id != "" && managers.some(user => user.id == defaultValues?.manager_id);
+  const form = useForm<StoreFormValues, unknown, Schema>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      manager_id: "",
       address: "",
       city: "",
       postal_code: "",
       phone: "",
       email: "",
       is_active: true,
-      ...data,
+      ...defaultValues ?? {},
+      ...({ manager_id: isManagerValid ? defaultValues?.manager_id : "" })
     },
   });
 

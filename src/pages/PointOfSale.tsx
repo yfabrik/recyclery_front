@@ -28,6 +28,7 @@ import {
   hasSignificantCashDifference,
   roundCurrency,
 } from "../services/cartService";
+import type { CashSession } from "../interfaces/Models";
 
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ const PointOfSale = () => {
   const activeSession = useQuery({
     queryKey: ["activeSession"],
     queryFn: () =>
-      getActiveCaisses().then((response) => response.data?.session ?? null),
+      getActiveCaisses().then((response) => response.data?.data ?? null),
   });
 
   const categories = useQuery({
@@ -59,7 +60,7 @@ const PointOfSale = () => {
         only_category: true,
         sell: true,
         store_id: activeSession.data?.CashRegister?.recyclery_id,
-      }).then((response) => response.data.categories),
+      }).then((response) => response.data.data),
   });
 
   const pos = usePointOfSale({
@@ -71,12 +72,14 @@ const PointOfSale = () => {
   });
 
   const closeSession = useMutation({
-    mutationFn: (data: { id: number; data: { closing_amount: number } }) =>
-      closeCaisse(data.id, data.data),
-    onSuccess: (data) => {
-      const { difference_amount } = data.data;
+    mutationFn: (data: {
+      id: CashSession["id"];
+      data: { closing_amount: number; notes: string | null };
+    }) => closeCaisse(data.id, data.data),
+    onSuccess: (response) => {
+      const { difference_amount } = response.data;
 
-      let message = getApiSuccessMessage(data, "Session fermée avec succès");
+      let message = getApiSuccessMessage(response, "Session fermée avec succès");
       if (hasSignificantCashDifference(difference_amount)) {
         message += `\nÉcart: ${difference_amount > 0 ? "+" : ""}${formatCurrency(roundCurrency(difference_amount))}`;
       }

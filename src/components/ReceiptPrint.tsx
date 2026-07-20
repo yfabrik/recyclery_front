@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Box, Typography } from "@mui/material";
+import type { SalesTransactionDto } from "@recyclerie/api/responses/salesTransactions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { CashSession, UserModel } from "../interfaces/Models";
-import type { CartItem } from "./forms/cartSchema";
+import type { AuthUserModel, CashSession } from "../interfaces/Models";
 import {
-  formatWeight,
   formatCurrency,
+  formatWeight,
   getCartLinePrice,
   getCartTotal,
   getCartTotalWithGlobalPromotion,
@@ -16,15 +16,15 @@ import {
   roundCurrency,
   type GlobalPromotionInput,
 } from "../services/cartService";
-import type { CreateTransactionResponse } from "../services/api/transactions";
+import type { CartItem } from "./forms/cartSchema";
 
-type ReceiptSale = CreateTransactionResponse["data"]["sale"];
+type ReceiptSale = SalesTransactionDto;
 
 interface ReceiptPrintPayload {
   sale: ReceiptSale;
   items: CartItem[];
   cashSession: CashSession;
-  user: UserModel;
+  user:  AuthUserModel;
   global_promotion?: GlobalPromotionInput | null;
 }
 

@@ -3,6 +3,7 @@ import type { CategoryModel } from "../interfaces/Models"
 import { SelectedIcon } from "./SelectedIcon"
 import { Add, Category, Delete, Edit } from "@mui/icons-material"
 import { IO } from "../services/categoriesMask"
+import type { PatchCategoryResponse } from "@recyclerie/api/responses/categories";
 import type { UseMutationResult } from "@tanstack/react-query"
 import type { AxiosResponse } from "axios"
 
@@ -12,7 +13,7 @@ interface CategoryCardProps {
     handleOpenDialog: (c: CategoryModel | null, s?: CategoryModel["id"]) => void
     handleDelete: (c: CategoryModel) => void
     patchCategory: UseMutationResult<
-        AxiosResponse<{ message: string; category: CategoryModel }>,
+        AxiosResponse<PatchCategoryResponse>,
         Error,
         {
             id: number;
@@ -93,7 +94,7 @@ export const CategoryCard = ({
                         <FormControlLabel
                             control={
                                 <Checkbox
-                                    checked={!!(category.IO & IO.IN)}
+                                    checked={!!((category.IO ?? 0) & IO.IN)}
                                     name="in"
                                     onChange={(e) =>
                                         patchCategory.mutate({
@@ -109,7 +110,7 @@ export const CategoryCard = ({
                         <FormControlLabel
                             control={
                                 <Checkbox
-                                    checked={!!(category.IO & IO.SELL)}
+                                    checked={!!((category.IO ?? 0) & IO.SELL)}
                                     name="sell"
                                     onChange={(e) =>
                                         patchCategory.mutate({
@@ -125,7 +126,7 @@ export const CategoryCard = ({
                         <FormControlLabel
                             control={
                                 <Checkbox
-                                    checked={!!(category.IO & IO.OUT)}
+                                    checked={!!((category.IO ?? 0) & IO.OUT)}
                                     name="out"
                                     onChange={(e) =>
                                         patchCategory.mutate({

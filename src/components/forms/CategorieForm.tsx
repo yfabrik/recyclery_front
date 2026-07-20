@@ -1,8 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
-import { emptyStringToNull } from "../../services/zodTransform";
+import { idSchema, noEmptyStr, nullString } from "../../interfaces/ZodTypes";
 import {
   FormIconSelect,
   FormInput,
@@ -10,13 +9,10 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-interface CategorieFormProps extends BaseFormProps<Schema> {
-  icons: string[];
-}
-export const schema = z.object({
-  name: z.string().trim().nonempty("name required"),
-  description: z.string().transform((v) => (v == "" ? null : v)),
-  icon: z.string().transform((v) => (v == "" ? null : v)),
+const schema = z.object({
+  name: noEmptyStr("name required"),
+  description: z.string().transform(v=>v==""?null:v),
+  icon: z.string().transform(v=>v==""?null:v),
   defaultPrice: z.coerce.number().nonnegative().default(0),
   defaultWeight: z.coerce.number().nonnegative().default(0),
   parent_id: idSchema().nullable(),
@@ -26,6 +22,11 @@ export const schema = z.object({
 });
 
 export type Schema = z.infer<typeof schema>;
+export type CategorieFormValues = z.input<typeof schema>;
+
+interface CategorieFormProps extends BaseFormProps<CategorieFormValues,Schema> {
+  icons: string[];
+}
 
 export const CategorieForm = ({
   icons,
@@ -33,8 +34,6 @@ export const CategorieForm = ({
   onSubmit,
   defaultValues,
 }: CategorieFormProps) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-
   const form = useForm({
     defaultValues: {
       name: "",
@@ -46,7 +45,7 @@ export const CategorieForm = ({
       priceBasedOnWeight: false,
       bundlePrice: "",
       bundleQuantity: "",
-      ...data,
+      ...defaultValues ?? {},
     },
     resolver: zodResolver(schema),
   });

@@ -1,9 +1,9 @@
 import { WbSunny, WbTwilight } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { WorkdaysModel } from "../interfaces/Models";
+import type { TimeSlot } from "@recyclerie/api/enums";
 
-export type WorkdayTimeSlotValue = WorkdaysModel["time_slot"];
+export type WorkdayTimeSlotValue = TimeSlot;
 
 export type WorkdayTimeSlot = {
   [K in WorkdayTimeSlotValue]: {

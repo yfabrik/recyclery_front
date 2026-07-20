@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrivalFilterForm, type Filters } from "./forms/ArrivalFilterForm";
+import { ArrivalFilterForm, type Filters } from "./forms/filters/ArrivalFilterForm";
 import { getArrivals } from "../services/api/arrival";
 import { Box, Chip, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { Business, Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";
@@ -30,7 +30,10 @@ export const ArrivalHistory = () => {
                     ...(filters.source_type !== "" ? { source_type: filters.source_type } : {}),
                     ...(filters.collection_point_id !== "" ? { collection_point_id: filters.collection_point_id } : {}),
                     page,
-                }).then((result) => result.data ?? []),
+                }).then((result) => ({
+                    arrivals: result.data.data,
+                    pagination: result.data.pagination,
+                })),
         });
     const getSourceTypeLabel = (type: ArrivalModel["source_type"]): string => {
         const types: Record<ArrivalModel["source_type"], string> = {

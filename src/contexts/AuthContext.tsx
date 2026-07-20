@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   createContext,
   useContext,
@@ -12,7 +11,13 @@ import {
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
 import { updateProfile as updateProfileApi } from "../services/api/profile";
-import type { UserModel } from "../interfaces/Models";
+import {
+  getProfile,
+  login as loginApi,
+  register as registerApi,
+} from "../services/api/auth";
+import axiosInstance from "../services/api/axios";
+import type { AuthUserModel } from "../interfaces/Models";
 import type { Schema as ProfileSchema } from "../components/forms/ProfileForm";
 
 const PERMISSIONS = {
@@ -64,7 +69,7 @@ export type PermissionAction =
   (typeof PERMISSIONS)[PermissionRole][PermissionModule][number];
 
 interface AuthContextValue {
-  user: UserModel | null;
+  user: AuthUserModel | null;
   login: (
     email: string,
     password: string,
@@ -100,67 +105,27 @@ interface AuthProps {
   children: ReactNode;
 }
 export const AuthProvider = ({ children }: AuthProps) => {
-  const [user, setUser] = useState<UserModel | null>(null);
-  const [permissions, setPermissions] = useState([]);
-  const [permissionsByModule, setPermissionsByModule] = useState({});
+  const [user, setUser] = useState<AuthUserModel | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   console.log(user);
-  //   if (user && user.role == "admin") {
-  //     setPermissions(["*"]);
-  //     setPermissionsByModule({
-  //       dashboard: ["read", "write"],
-  //       inventory: ["read", "write", "delete"],
-  //       sales: ["read", "write", "delete"],
-  //       logistics: ["read", "write", "delete"],
-  //       management: ["read", "write", "delete"],
-  //       planning: ["read", "write", "delete"],
-  //       administration: ["read", "write", "delete"],
-  //     });
-  //   }
-  //   if (user && user.role == "manager") {
-  //     setPermissions(["read", "write"]);
-  //     setPermissionsByModule({
-  //       dashboard: ["read", "write"],
-  //       inventory: ["read", "write"],
-  //       sales: ["read", "write"],
-  //       logistics: ["read", "write"],
-  //       management: ["read", "write"],
-  //       planning: ["read", "write"],
-  //     });
-  //   }
-  //   if (user && user.role == "employee") {
-  //     setPermissions(["read"]);
-  //     setPermissionsByModule({
-  //       dashboard: ["read"],
-  //       inventory: ["read"],
-  //       sales: ["read", "write"],
-  //       logistics: ["read"],
-  //     });
-  //   }
-  // }, [user]);
-  // Configuration d'axios avec le token
   const setupAxiosInterceptors = (token: string | null) => {
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      delete axios.defaults.headers.common["Authorization"];
+      delete axiosInstance.defaults.headers.common["Authorization"];
     }
   };
 
-  // Vérifier le token au chargement
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setupAxiosInterceptors(token);
-      verifyToken(token);
+      verifyToken();
     } else {
       setLoading(false);
     }
   }, []);
 
-  //check every minute if token is expired
   useEffect(() => {
     const checkToken = async () => {
       const token = localStorage.getItem("token");
@@ -171,26 +136,19 @@ export const AuthProvider = ({ children }: AuthProps) => {
       const timeUntilExpiry = info.exp - currentTime;
       if (timeUntilExpiry < 0) logout();
     };
-    // Check every minute
     const intervalId = setInterval(checkToken, 60000);
-    // Initial check
     checkToken();
     return () => clearInterval(intervalId);
   }, [user]);
 
-  const verifyToken = async (token: string) => {
+  const verifyToken = async () => {
     try {
-      const response = await axios.get("/api/auth/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(response.data.user);
-      setPermissions(response.data.permissions || []);
-      setPermissionsByModule(response.data.permissionsByModule || {});
+      const response = await getProfile();
+      const profile = response.data.data;
+      setUser(profile.user);
     } catch (error) {
       console.error("Token invalide:", error);
       logout();
-      // localStorage.removeItem("token");
-      // setupAxiosInterceptors(null);
     } finally {
       setLoading(false);
     }
@@ -198,27 +156,17 @@ export const AuthProvider = ({ children }: AuthProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(
-        "/api/auth/login",
-        { email, password },
-        { withCredentials: true },
-      );
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      setupAxiosInterceptors(token);
-      setUser(user);
+      const response = await loginApi({ email, password });
+      const session = response.data.data;
+      localStorage.setItem("token", session.token);
+      setupAxiosInterceptors(session.token);
+      setUser(session.user);
 
-      //FIXME database call telement a chier que quand ça essaye /profile  la requete de login est pas fini et le server est busy et peut pas handle la request
-      // Récupérer les permissions
       try {
-        const profileResponse = await axios.get("/api/auth/profile", {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        });
-        setPermissions(profileResponse.data.permissions || []);
-        setPermissionsByModule(profileResponse.data.permissionsByModule || {});
+        const profileResponse = await getProfile();
+        const profile = profileResponse.data.data;
+        void profile.permissions;
+        void profile.permissionsByModule;
       } catch (permError) {
         console.error("Erreur récupération permissions:", permError);
       }
@@ -238,12 +186,12 @@ export const AuthProvider = ({ children }: AuthProps) => {
     password: string;
   }) => {
     try {
-      const response = await axios.post("/api/auth/register", userData);
-      const { token, user } = response.data;
+      const response = await registerApi({ ...userData, role: "employee" });
+      const session = response.data.data;
 
-      localStorage.setItem("token", token);
-      setupAxiosInterceptors(token);
-      setUser(user);
+      localStorage.setItem("token", session.token);
+      setupAxiosInterceptors(session.token);
+      setUser(session.user);
 
       toast.success(getApiSuccessMessage(response, "Inscription réussie !"));
       return { success: true };
@@ -258,18 +206,9 @@ export const AuthProvider = ({ children }: AuthProps) => {
     localStorage.removeItem("token");
     setupAxiosInterceptors(null);
     setUser(null);
-    setPermissions([]);
-    setPermissionsByModule({});
     toast.info("Déconnexion réussie");
   };
 
-  // Fonction pour vérifier si l'utilisateur a une permission spécifique
-  // const hasPermission = (permission: string) => {
-  //   if (permissions == "*" || permissions[0] == "*") return true;
-  //   return permissions.some((p) => p.name === permission);
-  // };
-
-  // Fonction pour vérifier si l'utilisateur a accès à un module
   const hasModuleAccess = (
     module: PermissionModule,
     action: PermissionAction = "read",
@@ -277,15 +216,12 @@ export const AuthProvider = ({ children }: AuthProps) => {
     if (!user?.role) return false;
     const role = user.role as PermissionRole;
     return (PERMISSIONS[role][module] as readonly string[]).includes(action);
-    // if (permissionsByModule[module])
-    //   return permissionsByModule[module].includes(action)
-    // return hasPermission(`${module}.${action}`);
   };
 
   const updateProfile = async (data: ProfileSchema) => {
     try {
       const response = await updateProfileApi(data);
-      setUser(response.data.user);
+      setUser(response.data.data);
       toast.success(
         getApiSuccessMessage(response, "Profil mis à jour avec succès"),
       );
@@ -299,22 +235,13 @@ export const AuthProvider = ({ children }: AuthProps) => {
 
   const value = {
     user,
-    // permissions,
-    // permissionsByModule,
     login,
     register,
     logout,
     loading,
-    // hasPermission,
     hasModuleAccess,
     isAuthenticated: !!user,
     updateProfile,
-    // isAdmin: user?.role === "admin",
-    // isManager: ["admin", "direction", "coordination", "encadrant"].includes(
-    //   user?.role
-    // ),
-    // isDirection: ["admin", "direction"].includes(user?.role),
-    // roleLevel: user?.role_level || 0,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -5,25 +5,24 @@ import { useForm, useWatch } from "react-hook-form"
 import z from "zod"
 import type { CategoryModel, StoreModel } from "../../interfaces/Models"
 import { idSchema, nullString } from "../../interfaces/ZodTypes"
-import { emptyStringToNull } from "../../services/zodTransform"
 import { FormCategorySubcategoryFields, FormDate, FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./FormBase"
 
 const schema = z.object({
     category_id: idSchema("categorie requis"),
-    subcategory_id: z.union([idSchema(), z.literal("").transform(() => null)]),
+    subcategory_id: z.union([nullString(),idSchema()]),
     promotionValue: z.coerce.number("valeur doit etre en 0 et 100").min(0).max(100),
     startDate: z.coerce.date(),
-    endDate: z.union([z.coerce.date(), nullString()]),
+    endDate: z.union([nullString(),z.coerce.date()]),
     isActive: z.boolean(),
     stores: z
-        .array(z.union([idSchema(), z.literal("")]))
+        .array(z.union([z.literal(""),idSchema()]))//TODO remake cleaner
         .transform((value) => {
             if (value.length === 1 && value[0] === "") return null
             return value.filter((store): store is number => typeof store === "number")
         })
 })
 export type Schema = z.infer<typeof schema>
-type FormValues = z.input<typeof schema>
+export type PromoFormValues = z.input<typeof schema>
 
 
 export const PromoForm = ({
@@ -32,28 +31,27 @@ export const PromoForm = ({
     defaultValues,
     categories,
     stores
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<PromoFormValues,Schema> & {
     categories: CategoryModel[],
     stores: StoreModel[]
 }) => {
-    const data = defaultValues ? emptyStringToNull(defaultValues) : {}
-    const { stores: defaultStores, ...otherDefaultData } = data
-    const normalizedData = {
-        ...otherDefaultData,
+    const { stores: defaultStores, ...otherDefaultValues } = defaultValues ?? {}
+    const normalizedDefaults = {
+        ...otherDefaultValues,
         stores:
             defaultStores === null || (Array.isArray(defaultStores) && defaultStores.length === 0)
                 ? [""]
-                : defaultStores ?? [""]
-    } satisfies Partial<FormValues>
+                : defaultStores ?? [""],
+    } satisfies Partial<PromoFormValues>
 
-    const form = useForm<FormValues, unknown, Schema>({
+    const form = useForm<PromoFormValues, unknown, Schema>({
         resolver: zodResolver(schema),
         defaultValues: {
             category_id: "",
             subcategory_id: "",
             promotionValue: "",
             isActive: true,
-            ...normalizedData
+            ...normalizedDefaults,
         }
     })
     const selectedStores = useWatch({

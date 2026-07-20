@@ -1,15 +1,17 @@
 import type { AxiosResponse } from "axios";
-import type { UserModel } from "../../interfaces/Models";
-import type { Schema as PasswordSchema } from "../../components/forms/PasswordChangeForm";
-import type { Schema as ProfileSchema } from "../../components/forms/ProfileForm";
+import type { UpdateProfileBody, UpdatePasswordBody } from "@recyclerie/api/schemas/auth";
+import type {
+  UpdateProfileResponse,
+  UpdatePasswordResponse,
+} from "@recyclerie/api/responses/auth";
 import axiosInstance from "./axios";
 
 export const updateProfile = (
-  data: ProfileSchema,
-): Promise<AxiosResponse<{ message: string; user: UserModel }>> =>
-  axiosInstance.put("/api/auth/profile", data);
+  data: UpdateProfileBody,
+): Promise<AxiosResponse<UpdateProfileResponse>> =>
+  axiosInstance.put<UpdateProfileResponse>("/api/auth/profile", data);
 
 export const updateProfilePassword = (
-  data: PasswordSchema,
-): Promise<AxiosResponse<{ message: string }>> =>
-  axiosInstance.put("/api/auth/profile/password", data);
+  data: UpdatePasswordBody,
+): Promise<AxiosResponse<UpdatePasswordResponse>> =>
+  axiosInstance.put<UpdatePasswordResponse>("/api/auth/profile/password", data);

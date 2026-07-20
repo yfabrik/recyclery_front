@@ -26,7 +26,7 @@ export const EmployeeSkillForm = ({
   const skills = useQuery({
     queryKey: ["skills"],
     queryFn: () =>
-      fetchSkills().then((response) => response.data.skills || []),
+      fetchSkills().then((response) => response.data.data ?? []),
   });
   useQueryErrorToast(skills.error, "Erreur lors du chargement des compétences");
 
@@ -35,7 +35,7 @@ export const EmployeeSkillForm = ({
     queryFn: () =>
       detailEmployee(employee.id).then((response) => {
         const emp = response.data.data;
-        const raw = emp?.Skills ?? (emp as { skills?: SkillModel[] })?.skills ?? [];
+        const raw = emp?.skills ?? [];
         return Array.isArray(raw) ? (raw as SkillModel[]) : [];
       }),
     enabled: !!employee.id,

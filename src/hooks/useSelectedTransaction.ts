@@ -9,7 +9,7 @@ export const useSelectedTransaction = (
     queryKey: ["transactionDetails", transactionId],
     queryFn: () =>
       getTransactionDetails(transactionId!).then(
-        (response) => response.data.transaction,
+        (response) => response.data.data,
       ),
     enabled: enabled && transactionId != null,
   });

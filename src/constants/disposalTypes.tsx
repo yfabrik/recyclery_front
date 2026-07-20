@@ -6,9 +6,9 @@ import {
 } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { WasteModel } from "../interfaces/Models";
+import type { WasteDisposalType } from "@recyclerie/api/enums";
 
-export type DisposalTypeValue = WasteModel["disposal_type"];
+export type DisposalTypeValue = WasteDisposalType;
 
 export type DisposalType = {
   [K in DisposalTypeValue]: {

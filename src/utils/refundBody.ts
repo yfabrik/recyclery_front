@@ -1,11 +1,12 @@
+import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
 import type { Schema } from "../components/forms/RefundForm";
-import type { CreateRefundBody } from "../services/api/transactions";
+import type { CashSession } from "../interfaces/Models";
 import { getCartLinePrice } from "../services/cartService";
 
 export const buildCreateRefundBody = (
   data: Schema,
-  cashSessionId: number,
-): CreateRefundBody => {
+  cashSessionId: CashSession["id"],
+): RefundDataInput => {
   const items = data.cart
     .map((item) => ({
       ...item,

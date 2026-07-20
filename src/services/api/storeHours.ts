@@ -1,12 +1,31 @@
+import type {
+  CreateStoreHoursResponse,
+  ListStoreHoursResponse,
+  UpdateStoreHoursResponse,
+} from "@recyclerie/api/responses/taskSchedule";
+import type { CreateStoreHoursDataInput } from "@recyclerie/api/schemas/schedules";
 import type { AxiosResponse } from "axios";
+import type { ScheduleModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { StoreHoursModel } from "../../interfaces/Models";
-import type { Schema } from "../../components/forms/StoreOpeningForm";
 
-export const fetchStoreHours = (): Promise<AxiosResponse<{ message: string, storeHours: StoreHoursModel[] }>> => axiosInstance.get("/api/store-hours");
-export const updateStoreHours = (id:number, data:Schema) =>
-  axiosInstance.put(`/api/store-hours/${id}`, data);
-export const createStoreHours = (data:Schema) =>
-  axiosInstance.post("/api/store-hours", data);
-export const deleteStoreHours = (id:number) =>
+// export type StoreHoursPayload = Omit<Schema, "notes"> & {
+//   notes: string | null;
+// };
+
+export const fetchStoreHours = (): Promise<
+  AxiosResponse<ListStoreHoursResponse>
+> => axiosInstance.get<ListStoreHoursResponse>("/api/store-hours");
+
+export const updateStoreHours = (
+  id: ScheduleModel["id"],
+  data: CreateStoreHoursDataInput,
+): Promise<AxiosResponse<UpdateStoreHoursResponse>> =>
+  axiosInstance.put<UpdateStoreHoursResponse>(`/api/store-hours/${id}`, data);
+
+export const createStoreHours = (
+  data: CreateStoreHoursDataInput,
+): Promise<AxiosResponse<CreateStoreHoursResponse>> =>
+  axiosInstance.post<CreateStoreHoursResponse>("/api/store-hours", data);
+
+export const deleteStoreHours = (id: ScheduleModel["id"]) =>
   axiosInstance.delete(`/api/store-hours/${id}`);

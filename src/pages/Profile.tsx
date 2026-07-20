@@ -55,7 +55,7 @@ const Profile = () => {
   const [formKey, setFormKey] = useState(0);
   const [passwordFormKey, setPasswordFormKey] = useState(0);
 
-  const formatDate = (date?: string) =>
+  const formatDate = (date?: string | null) =>
     date ? new Date(date).toLocaleDateString('fr-FR') : '—';
 
   const managedStores =
@@ -69,7 +69,8 @@ const Profile = () => {
   });
 
   const changePassword = useMutation({
-    mutationFn: (data: PasswordSchema) => updateProfilePassword(data),
+    mutationFn: (data: PasswordSchema) =>
+      updateProfilePassword({ ...data, currentPassword: data.currentPassword ?? "" }),
     onSuccess: (response) => {
       toast.success(
         getApiSuccessMessage(response, 'Mot de passe mis à jour avec succès'),

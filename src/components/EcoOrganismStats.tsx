@@ -13,7 +13,9 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useMediaQuery, useTheme } from "@mui/material";
+import type { EcoOrgQuarterLabel } from "@recyclerie/api/responses/ecoOrganism";
 import type { EcoOrganismQuarterStat } from "../services/api/ecoOrganism";
+import { formatEcoOrgQuarterLabel } from "../services/api/ecoOrganism";
 import type { ArrivalModel } from "../interfaces/Models";
 import { getArrivalSourceLabel } from "../constants/arrivalSourceTypes";
 
@@ -36,8 +38,8 @@ export interface EcoOrganismStatsProps {
 }
 
 const formatQuarterRange = (quarter: string): string => {
-  // If backend already sends a range, keep it
-  if (quarter.includes("-")) return quarter;
+  const formatted = formatEcoOrgQuarterLabel(quarter);
+  if (formatted !== quarter) return formatted;
 
   const match = quarter.match(/^Q([1-4])\s+(\d{4})$/);
   if (!match) return quarter;
@@ -53,19 +55,18 @@ const formatQuarterRange = (quarter: string): string => {
   };
 
   const [startMonth, endMonth] = monthRanges[q] ?? [1, 3];
-
   const pad = (m: number) => (m < 10 ? `0${m}` : `${m}`);
 
   return `${pad(startMonth)}/${year} - ${pad(endMonth)}/${year}`;
 };
 
-const getLastFourQuarterLabels = (): string[] => {
+const getLastFourQuarterLabels = (): EcoOrgQuarterLabel[] => {
   const now = new Date();
   let y = now.getFullYear();
   let q = Math.floor(now.getMonth() / 3) + 1;
-  const labels: string[] = [];
+  const labels: EcoOrgQuarterLabel[] = [];
   for (let i = 0; i < 4; i++) {
-    labels.push(`Q${q} ${y}`);
+    labels.push(`${y}-T${q as 1 | 2 | 3 | 4}`);
     q -= 1;
     if (q === 0) {
       q = 4;
@@ -278,15 +279,11 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
       QuarterEntry["quarterIn"]["by_source_type"],
       Record<ArrivalModel["source_type"], unknown>
     >;
-    type QuarterStatForSource = QuarterInBySourceType["point"];
+    type QuarterStatForSource = QuarterInBySourceType[ArrivalModel["source_type"]];
 
-    // API can provide either an object or an array (legacy payload).
-    const bySourceType = Array.isArray(quarterIn.by_source_type)
-      ? quarterIn.by_source_type[0]
-      : quarterIn.by_source_type;
-    const sourceEntries = bySourceType
-      ? (Object.entries(bySourceType) as Array<[ArrivalModel["source_type"], QuarterStatForSource]>)
-      : [];
+    const sourceEntries = Object.entries(quarterIn.by_source_type) as Array<
+      [ArrivalModel["source_type"], QuarterStatForSource]
+    >;
 
     if (!sourceEntries.length) return renderCategoryRows(quarterIn.categories ?? []);
 
@@ -348,7 +345,7 @@ export const EcoOrganismStats: React.FC<EcoOrganismStatsProps> = ({
             }}
           >
             <Typography variant="body2" color="textSecondary">
-              {q.quarter?.trim() ? q.quarter : formatQuarterRange(q.quarter)}
+              {formatQuarterRange(q.quarter)}
             </Typography>
 
             <Stack spacing={1} sx={{ mt: 1.25 }}>

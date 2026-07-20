@@ -14,7 +14,6 @@ import {
   deleteTransaction,
   getTransactions,
   updateTransaction,
-  type CreateRefundBody,
   type transactionsFilters,
 } from "../../services/api/transactions";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
@@ -24,11 +23,12 @@ import type { Schema as RefundSchema } from "../forms/RefundForm";
 import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
-import { SaleHistoryFilter, type Filters } from "../forms/SaleHistoryFilter";
+import { SaleHistoryFilter, type Filters } from "../forms/filters/SaleHistoryFilter";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { buildUpdateTransactionBody } from "../../utils/editTransactionBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { SalesHistoryExport } from "./SalesHistoryExport";
+import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
 
 export const SalesHistory = ({
   activeSession,
@@ -64,7 +64,7 @@ export const SalesHistory = ({
         include: ["category", "promo"],
         only_category: true,
         sell: true,
-      }).then((response) => response.data.categories),
+      }).then((response) => response.data.data),
   });
 
   const transactionsHistory = useQuery({
@@ -91,7 +91,7 @@ export const SalesHistory = ({
   });
 
   const cashRegisterTransactions = (
-    transactionsHistory.data?.transactions || []
+    transactionsHistory.data?.data || []
   ).filter(
     (transaction) =>
       transaction.CashSession?.cash_register_id ===
@@ -100,7 +100,7 @@ export const SalesHistory = ({
   );
 
   const addRefund = useMutation({
-    mutationFn: (v: { id: number; data: CreateRefundBody }) =>
+    mutationFn: (v: { id: number; data: RefundDataInput }) =>
       createRefund(v.id, v.data),
     onSuccess: async (data, variables) => {
       handleCloseRefundDialog();
@@ -109,7 +109,7 @@ export const SalesHistory = ({
       );
       const isGiftCardRefund = variables.data.payment_method === "giftcard";
       if (isGiftCardRefund) {
-        const refundGiftCard = data.data.giftCard;
+        const refundGiftCard = data.data.data.giftCard;
 
         if (!refundGiftCard?.code) {
           toast.warning("Code d'avoir introuvable pour impression");
@@ -119,9 +119,9 @@ export const SalesHistory = ({
         triggerPrintGiftCard({
           giftCard: {
             code: refundGiftCard.code,
-            initial_value: Number(refundGiftCard.initial_value ?? 0),
-            current_value: Number(refundGiftCard.initial_value ?? 0),
-            createdAt: new Date(),
+            initial_value: Number(refundGiftCard.currentBalance ?? 0),
+            current_value: Number(refundGiftCard.currentBalance ?? 0),
+            createdAt: new Date().toISOString(),
           },
           storeAddress: undefined,
         });

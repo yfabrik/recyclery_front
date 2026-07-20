@@ -1,9 +1,9 @@
 import { Cancel, CheckCircle, Schedule } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { DonModel } from "../interfaces/Models";
+import type { DonationStatus as ApiDonationStatus } from "@recyclerie/api/enums";
 
-export type DonationStatusValue = DonModel["status"];
+export type DonationStatusValue = ApiDonationStatus;
 
 export type DonationStatus = {
   [K in DonationStatusValue]: {

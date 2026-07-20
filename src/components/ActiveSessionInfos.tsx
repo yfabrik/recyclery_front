@@ -39,7 +39,10 @@ export const ActiveSessionInfos = ({
                             </Typography>
                             <Typography variant="body2" color="textSecondary">
                                 Session: {activeSession.id} | Ouvert:{" "}
-                                {new Date(activeSession.createdAt).toLocaleString()} | Fonds de caisse: {formatCurrency(activeSession.opening_amount)}
+                                {activeSession.createdAt
+                                  ? new Date(activeSession.createdAt).toLocaleString()
+                                  : "—"}{" "}
+                                | Fonds de caisse: {formatCurrency(activeSession.opening_amount)}
                             </Typography>
                         </Box>
                     </Box>

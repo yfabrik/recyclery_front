@@ -1,18 +1,36 @@
+import type {
+  CreateDonationResponse,
+  DeleteDonationResponse,
+  DonationStatsResponse,
+  ListDonationsResponse,
+  UpdateDonationResponse,
+} from "@recyclerie/api/responses/donations";
+import type { DonationDataInput, DonationFilterInput } from "@recyclerie/api/schemas/donations";
 import type { AxiosResponse } from "axios";
 import type { DonModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
-import type { Schema } from "../../components/forms/DonForm";
 
-interface donStats {
-    total_donations: number;
-    pending_donations: number;
-    accepted_donations: number;
-    rejected_donations: number;
-    total_estimated_value: number;
-  }
 
-export const getDonations = (): Promise<AxiosResponse<{ message: string, donations: DonModel[] }>> => axiosInstance.get("/api/donations")
-export const getDonationsStats = (): Promise<AxiosResponse<{ message: string, stats: donStats }>> => axiosInstance.get("/api/donations/stats")
-export const createDonation = (data: Schema) => axiosInstance.post(`/api/donations`, data)
-export const updateDonation = (id: number, data: Schema) => axiosInstance.put(`/api/donations/${id}`, data)
-export const deleteDonation = (id: number) => axiosInstance.delete(`/api/donations/${id}`)
+export const getDonations = (
+  filters?: DonationFilterInput,
+): Promise<AxiosResponse<ListDonationsResponse>> =>
+  axiosInstance.get<ListDonationsResponse>("/api/donations", { params: filters });
+
+export const getDonationsStats = (): Promise<AxiosResponse<DonationStatsResponse>> =>
+  axiosInstance.get<DonationStatsResponse>("/api/donations/stats");
+
+export const createDonation = (
+  data: DonationDataInput,
+): Promise<AxiosResponse<CreateDonationResponse>> =>
+  axiosInstance.post<CreateDonationResponse>("/api/donations", data);
+
+export const updateDonation = (
+  id: DonModel["id"],
+  data: DonationDataInput,
+): Promise<AxiosResponse<UpdateDonationResponse>> =>
+  axiosInstance.put<UpdateDonationResponse>(`/api/donations/${id}`, data);
+
+export const deleteDonation = (
+  id: DonModel["id"],
+): Promise<AxiosResponse<DeleteDonationResponse>> =>
+  axiosInstance.delete<DeleteDonationResponse>(`/api/donations/${id}`);

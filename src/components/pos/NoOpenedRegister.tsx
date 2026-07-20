@@ -35,20 +35,21 @@ import {
   getCashSessionStatusLabel,
 } from "../../constants/cashSessionStatuses";
 import { useBilanCaissePrint } from "../BilanCaissePrint";
-import { OpenCaisseForm, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
+import { OpenCaisseForm, type OpenCaisseFormValues, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
 import { Loading } from "../Loading";
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
-    const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-    const [selectedCashRegisterId, setSelectedCashRegisterId] = useState<number | null>(null);
+    // const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+    // const [selectedCashRegisterId, setSelectedCashRegisterId] = useState<number | null>(null);
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [historyRegister, setHistoryRegister] = useState<CaisseModel | null>(null);
+    const [formDefaults,setFormDefaults] = useState<Partial<OpenCaisseFormValues>|null>(null)
 
     const queryClient = useQueryClient()
     const stores = useQuery({
         queryKey: ["stores", { active: true, include: ["caisses"] }],
-        queryFn: () => fetchStores({ active: true, include: ["caisses"] }).then((response) => response.data.stores),
+        queryFn: () => fetchStores({ active: true, include: ["caisses"] }).then((response) => response.data.data),
         // enabled: !storesData,
     });
 
@@ -79,8 +80,12 @@ export const NoOpenedRegister = () => {
     };
 
     const handleOpenClick = (storeId: number, cashRegisterId: number) => {
-        setSelectedStoreId(storeId);
-        setSelectedCashRegisterId(cashRegisterId);
+        setFormDefaults({
+            store_id: storeId,
+            cash_register_id: cashRegisterId,
+        })
+        // setSelectedStoreId(storeId);
+        // setSelectedCashRegisterId(cashRegisterId);
         setOpenSessionDialog(true);
     };
 
@@ -121,8 +126,9 @@ export const NoOpenedRegister = () => {
                 open={openSessionDialog}
                 onClose={() => {
                     setOpenSessionDialog(false);
-                    setSelectedStoreId(null);
-                    setSelectedCashRegisterId(null);
+                    setFormDefaults(null)
+                    // setSelectedStoreId(null);
+                    // setSelectedCashRegisterId(null);
                 }}
                 maxWidth="sm"
                 fullWidth
@@ -131,13 +137,14 @@ export const NoOpenedRegister = () => {
                 <DialogContent>
                     {openSessionDialog && (
                     <OpenCaisseForm
-                        key={`${selectedStoreId ?? ""}-${selectedCashRegisterId ?? ""}`}
+                        key={`${formDefaults?.store_id ?? ""}-${formDefaults?.cash_register_id ?? ""}`}
                         formId="OpenCaisseForm"
                         onSubmit={handleOpenSession}
                         stores={availableStores}
-                        defaultStoreId={selectedStoreId ?? undefined}
-                        defaultCashRegisterId={selectedCashRegisterId ?? undefined}
-                        lockStoreAndRegister={selectedStoreId !== null && selectedCashRegisterId !== null}
+                        defaultValues={formDefaults}
+                        // defaultStoreId={selectedStoreId ?? undefined}
+                        // defaultCashRegisterId={selectedCashRegisterId ?? undefined}
+                        // lockStoreAndRegister={formDefaults?.cash_register_id !== null && formDefaults?.store_id !== null}
                     />
                     )}
                 </DialogContent>
@@ -145,8 +152,9 @@ export const NoOpenedRegister = () => {
                     <Button
                         onClick={() => {
                             setOpenSessionDialog(false);
-                            setSelectedStoreId(null);
-                            setSelectedCashRegisterId(null);
+                            setFormDefaults(null)
+                            // setSelectedStoreId(null);
+                            // setSelectedCashRegisterId(null);
                         }}
                     >
                         Annuler
@@ -244,14 +252,14 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
     const { triggerPrintBilanCaisse, bilanCaissePrintNode } = useBilanCaissePrint();
     const sessions = useQuery({
         queryKey: ["sessions", { registerId: register.id }],
-        queryFn: () => getCaisseDetails(register.id).then((response) => response.data),
+        queryFn: () => getCaisseDetails(register.id).then((response) => response.data.data),
         enabled: !!register.id,
     });
 
     const handleReprintSummary = async (session: CashSession) => {
         try {
             setIsPrinting(true);
-            const detail = await getSessionDetails(session.id).then((response) => response.data.session);
+            const detail = await getSessionDetails(session.id).then((response) => response.data.data);
             triggerPrintBilanCaisse({
                 session: detail,
                 transactions: (detail.SalesTransactions ?? []).map(
@@ -280,18 +288,22 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
             <DialogTitle>Historique des sessions - {register.name}</DialogTitle>
             <DialogContent>
                 <Loading isLoading={sessions.isLoading}>
-                    {sessions.data?.data.sessions.length === 0 ? (
+                    {!sessions.data?.sessions?.length ? (
                         <Typography variant="body2" color="text.secondary">
                             Aucune session trouvée pour cette caisse.
                         </Typography>
                     ) : (
                         <List dense>
-                            {sessions.data?.data?.sessions?.map((session) => (
+                            {sessions.data?.sessions?.map((session) => (
                                 <ListItem key={session.id} divider>
                                     <ListItemText
                                         primary={
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <span>{`Session #${session.id} - ${new Date(session.createdAt).toLocaleString("fr-FR")} -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
+                                                <span>{`Session #${session.id} - ${
+                                                  session.createdAt
+                                                    ? new Date(session.createdAt).toLocaleString("fr-FR")
+                                                    : "—"
+                                                } -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
                                                 <Chip
                                                     size="small"
                                                     label={getCashSessionStatusLabel(session.status)}

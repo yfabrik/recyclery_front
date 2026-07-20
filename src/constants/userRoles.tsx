@@ -5,9 +5,9 @@ import {
 } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { UserModel } from "../interfaces/Models";
+import type { UserRole as ApiUserRole } from "@recyclerie/api/enums";
 
-export type UserRoleValue = UserModel["role"];
+export type UserRoleValue = ApiUserRole;
 
 export type UserRole = {
   [K in UserRoleValue]: {

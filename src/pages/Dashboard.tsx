@@ -11,7 +11,7 @@ import {
   Store,
   TrendingUp,
   VolunteerActivism,
-  WavingHand,
+  WavingHand
 } from "@mui/icons-material";
 import {
   Alert,
@@ -27,36 +27,21 @@ import {
   List,
   Paper,
   Stack,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
-import React, { useState } from "react";
+import React from "react";
 
-// Fonction pour obtenir l'icône par nom
-// const getIconByName = (iconName) => {
-//   const icons = {
-//     ShoppingCart,
-//     VolunteerActivism,
-//     LocalShipping,
-//     Inventory,
-//     People,
-//   };
-//   return icons[iconName] || Info;
-// };
-import { BarChart, PieChart } from "@mui/x-charts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import dayjs from "dayjs";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
-import { StatCard } from "../components/StatCard";
+import { SalesCharts } from "../components/dashboard/SalesCharts";
 import DashboardNotifications from "../components/DashboardNotifications";
-import EcoOrganismStats from "../components/EcoOrganismStats";
+import { Loading } from "../components/Loading";
 import QuickStats from "../components/QuickStats";
+import { StatCard } from "../components/StatCard";
 import StoreStats from "../components/StoreStats";
 import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
-import type { StoreModel } from "../interfaces/Models";
 import {
   getActivities,
   getChartsData,
@@ -65,61 +50,10 @@ import {
   type Activity,
   type Stats,
 } from "../services/api/dashboard";
-import { fetchEcoOrganismQuarterStats } from "../services/api/ecoOrganism";
-import {
-  getTranscationStats,
-  type transactionsFilters,
-} from "../services/api/transactions";
 import { formatCurrency, formatPercentage } from "../services/cartService";
-import { Loading } from "../components/Loading";
-
-const ALL_STORES = "all" as const;
-type ViewStoreFilter = StoreModel["id"] | typeof ALL_STORES;
 
 const Dashboard = () => {
   const { user } = useAuth();
-
-  type ViewType = "week" | "month" | "year";
-  const [view, setView] = React.useState<ViewType>("week");
-  const handleViewChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newView: ViewType,
-  ) => {
-    if (newView !== null) {
-      setView(newView);
-    }
-  };
-  const [viewStore, setViewStore] =
-    useState<ViewStoreFilter>(ALL_STORES);
-
-  const handleStatsFilter = (): transactionsFilters => {
-    const saleFilter: transactionsFilters = {};
-    if (viewStore !== ALL_STORES) saleFilter.store_id = viewStore;
-    switch (view) {
-      case "week":
-        saleFilter.date_from = dayjs().startOf("week").toISOString();
-        break;
-      case "month":
-        saleFilter.date_from = dayjs().startOf("month").toISOString();
-        break;
-      case "year":
-        saleFilter.date_from = dayjs().startOf("year").toISOString();
-        break;
-      default:
-        view satisfies never;
-        break;
-    }
-    return saleFilter;
-  };
-
-  const handleViewStoreChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newView: ViewStoreFilter | null,
-  ) => {
-    if (newView !== null) {
-      setViewStore(newView);
-    }
-  };
 
   // Données simulées réalistes pour la démonstration
   const mockStats = {
@@ -139,7 +73,7 @@ const Dashboard = () => {
 
   const mockActivities = [
     {
-      id: 1,
+      id: "1",
       type: "sale",
       description: "Vente d'un réfrigérateur Samsung",
       amount: "150€",
@@ -150,7 +84,7 @@ const Dashboard = () => {
       statusColor: "success",
     },
     {
-      id: 2,
+      id: "2",
       type: "donation",
       description: "Nouveau don de mobilier",
       amount: "5 articles",
@@ -161,7 +95,7 @@ const Dashboard = () => {
       statusColor: "warning",
     },
     {
-      id: 3,
+      id: "3",
       type: "collection",
       description: "Collecte programmée",
       amount: "Demain 9h",
@@ -172,7 +106,7 @@ const Dashboard = () => {
       statusColor: "info",
     },
     {
-      id: 4,
+      id: "4",
       type: "inventory",
       description: "Ajout de 12 articles électroniques",
       amount: "Catégorie: Électronique",
@@ -183,7 +117,7 @@ const Dashboard = () => {
       statusColor: "success",
     },
     {
-      id: 5,
+      id: "5",
       type: "user",
       description: "Nouvel employé ajouté",
       amount: "Marie Dubois",
@@ -222,18 +156,13 @@ const Dashboard = () => {
   });
   const storesStats = useQuery({
     queryKey: ["storesStats"],
-    queryFn: () => getStoreStats().then((response) => response.data.stores),
+    queryFn: () => getStoreStats().then((response) => response.data.data),
   });
-  const ecoOrganismQuarterStats = useQuery({
-    queryKey: ["ecoOrganismQuarterStats"],
-    queryFn: () =>
-      fetchEcoOrganismQuarterStats().then((response) => response.data.stats),
-  });
-
-  const salesStats = useQuery({
-    queryKey: ["salesStats", handleStatsFilter()],
-    queryFn: () => getTranscationStats(handleStatsFilter()),
-  });
+  // const ecoOrganismQuarterStats = useQuery({
+  //   queryKey: ["ecoOrganismQuarterStats"],
+  //   queryFn: () =>
+  //     fetchEcoOrganismQuarterStats().then((response) => response.data.data),
+  // });
 
   const handleRefresh = async () => {
     queryClient.invalidateQueries({
@@ -244,7 +173,7 @@ const Dashboard = () => {
     });
   };
   type TrendDirection = "up" | "down";
-  const calculateTrend = (current: number = 0, previous: number = 0):{direction: TrendDirection , value: string} | null => {
+  const calculateTrend = (current: number = 0, previous: number = 0): { direction: TrendDirection, value: string } | null => {
     if (!previous) return null;
     const percentage = formatPercentage((current - previous) / previous);
     return {
@@ -342,8 +271,8 @@ const Dashboard = () => {
             subtitle={`sur ${stats.data?.totalItems?.toLocaleString() || "0"} total`}
             icon={<Inventory />}
             color="primary"
-            // trend={salesTrend?.direction}
-            // trendValue={salesTrend?.value}
+          // trend={salesTrend?.direction}
+          // trendValue={salesTrend?.value}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -430,191 +359,11 @@ const Dashboard = () => {
 
       <Grid container spacing={3}>
         {/* Graphiques de performance */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          {/* <SimpleBarChart
-            pData={charts.data?.sales || mockSalesData}
-            uData={charts.data?.revenue || mockRevenueData}
-            label1="Ventes cette semaine"
-            label2="Revenus cette semaine (€)"
-            xLabels={
-              charts.data?.labels || [
-                "Lun",
-                "Mar",
-                "Mer",
-                "Jeu",
-                "Ven",
-                "Sam",
-                "Dim",
-              ]
-            }
-          /> */}
 
-          {/* <SimpleChart
-            data={charts.sales.length > 0 ? charts.sales : mockSalesData}
-            title="Ventes cette semaine"
-            color="success"
-            labels={
-              charts.labels && charts.labels.length > 0
-                ? charts.labels
-                : ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SimpleChart
-            data={charts.revenue.length > 0 ? charts.revenue : mockRevenueData}
-            title="Revenus cette semaine (€)"
-            color="primary"
-            labels={
-              charts.labels && charts.labels.length > 0
-                ? charts.labels
-                : ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-            }
-          /> */}
-        </Grid>
-
-        <Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 3,
-              mb: 2,
-            }}
-          >
-            <ToggleButtonGroup
-              color="primary"
-              size="small"
-              value={view}
-              exclusive
-              onChange={handleViewChange}
-            >
-              <ToggleButton value="week">semaine</ToggleButton>
-              <ToggleButton value="month">mois</ToggleButton>
-              <ToggleButton value="year">année</ToggleButton>
-            </ToggleButtonGroup>
-
-            <ToggleButtonGroup
-              color="primary"
-              size="small"
-              value={viewStore}
-              exclusive
-              onChange={handleViewStoreChange}
-            >
-              <ToggleButton value={ALL_STORES}>TOUT</ToggleButton>
-              {storesStats.data?.map((store) => (
-                <ToggleButton value={store.id}>{store.name}</ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          </Box>
-          {salesStats.isSuccess && (
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "flex-start",
-                gap: 2,
-              }}
-            >
-              <Box sx={{ flex: "1 1 400px", minWidth: 0 }}>
-                <BarChart
-                  height={350}
-                  series={[
-                    {
-                      data:
-                        salesStats.data?.data.stats.by_day.map(
-                          (cat) => cat.total_amount,
-                        ) ?? [],
-                      label: "Chiffre d'affaires",
-                      id: "money",
-                    },
-                    {
-                      data:
-                        salesStats.data?.data.stats.by_day.map(
-                          (cat) => cat.transaction_count,
-                        ) ?? [],
-                      label: "nombre de transactions",
-                      id: "quantity",
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      data: salesStats.data?.data.stats.by_day.map(
-                        (cat) => cat.date,
-                      ),
-                      height: 28,
-                    },
-                  ]}
-                  yAxis={[{ width: 50 }]}
-                />
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: 600, mb: 0.5 }}
-                >
-                  Quantité par catégorie
-                </Typography>
-                <PieChart
-                  series={[
-                    {
-                      data:
-                        salesStats.data?.data.stats.by_category.map(
-                          (cat, index) => ({
-                            id: index,
-                            label: cat.category_name,
-                            value: cat.total_quantity,
-                          }),
-                        ) || [],
-                    },
-                  ]}
-                  width={200}
-                  height={200}
-                />
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: 600, mb: 0.5 }}
-                >
-                  Montant par catégorie
-                </Typography>
-                <PieChart
-                  series={[
-                    {
-                      data:
-                        salesStats.data?.data.stats.by_category.map(
-                          (cat, index) => ({
-                            id: index,
-                            label: cat.category_name,
-                            value: cat.total_price_sum,
-                          }),
-                        ) || [],
-                      valueFormatter: (item) =>
-                        `${item.label} ${formatCurrency(item.value as number)}`,
-                    },
-                  ]}
-                  width={200}
-                  height={200}
-                />
-              </Box>
-            </Box>
-          )}
-        </Box>
-        <Box>
+        <Loading isLoading={storesStats.isLoading}>
+          <SalesCharts stores={storesStats.data || []} />
+        </Loading>
+        {/* <Box>
           <EcoOrganismStats
             title="Statistiques sortant par éco-organisme"
             stats={ecoOrganismQuarterStats.data || []}
@@ -636,7 +385,7 @@ const Dashboard = () => {
             valueLabel="Tonnage vendu (kg)"
             metricSource="quarterSell"
           />
-        </Box>
+        </Box> */}
 
         {/* Activités récentes améliorées */}
         <Grid size={{ xs: 12, md: 8 }}>
@@ -760,7 +509,7 @@ const Dashboard = () => {
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications onDismiss={() => {}} />
+            <DashboardNotifications onDismiss={() => { }} />
           </Stack>
         </Grid>
       </Grid>

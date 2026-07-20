@@ -52,7 +52,7 @@ export const CreateCaisseDialog = ({
   const caisses = useQuery({
     queryKey: ["caisses", store.id],
     queryFn: () =>
-      fetchCaisses(store.id).then((response) => response.data.cash_registers),
+      fetchCaisses(store.id).then((response) => response.data.data),
     placeholderData: [],
   });
   useQueryErrorToast(caisses.error, "Erreur lors du chargement des caisses");

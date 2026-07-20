@@ -1,33 +1,111 @@
+import type {
+  AssignEmployeeTaskResponse,
+  CreateTaskResponse,
+  DeleteTaskResponse,
+  ListTasksResponse,
+  RemoveEmployeeTaskResponse,
+  TaskEmployeesResponse,
+  UpdateTaskResponse,
+} from "@recyclerie/api/responses/tasks";
+import type { TaskDataInput, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
 import type { AxiosResponse } from "axios";
-import axiosInstance from "./axios";
 import type { TaskFormSchema } from "../../components/forms/TaskForm";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
-interface filterTask {
-  include?: ("user" | "store")[];
-  store_id?: number;
-  date_from?: string | Date;
-  date_to?: string | Date;
-  category?: TaskModel["category"];
+import axiosInstance from "./axios";
+
+// export type { TaskListFilter };
+
+export function parseTaskJsonArray(
+  value: string | string[] | null | undefined,
+): string[] {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
 }
-export const getTasks = (filter?: filterTask): Promise<AxiosResponse<{ message: string, tasks: TaskModel[] }>> =>
-  axiosInstance.get("/api/tasks", { params: { ...filter, include: filter?.include?.toString() } });
 
-export const getEmployeesForTask = (id: number): Promise<AxiosResponse<{
-  message: string, employees: EmployeeModel []
-}>> =>
-  axiosInstance.get(`/api/tasks/${id}/employees`);
+export type TaskDisplay = Omit<
+  TaskModel,
+  "required_skills" | "equipment_needed"
+> & {
+  required_skills: string[];
+  equipment_needed: string[];
+  assigned_employees?: EmployeeModel[];
+};
 
-export const updateTask = (id: number, data: TaskFormSchema) =>
-  axiosInstance.put(`/api/tasks/${id}`, data);
+export function normalizeTaskForDisplay(task: TaskModel): TaskDisplay {
+  return {
+    ...task,
+    required_skills: parseTaskJsonArray(task.required_skills),
+    equipment_needed: parseTaskJsonArray(task.equipment_needed),
+  };
+}
 
-export const createTask = (data: TaskFormSchema) =>
-  axiosInstance.post("/api/tasks", data);
+export function taskToFormValues(
+  task: TaskModel | TaskDisplay,
+): Partial<TaskFormSchema> {
+  return {
+    name: task.name,
+    description: task.description ?? "",
+    category: task.category,
+    priority: task.priority ?? "medium",
+    location: task.location ?? "",
+    required_skills: parseTaskJsonArray(task.required_skills),
+    equipment_needed: parseTaskJsonArray(task.equipment_needed),
+    hourly_rate: task.hourly_rate != null ? Number(task.hourly_rate) : undefined,
+    is_recurring: false,
+    recurrence_pattern: null,
+    notes: task.notes ?? "",
+    scheduled_date: new Date(task.scheduled_date),
+    start_time: task.start_time ? new Date(task.start_time) : new Date(),
+    end_time: task.end_time ? new Date(task.end_time) : new Date(),
+  };
+}
 
-export const deleteTask = (id: number) =>
-  axiosInstance.delete(`/api/tasks/${id}`);
+export const getTasks = (
+  filter?: TaskListFilterInput,
+): Promise<AxiosResponse<ListTasksResponse>> =>
+  axiosInstance.get<ListTasksResponse>("/api/tasks", {
+    params: { ...filter, include: filter?.include?.toString() },
+  });
 
-export const addEmployeeToTask = (id: number, employee_id: number) =>
-  axiosInstance.post(`/api/tasks/${id}/employees`, { employee_id });
+export const getEmployeesForTask = (
+  id: TaskModel["id"],
+): Promise<AxiosResponse<TaskEmployeesResponse>> =>
+  axiosInstance.get<TaskEmployeesResponse>(`/api/tasks/${id}/employees`);
 
-export const removeEmployeeFromTask = (id: number, employee_id: number) =>
-  axiosInstance.delete(`/api/tasks/${id}/employees/${employee_id}`);
+export const updateTask = (
+  id: TaskModel["id"],
+  data: TaskDataInput,
+): Promise<AxiosResponse<UpdateTaskResponse>> =>
+  axiosInstance.put<UpdateTaskResponse>(`/api/tasks/${id}`, data);
+
+export const createTask = (
+  data: TaskDataInput,
+): Promise<AxiosResponse<CreateTaskResponse>> =>
+  axiosInstance.post<CreateTaskResponse>("/api/tasks", data);
+
+export const deleteTask = (
+  id: TaskModel["id"],
+): Promise<AxiosResponse<DeleteTaskResponse>> =>
+  axiosInstance.delete<DeleteTaskResponse>(`/api/tasks/${id}`);
+
+export const addEmployeeToTask = (
+  id: TaskModel["id"],
+  employee_id: EmployeeModel["id"],
+): Promise<AxiosResponse<AssignEmployeeTaskResponse>> =>
+  axiosInstance.post<AssignEmployeeTaskResponse>(`/api/tasks/${id}/employees`, {
+    employee_id,
+  });
+
+export const removeEmployeeFromTask = (
+  id: TaskModel["id"],
+  employee_id: EmployeeModel["id"],
+): Promise<AxiosResponse<RemoveEmployeeTaskResponse>> =>
+  axiosInstance.delete<RemoveEmployeeTaskResponse>(
+    `/api/tasks/${id}/employees/${employee_id}`,
+  );

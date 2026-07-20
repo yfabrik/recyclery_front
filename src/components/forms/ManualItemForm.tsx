@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
 import { sumPromoCategorie } from "../../services/cartService";
-import { emptyStringToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
@@ -26,12 +25,12 @@ export const ManualItemForm = ({
   onSubmit,
   defaultValues,
   categories,
-}: BaseFormProps<ManualItemSchema> & {
+}: BaseFormProps<FormValues,ManualItemSchema> & {
   categories: CategoryModel[];
 }) => {
   const { prompt, PromptDialog } = usePrompt();
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm<FormValues, unknown, ManualItemSchema>({
+  // const data = defaultValues ? emptyStringToNull(defaultValues) : {};
+  const form = useForm({
     resolver: zodResolver(manualItemSchema(categories)),
     defaultValues: {
       category_id: "",
@@ -40,7 +39,8 @@ export const ManualItemForm = ({
       price: "",
       description: "",
       promotion: "",
-      ...data,
+      // ...data,
+      ...defaultValues ??{}
     },
   });
 

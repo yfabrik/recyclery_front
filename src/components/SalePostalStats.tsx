@@ -16,7 +16,7 @@ export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
     queryKey: ["transactionsPostalStats", filters],
     queryFn: () =>
       getTranscationPostalStats(filters).then(
-        (response) => response.data.postal_codes,
+        (response) => response.data.data,
       ),
   });
 
@@ -49,16 +49,16 @@ export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
                   color="success.main"
                   fontWeight="bold"
                 >
-                  {formatCurrency(postal.total_sales)}
+                  {formatCurrency(Number(postal.total_sales))}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="body2" color="textSecondary">
-                  {postal.transaction_count} transaction
-                  {postal.transaction_count > 1 ? "s" : ""}
+                  {Number(postal.transaction_count)} transaction
+                  {Number(postal.transaction_count) > 1 ? "s" : ""}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Panier moyen: {formatCurrency(postal.average_transaction)}
+                  Panier moyen: {formatCurrency(Number(postal.average_transaction))}
                 </Typography>
               </Box>
               {index < postalCodeStats.data?.slice(0, 10).length - 1 && (

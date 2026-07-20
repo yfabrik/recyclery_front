@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { mockCategories } from "../../stories/fixtures";
+import { mockCategories } from "../../../stories/fixtures";
 import { LabelFiltersForm } from "./LabelFiltersForm";
 
 const meta = {
@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Labeled items list filters: category, search text, and status chip.",
+          "Labeled items list filters: category, search text, status, and date range.",
       },
     },
   },
@@ -21,6 +21,8 @@ const meta = {
       category_id: "",
       search: "",
       status: "",
+      date_from: null,
+      date_to: null,
     },
     onChange: (values: unknown) => console.log("[label filters]", values),
   },

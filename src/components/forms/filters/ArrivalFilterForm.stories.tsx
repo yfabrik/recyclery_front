@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { mockCollectionPoints } from "../../stories/fixtures";
-import axiosInstance from "../../services/api/axios";
+import { mockCollectionPoints } from "../../../stories/fixtures";
+import axiosInstance from "../../../services/api/axios";
 import { ArrivalFilterForm } from "./ArrivalFilterForm";
 
 function StoryWrapper() {

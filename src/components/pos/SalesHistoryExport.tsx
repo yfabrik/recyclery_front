@@ -6,7 +6,7 @@ import {
   getTransactions,
   type transactionsFilters,
 } from "../../services/api/transactions";
-import type { Filters } from "../forms/SaleHistoryFilter";
+import type { Filters } from "../forms/filters/SaleHistoryFilter";
 import { ExportCsvButton, type ExportScope } from "../ExportCsvButton";
 import { downloadCsv, rowsToCsv, type CsvColumn } from "../../utils/csv";
 import { fetchAllPages } from "../../utils/fetchAllPages";
@@ -91,7 +91,7 @@ export const SalesHistoryExport = ({
       const allTransactions = await fetchAllPages<
         TransactionModel,
         {
-          transactions?: TransactionModel[];
+          data?: TransactionModel[];
           pagination?: Partial<PaginationMeta>;
         }
       >({
@@ -102,7 +102,7 @@ export const SalesHistoryExport = ({
           return response.data;
         },
         getItems: (data) =>
-          (data.transactions || []).filter(
+          (data.data || []).filter(
             (transaction) =>
               transaction.CashSession?.cash_register_id ===
                 activeSession.cash_register_id ||

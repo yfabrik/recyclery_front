@@ -369,14 +369,14 @@ const TaskAssignmentDialog = ({
   const availableEmployees = useQuery({
     queryKey: ["availableEmployee", selectedTask.id],
     queryFn: () => getAvailableUserForTask(selectedTask.id)
-      .then(response => response.data.employees)
+      .then(response => response.data.data)
       .then(employees => employees.filter((e) => e.is_available)),
     enabled: !!selectedTask?.id
   })
   const assignedEmployees = useQuery({
     queryKey: ["assignedEmployees", selectedTask.id],
     queryFn: () => getEmployeesForTask(selectedTask.id)
-      .then(response => response.data.employees)
+      .then(response => response.data.data)
     ,
 
     enabled: !!selectedTask?.id
