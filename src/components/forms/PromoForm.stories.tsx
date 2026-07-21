@@ -36,7 +36,7 @@ export const AllStores: Story = {
       category_id: 1,
       promotionValue: 20,
       isActive: true,
-      stores: null,
+      stores: [""],
     },
   },
 };

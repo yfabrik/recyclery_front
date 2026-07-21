@@ -34,74 +34,31 @@ import {
 } from "../../../services/api/collectionPointPresence";
 import { fetchStores } from "../../../services/api/store";
 import { CardCollectionPoint } from "../../CardCollectionPoint";
-import {
-  CollectionPointForm,
-  type Schema,
-  type SchemaInputValues,
-} from "../../forms/CollectionPointForm";
+import { CollectionPointForm } from "../../forms/CollectionPointForm";
 import type {
   PresencePointFormValues,
   Schema as PresenceSchema,
 } from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
-import type { CollectionPointDataInput } from "@recyclerie/api/schemas/collectionPoints";
+import {
+  presencePayloadFromForm,
+  presenceToFormValues,
+} from "../../../services/mapper/schedule";
+import {
+  collectionPointPayloadFromForm,
+  collectionPointToFormValues,
+} from "../../../services/mapper/collectionPoint";
+import type {
+  CollectionPointFormOutput,
+  CollectionPointFormValues,
+} from "../../../services/schema/collectionPoint";
 import { Loading } from "../../Loading";
-import type { CreateCollectionPointPresenceDataInput } from "@recyclerie/api/schemas/schedules";
 
-function collectionPointToFormValues(
-  point: CollectionPointModel,
-): Partial<SchemaInputValues> {
-  return {
-    name: point.name,
-    address: point.address ?? "",
-    city: point.city ?? "",
-    postal_code: point.postal_code ?? "",
-    contact_person: point.contact_person ?? "",
-    contact_phone: point.contact_phone ?? "",
-    contact_email: point.contact_email ?? "",
-    notes: point.notes ?? "",
-    is_active: point.is_active,
-    recyclery_id: point.recyclery_id ?? "",
-  };
-}
-function collectionPointPayloadFromForm(data: Schema): CollectionPointDataInput {
-  return {
-    ...data,
-  };
-}
-function presenceToFormValues(
-  presence: ScheduleModel | null,
-  pointId: CollectionPointModel["id"] | null,//TODO ScheduleModel["collection_point_id"] ?
-):
-  | (Partial<PresencePointFormValues>)
-  | null {
-  if (!presence && !pointId) return null;
-  const dayOfWeek = presence?.scheduled_date
-    ? new Date(presence.scheduled_date).getDay()
-    : undefined;
-  return {
-    collection_point_id:
-      presence?.collection_point_id != null
-        ? Number(presence.collection_point_id)
-        : (pointId ?? undefined),
-    ...(typeof presence?.day_of_week === "number"
-      ? { day_of_week: presence.day_of_week }
-      : dayOfWeek != undefined
-        ? { day_of_week: dayOfWeek }
-        : {}),
-    is_present: presence?.is_recurring ?? true,
-    start_time: presence?.start_time
-      ? new Date(presence.start_time)
-      : undefined,
-    end_time: presence?.end_time ? new Date(presence.end_time) : undefined,
-    notes: presence?.notes ?? "",
-  };
-}
 const CollectionPointsTab = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPointId, setEditingPointId] = useState<CollectionPointModel["id"] | null>(null);
   const [pointFormDefaults, setPointFormDefaults] =
-    useState<Partial<SchemaInputValues> | null>(null);
+    useState<Partial<CollectionPointFormValues> | null>(null);
   const [presenceDialogOpen, setPresenceDialogOpen] = useState(false);
   const [editingPresenceId, setEditingPresenceId] = useState<ScheduleModel["id"] | null>(
     null,
@@ -120,7 +77,7 @@ const CollectionPointsTab = () => {
     "Erreur lors du chargement des points de collecte",
   );
   const updatePoint = useMutation({
-    mutationFn: ({ id, data }: { id: CollectionPointModel["id"]; data: Schema }) =>
+    mutationFn: ({ id, data }: { id: CollectionPointModel["id"]; data: CollectionPointFormOutput }) =>
       updateCollectionPoint(id, collectionPointPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
@@ -133,7 +90,7 @@ const CollectionPointsTab = () => {
     },
   });
   const createPoint = useMutation({
-    mutationFn: (data: Schema) => createCollectionPoint(collectionPointPayloadFromForm(data)),
+    mutationFn: (data: CollectionPointFormOutput) => createCollectionPoint(collectionPointPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -173,7 +130,7 @@ const CollectionPointsTab = () => {
     setEditingPointId(null);
     setPointFormDefaults(null);
   };
-  const handleSave = async (data: Schema) => {
+  const handleSave = async (data: CollectionPointFormOutput) => {
     const payload = collectionPointPayloadFromForm(data);
     if (editingPointId)
       updatePoint.mutate({ id: editingPointId, data: payload });
@@ -200,9 +157,6 @@ const CollectionPointsTab = () => {
     setPresenceFormDefaults(null);
   };
 
-  const presencePayloadFromForm = (data: PresenceSchema): CreateCollectionPointPresenceDataInput => ({
-    ...data
-  });
   const updatePresence = useMutation({
     mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: PresenceSchema }) =>
       updatePointPresence(id, presencePayloadFromForm(data)),

@@ -2,10 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { WbSunny, WbTwilight } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { TASK_PRIORITIES } from "../../constants/taskPriorities";
 import { WORKDAY_TIME_SLOT_VALUES } from "../../constants/workdayTimeSlots";
-import { idSchema, noEmptyStr, nullString } from "../../interfaces/ZodTypes";
 import {
   FormDate,
   FormInput,
@@ -14,24 +12,16 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 import type { StoreModel } from "../../interfaces/Models";
-import { RECURRENCE_PATTERNS, TASK_CATEGORIES } from "@recyclerie/api/enums";
-const categoryEnum = z.enum(TASK_CATEGORIES);
-const recurrencePatternEnum = z.enum(RECURRENCE_PATTERNS);
-const schema = z.object({
-  name: noEmptyStr("name requis"),
-  category: categoryEnum,
-  scheduled_date: z.coerce.date("La date est requise"),
-  start_time: z.coerce.date("L'heure de début est requise"),
-  end_time: z.coerce.date("L'heure de fin est requise"),
-  priority: noEmptyStr("La priorité est requise"),
-  store_id: z.union([nullString(), idSchema()]),
-  recurrence_pattern: z.union([nullString(), recurrencePatternEnum]),
-  notes: z.string().transform(v => v == "" ? null : v),
-});
+import {
+  planningFormSchema,
+  type PlanningFormOutput,
+  type PlanningFormValues,
+} from "../../services/schema/schedule";
 
-export type Schema = z.infer<typeof schema>;
-export type SchemaInputValues = z.input<typeof schema>;
-
+export type { PlanningFormOutput };
+export type SchemaInputValues = PlanningFormValues;
+/** @deprecated Use PlanningFormOutput */
+export type Schema = PlanningFormOutput;
 
 type ScheduleFormProps = BaseFormProps<SchemaInputValues, Schema> & {
   stores: Pick<StoreModel, "id" | "name">[];
@@ -44,7 +34,7 @@ export const PlaningForm = ({
   stores,
 }: ScheduleFormProps) => {
   const form = useForm<SchemaInputValues, unknown, Schema>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(planningFormSchema),
     defaultValues: {
       name: "",
       category: "custom",

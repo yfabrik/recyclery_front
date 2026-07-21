@@ -1,9 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
-import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
+import {
+  employeeFormSchema,
+  type EmployeeFormOutput,
+  type EmployeeFormValues,
+} from "../../services/schema/employee";
 import {
   FormInput,
   FormSelect,
@@ -11,23 +14,16 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-const schema = z.object({
-  prenom: noEmptyStr("prenom requis"),
-  nom: noEmptyStr("nom requis"),
-  phone: z.union([nullString(),phoneSchema()]),
-  recyclery_id: z.union([nullString(),idSchema()]),
-  isActive: z.boolean().default(true),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type EmployeeFormValues = z.input<typeof schema>;
+export type { EmployeeFormOutput, EmployeeFormValues };
+/** @deprecated Use EmployeeFormOutput */
+export type Schema = EmployeeFormOutput;
 
 export const EmployeeForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores,
-}: BaseFormProps<EmployeeFormValues,Schema> & {
+}: BaseFormProps<EmployeeFormValues,EmployeeFormOutput> & {
   stores: StoreModel[];
 }) => {
   const form = useForm({
@@ -39,7 +35,7 @@ export const EmployeeForm = ({
       recyclery_id: "",
       ...defaultValues ?? {},
     },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(employeeFormSchema),
   });
 
   return (

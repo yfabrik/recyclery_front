@@ -3,24 +3,16 @@ import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z, { literal } from "zod";
 import { FormCategorySelect, FormDate, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
-import { idSchema } from "../../../interfaces/ZodTypes";
 import type { CategoryModel } from "../../../interfaces/Models";
+import { FORM_DISPOSAL_TYPES } from "../../../constants/disposalTypes";
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-  DISPOSAL_TYPE_FILTER_VALUES,
-  FORM_DISPOSAL_TYPES,
-} from "../../../constants/disposalTypes";
-
-const filterSchema = z.object({
-    category_id: z.union([idSchema(), literal("")]),
-    disposal_type: z.enum(DISPOSAL_TYPE_FILTER_VALUES),
-    date_from: z.coerce.date(),
-    date_to: z.coerce.date()
-})
-
-export type Filters = z.infer<typeof filterSchema>
+    getWasteFilterDefaults,
+    wasteFilterSchema,
+    type WasteFilters as Filters,
+} from "../../../services/schema/waste";
 
 interface WasteFilterFormProps {
     categories: CategoryModel[]
@@ -30,21 +22,21 @@ interface WasteFilterFormProps {
 export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFilterFormProps) => {
     const form = useForm({
         defaultValues,
-        resolver: zodResolver(filterSchema),
+        resolver: zodResolver(wasteFilterSchema),
     });
-    const onSubmit = (data: Filters) => {
-        onChange(data);
-        console.log("data");
-    };
+    const markEmitted = useSyncFilterDefaults(form, defaultValues);
 
+    const onSubmit = (data: Filters) => {
+        markEmitted(data);
+        onChange(data);
+    };
 
     const watch = form.watch
     const debouncer = useDebouncer(() => {
         form.handleSubmit(onSubmit, (e) => console.error(e))()
     }, { wait: 1000 })
     useEffect(() => {
-        const subscription = watch((values, { name, type }) => {
-            console.log(values, name, type)
+        const subscription = watch(() => {
             debouncer.maybeExecute()
         })
         return () => {
@@ -52,6 +44,13 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
             subscription.unsubscribe()
         }
     }, [watch]) // watch all changes
+
+    const handleReset = () => {
+        const defaults = getWasteFilterDefaults();
+        form.reset(defaults);
+        markEmitted(defaults);
+        onChange(defaults);
+    };
 
     return (
 
@@ -87,7 +86,7 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
             </Grid>
 
             <Grid size="auto" sx={{ ml: "auto" }}>
-                <ResetFiltersButton onReset={() => form.reset()} />
+                <ResetFiltersButton onReset={handleReset} />
             </Grid>
         </Grid>
     )

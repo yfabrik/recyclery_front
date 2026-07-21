@@ -2,11 +2,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 import { FORM_DISPOSAL_TYPES } from "../../constants/disposalTypes";
 import type { CategoryModel, EcoOrgModel } from "../../interfaces/Models";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import {
+  wasteFormSchema,
+  type WasteFormOutput,
+  type WasteFormValues,
+} from "../../services/schema/waste";
 import {
   FormCategorySubcategoryFields,
   FormDate,
@@ -15,44 +18,11 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-const disposalTypeEnum = z.enum(
-  FORM_DISPOSAL_TYPES.map((type) => type.value) as [
-    (typeof FORM_DISPOSAL_TYPES)[number]["value"],
-    ...(typeof FORM_DISPOSAL_TYPES)[number]["value"][],
-  ],
-);
+export type { WasteFormOutput, WasteFormValues };
+/** @deprecated Use WasteFormOutput */
+export type Schema = WasteFormOutput;
 
-const schema =(categories: CategoryModel[]) => z.object({
-  disposal_date: z.coerce.date("La date de sortie est requise"),
-  disposal_type: disposalTypeEnum,
-  category_id: idSchema("categorie requis"),
-  subcategory_id: z.union([nullString(),idSchema()]),
-  eco_organism_id: z.union([nullString(),idSchema()]),
-  weight_kg: z.coerce.number().positive("Le poids est requis"),
-  volume_m3: z.coerce.number().nonnegative().default(0),
-  transport_method: z.string().transform(v=>v==""?null:v),
-  transport_company: z.string().transform(v=>v==""?null:v),
-  transport_cost: z.coerce.number().nonnegative().default(0),
-  notes: z.string().transform(v=>v==""?null:v),
-}).superRefine(
-  (data, ctx) => {
-    //TODO copy paster from arrival form
-    const selectedCategory = categories.find((c) => c.id === data.category_id);
-    const hasSubcategories = (selectedCategory?.subcategories?.length ?? 0) > 0;
-    if (hasSubcategories && !data.subcategory_id) {
-      ctx.addIssue({ code: "custom", path: ["subcategory_id"], message: "Sous-catégorie requise" });
-    }
-
-    if (data.disposal_type === "eco_organism" && !data.eco_organism_id)
-      ctx.addIssue({ code: "custom", path: ["eco_organism_id"], message: "Veuillez sélectionner un eco_orgnism" });
-  }
-);
-
-export type Schema = z.infer<ReturnType<typeof schema>>;
-
-export type WasteFormValues = z.input<ReturnType<typeof schema>>;
-
-type WasteFormProps = BaseFormProps<WasteFormValues,Schema> & {
+type WasteFormProps = BaseFormProps<WasteFormValues, WasteFormOutput> & {
   categories: CategoryModel[];
   ecoOrganisms: EcoOrgModel[];
   onWeightFieldClick: () => void;
@@ -67,7 +37,7 @@ export const WasteForm = ({
   onWeightFieldClick,
 }: WasteFormProps) => {
   const form = useForm({
-    resolver: zodResolver(schema(categories)),
+    resolver: zodResolver(wasteFormSchema(categories)),
     defaultValues: {
       disposal_date: new Date(),
       disposal_type: "eco_organism",

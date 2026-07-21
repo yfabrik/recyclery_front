@@ -2,28 +2,17 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Grid, MenuItem } from "@mui/material"
 import { useEffect, useRef } from "react"
 import { useForm, useWatch } from "react-hook-form"
-import z from "zod"
 import type { CategoryModel, StoreModel } from "../../interfaces/Models"
-import { idSchema, nullString } from "../../interfaces/ZodTypes"
+import {
+    promoFormSchema,
+    type PromoFormOutput,
+    type PromoFormValues,
+} from "../../services/schema/promotion"
 import { FormCategorySubcategoryFields, FormDate, FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./FormBase"
 
-const schema = z.object({
-    category_id: idSchema("categorie requis"),
-    subcategory_id: z.union([nullString(),idSchema()]),
-    promotionValue: z.coerce.number("valeur doit etre en 0 et 100").min(0).max(100),
-    startDate: z.coerce.date(),
-    endDate: z.union([nullString(),z.coerce.date()]),
-    isActive: z.boolean(),
-    stores: z
-        .array(z.union([z.literal(""),idSchema()]))//TODO remake cleaner
-        .transform((value) => {
-            if (value.length === 1 && value[0] === "") return null
-            return value.filter((store): store is number => typeof store === "number")
-        })
-})
-export type Schema = z.infer<typeof schema>
-export type PromoFormValues = z.input<typeof schema>
-
+export type { PromoFormOutput, PromoFormValues }
+/** @deprecated Use PromoFormOutput */
+export type Schema = PromoFormOutput
 
 export const PromoForm = ({
     formId,
@@ -31,7 +20,7 @@ export const PromoForm = ({
     defaultValues,
     categories,
     stores
-}: BaseFormProps<PromoFormValues,Schema> & {
+}: BaseFormProps<PromoFormValues,PromoFormOutput> & {
     categories: CategoryModel[],
     stores: StoreModel[]
 }) => {
@@ -44,12 +33,13 @@ export const PromoForm = ({
                 : defaultStores ?? [""],
     } satisfies Partial<PromoFormValues>
 
-    const form = useForm<PromoFormValues, unknown, Schema>({
-        resolver: zodResolver(schema),
+    const form = useForm<PromoFormValues, unknown, PromoFormOutput>({
+        resolver: zodResolver(promoFormSchema),
         defaultValues: {
             category_id: "",
             subcategory_id: "",
             promotionValue: "",
+            endDate: "",
             isActive: true,
             ...normalizedDefaults,
         }

@@ -30,7 +30,6 @@ import {
   Typography
 } from "@mui/material";
 
-import type { EcoOrganismDataInput } from "@recyclerie/api/schemas/ecoOrganism";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -44,34 +43,17 @@ import {
   updateEcoOrganism
 } from "../../../services/api/ecoOrganism";
 import {
+  ecoOrganismPayloadFromForm,
+  ecoOrganismToFormValues,
+} from "../../../services/mapper/ecoOrganism";
+import type { EcoOrganismFormOutput, EcoOrganismFormValues } from "../../../services/schema/ecoOrganism";
+import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
-import { EcoOrganismForm, type EcoOrganismFormValues, type Schema } from "../../forms/EcoOrganismForm";
+import { EcoOrganismForm } from "../../forms/EcoOrganismForm";
 import { Loading } from "../../Loading";
 import { StatCard } from "../../StatCard";
-
-function ecoOrganismToFormValues(org: EcoOrgModel): Partial<EcoOrganismFormValues> {
-  const raw = org as EcoOrgModel & {
-    incategories?: Array<{ id: number }>;
-    sellcategories?: Array<{ id: number }>;
-    inCategories?: Array<{ id: number }>;
-    sellCategories?: Array<{ id: number }>;
-  };
-  const inCats = raw.inCategories ?? raw.incategories ?? [];
-  const sellCats = raw.sellCategories ?? raw.sellcategories ?? [];
-  return {
-    name: org.name,
-    description: org.description ?? "",
-    contact_email: org.contact_email ?? "",
-    contact_phone: org.contact_phone ?? "",
-    address: org.address ?? "",
-    website: org.website ?? "",
-    is_active: org.is_active,
-    inCategories: inCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
-    sellCategories: sellCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
-  };
-}
 
 export const EcoOrganismsTab = () => {
   const [ecoOrganismDialog, setEcoOrganismDialog] = useState(false);
@@ -99,9 +81,8 @@ export const EcoOrganismsTab = () => {
     "Erreur lors du chargement des statistiques",
   );
 
-  const ecoOrganismPayloadFromForm = (data: Schema): EcoOrganismDataInput => ({...data});
   const editEcoOrganism = useMutation({
-    mutationFn: ({ id, data }: { id: EcoOrgModel["id"], data: Schema }) => updateEcoOrganism(id, ecoOrganismPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: EcoOrgModel["id"], data: EcoOrganismFormOutput }) => updateEcoOrganism(id, ecoOrganismPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Éco-organisme mis à jour avec succès"));
       handleCloseEcoOrganismDialog();
@@ -112,7 +93,7 @@ export const EcoOrganismsTab = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde"))
   })
   const addEcoOrganism = useMutation({
-    mutationFn: (data: Schema) => createEcoOrganism(ecoOrganismPayloadFromForm(data)),
+    mutationFn: (data: EcoOrganismFormOutput) => createEcoOrganism(ecoOrganismPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Éco-organisme créé avec succès"));
       handleCloseEcoOrganismDialog();
@@ -168,7 +149,7 @@ export const EcoOrganismsTab = () => {
     setFormDefaults(null);
   };
 
-  const handleSaveEcoOrganism = async (data: Schema) => {
+  const handleSaveEcoOrganism = async (data: EcoOrganismFormOutput) => {
     if (editingEcoOrganismId) {
       editEcoOrganism.mutate({ id: editingEcoOrganismId, data })
     } else {

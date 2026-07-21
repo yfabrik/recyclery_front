@@ -5,34 +5,23 @@ import { FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./Fo
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
-import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
+import {
+  ecoOrganismFormSchema,
+  type EcoOrganismFormOutput,
+  type EcoOrganismFormValues,
+} from "../../services/schema/ecoOrganism";
 import { fetchCategories } from "../../services/api/categories";
 
-const schema = z.object({
-  name: noEmptyStr("nom requis"),
-  description: z.string().transform(v=>v==""?null:v),
-  contact_email: z.union([nullString(),z.email()]),
-  contact_phone: z.union([
-    nullString(),
-    phoneSchema(),
-  ]),
-  address: z.string().transform(v=>v==""?null:v),
-  website: z.union([nullString(),z.url()]),
-  inCategories: z.array(idSchema()).default([]),
-  sellCategories: z.array(idSchema()).default([]),
-  is_active: z.boolean(),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type EcoOrganismFormValues = z.input<typeof schema>;
+export type { EcoOrganismFormOutput, EcoOrganismFormValues };
+/** @deprecated Use EcoOrganismFormOutput */
+export type Schema = EcoOrganismFormOutput;
 
 export const EcoOrganismForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<EcoOrganismFormValues,Schema>& {
+}: BaseFormProps<EcoOrganismFormValues, EcoOrganismFormOutput> & {
 }) => {
   const {
     inCategories: rawInCategories,
@@ -52,7 +41,7 @@ export const EcoOrganismForm = ({
   const categoriesIn = categoriesQuery.data ?? [];
   const categoriesSell = categoriesSellQuery.data ?? [];
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(ecoOrganismFormSchema),
     defaultValues: {
       name: restDefaults.name ?? "",
       description: restDefaults.description ?? "",

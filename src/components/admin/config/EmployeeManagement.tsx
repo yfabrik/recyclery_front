@@ -29,7 +29,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import type { EmployeeDataInput, EmployeeSkillsInput } from "@recyclerie/api/schemas/employees";
+import type { EmployeeSkillsInput } from "@recyclerie/api/schemas/employees";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -49,24 +49,18 @@ import {
 } from "../../../utils/apiToastMessage";
 import EmployeeStoreAssignment from "../../EmployeeStoreAssignment";
 import EmployeeWorkdays from "../../EmployeeWorkdays";
-import {
-  EMPLOYEE_FILTER_DEFAULTS,
-  EmployeeFilterForm,
-  type EmployeeFilters,
-} from "../../forms/filters/EmployeeFilterForm";
-import { EmployeeForm, type EmployeeFormValues, type Schema } from "../../forms/EmployeeForm";
+import { EmployeeFilterForm } from "../../forms/filters/EmployeeFilterForm";
+import { useUrlFilters } from "../../../hooks/useUrlFilters";
+import { EmployeeForm } from "../../forms/EmployeeForm";
 import { EmployeeSkillForm, type Schema as EmployeeSkillSchema } from "../../forms/EmployeeSkillForm";
 import { Loading } from "../../Loading";
-
-function employeeToFormValues(employee: EmployeeModel): Partial<EmployeeFormValues> {
-  return {
-    prenom: employee.prenom,
-    nom: employee.nom,
-    phone: employee.phone ?? "",
-    isActive: employee.isActive,
-    recyclery_id: employee.stores?.[0]?.id ?? "",
-  };
-}
+import { employeePayloadFromForm, employeeToFormValues } from "../../../services/mapper/employee";
+import {
+  EMPLOYEE_FILTER_DEFAULTS,
+  employeeFilterSchema,
+  type EmployeeFormOutput,
+  type EmployeeFormValues,
+} from "../../../services/schema/employee";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -105,7 +99,10 @@ const EmployeeManagement = () => {
   //   { value: "collector", label: "Collecteur" },
   // ];
 
-  const [filters, setFilters] = useState<EmployeeFilters>(EMPLOYEE_FILTER_DEFAULTS);
+  const { filters, setFilters } = useUrlFilters({
+    schema: employeeFilterSchema,
+    defaults: EMPLOYEE_FILTER_DEFAULTS,
+  });
 
   const queryClient = useQueryClient()
 
@@ -121,9 +118,8 @@ const EmployeeManagement = () => {
   })
   useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
 
-  const employeePayloadFromForm = (data: Schema): EmployeeDataInput => ({ ...data });
   const editEmployee = useMutation({
-    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: Schema }) => updateEmployee(id, employeePayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: EmployeeFormOutput }) => updateEmployee(id, employeePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Employé mis à jour avec succès"));
       handleCloseDialog();
@@ -133,7 +129,7 @@ const EmployeeManagement = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   })
   const addEmployee = useMutation({
-    mutationFn: (data: Schema) => createEmployees(employeePayloadFromForm(data)),
+    mutationFn: (data: EmployeeFormOutput) => createEmployees(employeePayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Employé créé avec succès"));
       handleCloseDialog();
@@ -196,7 +192,7 @@ const EmployeeManagement = () => {
   };
 
 
-  const handleSave = async (data: Schema) => {
+  const handleSave = async (data: EmployeeFormOutput) => {
     if (selectedEmployee?.id) editEmployee.mutate({ id: selectedEmployee.id, data })
     else addEmployee.mutate(data)
   };
@@ -299,9 +295,7 @@ const EmployeeManagement = () => {
         <Paper sx={{ p: 2, mb: 3 }}>
           <EmployeeFilterForm
             defaultValues={filters}
-            onChange={(values) =>
-              setFilters((prev) => ({ ...prev, ...values }))
-            }
+            onChange={setFilters}
             stores={stores.data || []}
           // roleOptions={roleOptions}
           />

@@ -1,23 +1,20 @@
-import { useState } from "react";
-import { ArrivalFilterForm, type Filters } from "./forms/filters/ArrivalFilterForm";
+import { useMemo } from "react";
+import { ArrivalFilterForm } from "./forms/filters/ArrivalFilterForm";
+import { arrivalFilterSchema, getArrivalFilterDefaults } from "../services/schema/arrival";
 import { getArrivals } from "../services/api/arrival";
 import { Box, Chip, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { Business, Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";
 import type { ArrivalModel } from "../interfaces/Models";
 import { useQuery } from "@tanstack/react-query";
 import { muiPageCount } from "../services/api/pagination";
+import { useUrlFilters } from "../hooks/useUrlFilters";
 
 export const ArrivalHistory = () => {
-    const todayKey = () => new Date();
-
-    const [page, setPage] = useState(1);
-
-
-    const [filters, setFilters] = useState<Filters>({
-        date_from: todayKey(),
-        date_to: todayKey(),
-        source_type: "",
-        collection_point_id: ""
+    const defaults = useMemo(() => getArrivalFilterDefaults(), []);
+    const { filters, setFilters, page, setPage } = useUrlFilters({
+        schema: arrivalFilterSchema,
+        defaults,
+        withPage: true,
     });
 
     const { data: arrivals = { arrivals: [], pagination: { total: 0, page: 1, perPage: 50, totalPages: 1, hasNext: false, hasPrevious: false } } }
@@ -25,8 +22,8 @@ export const ArrivalHistory = () => {
             queryKey: ["arrivals", filters, page],
             queryFn: () =>
                 getArrivals({
-                    date_from: filters.date_from.toISOString(),
-                    date_to: filters.date_to.toISOString(),
+                    date_from: filters.date_from,
+                    date_to: filters.date_to,
                     ...(filters.source_type !== "" ? { source_type: filters.source_type } : {}),
                     ...(filters.collection_point_id !== "" ? { collection_point_id: filters.collection_point_id } : {}),
                     page,
@@ -59,12 +56,7 @@ export const ArrivalHistory = () => {
             <Paper sx={{ p: 2, mb: 3 }}>
                 <ArrivalFilterForm
                     defaultValues={filters}
-                    onChange={(values) =>
-                        setFilters((prev) => ({
-                            ...prev,
-                            ...values,
-                        }))
-                    }
+                    onChange={setFilters}
                 />
             </Paper>
             <Paper sx={{ p: 3 }}>

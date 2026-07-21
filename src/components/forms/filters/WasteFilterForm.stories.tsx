@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { mockCategories } from "../../../stories/fixtures";
+import { toIsoDate } from "../../../services/dateService";
 import { WasteFilterForm } from "./WasteFilterForm";
 
-const today = new Date();
+const today = toIsoDate(new Date());
 
 const meta = {
   title: "Forms/WasteFilterForm",

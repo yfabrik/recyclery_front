@@ -9,7 +9,6 @@ import type {
 } from "@recyclerie/api/responses/tasks";
 import type { TaskDataInput, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
 import type { AxiosResponse } from "axios";
-import type { TaskFormSchema } from "../../components/forms/TaskForm";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
@@ -42,27 +41,6 @@ export function normalizeTaskForDisplay(task: TaskModel): TaskDisplay {
     ...task,
     required_skills: parseTaskJsonArray(task.required_skills),
     equipment_needed: parseTaskJsonArray(task.equipment_needed),
-  };
-}
-
-export function taskToFormValues(
-  task: TaskModel | TaskDisplay,
-): Partial<TaskFormSchema> {
-  return {
-    name: task.name,
-    description: task.description ?? "",
-    category: task.category,
-    priority: task.priority ?? "medium",
-    location: task.location ?? "",
-    required_skills: parseTaskJsonArray(task.required_skills),
-    equipment_needed: parseTaskJsonArray(task.equipment_needed),
-    hourly_rate: task.hourly_rate != null ? Number(task.hourly_rate) : undefined,
-    is_recurring: false,
-    recurrence_pattern: null,
-    notes: task.notes ?? "",
-    scheduled_date: new Date(task.scheduled_date),
-    start_time: task.start_time ? new Date(task.start_time) : new Date(),
-    end_time: task.end_time ? new Date(task.end_time) : new Date(),
   };
 }
 

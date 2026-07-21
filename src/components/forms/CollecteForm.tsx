@@ -1,6 +1,5 @@
 import { Grid, ListSubheader, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import {
   FormInput,
   FormMultiSelect,
@@ -13,20 +12,15 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CollectionPointModel, StoreModel } from "../../interfaces/Models";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema, noEmptyStr, nullString } from "../../interfaces/ZodTypes";
+import {
+  collecteFormSchema,
+  type CollecteFormOutput,
+  type CollecteFormValues,
+} from "../../services/schema/schedule";
 
-const schema = z.object({
-  day_of_week: noEmptyStr("choissisez un jour"),
-  is_active: z.boolean(),
-  start_time: z.coerce.date(),
-  end_time: z.coerce.date(),
-  notes: z.string().transform(v=>v==""?null:v),
-  store_id: z.union([nullString(),idSchema()]),
-  location: z.array(z.string()).default([]),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type CollecteFormValues =z.input<typeof schema>
+export type { CollecteFormOutput, CollecteFormValues };
+/** @deprecated Use CollecteFormOutput */
+export type Schema = CollecteFormOutput;
 
 export const CollecteForm = ({
   formId,
@@ -34,12 +28,12 @@ export const CollecteForm = ({
   defaultValues,
   collectionPoints,
   stores,
-}: BaseFormProps<CollecteFormValues,Schema> & {
+}: BaseFormProps<CollecteFormValues,CollecteFormOutput> & {
   collectionPoints: CollectionPointModel[];
   stores: StoreModel[];
 }) => {
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(collecteFormSchema),
     defaultValues: {
       day_of_week: "",
       is_active: true,
@@ -61,8 +55,9 @@ export const CollecteForm = ({
             control={form.control}
             name="day_of_week"
           >
+            <MenuItem value="">choisissez un jour</MenuItem>
             {daysOfWeek.map((day) => (
-              <MenuItem key={day.key} value={day.label}>
+              <MenuItem key={day.value} value={day.value}>
                 {day.label}
               </MenuItem>
             ))}

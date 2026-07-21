@@ -1,6 +1,5 @@
 import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import {
   FormInput,
   FormSelect,
@@ -11,21 +10,17 @@ import {
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CollectionPointModel } from "../../interfaces/Models";
-import { idSchema, weekDays } from "../../interfaces/ZodTypes";
 import { weekDaysArray } from "../../services/dateService";
+import {
+  presenceFormSchema,
+  type PresenceFormOutput,
+  type PresenceFormValues,
+} from "../../services/schema/schedule";
 
-const schema = z.object({
-  collection_point_id: idSchema("un point de collecte est requis"),
-  day_of_week: weekDays("choissisez un jour"),
-  is_present: z.boolean(),
-  start_time: z.coerce.date(),
-  end_time: z.coerce.date(),
-  // is_24h: z.boolean(),
-  notes: z.string().transform(v=>v==""?null:v),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type PresencePointFormValues = z.input<typeof schema>;
+export type { PresenceFormOutput };
+export type PresencePointFormValues = PresenceFormValues;
+/** @deprecated Use PresenceFormOutput */
+export type Schema = PresenceFormOutput;
 
 export const PresencePointForm = ({
   formId,
@@ -44,7 +39,7 @@ export const PresencePointForm = ({
   //   (scheduledDate != null ? new Date(scheduledDate).getDay() : undefined);
 
   const form = useForm<PresencePointFormValues,unknown,Schema>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(presenceFormSchema),
     defaultValues: {
       collection_point_id: "",
       is_present: true,
@@ -80,16 +75,12 @@ export const PresencePointForm = ({
             control={form.control}
             name="day_of_week"
           >
-             <MenuItem key="all-days" value="">choisissez un jour</MenuItem>
+            <MenuItem key="all-days" value="">
+              choisissez un jour
+            </MenuItem>
             {weekDaysArray().map((day) => (
-              <MenuItem
-                key={day.key}
-                value={day.key}
-                sx={{ textTransform: "capitalize" }}
-              >
-                {typeof day.label === "string"
-                  ? day.label.charAt(0).toUpperCase() + day.label.slice(1).toLowerCase()
-                  : day.label}
+              <MenuItem key={day.value} value={day.value}>
+                {day.label}
               </MenuItem>
             ))}
           </FormSelect>

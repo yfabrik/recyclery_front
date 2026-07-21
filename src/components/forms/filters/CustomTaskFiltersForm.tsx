@@ -4,32 +4,17 @@ import { Box, Button, Grid, IconButton, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
-import {
-  RECURRENCE_FILTER_VALUES,
-  RECURRENCE_PATTERNS,
-} from "../../../constants/recurrencePatterns";
-import { PRIORITY_FILTER_VALUES, TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { RECURRENCE_PATTERNS } from "../../../constants/recurrencePatterns";
+import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
 import type { StoreModel } from "../../../interfaces/Models";
-import { idSchema } from "../../../interfaces/ZodTypes";
 import { FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
-
-const filterSchema = z.object({
-  search: z.string().trim().optional(),
-  store_id: z.union([idSchema(), z.literal("")]),
-  priority: z.enum(PRIORITY_FILTER_VALUES),
-  recurrence: z.enum(RECURRENCE_FILTER_VALUES),
-});
-
-export type CustomTaskFilters = z.infer<typeof filterSchema>;
-
-export const CUSTOM_TASK_FILTER_DEFAULTS: CustomTaskFilters = {
-  search: "",
-  store_id: "",
-  priority: "all",
-  recurrence: "all",
-};
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+  CUSTOM_TASK_FILTER_DEFAULTS,
+  customTaskFilterSchema,
+  type CustomTaskFilters,
+} from "../../../services/schema/task";
 
 interface CustomTaskFiltersFormProps {
   stores: StoreModel[];
@@ -46,10 +31,12 @@ export const CustomTaskFiltersForm = ({
 }: CustomTaskFiltersFormProps) => {
   const filters = useForm({
     defaultValues,
-    resolver: zodResolver(filterSchema),
+    resolver: zodResolver(customTaskFilterSchema),
   });
+  const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
   const onSubmit = (data: CustomTaskFilters) => {
+    markEmitted(data);
     onChange(data);
   };
 
@@ -73,6 +60,7 @@ export const CustomTaskFiltersForm = ({
 
   const handleReset = () => {
     filters.reset(CUSTOM_TASK_FILTER_DEFAULTS);
+    markEmitted(CUSTOM_TASK_FILTER_DEFAULTS);
     onChange(CUSTOM_TASK_FILTER_DEFAULTS);
   };
 

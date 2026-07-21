@@ -25,7 +25,7 @@ import {
 import { buildTransactionBody } from "../utils/transactionBody";
 import type { ReceiptSale } from "../utils/transactionReceipt";
 import { useCheckoutFormCore } from "./useCheckoutFormCore";
-import type { ManualItemSchema } from "../components/forms/itemCoreSchema";
+import type { ManualItemFormOutput as ManualItemSchema } from "../services/schema/item";
 import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
 
 const defaultFormValues: CartFormValues = {

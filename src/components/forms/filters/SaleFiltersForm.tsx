@@ -4,24 +4,16 @@ import { Grid, IconButton, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import type { StoreModel } from "../../../interfaces/Models";
-import { idSchema } from "../../../interfaces/ZodTypes";
+import { toIsoDate } from "../../../services/dateService";
 import { FormDate, FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
-
-const filterSchema = z.object({
-    store_id: z.union([idSchema(), z.literal("")]),
-    period: z.enum(["week", "month", "custom"]),//TODO find enum
-    date_from: z.coerce
-        .date()
-        .transform((val) => val.toISOString().slice(0, 10)),
-    date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
-    transaction_number: z.string().trim().optional(),
-});
-export type Filters = z.infer<typeof filterSchema>;
-export type FiltersInput = z.input<typeof filterSchema>;
-
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+    getSaleFilterDefaults,
+    saleFilterSchema,
+    type SaleFilters as Filters,
+} from "../../../services/schema/sale";
 
 interface FilterFormProps {
     stores: StoreModel[];
@@ -33,9 +25,12 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
 
     const filters = useForm({
         defaultValues,
-        resolver: zodResolver(filterSchema),
+        resolver: zodResolver(saleFilterSchema),
     });
+    const markEmitted = useSyncFilterDefaults(filters, defaultValues);
+
     const onSubmit = (data: Filters) => {
+        markEmitted(data);
         onChange(data);
     };
 
@@ -47,19 +42,14 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
         if (period === "week") {
             const startOfWeek = new Date(today);
             startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-            const date_from = startOfWeek.toISOString().split("T")[0];
-            const date_to = today.toISOString().split("T")[0];
-
-            filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
-            filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
+            filters.setValue("date_from", toIsoDate(startOfWeek));
+            filters.setValue("date_to", toIsoDate(today));
         } else if (period === "month") {
-            const date_from = new Date(today.getFullYear(), today.getMonth(), 1)
-                .toISOString()
-                .split("T")[0];
-            const date_to = today.toISOString().split("T")[0];
-
-            filters.setValue("date_from", date_from as unknown as Filters["date_from"]);
-            filters.setValue("date_to", date_to as unknown as Filters["date_to"]);
+            filters.setValue(
+                "date_from",
+                toIsoDate(new Date(today.getFullYear(), today.getMonth(), 1)),
+            );
+            filters.setValue("date_to", toIsoDate(today));
         }
     }, [period, filters]);
 
@@ -68,8 +58,7 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
         filters.handleSubmit(onSubmit, (e) => console.error(e))()
     }, { wait: 1000 })
     useEffect(() => {
-        const subscription = watch((values, { name, type }) => {
-            console.log(values, name, type)
+        const subscription = watch(() => {
             debouncer.maybeExecute()
         })
         return () => {
@@ -78,31 +67,16 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
         }
     }, [watch]) // watch all changes
 
-    // const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // useEffect(() => {
-    //     const subscription = filters.watch(() => {
-    //         if (debounceTimeout.current) {
-    //             clearTimeout(debounceTimeout.current);
-    //         }
-
-    //         debounceTimeout.current = setTimeout(() => {
-    //             filters.handleSubmit(onSubmit)();
-    //         }, 500);
-    //     });
-
-    //     return () => {
-    //         subscription.unsubscribe();
-    //         if (debounceTimeout.current) {
-    //             clearTimeout(debounceTimeout.current);
-    //         }
-    //     };
-    // }, [filters]);
+    const handleReset = () => {
+        const defaults = getSaleFilterDefaults();
+        filters.reset(defaults);
+        markEmitted(defaults);
+        onChange(defaults);
+    };
 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
             <Grid container spacing={2} alignItems="center">
-                {/* Filtre par magasin */}
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormSelect control={filters.control} name="store_id" label="Magasin">
                         <MenuItem key="all-stores" value="">
@@ -116,7 +90,6 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
                     </FormSelect>
                 </Grid>
 
-                {/* Filtre par période */}
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormSelect control={filters.control} name="period" label="Période">
                         <MenuItem key="week" value="week">
@@ -131,7 +104,6 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
                     </FormSelect>
                 </Grid>
 
-                {/* Dates personnalisées */}
                 {period === "custom" && (
                     <>
                         <Grid size={{ xs: 12, md: 3 }}>
@@ -151,7 +123,6 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
                     </>
                 )}
 
-                {/* Recherche par numéro de transaction */}
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormInput
                         control={filters.control}
@@ -176,9 +147,8 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
                     />
                 </Grid>
 
-                {/* Bouton pour effacer tous les filtres */}
                 <Grid size="auto" sx={{ ml: "auto" }}>
-                    <ResetFiltersButton onReset={() => filters.reset()} />
+                    <ResetFiltersButton onReset={handleReset} />
                 </Grid>
             </Grid>
         </form>

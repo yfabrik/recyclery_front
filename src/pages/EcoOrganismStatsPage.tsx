@@ -6,34 +6,24 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { EcoOrganismStatsExport } from "../components/admin/EcoOrganismStatsExport";
 import EcoOrganismStatsTable, {
   type EcoMetricSource,
   type EcoOrganismStatsRow,
 } from "../components/admin/EcoOrganismStatsTable";
+import { EcoOrgStatsFilters } from "../components/forms/filters/EcoOrgStatsFilters";
 import {
-  EcoOrgStatsFilters,
-  type Filters,
-} from "../components/forms/filters/EcoOrgStatsFilters";
+  ecoOrgFilterSchema,
+  getEcoOrgFilterDefaults,
+} from "../services/schema/ecoOrganism";
+import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   fetchEcoOrganismQuarterStats,
   formatEcoOrgQuarterLabel,
   parseEcoOrgQuarterKey,
   type EcoOrganismQuarterStat,
 } from "../services/api/ecoOrganism";
-
-const getDefaultFilters = (): Filters => {
-  return {
-    eco_organism_id: "",
-    metric_source: "quarterOut",
-    quarter: "",
-    month_year: null,
-    source_type: "",
-    collection_point_id: "",
-    category: "",
-  };
-};
 
 const parseQuarterKey = parseEcoOrgQuarterKey;
 
@@ -195,44 +185,17 @@ const getMetricRows = (
 };
 
 const EcoOrganismStatsPage = () => {
-  const [filters, setFilters] = useState<Filters>(getDefaultFilters);
-  const [quarterPage, setQuarterPage] = useState(1);
-
-  // const form = useForm<Omit<Filters, "eco_organism_id"> & { eco_organism_id: unknown }, unknown, Filters>({
-  //   defaultValues: filters,
-  //   resolver: zodResolver(filterSchema),
-  // });
-
-  // const onSubmit = (values: Filters) => {
-  //   setFilters(values);
-  // };
-
-  // const watch = form.watch;
-  // const debouncer = useDebouncer(() => {
-  //   form.handleSubmit(onSubmit, (errors) => console.error(errors))();
-  // }, { wait: 500 });
-
-  // useEffect(() => {
-  //   const subscription = watch(() => {
-  //     debouncer.maybeExecute();
-  //   });
-  //   return () => {
-  //     debouncer.cancel();
-  //     subscription.unsubscribe();
-  //   };
-  // }, [watch, debouncer]);
+  const defaults = useMemo(() => getEcoOrgFilterDefaults(), []);
+  const { filters, setFilters, page, setPage } = useUrlFilters({
+    schema: ecoOrgFilterSchema,
+    defaults,
+    withPage: true,
+  });
 
   const ecoStats = useQuery({
     queryKey: ["ecoOrganismQuarterStats",filters.collection_point_id],
     queryFn: () => fetchEcoOrganismQuarterStats(filters.collection_point_id !=""?{point:filters.collection_point_id}:{}).then((response) => response.data.data),
   });
-
-  // const ecoOrganismOptions = useMemo(() => {
-  //   return (ecoStats.data || []).map((item) => ({
-  //     id: item.id,
-  //     name: item.name,
-  //   }));
-  // }, [ecoStats.data]);
 
   const allRows = useMemo(() => {
     return (ecoStats.data || [])
@@ -258,26 +221,15 @@ const EcoOrganismStatsPage = () => {
     return "";
   }, [filters]);
 
-  // useEffect(() => {
-  //   if (filters.metric_source !== "quarterIn" && filters.source_type !== "") {
-  //     form.setValue("source_type", "");
-  //     setFilters((prev) => ({ ...prev, source_type: "" }));
-  //   }
-  // }, [filters.metric_source, filters.source_type, form]);
-
-  useEffect(() => {
-    setQuarterPage(1);
-  }, [filters, ecoStats.data]);
-
   const quarterPageCount = selectedQuarter
     ? 1
     : Math.max(1, quarterOptions.length);
 
   const displayedQuarters = useMemo(() => {
     if (selectedQuarter) return [selectedQuarter];
-    const quarterAtPage = quarterOptions[quarterPage - 1];
+    const quarterAtPage = quarterOptions[page - 1];
     return quarterAtPage ? [quarterAtPage] : [];
-  }, [selectedQuarter, quarterOptions, quarterPage]);
+  }, [selectedQuarter, quarterOptions, page]);
 
   const rows = useMemo(() => {
     if (displayedQuarters.length === 0) return [];
@@ -349,12 +301,7 @@ const EcoOrganismStatsPage = () => {
       <Paper sx={{ p: 2 }}>
         <EcoOrgStatsFilters
           defaultValues={filters}
-          onChange={(values) =>
-            setFilters((prev) => ({
-              ...prev,
-              ...values,
-            }))
-          }
+          onChange={setFilters}
           statsRows={ecoStats.data ?? []}
           allRows={allRows}
         />
@@ -370,8 +317,8 @@ const EcoOrganismStatsPage = () => {
           <Pagination
             color="primary"
             count={quarterPageCount}
-            page={quarterPage}
-            onChange={(_, page) => setQuarterPage(page)}
+            page={page}
+            onChange={(_, nextPage) => setPage(nextPage)}
           />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
             Trimestre affiche: {displayedQuarters[0] || "Aucun"}

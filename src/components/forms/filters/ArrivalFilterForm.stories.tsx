@@ -3,13 +3,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { mockCollectionPoints } from "../../../stories/fixtures";
 import axiosInstance from "../../../services/api/axios";
+import { toIsoDate } from "../../../services/dateService";
 import { ArrivalFilterForm } from "./ArrivalFilterForm";
 
 function StoryWrapper() {
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
-  const today = new Date().toISOString().split("T")[0];
+  const today = toIsoDate(new Date());
 
   useEffect(() => {
     const originalGet = axiosInstance.get.bind(axiosInstance);
@@ -30,8 +31,8 @@ function StoryWrapper() {
     <QueryClientProvider client={queryClient}>
       <ArrivalFilterForm
         defaultValues={{
-          date_from: new Date(today),
-          date_to: new Date(today),
+          date_from: today,
+          date_to: today,
           source_type: "",
           collection_point_id: "",
         }}

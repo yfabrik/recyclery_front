@@ -3,21 +3,17 @@ import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import { FormDate, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
-import { idSchema } from "../../../interfaces/ZodTypes";
 import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
-
-const filterSchema = z.object({
-    date_from: z.coerce.date(),
-    date_to: z.coerce.date(),
-    source_type: z.union([z.enum(ARRIVAL_SOURCE_TYPES.map(s=>s.value)), z.literal("")]),
-    collection_point_id: z.union([idSchema(), z.literal("")]),
-});
-export type Filters = z.infer<typeof filterSchema>;
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+    arrivalFilterSchema,
+    getArrivalFilterDefaults,
+    type ArrivalFilters as Filters,
+} from "../../../services/schema/arrival";
 
 interface FilterFormProps {
     defaultValues: Filters;
@@ -28,9 +24,12 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
 
     const filters = useForm({
         defaultValues,
-        resolver: zodResolver(filterSchema),
+        resolver: zodResolver(arrivalFilterSchema),
     });
+    const markEmitted = useSyncFilterDefaults(filters, defaultValues);
+
     const onSubmit = (data: Filters) => {
+        markEmitted(data);
         onChange(data);
     };
     const collectionPoints = useQuery({
@@ -43,15 +42,14 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
         if (sourceType !== "point") {
             filters.setValue("collection_point_id", "");
         }
-    }, [sourceType, filters]);  
-    
+    }, [sourceType, filters]);
+
     const watch = filters.watch
     const debouncer = useDebouncer(() => {
         filters.handleSubmit(onSubmit, (e) => console.error(e))()
     }, { wait: 1000 })
     useEffect(() => {
-        const subscription = watch((values, { name, type }) => {
-            console.log(values, name, type)
+        const subscription = watch(() => {
             debouncer.maybeExecute()
         })
         return () => {
@@ -60,6 +58,12 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
         }
     }, [watch]) // watch all changes
 
+    const handleReset = () => {
+        const defaults = getArrivalFilterDefaults();
+        filters.reset(defaults);
+        markEmitted(defaults);
+        onChange(defaults);
+    };
 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
@@ -69,14 +73,14 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
                         <MenuItem key="all-stores" value="">
                             Tous les types
                         </MenuItem>
-                    {ARRIVAL_SOURCE_TYPES.map(s=>(
-                        <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
-                    ))}
+                        {ARRIVAL_SOURCE_TYPES.map(s => (
+                            <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+                        ))}
                     </FormSelect>
                 </Grid>
-                { sourceType === "point" && (
+                {sourceType === "point" && (
                     <Grid size={{ xs: 12, md: 3 }}>
-                        
+
                         <FormSelect control={filters.control} name="collection_point_id" label="Point de collecte">
                             <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
                             {collectionPoints.data?.map((point) => (
@@ -101,12 +105,8 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
                     />
                 </Grid>
 
-
-
-
-                {/* Bouton pour effacer tous les filtres */}
                 <Grid size="auto" sx={{ ml: "auto" }}>
-                    <ResetFiltersButton onReset={() => filters.reset()} />
+                    <ResetFiltersButton onReset={handleReset} />
                 </Grid>
             </Grid>
         </form>

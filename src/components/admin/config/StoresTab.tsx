@@ -15,7 +15,6 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import type { RecycleryDataInput } from "@recyclerie/api/schemas/recycleries";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -39,47 +38,18 @@ import {
 } from "../../../utils/apiToastMessage";
 import { CardStore } from "../../CardStore";
 import { CreateCaisseDialog } from "../../CreateCaisseDialog";
-import { StoreForm, type Schema, type StoreFormValues } from "../../forms/StoreForm";
+import { StoreForm } from "../../forms/StoreForm";
 import type { Schema as HoraireSchema, StoreOpeningFormValues } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
 import { Loading } from "../../Loading";
 import { StatCard } from "../../StatCard";
-import type { CreateStoreHoursDataInput } from "@recyclerie/api/schemas/schedules";
-function storeToFormValues(store: StoreModel): Partial<StoreFormValues> {
-  return {
-    name: store.name,
-    manager_id: store.manager_id ?? "",
-    ...(store.address ? { address: store.address } : {}),
-    city: store.city ?? "",
-    postal_code: store.postal_code ?? "",
-    phone: store.phone ?? "",
-    email: store.email ?? "",
-    is_active: store.is_active,
-  };
-}
-function storePayloadFromForm(data: Schema): RecycleryDataInput {
-  return {
-    ...data,
-  };
-}
-function storeHoursToFormValues(
-  hours: Partial<ScheduleModel>,
-): Partial<StoreOpeningFormValues> {
-  return {
-    store_id: hours.store_id != null ? hours.store_id : undefined,
-    day_of_week: hours.day_of_week ?? "",
-    is_recurring: hours.is_recurring ?? true,
-    start_time: hours.start_time ? new Date(hours.start_time) : undefined,
-    end_time: hours.end_time ? new Date(hours.end_time) : undefined,
-    is_24h: (hours as { is_24h?: boolean }).is_24h ?? false,
-    notes: hours.notes ?? "",
-  };
-}
-function storeHoursPayloadFromForm(data: HoraireSchema): CreateStoreHoursDataInput {
-  return {
-    ...data,
-  };
-}
+import {
+  storeHoursPayloadFromForm,
+  storeHoursToFormValues,
+} from "../../../services/mapper/schedule";
+import { storePayloadFromForm, storeToFormValues } from "../../../services/mapper/store";
+import type { StoreFormOutput, StoreFormValues } from "../../../services/schema/store";
+
 const StoresTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStoreId, setEditingStoreId] = useState<StoreModel["id"] | null>(null);
@@ -102,7 +72,7 @@ const StoresTab = () => {
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const editStore = useMutation({
-    mutationFn: ({ id, data }: { id: StoreModel["id"]; data: Schema }) =>
+    mutationFn: ({ id, data }: { id: StoreModel["id"]; data: StoreFormOutput }) =>
       updateStore(id, storePayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
@@ -115,7 +85,7 @@ const StoresTab = () => {
     },
   });
   const addStore = useMutation({
-    mutationFn: (data: Schema) => createStore(storePayloadFromForm(data)),
+    mutationFn: (data: StoreFormOutput) => createStore(storePayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -154,7 +124,7 @@ const StoresTab = () => {
       ),
   });
   const editHoraire = useMutation({
-    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: CreateStoreHoursDataInput }) =>
+    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: HoraireSchema }) =>
       updateStoreHours(id, storeHoursPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
@@ -191,7 +161,7 @@ const StoresTab = () => {
     setEditingStoreId(null);
     setStoreFormDefaults(null);
   };
-  const handleSave = async (data: Schema) => {
+  const handleSave = async (data: StoreFormOutput) => {
     if (editingStoreId) editStore.mutate({ id: editingStoreId, data });
     else addStore.mutate(data);
   };
