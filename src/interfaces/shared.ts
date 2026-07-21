@@ -1,12 +1,22 @@
-export const DAYS_OF_WEEK = [
-  { key: "monday", label: "Lundi", short: "Lun" },
-  { key: "tuesday", label: "Mardi", short: "Mar" },
-  { key: "wednesday", label: "Mercredi", short: "Mer" },
-  { key: "thursday", label: "Jeudi", short: "Jeu" },
-  { key: "friday", label: "Vendredi", short: "Ven" },
-  { key: "saturday", label: "Samedi", short: "Sam" },
-  { key: "sunday", label: "Dimanche", short: "Dim" },
-];
+import type { Weekday } from "@recyclerie/api/enums";
+import { WEEKDAYS_MONDAY_FIRST } from "@recyclerie/api/domain/date";
+import { dayjs, weekdayLabel } from "../services/dateService";
+
+const capitalize = (s: string) =>
+  s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Mon-first list; `value` is JS Weekday 0=Sunday … 6=Saturday. */
+export const DAYS_OF_WEEK: {
+  value: Weekday;
+  label: string;
+  short: string;
+}[] = WEEKDAYS_MONDAY_FIRST.map((value) => ({
+  value,
+  label: weekdayLabel(value),
+  short: capitalize(
+    dayjs("1970-01-04").locale("fr").add(value, "day").format("ddd"),
+  ),
+}));
 
 export const TIME_SLOTS = [
   { value: "Ouverture", label: "Ouverture générale" },

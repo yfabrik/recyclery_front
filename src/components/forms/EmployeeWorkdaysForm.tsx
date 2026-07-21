@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { Weekday } from "@recyclerie/api/enums";
+import { WEEKDAYS_MONDAY_FIRST } from "@recyclerie/api/domain/date";
 import {
   WbSunny,
   WbSunnyOutlined,
@@ -20,23 +22,16 @@ import {
   getWorkdayTimeSlotLabel,
 } from "../../constants/workdayTimeSlots";
 import type { WorkdaysModelTransformed } from "../../services/api/users";
+import { formatTime, weekdayLabel } from "../../services/dateService";
+import { weekDays } from "../../interfaces/ZodTypes";
 import { FormTime, type BaseFormProps } from "./FormBase";
-import { formatTime } from "../../services/dateService";
 
 const workdaySchema = z.object({
-  start_time: z
-    .date()
-    .transform((val) =>
-      formatTime(val)
-    ),
-  end_time: z
-    .date()
-    .transform((val) =>
-      formatTime(val)
-    ),
+  start_time: z.date().transform((val) => formatTime(val)),
+  end_time: z.date().transform((val) => formatTime(val)),
   is_working: z.boolean(),
   time_slot: z.enum(WORKDAY_TIME_SLOT_VALUES),
-  day_of_week: z.string(),
+  day_of_week: weekDays("jour requis"),
 });
 const schema = z.object({
   week1: z.array(workdaySchema),
@@ -52,43 +47,18 @@ export type FormValues = z.input<typeof schema>;
 export const EmployeeWorkdaysForm = ({
   formId,
   onSubmit,
-  defaultValues,
   defaults,//TODO use as default value
 }: BaseFormProps<Schema> & { defaults?: WorkdaysModelTransformed[] }) => {
   const [tabValue, setTabValue] = useState(0);
 
-  // const workdays: z.infer<typeof workdaySchema>[] = [
-  //   1, 2, 3, 4, 5, 6, 0,
-  // ].flatMap((day) => {
-  //   return (["morning", "afternoon"] as const).map((slot) => {
-  //     const today = new Intl.DateTimeFormat("fr", {
-  //       weekday: "long",
-  //     }).format(new Date(1970, 0, 4 + day));
-  //     return (
-  //       defaults.find(
-  //         (def) => def.day_of_week === today && def.time_slot === slot,
-  //       ) || {
-  //         day_of_week: today,
-  //         end_time: new Date(),
-  //         start_time: new Date(),
-  //         is_working: false,
-  //         time_slot: slot,
-  //       }
-  //     );
-  //   });
-  // });
-
   const fillWithDefault = (
     def?: WorkdaysModelTransformed[],
   ): WorkdayInput[] => {
-    return [1, 2, 3, 4, 5, 6, 0].flatMap((day) => {
+    return WEEKDAYS_MONDAY_FIRST.flatMap((day) => {
       return WORKDAY_TIME_SLOT_VALUES.map((slot) => {
-        const today = new Intl.DateTimeFormat("fr", {
-          weekday: "long",
-        }).format(new Date(1970, 0, 4 + day));
         return (
-          def?.find((d) => d.day_of_week === today && d.time_slot === slot) || {
-            day_of_week: today,
+          def?.find((d) => d.day_of_week === day && d.time_slot === slot) || {
+            day_of_week: day,
             start_time: new Date(
               new Date().setHours(slot == "morning" ? 8 : 13, 0),
             ),
@@ -118,7 +88,7 @@ export const EmployeeWorkdaysForm = ({
     resolver: zodResolver(schema),
   });
 
-  const { fields, append:_append, remove:_remove } = useFieldArray({
+  const { fields } = useFieldArray({
     name: "week1",
     control: form.control,
   });
@@ -144,19 +114,15 @@ export const EmployeeWorkdaysForm = ({
             <Fragment key={field.id}>
               {!(index % 2) && (
                 <Grid size={{ xs: 3 }} key={`week1-label-${field.day_of_week}`}>
-                  <Typography
-                    variant="body1"
-                    fontWeight="medium"
-                    textTransform={"capitalize"}
-                  >
-                    {field.day_of_week}
+                  <Typography variant="body1" fontWeight="medium">
+                    {weekdayLabel(field.day_of_week as Weekday)}
                   </Typography>
                 </Grid>
               )}
               <Grid size={{ xs: 4.5 }} key={`week1-slot-${field.id}`}>
                 <HalfDay
                   control={form.control}
-                  day={field.day_of_week}
+                  day={field.day_of_week as Weekday}
                   name={`week1.${index}`}
                   slot={field.time_slot}
                 />
@@ -169,19 +135,15 @@ export const EmployeeWorkdaysForm = ({
             <Fragment key={field.id}>
               {!(index % 2) && (
                 <Grid size={{ xs: 3 }} key={`week2-label-${field.day_of_week}`}>
-                  <Typography
-                    variant="body1"
-                    fontWeight="medium"
-                    textTransform={"capitalize"}
-                  >
-                    {field.day_of_week}
+                  <Typography variant="body1" fontWeight="medium">
+                    {weekdayLabel(field.day_of_week as Weekday)}
                   </Typography>
                 </Grid>
               )}
               <Grid size={{ xs: 4.5 }} key={`week2-slot-${field.id}`}>
                 <HalfDay
                   control={form.control}
-                  day={field.day_of_week}
+                  day={field.day_of_week as Weekday}
                   name={`week2.${index}`}
                   slot={field.time_slot}
                 />
@@ -229,7 +191,7 @@ interface HalfDayProps {
   control: Control<FormValues, unknown, Schema>;
   name: `week1.${number}` | `week2.${number}`;
   slot: Workday["time_slot"];
-  day: string;
+  day: Weekday;
 }
 const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
   const isWorking = useWatch({
@@ -282,7 +244,7 @@ const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {
               onClick={(e) => e.stopPropagation()}
             />
             <Box component="span" sx={{ flex: 1 }}>
-              {`${day} - ${getWorkdayTimeSlotLabel(slot)}`}
+              {`${weekdayLabel(day)} - ${getWorkdayTimeSlotLabel(slot)}`}
             </Box>
           </Box>
           <Horaires control={control} name={name} />

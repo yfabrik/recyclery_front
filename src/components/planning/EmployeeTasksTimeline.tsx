@@ -17,7 +17,9 @@ import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import { Box, Paper, Typography } from "@mui/material";
 import type { SvgIconComponent } from "@mui/icons-material";
+import type { Weekday } from "@recyclerie/api/enums";
 import dayjs from "dayjs";
+import { weekdayLabel } from "../../services/dateService";
 
 /**
  * Shape of a single task for the timeline (compatible with TaskModel).
@@ -26,9 +28,18 @@ export interface EmployeeTaskItem {
   name: string;
   start_time: Date | string;
   end_time: Date | string;
-  day_of_week: string;
+  day_of_week: Weekday | number | string;
   /** Task category used to pick the timeline icon (e.g. vente, point, collection, custom). */
   category?: string;
+}
+
+function formatDayOfWeek(day: EmployeeTaskItem["day_of_week"]): string {
+  if (typeof day === "number") return weekdayLabel(day);
+  const asNum = Number(day);
+  if (day !== "" && !Number.isNaN(asNum) && asNum >= 0 && asNum <= 6) {
+    return weekdayLabel(asNum);
+  }
+  return String(day);
 }
 
 const CATEGORY_ICONS: Record<string, SvgIconComponent> = {
@@ -131,7 +142,7 @@ export function EmployeeTasksTimeline({
                 component="div"
                 sx={{ display: "block" }}
               >
-                {task.day_of_week}
+                {formatDayOfWeek(task.day_of_week)}
               </Typography>
               <Typography
                 variant="body2"
