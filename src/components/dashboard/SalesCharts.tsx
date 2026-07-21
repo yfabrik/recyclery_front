@@ -18,6 +18,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import "dayjs/locale/fr";
 import { useMemo, useState } from "react";
 import { getTranscationStats, type transactionsFilters } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
@@ -39,8 +40,8 @@ const getStatsDateRange = (
   if (view === "custom") {
     if (customRange) {
       return {
-        date_from: customRange.from.startOf("day").toISOString(),
-        date_to: customRange.to.endOf("day").toISOString(),
+        date_from: customRange.from.startOf("day").format("YYYY-MM-DD"),
+        date_to: customRange.to.endOf("day").format("YYYY-MM-DD"),
       };
     }
     view = "week";
@@ -50,18 +51,18 @@ const getStatsDateRange = (
   switch (view) {
     case "week":
       return {
-        date_from: base.startOf("week").toISOString(),
-        date_to: base.endOf("week").toISOString(),
+        date_from: base.startOf("week").format("YYYY-MM-DD"),
+        date_to: base.endOf("week").format("YYYY-MM-DD"),
       };
     case "month":
       return {
-        date_from: base.startOf("month").toISOString(),
-        date_to: base.endOf("month").toISOString(),
+        date_from: base.startOf("month").format("YYYY-MM-DD"),
+        date_to: base.endOf("month").format("YYYY-MM-DD"),
       };
     case "year":
       return {
-        date_from: base.startOf("year").toISOString(),
-        date_to: base.endOf("year").toISOString(),
+        date_from: base.startOf("year").format("YYYY-MM-DD"),
+        date_to: base.endOf("year").format("YYYY-MM-DD"),
       };
   }
 };
@@ -199,7 +200,7 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
         }}
       >
         {view === "custom" ? (
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
             <Box
               sx={{
                 display: "flex",
@@ -211,6 +212,7 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
             >
               <DatePicker
                 label="Date de début"
+                format="DD/MM/YYYY"
                 value={customDateRange.from}
                 onChange={(value) => {
                   if (!value) return;
@@ -228,6 +230,7 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
               </Typography>
               <DatePicker
                 label="Date de fin"
+                format="DD/MM/YYYY"
                 value={customDateRange.to}
                 onChange={(value) => {
                   if (!value) return;

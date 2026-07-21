@@ -1,3 +1,4 @@
+import { Category, Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   Box,
   Card,
@@ -25,7 +26,6 @@ import {
   type SelectProps,
   type TextFieldProps
 } from "@mui/material";
-import { Category, Visibility, VisibilityOff } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import {
   Children,
@@ -56,15 +56,16 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
-import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
-import { SelectedIcon } from "../SelectedIcon";
-import type { CategoryModel } from "../../interfaces/Models";
+import "dayjs/locale/fr";
 import {
   PAYMENT_METHODS,
 } from "../../constants/paymentMethods";
 import {
   TRANSACTION_TYPES,
 } from "../../constants/transactionTypes";
+import type { CategoryModel } from "../../interfaces/Models";
+import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
+import { SelectedIcon } from "../SelectedIcon";
 export interface BaseFormProps< TFieldValues extends FieldValues = FieldValues,TTransformedValues = TFieldValues> {
   formId: string;
   defaultValues?: Partial<TFieldValues> | null;
@@ -276,7 +277,7 @@ export const FormDate = <
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
           <DatePicker
             label={label}
             slotProps={{
@@ -288,6 +289,7 @@ export const FormDate = <
             }}
             {...extra}
             {...field}
+            format={extra?.format ?? "DD/MM/YYYY"}
             value={field.value ? dayjs(field.value) : null}
             onChange={(value) => field.onChange(value ? value.toDate() : null)}
           />
@@ -311,7 +313,7 @@ export const FormTime = <
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
           <TimePicker
             label={label}
             ampm={false}
