@@ -1,8 +1,6 @@
-import z from "zod";
 import type { EcoOrganismQuarterStat } from "../../../services/api/ecoOrganism";
 import { parseEcoOrgQuarterKey } from "../../../services/api/ecoOrganism";
 import type { EcoOrganismStatsRow } from "../../admin/EcoOrganismStatsTable";
-import { idSchema } from "../../../interfaces/ZodTypes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {  useEffect, useMemo } from "react";
@@ -13,34 +11,13 @@ import { FormDate, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
-
-
-const METRIC_SOURCES = ["quarterIn", "quarterOut", "quarterSell"] as const;
-const SOURCE_TYPES = ARRIVAL_SOURCE_TYPES.map(s=>s.value);
-const filterSchema = z.object({
-  eco_organism_id: z.union([idSchema(), z.literal("")]),
-  metric_source: z.enum(METRIC_SOURCES),
-  quarter: z.string(),
-  month_year: z.date().nullable(),
-  source_type: z.enum([...SOURCE_TYPES, ""]),
-  collection_point_id: z.union([idSchema(), z.literal("")]),
-  category: z.string(),
-});
-
-export type Filters = z.infer<typeof filterSchema>;
-export type EcoOrgStatsFiltersValues = z.input<typeof filterSchema>;
-
-const getDefaultFilters = (): Filters => {
-  return {
-    eco_organism_id: "",
-    metric_source: "quarterOut",
-    quarter: "",
-    month_year: null,
-    source_type: "",
-    collection_point_id: "",
-    category: "",
-  };
-};
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+  ecoOrgFilterSchema,
+  getEcoOrgFilterDefaults,
+  type EcoOrgFilters as Filters,
+  type EcoOrgFilterValues as EcoOrgStatsFiltersValues,
+} from "../../../services/schema/ecoOrganism";
 
 const parseQuarterKey = parseEcoOrgQuarterKey;
 
@@ -67,9 +44,12 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
     Filters
   >({
     defaultValues: defaultValues,
-    resolver: zodResolver(filterSchema),
+    resolver: zodResolver(ecoOrgFilterSchema),
   });
+  const markEmitted = useSyncFilterDefaults(form, defaultValues);
+
   const onSubmit = (values: Filters) => {
+    markEmitted(values);
     onChange(values)
   };
 
@@ -261,7 +241,12 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
 
         <Grid size="auto" sx={{ ml: "auto" }}>
           <ResetFiltersButton
-            onReset={() => form.reset(getDefaultFilters())}
+            onReset={() => {
+              const defaults = getEcoOrgFilterDefaults();
+              form.reset(defaults);
+              markEmitted(defaults);
+              onChange(defaults);
+            }}
           />
         </Grid>
       </Grid>

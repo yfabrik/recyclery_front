@@ -3,7 +3,6 @@ import { Euro, Scale } from "@mui/icons-material";
 import { Grid, MenuItem } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import {
   LABELED_ITEM_CONDITIONS,
 } from "../../constants/labeledItemConditions";
@@ -17,14 +16,17 @@ import {
 } from "./FormBase";
 import {
   labeledItemSchema,
-  type LabeledItemSchema,
-} from "./itemCoreSchema";
+  type LabeledItemFormOutput,
+  type LabeledItemFormValues,
+} from "../../services/schema/item";
 
-export type LabeledItemFormValues = z.input<ReturnType<typeof labeledItemSchema>>;
+export type { LabeledItemFormValues };
+/** @deprecated Use LabeledItemFormOutput */
+export type LabeledItemSchema = LabeledItemFormOutput;
 
 type FormValues = LabeledItemFormValues;
 
-interface LabeledFormProps extends BaseFormProps<FormValues,LabeledItemSchema> {
+interface LabeledFormProps extends BaseFormProps<FormValues, LabeledItemFormOutput> {
   categories: CategoryModel[];
 }
 
@@ -36,7 +38,7 @@ export const LabeledItemForm = ({
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
 
-  const form = useForm<FormValues, unknown, LabeledItemSchema>({
+  const form = useForm<FormValues, unknown, LabeledItemFormOutput>({
     defaultValues: {
       category_id: "",
       subcategory_id: "",

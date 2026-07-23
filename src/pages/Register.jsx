@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
 import {
-  Container,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Link,
-  Alert,
-  InputAdornment,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@mui/material';
-import {
-  Person,
   Email,
   Lock,
+  Person,
+  Store,
   Visibility,
   VisibilityOff,
-  Store,
 } from '@mui/icons-material';
-import { Link as RouterLink, useNavigate } from 'react-router';
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  Link,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {

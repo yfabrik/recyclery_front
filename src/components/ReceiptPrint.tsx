@@ -1,9 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Box, Typography } from "@mui/material";
-import type { SalesTransactionDto } from "@recyclerie/api/responses/salesTransactions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { AuthUserModel, CashSession } from "../interfaces/Models";
 import {
   formatCurrency,
   formatWeight,
@@ -14,19 +12,11 @@ import {
   getPaymentBalance,
   getPaymentMethodLabel,
   roundCurrency,
-  type GlobalPromotionInput,
 } from "../services/cartService";
-import type { CartItem } from "./forms/cartSchema";
-
-type ReceiptSale = SalesTransactionDto;
-
-interface ReceiptPrintPayload {
-  sale: ReceiptSale;
-  items: CartItem[];
-  cashSession: CashSession;
-  user:  AuthUserModel;
-  global_promotion?: GlobalPromotionInput | null;
-}
+import type {
+  ReceiptPrintPayload,
+  ReceiptSale,
+} from "../utils/transactionReceipt";
 
 const getPaymentLabel = (method: ReceiptSale["payment_method"]) => {
   if (method === "mixed") return "Paiement multiple";
@@ -60,7 +50,7 @@ const ReceiptPrintContent = ({ payload }: { payload: ReceiptPrintPayload }) => {
     <Box sx={{ px: 2, py: 1, fontFamily: "monospace", fontSize: "12px", width: "80mm" }} className="receipt-print-root">
       <Box sx={{ textAlign: "center", mb: 2 }}>
         <Typography variant="subtitle1" sx={{ fontFamily: "monospace", fontWeight: 700 }}>
-          {cashSession.Recyclery?.name}
+          {cashSession.CashRegister?.Recyclery?.name}
         </Typography>
         <Typography variant="body2" sx={{ fontFamily: "monospace" }}>Ticket N°: {sale.id}</Typography>
         <Typography variant="body2" sx={{ fontFamily: "monospace" }}>

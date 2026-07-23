@@ -28,7 +28,7 @@ export const ActiveSessionInfos = ({
                         <PointOfSale color="primary" />
                         <Box>
                             <Typography variant="h6">
-                                {activeSession.Recyclery?.name} -{" "}
+                                {activeSession.CashRegister?.Recyclery?.name} -{" "}
                                 {activeSession.CashRegister?.name}
                                 <Chip
                                     size="small"

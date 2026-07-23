@@ -8,7 +8,7 @@ import type {
   ListEcoOrganismsResponse,
   UpdateEcoOrganismResponse
 } from "@recyclerie/api/responses/ecoOrganism";
-import type { EcoOrganismDataInput, EcoOrganismFilterInput, EcoOrganismQuartersFilterInput } from "@recyclerie/api/schemas/ecoOrganism";
+import type { EcoOrganismDataInput, EcoOrganismFilter, EcoOrganismFilterInput, EcoOrganismQuartersFilterInput } from "@recyclerie/api/schemas/ecoOrganism";
 import type { AxiosResponse } from "axios";
 import type { EcoOrgModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
@@ -16,6 +16,10 @@ import axiosInstance from "./axios";
 // export type { EcoOrganismFilter };
 export type EcoOrganismQuarterStat = EcoOrgQuarterStatsDto;
 // export type { EcoOrgQuarterLabel, EcoOrgQuarterStatsDto };
+
+type EcoOrganismQuery = Omit<EcoOrganismFilterInput, "include"> & {
+  include?: EcoOrganismFilter["include"];
+};
 
 export const formatEcoOrgQuarterLabel = (quarter: EcoOrgQuarterLabel | string): string => {
   const match = String(quarter).match(/^(\d{4})-T([1-4])$/);
@@ -37,10 +41,10 @@ export const parseEcoOrgQuarterKey = (value?: string) => {
 };
 
 export const getEcoOrganisms = (
-  filters?: EcoOrganismFilterInput,
+  filters?: EcoOrganismQuery,
 ): Promise<AxiosResponse<ListEcoOrganismsResponse>> =>
   axiosInstance.get<ListEcoOrganismsResponse>("/api/eco-organisms", {
-    params: { ...filters, include: filters?.include?.toString() },//TODO format before sending
+    params: { ...filters, include: filters?.include?.toString() },
   });
 
 export const fetchEcoOrganismsStats = (): Promise<

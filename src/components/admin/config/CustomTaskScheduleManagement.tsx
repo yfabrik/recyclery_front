@@ -24,7 +24,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { TaskScheduleDataInput } from "@recyclerie/api/schemas/taskSchedule";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -41,17 +40,27 @@ import {
   updatePlanning,
 } from "../../../services/api/planning";
 import { fetchStores } from "../../../services/api/store";
-import { formatTime } from "../../../services/dateService";
+import {
+  formatTime,
+  weekdayFromDate,
+  weekdayLabel,
+} from "../../../services/dateService";
+import {
+  scheduleCustomPayloadFromForm,
+  scheduleToCustomFormValues,
+} from "../../../services/mapper/schedule";
+import type { PlanningFormOutput, PlanningFormValues } from "../../../services/schema/schedule";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
+import { CustomTaskFiltersForm } from "../../forms/filters/CustomTaskFiltersForm";
 import {
   CUSTOM_TASK_FILTER_DEFAULTS,
-  CustomTaskFiltersForm,
-  type CustomTaskFilters,
-} from "../../forms/filters/CustomTaskFiltersForm";
-import { PlaningForm, type Schema, type SchemaInputValues } from "../../forms/planningForm";
+  customTaskFilterSchema,
+} from "../../../services/schema/task";
+import { useUrlFilters } from "../../../hooks/useUrlFilters";
+import { PlaningForm } from "../../forms/planningForm";
 import { Loading } from "../../Loading";
 
 const CUSTOM_SCHEDULES_KEY = ["custom-schedules"] as const;
@@ -62,20 +71,10 @@ const CustomTaskScheduleManagement = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleModel | null>(
     null,
   );
-  const [formDefaults, setFormDefaults] = useState<Partial<SchemaInputValues> | null>(null);
-  const [filters, setFilters] = useState<CustomTaskFilters>(
-    CUSTOM_TASK_FILTER_DEFAULTS,
-  );
-
-  const scheduleToFormValues = (schedule: ScheduleModel): Partial<SchemaInputValues> => ({
-    name: schedule.name,
-    category: schedule.category,
-    scheduled_date: new Date(schedule.scheduled_date),
-    start_time: new Date(schedule.start_time),
-    end_time: new Date(schedule.end_time),
-    ...(schedule.priority ? { priority: schedule.priority } : {}),
-    ...(schedule.store_id ? { store_id: schedule.store_id } : {}),
-    ...(schedule.notes ? { notes: schedule.notes } : {}),
+  const [formDefaults, setFormDefaults] = useState<Partial<PlanningFormValues> | null>(null);
+  const { filters, setFilters } = useUrlFilters({
+    schema: customTaskFilterSchema,
+    defaults: CUSTOM_TASK_FILTER_DEFAULTS,
   });
 
   const stores = useQuery({
@@ -94,24 +93,9 @@ const CustomTaskScheduleManagement = () => {
     "Erreur lors du chargement des tâches personnalisées",
   );
 
-  const schedulePayloadFromForm = (data: Schema): TaskScheduleDataInput => {
-    return {
-      name: data.name,
-      scheduled_date: data.scheduled_date,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      category: "custom",
-      notes: data.notes || null,
-      store_id: data.store_id,
-      is_recurring: !!data.recurrence_pattern,
-      recurrence_pattern: data.recurrence_pattern || null,
-    };
-    return {
-      ...data
-    }
-  };
   const addSchedule = useMutation({
-    mutationFn: (data: Schema) => createPlanning(schedulePayloadFromForm(data)),
+    mutationFn: (data: PlanningFormOutput) =>
+      createPlanning(scheduleCustomPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Tâche personnalisée créée avec succès"),
@@ -124,8 +108,8 @@ const CustomTaskScheduleManagement = () => {
   });
 
   const updateSchedule = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Schema }) =>
-      updatePlanning(id, schedulePayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: number; data: PlanningFormOutput }) =>
+      updatePlanning(id, scheduleCustomPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(
@@ -162,7 +146,7 @@ const CustomTaskScheduleManagement = () => {
 
   const handleOpenDialog = (schedule: ScheduleModel | null = null) => {
     setEditingSchedule(schedule);
-    setFormDefaults(schedule ? scheduleToFormValues(schedule) : null);
+    setFormDefaults(schedule ? scheduleToCustomFormValues(schedule) : null);
     setOpenDialog(true);
   };
 
@@ -171,7 +155,7 @@ const CustomTaskScheduleManagement = () => {
     setEditingSchedule(null);
   };
 
-  const handleSave = (data: Schema) => {
+  const handleSave = (data: PlanningFormOutput) => {
     if (editingSchedule?.id) {
       updateSchedule.mutate({ id: editingSchedule.id, data });
     } else {
@@ -190,19 +174,12 @@ const CustomTaskScheduleManagement = () => {
     deleteSchedule.mutate(scheduleId);
   };
 
-  const getPriorityInfo = (priority: string | null | undefined) => {
-    return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
-  };
-
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
-    if (schedule.day_of_week) {
-      return schedule.day_of_week;
+    if (typeof schedule.day_of_week === "number") {
+      return weekdayLabel(schedule.day_of_week);
     }
     if (schedule.scheduled_date) {
-      const day = new Date(schedule.scheduled_date).toLocaleDateString("fr-FR", {
-        weekday: "long",
-      });
-      return day.charAt(0).toUpperCase() + day.slice(1);
+      return weekdayLabel(weekdayFromDate(schedule.scheduled_date));
     }
     return null;
   };
@@ -269,12 +246,7 @@ const CustomTaskScheduleManagement = () => {
         <CustomTaskFiltersForm
           stores={stores.data ?? []}
           defaultValues={filters}
-          onChange={(values) =>
-            setFilters((prev) => ({
-              ...prev,
-              ...values,
-            }))
-          }
+          onChange={setFilters}
           onRefresh={() => schedulesQuery.refetch()}
         />
       </Paper>

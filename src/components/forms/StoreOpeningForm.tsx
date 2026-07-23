@@ -9,31 +9,26 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-import * as z from "zod";
 import { DAYS_OF_WEEK as daysOfWeek } from "../../interfaces/shared";
-import { idSchema, noEmptyStr } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
+import {
+  storeOpeningFormSchema,
+  type StoreOpeningFormOutput,
+  type StoreOpeningFormValues,
+} from "../../services/schema/schedule";
 
-const schema = z.object({
-  store_id: idSchema("choississez un magasin"),
-  day_of_week: noEmptyStr("choisissez un jour"),
-  is_recurring: z.boolean(),
-  start_time: z.coerce.date(),
-  end_time: z.coerce.date(),
-  is_24h: z.boolean(),
-  notes: z.string().transform((val) => (val == "" ? null : val)),
-});
+export type { StoreOpeningFormOutput, StoreOpeningFormValues };
+/** @deprecated Use StoreOpeningFormOutput */
+export type Schema = StoreOpeningFormOutput;
 
-export type Schema = z.infer<typeof schema>;
-export type StoreOpeningFormValues = z.input<typeof schema>;
 export const StoreOpeningForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores,
-}: BaseFormProps<StoreOpeningFormValues,Schema> & { stores: StoreModel[] }) => {
+}: BaseFormProps<StoreOpeningFormValues,StoreOpeningFormOutput> & { stores: StoreModel[] }) => {
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(storeOpeningFormSchema),
     defaultValues: {
       store_id: "",
       day_of_week: "",
@@ -66,8 +61,9 @@ export const StoreOpeningForm = ({
             label="Jour de la semaine"
             name="day_of_week"
           >
+            <MenuItem value="">choisissez un jour</MenuItem>
             {daysOfWeek.map((day) => (
-              <MenuItem key={day.key} value={day.label}>
+              <MenuItem key={day.value} value={day.value}>
                 {day.label}
               </MenuItem>
             ))}

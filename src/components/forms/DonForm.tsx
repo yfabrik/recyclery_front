@@ -7,40 +7,24 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-import * as z from "zod";
-import { noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
+import { DONATION_STATUSES } from "../../constants/donationStatuses";
 import {
-  DONATION_STATUSES,
-  DONATION_STATUS_VALUES,
-} from "../../constants/donationStatuses";
+  donFormSchema,
+  type DonFormOutput,
+  type DonFormValues,
+} from "../../services/schema/don";
 
-const schema = z.object({
-  donor_name: noEmptyStr("nom requis"),
-  donor_email: z.union([nullString(),z.email()]),
-  donor_phone: z.union([nullString(),phoneSchema()]),
-  // donor_contact: z.union([z.email(), phoneSchema(), z.literal("").transform(() => null)]),
-  item_description: noEmptyStr("description requise"),
-  estimated_value: z.coerce.number().min(0),
-  weight: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    // z.union([
-      // z.undefined().refine(() => false, { message: "Poids requis" }),
-      z.coerce.number("poids requis").min(0),
-    // ])
-  ) as z.ZodType<number>,//TODO remake
-  status: z.enum(DONATION_STATUS_VALUES),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type DonFormValues = z.input<typeof schema>;
+export type { DonFormOutput, DonFormValues };
+/** @deprecated Use DonFormOutput */
+export type Schema = DonFormOutput;
 
 export const DonForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<DonFormValues,Schema>) => {
-  const form = useForm<DonFormValues,unknown,Schema>({
-    resolver: zodResolver(schema),
+}: BaseFormProps<DonFormValues,DonFormOutput>) => {
+  const form = useForm<DonFormValues,unknown,DonFormOutput>({
+    resolver: zodResolver(donFormSchema),
     defaultValues: {
       donor_name: "",
       donor_email: "",

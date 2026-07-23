@@ -10,14 +10,17 @@ import {
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { useForm, useWatch, type UseFormReset } from "react-hook-form";
-import * as z from "zod";
 
 import type {
   CategoryModel,
   CollectionPointModel,
 } from "../../interfaces/Models";
 import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
-import { idSchema, nullString } from "../../interfaces/ZodTypes";
+import {
+  arrivalFormSchema,
+  type ArrivalFormOutput,
+  type ArrivalFormValues,
+} from "../../services/schema/arrival";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
@@ -29,56 +32,16 @@ import {
   FormTime,
   type BaseFormProps,
 } from "./FormBase";
-const sourceTypeEnum = z.enum(ARRIVAL_SOURCE_TYPES.map(s=>s.value));
 
-const schema = (categories: CategoryModel[]) =>
-  z
-    .object({
-      category_id: idSchema("La catégorie est requise"),
-      subcategory_id: z.union([
-        nullString(),
-        idSchema(),
-      ]),
-      weight: z.coerce.number().positive("Le poids est requis"),
-      arrival_date: z.coerce.date("La date est requise"),
-      arrival_time: z.coerce.date("La date est requise"),
-      source_type: sourceTypeEnum,
-      collection_point_id: z.union([
-        nullString(),
-        idSchema(),
-      ]),
-      source_details: z.string().transform((v) => (v == "" ? null : v)),
-      notes: z.string().transform((v) => (v == "" ? null : v)),
-    })
-    .superRefine((data, ctx) => {
-      if (data.source_type === "point" && !data.collection_point_id)
-        ctx.addIssue({
-          code: "custom",
-          path: ["collection_point_id"],
-          message: "Veuillez sélectionner un point de collecte",
-        });
-      const selectedCategory = categories.find(
-        (c) => c.id === Number(data.category_id),
-      );
-      const hasSubcategories =
-        (selectedCategory?.subcategories?.length ?? 0) > 0;
-      if (hasSubcategories && !data.subcategory_id) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["subcategory_id"],
-          message: "Sous-categorie requise",
-        });
-      }
-    });
+export type { ArrivalFormOutput, ArrivalFormValues };
+/** @deprecated Use ArrivalFormOutput */
+export type ArrivalFormSchema = ArrivalFormOutput;
 
-export type ArrivalFormSchema = z.infer<ReturnType<typeof schema>>;
-type ArrivalFormInput = z.input<ReturnType<typeof schema>>;
-
-type ArrivalFormProps = BaseFormProps<ArrivalFormSchema> & {
+type ArrivalFormProps = BaseFormProps<ArrivalFormValues, ArrivalFormOutput> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
-  onReady?: (method: { reset: UseFormReset<ArrivalFormSchema> }) => void;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormOutput> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -89,8 +52,8 @@ export const ArrivalForm = ({
   loading = false,
   onReady,
 }: ArrivalFormProps) => {
-  const form = useForm<ArrivalFormInput, unknown, ArrivalFormSchema>({
-    resolver: zodResolver(schema(categories)),
+  const form = useForm({
+    resolver: zodResolver(arrivalFormSchema(categories)),
     defaultValues: {
       category_id: "",
       subcategory_id: "",
@@ -216,7 +179,7 @@ export const ArrivalForm = ({
 
   const reset = form.reset;
   useEffect(() => {
-    onReady?.({ reset: reset as UseFormReset<ArrivalFormSchema> });
+    onReady?.({ reset: reset as UseFormReset<ArrivalFormOutput> });
   }, [onReady, reset]);
 
   // Reset subcategory when category changes to avoid out-of-range select values.

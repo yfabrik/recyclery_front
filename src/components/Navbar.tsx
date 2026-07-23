@@ -4,6 +4,7 @@ import {
   Build,
   Dashboard,
   DeleteSweep,
+  DesktopWindows,
   ExitToApp,
   Inventory,
   Menu as MenuIcon,
@@ -11,7 +12,8 @@ import {
   PointOfSale,
   QrCode,
   Settings,
-  Store
+  Store,
+  TouchApp,
 } from '@mui/icons-material';
 import {
   AppBar,
@@ -29,6 +31,7 @@ import {
 import { useState, type ElementType, type MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth, type PermissionAction, type PermissionModule } from '../contexts/AuthContext';
+import { useTouchLayout } from '../contexts/TouchLayoutContext';
 import { getUserRoleLabel } from '../constants/userRoles';
 
 interface NavBarProps {
@@ -124,6 +127,9 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
             ))}
           </Box>
 
+          {/* Mode tactile */}
+          <TouchLayoutToggle />
+
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton
@@ -153,6 +159,35 @@ const Navbar = ({ onMenuToggle }: NavBarProps) => {
 
 export default Navbar;
 
+const iconButtonHoverSx = {
+  '&:hover': {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    transform: 'scale(1.1)',
+  },
+  transition: 'all 0.2s ease-in-out',
+  borderRadius: '8px',
+} as const;
+
+const TouchLayoutToggle = () => {
+  const { isTouchLayout, toggleTouchLayout } = useTouchLayout();
+
+  return (
+    <Tooltip title={isTouchLayout ? 'Mode classique' : 'Mode tactile'}>
+      <IconButton
+        color="inherit"
+        aria-label={isTouchLayout ? 'Activer le mode classique' : 'Activer le mode tactile'}
+        aria-pressed={isTouchLayout}
+        onClick={toggleTouchLayout}
+        sx={{
+          ...iconButtonHoverSx,
+          backgroundColor: isTouchLayout ? 'rgba(255,255,255,0.15)' : 'transparent',
+        }}
+      >
+        {isTouchLayout ? <DesktopWindows /> : <TouchApp />}
+      </IconButton>
+    </Tooltip>
+  );
+};
 
 const UserMenu = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);

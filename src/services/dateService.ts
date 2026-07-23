@@ -1,50 +1,77 @@
-export const weekDays = () => {
-    const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long" })
-    return [1, 2, 3, 4, 5, 6, 0].map(day => {
-        const jour = new Date(1970, 0, 4 + day) // 04/01/1970=dimanche = 0
-        return formatter.format(jour)
-    })
-}
+import type { Weekday } from "@recyclerie/api/enums";
+import {
+  dateFromWeekday,
+  dayjs,
+  startOfDay,
+  toIsoDate,
+  toIsoTime,
+  weekday,
+  WEEKDAYS_MONDAY_FIRST,
+  weekdaySortKey,
+} from "@recyclerie/api/domain/date";
+import "dayjs/locale/fr";
 
-export const weekDaysMap = () => {
-    const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long" })
-    return [1, 2, 3, 4, 5, 6, 0].reduce((prev, current) => {
-        const jour = new Date(1970, 0, 4 + current) // 04/01/1970=dimanche = 0
-        return prev.set(current, formatter.format(jour))
-    }, new Map())
-}
-export const weekDaysArray = () => {
-    const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long" })
-    return [1, 2, 3, 4, 5, 6, 0].map(day => {
-        const jour = new Date(1970, 0, 4 + day) // 04/01/1970=dimanche = 0
-        return { key: day, label: formatter.format(jour) }
-    })
-}
+export {
+  dateFromWeekday,
+  dayjs,
+  now,
+  startOfDay,
+  endOfDay,
+  toIsoDate,
+  toIsoTime,
+  toIsoDateTime,
+  combineDateAndTime,
+  WEEKDAY_LABELS_FR,
+  WEEKDAYS_MONDAY_FIRST,
+  weekdaySortKey,
+} from "@recyclerie/api/domain/date";
 
-export const getDay = (n: number) => {
-    const formatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long" })
-    const jour = new Date(1970, 0, 4 + n)
-    return formatter.format(jour)
-}
+/** @deprecated Prefer `weekday` from `@recyclerie/api/domain/date` */
+export const weekdayFromDate = weekday;
 
-export const formatDate = (d: Date) => {
-    return d.toLocaleDateString("fr-FR")
-}
+/** @deprecated Prefer `dateFromWeekday` from `@recyclerie/api/domain/date` */
+export const nextDateForWeekday = dateFromWeekday;
 
-export const formatTime = (d: Date) => {
-    return d.toLocaleTimeString("fr-FR", { minute: "2-digit", hour: "2-digit", hour12: false })
-}
+const capitalize = (s: string) =>
+  s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1);
 
-/** Week (Monday–Sunday) containing the given date. Returns date_from and date_to in en-ca format for API. */
-export const getWeekRangeFromDate = (selectedDate: Date): { date_from: string; date_to: string } => {
-    const lundi = new Date(selectedDate)
-    const day = lundi.getDay()
-    const diff = lundi.getDate() - day + (day === 0 ? -6 : 1)
-    lundi.setDate(diff)
-    const dimanche = new Date(lundi)
-    dimanche.setDate(lundi.getDate() + 6)
-    return {
-        date_from: lundi.toLocaleString("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }),
-        date_to: dimanche.toLocaleString("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }),
-    }
-}
+/** French Title Case weekday label via dayjs locale (0=Sunday … 6=Saturday). */
+export const weekdayLabel = (n: Weekday | number): string =>
+  // 1970-01-04 is a Sunday
+  capitalize(dayjs("1970-01-04").locale("fr").add(n, "day").format("dddd"));
+
+export const weekDays = () =>
+  WEEKDAYS_MONDAY_FIRST.map((day) => weekdayLabel(day).toLowerCase());
+
+export const weekDaysMap = () =>
+  WEEKDAYS_MONDAY_FIRST.reduce((prev, current) => {
+    return prev.set(current, weekdayLabel(current).toLowerCase());
+  }, new Map<Weekday, string>());
+
+export const weekDaysArray = () =>
+  WEEKDAYS_MONDAY_FIRST.map((day) => ({
+    key: day,
+    value: day,
+    label: weekdayLabel(day),
+  }));
+
+export const getDay = (n: number) => weekdayLabel(n);
+
+/** Display DD/MM/YYYY (UI only). */
+export const formatDate = (d: Date) => dayjs(d).format("DD/MM/YYYY");
+
+/** Display HH:mm (UI only). */
+export const formatTime = (d: Date) => toIsoTime(d);
+
+/** Week (Monday–Sunday) containing the given date. Returns YYYY-MM-DD for API. */
+export const getWeekRangeFromDate = (
+  selectedDate: Date,
+): { date_from: string; date_to: string } => {
+  const d = startOfDay(selectedDate);
+  const lundi = d.subtract(weekdaySortKey(d.day() as Weekday), "day");
+  const dimanche = lundi.add(6, "day");
+  return {
+    date_from: toIsoDate(lundi.toDate()),
+    date_to: toIsoDate(dimanche.toDate()),
+  };
+};

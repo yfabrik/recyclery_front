@@ -4,71 +4,57 @@ import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import { FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
-import { idSchema } from "@recyclerie/api/primitives/zod";
 import type { StoreModel } from "../../../interfaces/Models";
-
-const filterSchema = z.object({
-  search: z.string().optional(),
-  status: z.string().optional(),
-  store_id: z.union([idSchema(), z.literal("")]).optional(),
-});
-export type EmployeeFilters = z.infer<typeof filterSchema>;
-export type EmployeeFiltersValues = z.input<typeof filterSchema>;
-
-
-const defaultFilterValues: EmployeeFiltersValues = {
-  search: "",
-  status: "",
-  store_id: "",
-};
-
-export const EMPLOYEE_FILTER_DEFAULTS = defaultFilterValues;
-
-// interface RoleOption {
-//   value: string;
-//   label: string;
-// }
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+  EMPLOYEE_FILTER_DEFAULTS,
+  employeeFilterSchema,
+  type EmployeeFilters,
+} from "../../../services/schema/employee";
 
 interface EmployeeFilterFormProps {
   defaultValues?: EmployeeFilters;
   onChange: (values: EmployeeFilters) => void;
-  // roleOptions: RoleOption[];
   stores?: StoreModel[];
 }
 
 export const EmployeeFilterForm = ({
-  defaultValues = defaultFilterValues,
+  defaultValues = EMPLOYEE_FILTER_DEFAULTS,
   onChange,
-  // roleOptions,
-  stores=[],
+  stores = [],
 }: EmployeeFilterFormProps) => {
-  const form = useForm<EmployeeFilters>({
+  const form = useForm({
     defaultValues,
-    resolver: zodResolver(filterSchema),
+    resolver: zodResolver(employeeFilterSchema),
   });
+  const markEmitted = useSyncFilterDefaults(form, defaultValues);
 
   const onSubmit = (data: EmployeeFilters) => {
+    markEmitted(data);
     onChange(data);
   };
 
-  const watch = form.watch
-  const debouncer = useDebouncer(()=>{
+  const debouncer = useDebouncer(() => {
     form.handleSubmit(onSubmit, (e) => console.error(e))()
   }, { wait: 1000 })
   useEffect(() => {
-    const subscription = watch((values, { name, type }) => {
-      // console.log(values, name, type)
+    const subscription = form.watch(() => {
       debouncer.maybeExecute()
-    })
+    }) as { unsubscribe: () => void }
     return () => {
       debouncer.cancel()
       subscription.unsubscribe()
     }
-  }, [watch]) // watch all changes
-  
+  }, [form, debouncer]) // watch all changes
+
+  const handleReset = () => {
+    form.reset(EMPLOYEE_FILTER_DEFAULTS);
+    markEmitted(EMPLOYEE_FILTER_DEFAULTS);
+    onChange(EMPLOYEE_FILTER_DEFAULTS);
+  };
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2} alignItems="center">
@@ -89,18 +75,6 @@ export const EmployeeFilterForm = ({
             }}
           />
         </Grid>
-        {/* <Grid size={{ xs: 12, md: 3 }}>
-          <FormSelect label="Rôle" control={form.control} name="role">
-            <MenuItem key="all" value="">
-              Tous les rôles
-            </MenuItem>
-            {roleOptions.map((role) => (
-              <MenuItem key={role.value} value={role.value}>
-                {role.label}
-              </MenuItem>
-            ))}
-          </FormSelect>
-        </Grid> */}
         <Grid size={{ xs: 12, md: 3 }}>
           <FormSelect control={form.control} name="status" label="Statut">
             <MenuItem value="">Tous</MenuItem>
@@ -121,12 +95,7 @@ export const EmployeeFilterForm = ({
           </FormSelect>
         </Grid>
         <Grid size="auto" sx={{ ml: "auto" }}>
-          <ResetFiltersButton
-            onReset={() => {
-              form.reset(defaultFilterValues);
-              onChange(defaultFilterValues);
-            }}
-          />
+          <ResetFiltersButton onReset={handleReset} />
         </Grid>
       </Grid>
     </form>

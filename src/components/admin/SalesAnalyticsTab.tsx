@@ -18,7 +18,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   getApiErrorMessage,
@@ -41,7 +41,12 @@ import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
 import type { Schema } from "../forms/RefundForm";
-import { SaleFiltersForm, type Filters } from "../forms/filters/SaleFiltersForm";
+import { SaleFiltersForm } from "../forms/filters/SaleFiltersForm";
+import {
+  getSaleFilterDefaults,
+  saleFilterSchema,
+  type SaleFilters as Filters,
+} from "../../services/schema/sale";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
 import { useReceiptPrint } from "../ReceiptPrint";
@@ -49,6 +54,7 @@ import { buildCreateRefundBody } from "../../utils/refundBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { StatCard } from "../StatCard";
 import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
+import { useUrlFilters } from "../../hooks/useUrlFilters";
 
 const toTransactionFilters = ({
   store_id,
@@ -63,16 +69,11 @@ const toTransactionFilters = ({
 });
 
 export const SalesAnalyticsTab = () => {
-  const [page, setPage] = useState(1);
-
-  const [filters, setFilters] = useState<Filters>({
-    store_id: "",
-    period: "month",
-    date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
-    date_to: new Date().toISOString().split("T")[0],
-    transaction_number: "",
+  const defaults = useMemo(() => getSaleFilterDefaults(), []);
+  const { filters, setFilters, page, setPage } = useUrlFilters({
+    schema: saleFilterSchema,
+    defaults,
+    withPage: true,
   });
 
   const [refundDialog, setRefundDialog] = useState(false);
@@ -224,12 +225,7 @@ export const SalesAnalyticsTab = () => {
         <SaleFiltersForm
           stores={stores.data || []}
           defaultValues={filters}
-          onChange={(values) =>
-            setFilters((prev) => ({
-              ...prev,
-              ...values,
-            }))
-          }
+          onChange={setFilters}
         />
       </Paper>
 
@@ -314,7 +310,7 @@ export const SalesAnalyticsTab = () => {
                 color="primary"
                 variant="outlined"
                 onDelete={() =>
-                  setFilters((prev) => ({ ...prev, transaction_number: "" }))
+                  setFilters({ ...filters, transaction_number: "" })
                 }
                 deleteIcon={<Clear />}
               />

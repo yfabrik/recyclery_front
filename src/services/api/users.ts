@@ -15,9 +15,11 @@ import type {
   UpdateUserResponse,
   UserStatsResponse,
 } from "@recyclerie/api/responses/users";
+import type { Weekday } from "@recyclerie/api/enums";
 import type { AssignEmployeeStoreInput } from "@recyclerie/api/schemas/employeeStore";
-import type { UserAdminUpdatePasswordInput, UserCreateInput, UserListFilterInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserListFilter, UserListFilterInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 import type { AxiosResponse } from "axios";
+import dayjs from "dayjs";
 import type { EmployeeModel, UserModel, WorkdaysModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
@@ -29,10 +31,16 @@ import axiosInstance from "./axios";
 // }
 // export type { UserListFilter as UserFilters };
 
+type UserListQuery = Omit<UserListFilterInput, "include"> & {
+  include?: UserListFilter["include"];
+};
+
 export const fetchUsers = (
-  filters?: UserListFilterInput,
+  filters?: UserListQuery,
 ): Promise<AxiosResponse<ListUsersResponse>> =>
-  axiosInstance.get<ListUsersResponse>("/api/users", { params: filters });
+  axiosInstance.get<ListUsersResponse>("/api/users", {
+    params: { ...filters, include: filters?.include?.toString() },
+  });
 
 export const createUser = (
   data: UserCreateInput,
@@ -85,40 +93,20 @@ export const addAssignedStore = (
 ): Promise<AxiosResponse<AssignEmployeeStoreResponse>> =>
   axiosInstance.post<AssignEmployeeStoreResponse>("/api/employee-stores", data);
 
-const DAY_OF_WEEK_FR = new Map([
-  ["monday", "lundi"],
-  ["tuesday", "mardi"],
-  ["wednesday", "mercredi"],
-  ["thursday", "jeudi"],
-  ["friday", "vendredi"],
-  ["saturday", "samedi"],
-  ["sunday", "dimanche"],
-]);
-
-const DAY_OF_WEEK_EN = new Map([
-  ["lundi", "monday"],
-  ["mardi", "tuesday"],
-  ["mercredi", "wednesday"],
-  ["jeudi", "thursday"],
-  ["vendredi", "friday"],
-  ["samedi", "saturday"],
-  ["dimanche", "sunday"],
-]);
-
 function parseTimeToDate(timeStr: string): Date {
-  const [h, m] = timeStr.split(":").map(Number);
-  return new Date(new Date().setHours(h ?? 0, m ?? 0));
+  const [h, m] = String(timeStr).split(":").map(Number);
+  return dayjs().hour(h ?? 0).minute(m ?? 0).second(0).millisecond(0).toDate();
 }
 
-/** Workday from API with start_time/end_time as Date and day_of_week in French */
+/** Workday from API with start_time/end_time as Date; day_of_week is Weekday 0–6 */
 export type WorkdaysModelTransformed = Omit<
   WorkdaysModel,
-  "start_time" | "end_time" | "day_of_week"
+  "start_time" | "end_time"
 > & {
   start_time: Date;
   end_time: Date;
   time_slot: "morning" | "afternoon";
-  day_of_week: string;
+  day_of_week: Weekday;
 };
 
 interface GetUserWorkdaysResponse {
@@ -133,7 +121,7 @@ function transformWorkdaysResponse(
   const raw = parsed?.data ?? [];
   const workdays: WorkdaysModelTransformed[] = raw.map((w) => ({
     ...w,
-    day_of_week: DAY_OF_WEEK_FR.get(w.day_of_week) ?? w.day_of_week,
+    day_of_week: Number(w.day_of_week) as Weekday,
     time_slot: w.time_slot === "afternoon" ? "afternoon" : "morning",
     start_time: parseTimeToDate(w.start_time),
     end_time: parseTimeToDate(w.end_time),
@@ -150,14 +138,14 @@ export const getUserWorkdays = (id: EmployeeModel["id"]) =>
 /** Form payload shape: { week1: Workday[], week2: Workday[] } */
 export interface WorkdaysFormPayload {
   week1: Array<{
-    day_of_week: string;
+    day_of_week: Weekday | number;
     start_time: string;
     end_time: string;
     is_working: boolean;
     time_slot: "morning" | "afternoon";
   }>;
   week2: Array<{
-    day_of_week: string;
+    day_of_week: Weekday | number;
     start_time: string;
     end_time: string;
     is_working: boolean;
@@ -167,7 +155,7 @@ export interface WorkdaysFormPayload {
 
 interface AddWorkdaysApiPayload {
   workdays: Array<{
-    day_of_week: string;
+    day_of_week: Weekday | number;
     start_time: string;
     end_time: string;
     is_working: boolean;
@@ -181,7 +169,7 @@ function transformWorkdaysPayload(data: WorkdaysFormPayload): AddWorkdaysApiPayl
     .flatMap(([key, arr]) =>
       arr.map((day) => ({
         ...day,
-        day_of_week: DAY_OF_WEEK_EN.get(day.day_of_week) ?? day.day_of_week,
+        day_of_week: Number(day.day_of_week),
         week: key,
       })),
     )

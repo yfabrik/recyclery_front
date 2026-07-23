@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import {
@@ -55,13 +55,14 @@ import {
   LabeledItemForm,
   type LabeledItemFormValues,
 } from "../components/forms/LabeledItemForm";
-import type { LabeledItemSchema } from "../components/forms/itemCoreSchema";
+import type { LabeledItemFormOutput } from "../services/schema/item";
 import {
-  EMPTY_FILTER_INPUT,
-  parseFilters,
-  toFilterInput,
-  type FilterInput,
-} from "../components/forms/filters/labelFiltersSchema";
+  LABEL_FILTER_DEFAULTS,
+  labelFilterSchema,
+  toLabelFilterInput,
+} from "../services/schema/label";
+import { labeledItemToFormValues } from "../services/mapper/label";
+import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   getLabeledItemConditionColor,
   getLabeledItemConditionLabel,
@@ -82,18 +83,6 @@ import {
 } from "../services/api/labeledItems";
 import { formatCurrency, formatWeight } from "../services/cartService";
 
-function labeledItemToFormValues(item: LabeledItemModel): Partial<LabeledItemFormValues> {
-  return {
-    category_id: item.category_id,
-    subcategory_id: item.subcategory_id ?? "",
-    weight: item.weight,
-    price: item.price,
-    condition_state: item.condition_state,
-    description: item.description ?? "",
-    location: "",
-  };
-}
-
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -102,23 +91,28 @@ const Labels = () => {
   const [formDefaults, setFormDefaults] = useState<Partial<LabeledItemFormValues> | null>(null);
   const [autoPrint, setAutoPrint] = useState(true);
 
-
-  const [filters, setFilters] = useState<FilterInput>(EMPTY_FILTER_INPUT);
-  const [page, setPage] = useState(1);
+  const defaults = useMemo(
+    () => labelFilterSchema.parse(LABEL_FILTER_DEFAULTS),
+    [],
+  );
+  const { filters, setFilters, page, setPage } = useUrlFilters({
+    schema: labelFilterSchema,
+    defaults,
+    withPage: true,
+  });
 
   const queryClient = useQueryClient();
   const items = useQuery({
     queryKey: ["items", { filters }, page],
     queryFn: () => {
-      const applied = parseFilters(filters);
       return getLabeledItems({
-        ...(applied.status && { status: applied.status }),
-        ...(typeof applied.category_id === "number" && {
-          category_id: applied.category_id,
+        ...(filters.status && { status: filters.status }),
+        ...(typeof filters.category_id === "number" && {
+          category_id: filters.category_id,
         }),
-        ...(applied.search && { search: applied.search }),
-        ...(applied.date_from && { date_from: applied.date_from }),
-        ...(applied.date_to && { date_to: applied.date_to }),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.date_from && { date_from: filters.date_from }),
+        ...(filters.date_to && { date_to: filters.date_to }),
         page,
       }).then((response) => ({
         items: response.data.data,
@@ -132,16 +126,14 @@ const Labels = () => {
   const itemStats = useQuery({
     queryKey: ["itemStats", "items", { filters }],
     queryFn: () => {
-      const applied = parseFilters(filters);
-
       return getItemStats({
-        ...(applied.status && { status: applied.status }),
-        ...(typeof applied.category_id === "number" && {
-          category_id: applied.category_id,
+        ...(filters.status && { status: filters.status }),
+        ...(typeof filters.category_id === "number" && {
+          category_id: filters.category_id,
         }),
-        ...(applied.search && { search: applied.search }),
-        ...(applied.date_from && { date_from: applied.date_from }),
-        ...(applied.date_to && { date_to: applied.date_to }),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.date_from && { date_from: filters.date_from }),
+        ...(filters.date_to && { date_to: filters.date_to }),
         page,
       }).then((response) => response.data.data)
     },
@@ -159,14 +151,14 @@ const Labels = () => {
   });
 
   const addItem = useMutation({
-    mutationFn: (data: LabeledItemSchema) => createLabeledItem(data),
+    mutationFn: (data: LabeledItemFormOutput) => createLabeledItem(data),
     onSuccess: (data) => {
       saved(data);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editItem = useMutation({
-    mutationFn: (data: { id: number; data: LabeledItemSchema }) =>
+    mutationFn: (data: { id: number; data: LabeledItemFormOutput }) =>
       updateLabeledItem(data.id, data.data),
     onSuccess: (data) => {
       return saved(data);
@@ -238,23 +230,23 @@ const Labels = () => {
     setFormDefaults(null);
   };
 
-  const handleSave = async (data: LabeledItemSchema) => {
+  const handleSave = async (data: LabeledItemFormOutput) => {
     if (editingItemId) editItem.mutate({ id: editingItemId, data });
     else addItem.mutate(data);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (item: LabeledItemModel) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
       return;
     }
-    removeItem.mutate(id);
+    removeItem.mutate(item.id);
   };
 
-  const handleSell = async (id: number) => {
+  const handleSell = async (item: LabeledItemModel) => {
     if (!window.confirm("Marquer cet article comme vendu ?")) {
       return;
     }
-    sell.mutate(id);
+    sell.mutate(item.id);
   };
 
   return (
@@ -327,12 +319,20 @@ const Labels = () => {
       </Grid>
       {/* Filtres */}
       <LabelFiltersForm
-        defaultValues={filters}
-        onChange={(values) => setFilters(toFilterInput(values))}
+        defaultValues={toLabelFilterInput(filters)}
+        onChange={setFilters}
         categories={categories.data ?? []}
       />
       {/* Table des articles */}
-      <TableContainer component={Paper}>
+      <LabelTable
+        items={items.data?.items ?? []}
+        isLoading={items.isLoading}
+        onPrint={triggerPrintLabel}
+        onEdit={handleOpenDialog}
+        onSell={handleSell}
+        onDelete={handleDelete}
+      />
+      {/* <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -450,7 +450,7 @@ const Labels = () => {
             </Loading>
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainer> */}
       <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
         <Pagination
           count={Math.max(1, items.data?.pagination?.totalPages ?? 1)}
@@ -493,3 +493,136 @@ const Labels = () => {
 };
 
 export default Labels;
+
+interface LabelTableProps {
+  items: LabeledItemModel[];
+  isLoading: boolean;
+  onPrint: (item: LabeledItemModel) => void;
+  onEdit: (item: LabeledItemModel) => void;
+  onSell: (item: LabeledItemModel) => void;
+  onDelete: (item: LabeledItemModel) => void;
+}
+
+const LabelTable = ({ items, isLoading, onPrint, onEdit, onSell, onDelete }: LabelTableProps) => {
+  return (
+    <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Code-barres</TableCell>
+              <TableCell>Catégorie</TableCell>
+              <TableCell>Sous-catégorie</TableCell>
+              <TableCell>Poids</TableCell>
+              <TableCell>Prix</TableCell>
+              <TableCell>État</TableCell>
+              <TableCell>Statut</TableCell>
+              <TableCell>Date de création</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <Loading isLoading={isLoading} tableCols={9}>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    Aucun article trouvé
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontFamily="monospace">
+                        {item.barcode}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {item?.category?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="textSecondary">
+                        {item?.subcategory?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {item.weight ? formatWeight(item.weight) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {formatCurrency(item.price)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={getLabeledItemConditionLabel(item.condition_state)}
+                        color={getLabeledItemConditionColor(item.condition_state)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={getLabeledItemStatusLabel(item.status)}
+                        color={getLabeledItemStatusColor(item.status)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString("fr-FR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Tooltip title="Imprimer étiquette">
+                          <IconButton
+                            size="small"
+                            onClick={() => onPrint(item)}
+                          >
+                            <Print />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Modifier">
+                          <IconButton
+                            size="small"
+                            onClick={() => onEdit(item)}
+                          >
+                            <Edit />
+                          </IconButton>
+                        </Tooltip>
+                        {item.status === "available" && (
+                          <Tooltip title="Marquer comme vendu">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={() => onSell(item)}
+                            >
+                              <PointOfSale />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(item)}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </Loading>
+          </TableBody>
+        </Table>
+      </TableContainer>
+  )
+}

@@ -8,6 +8,7 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
+import { toIsoDate } from "../services/dateService";
 import type { CategoryModel, CollectionPointModel } from "../interfaces/Models";
 import type { UseFormReset } from "react-hook-form";
 import { useState } from "react";
@@ -24,7 +25,7 @@ export const ArrivalAdd = ({
     reset: UseFormReset<ArrivalFormSchema>;
   } | null>(null);
 
-  const todayKey = () => new Date().toISOString().split("T")[0];
+  const todayKey = () => toIsoDate(new Date());
   const queryClient = useQueryClient();
 
   const {

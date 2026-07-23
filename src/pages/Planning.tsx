@@ -38,7 +38,6 @@ import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import {
   PlaningForm,
-  type Schema as PlanningFormSchema,
   type SchemaInputValues,
 } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
@@ -62,6 +61,17 @@ import {
   getTasks,
   updateTask,
 } from "../services/api/tasks";
+import {
+  planningTaskPayloadFromForm,
+  taskToPlanningFormValues,
+} from "../services/mapper/task";
+import type { PlanningFormOutput } from "../services/schema/schedule";
+import {
+  getWeekRangeFromDate,
+  toIsoDate,
+  WEEKDAY_LABELS_FR,
+  WEEKDAYS_MONDAY_FIRST,
+} from "../services/dateService";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -100,19 +110,6 @@ function defineStatusOptions<const T extends readonly StatusOption[]>(
     (HasUniqueValues<T> extends true ? unknown : never),
 ): T {
   return options;
-}
-
-function taskToFormValues(task: Partial<TaskModel>): Partial<SchemaInputValues> {
-  return {
-    name: task.name,
-    category: task.category,
-    priority: task.priority ?? "medium",
-    scheduled_date: task.scheduled_date ? new Date(task.scheduled_date) : undefined,
-    start_time: task.start_time ? new Date(task.start_time) : undefined,
-    end_time: task.end_time ? new Date(task.end_time) : undefined,
-    notes: task.notes ?? "",
-    store_id: task.store_id ?? "",
-  };
 }
 
 const Planning = () => {
@@ -180,48 +177,23 @@ const Planning = () => {
 
   const date_from = () => {
     if (viewMode == "week") {
-      const lundi = new Date(
-        new Date(selectedDate).setDate(
-          selectedDate.getDate() -
-          selectedDate.getDay() +
-          (selectedDate.getDay() === 0 ? -6 : 1),
-        ),
-      );
-
-      return {
-        date_from: lundi.toLocaleString("en-ca", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }),
-        date_to: new Date(
-          new Date(lundi).setDate(lundi.getDate() + 6),
-        ).toLocaleString("en-ca", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }),
-      };
+      return getWeekRangeFromDate(selectedDate);
     }
 
     if (viewMode == "calendar") {
       const first = new Date(new Date(selectedDate).setDate(1));
+      const start = new Date(first);
+      start.setDate(first.getDate() - first.getDay() + 1);
+      const end = new Date(first);
+      end.setDate(first.getDate() - first.getDay() + 42);
       return {
-        date_from: new Date(
-          new Date(first).setDate(first.getDate() - first.getDay() + 1),
-        )
-          .toISOString().slice(0, 10),
-        // .replaceAll("/", "-"),
-        date_to: new Date(
-          new Date(first).setDate(first.getDate() - first.getDay() + 42),
-        )
-          .toISOString().slice(0, 10),
-        // .replaceAll("/", "-"),
+        date_from: toIsoDate(start),
+        date_to: toIsoDate(end),
       };
     }
     return {
-      date_from: selectedDate.toISOString().slice(0, 10),
-      date_to: selectedDate.toISOString().slice(0, 10),
+      date_from: toIsoDate(selectedDate),
+      date_to: toIsoDate(selectedDate),
     };
   };
 
@@ -316,25 +288,7 @@ const Planning = () => {
       allDay: EmployeeModel[];
     };
   } => {
-    //TODO get rid OF ME
-    const daysOfWeek = [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-      "sunday",
-    ];
-    const dayLabels = [
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-      "Dimanche",
-    ];
+    const daysOfWeek = WEEKDAYS_MONDAY_FIRST;
 
     // Filtrer les employés selon le magasin sélectionné
     let employeesToProcess: EmployeeModel[] = [];
@@ -369,12 +323,12 @@ const Planning = () => {
         allDay: EmployeeModel[];
       };
     } = {};
-    daysOfWeek.forEach((day, index) => {
+    daysOfWeek.forEach((day) => {
       const morning = employeesToProcess.filter((employee) => {
         const workday = employee.EmployeeWorkdays || [];
         return workday.some(
           (wd) =>
-            wd.day_of_week === day &&
+            Number(wd.day_of_week) === day &&
             wd.time_slot === "morning" &&
             wd.is_working === true &&
             weekToProcess &&
@@ -385,7 +339,7 @@ const Planning = () => {
         const workdays = employee.EmployeeWorkdays || [];
         return workdays.some(
           (wd) =>
-            wd.day_of_week === day &&
+            Number(wd.day_of_week) === day &&
             wd.time_slot === "afternoon" &&
             wd.is_working === true &&
             weekToProcess &&
@@ -414,8 +368,8 @@ const Planning = () => {
           onlyNoon.push(obj);
         }
       }
-      employeesByDay[day] = {
-        label: dayLabels[index],
+      employeesByDay[String(day)] = {
+        label: WEEKDAY_LABELS_FR[day],
         morning: onlyMorning,
         afternoon: onlyNoon,
         allDay: allDay,
@@ -432,7 +386,7 @@ const Planning = () => {
     setEditingScheduleId(schedule?.id ?? null);
     setFormDefaults(
       schedule
-        ? taskToFormValues(schedule)
+        ? taskToPlanningFormValues(schedule)
         : { scheduled_date: selectedDate || new Date() },
     );
 
@@ -444,24 +398,8 @@ const Planning = () => {
     setEditingScheduleId(null);
     setFormDefaults(null);
   };
-  const formDataToAPI = (data: PlanningFormSchema): Parameters<typeof createTask>[0] => {
-    const { store_id, recurrence_pattern, notes, ...rest } = data;
-    return {
-      ...rest,
-      notes: notes || null,
-      recurrence_pattern: recurrence_pattern,
-      store_id: store_id,
-      description: null,
-      location: null,
-      required_skills: [] as string[],
-      equipment_needed: [] as string[],
-      is_recurring: !!recurrence_pattern,
-    };
-
-  }
-
-  const handleSave = async (data: PlanningFormSchema) => {
-    const result = formDataToAPI(data)
+  const handleSave = async (data: PlanningFormOutput) => {
+    const result = planningTaskPayloadFromForm(data)
     if (editingScheduleId)
       editTask.mutate({ id: editingScheduleId, data: result });
     else addTask.mutate(result);
@@ -605,7 +543,7 @@ const Planning = () => {
           <Box sx={{ mb: 2 }}>
             <Button
               component={Link}
-              to={`/admin/planning/print?date=${selectedDate.toISOString().slice(0, 10)}${selectedStore?.id != null ? `&store_id=${selectedStore.id}` : ""}`}
+              to={`/admin/planning/print?date=${toIsoDate(selectedDate)}${selectedStore?.id != null ? `&store_id=${selectedStore.id}` : ""}`}
               variant="outlined"
               startIcon={<Print />}
               size="small"

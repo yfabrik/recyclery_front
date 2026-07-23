@@ -1,7 +1,7 @@
 import { Description } from "@mui/icons-material";
 import { Box, Paper, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   getApiErrorMessage,
@@ -23,12 +23,17 @@ import type { Schema as RefundSchema } from "../forms/RefundForm";
 import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
-import { SaleHistoryFilter, type Filters } from "../forms/filters/SaleHistoryFilter";
+import { SaleHistoryFilter } from "../forms/filters/SaleHistoryFilter";
+import {
+  getSaleHistoryFilterDefaults,
+  saleHistoryFilterSchema,
+} from "../../services/schema/sale";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { buildUpdateTransactionBody } from "../../utils/editTransactionBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { SalesHistoryExport } from "./SalesHistoryExport";
 import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
+import { useUrlFilters } from "../../hooks/useUrlFilters";
 
 export const SalesHistory = ({
   activeSession,
@@ -40,18 +45,14 @@ export const SalesHistory = ({
   const [refundDialog, setRefundDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionModel | null>(null);
-  const [page, setPage] = useState(1);
   const [transactionDetailsDialog, setTransactionDetailsDialog] =
     useState(false);
 
-  const [filters, setFilters] = useState<Filters>({
-    date_from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
-    date_to: new Date().toISOString().split("T")[0],
-    transaction_number: "",
-    transactionType: "",
-    transactionMethod: "",
+  const defaults = useMemo(() => getSaleHistoryFilterDefaults(), []);
+  const { filters, setFilters, page, setPage } = useUrlFilters({
+    schema: saleHistoryFilterSchema,
+    defaults,
+    withPage: true,
   });
 
   const categories = useQuery({
@@ -174,7 +175,7 @@ export const SalesHistory = ({
 
   const handleSubmitRefund = async (data: RefundSchema) => {
     if (!selectedTransaction) return;
-    return toast.error("Cette fonctionnalité n'est pas encore disponible")
+    // return toast.error("Cette fonctionnalité n'est pas encore disponible")
     addRefund.mutate({
       id: selectedTransaction.id,
       data: buildCreateRefundBody(data, activeSession.id),
@@ -183,7 +184,7 @@ export const SalesHistory = ({
 
   const handleSaveTransaction = (data: EditTransactionSchema) => {
     if (!selectedTransaction) return;
-    return toast.error("Cette fonctionnalité n'est pas encore disponible")
+    // return toast.error("Cette fonctionnalité n'est pas encore disponible")
 
     editTransaction.mutate({
       id: selectedTransaction.id,
@@ -226,12 +227,7 @@ export const SalesHistory = ({
       <Paper sx={{ p: 2, mb: 2 }}>
         <SaleHistoryFilter
           defaultValues={filters}
-          onChange={(values) =>
-            setFilters((prev) => ({
-              ...prev,
-              ...values,
-            }))
-          }
+          onChange={setFilters}
         />
       </Paper>
 

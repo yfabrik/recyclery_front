@@ -26,7 +26,6 @@ import {
   TableRow,
   Typography
 } from "@mui/material";
-import type { DonationDataInput } from "@recyclerie/api/schemas/donations";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -43,26 +42,16 @@ import {
   getDonationsStats,
   updateDonation
 } from "../../services/api/donations";
+import { donationPayloadFromForm, donationToFormValues } from "../../services/mapper/don";
 import { formatCurrency } from "../../services/cartService";
+import type { DonFormOutput, DonFormValues } from "../../services/schema/don";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
-import { DonForm, type DonFormValues, type Schema } from "../forms/DonForm";
+import { DonForm } from "../forms/DonForm";
 import { Loading } from "../Loading";
 import { StatCard } from "../StatCard";
-
-function donationToFormValues(donation: DonModel): Partial<DonFormValues> {
-  return {
-    donor_name: donation.donor_name ?? "",
-    donor_email: donation.donor_email ?? "",
-    donor_phone: donation.donor_phone ?? "",
-    item_description: donation.item_description ?? "",
-    estimated_value: donation.estimated_value ?? 0,
-    weight: donation.weight ?? 0,
-    status: donation.status,
-  };
-}
 
 export const DonationsTab = () => {
 
@@ -83,9 +72,8 @@ export const DonationsTab = () => {
     queryFn: () => getDonationsStats().then(response => response.data.data)
   })
 
-  const createDonationPayloadFromForm = (data: Schema): DonationDataInput => ({...data});
   const addDon = useMutation({
-    mutationFn: (data: Schema) => createDonation(createDonationPayloadFromForm(data)),
+    mutationFn: (data: DonFormOutput) => createDonation(donationPayloadFromForm(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Don enregistré avec succès"))
@@ -95,7 +83,7 @@ export const DonationsTab = () => {
   })
 
   const editDon = useMutation({
-    mutationFn: ({ id, data }: { id: DonModel["id"], data: Schema }) => updateDonation(id, createDonationPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: DonModel["id"], data: DonFormOutput }) => updateDonation(id, donationPayloadFromForm(data)),
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Don mis à jour avec succès"))
@@ -131,7 +119,7 @@ export const DonationsTab = () => {
     setFormDefaults(null);
   };
 
-  const handleSaveDonation = async (data: Schema) => {
+  const handleSaveDonation = async (data: DonFormOutput) => {
     
     if (editingDonationId) {
       editDon.mutate({ id: editingDonationId, data });

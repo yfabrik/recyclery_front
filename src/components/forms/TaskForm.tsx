@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Chip, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm, useWatch, type Control } from "react-hook-form";
-import * as z from "zod";
 
 import {
   DAYS_OF_WEEK,
@@ -20,53 +19,23 @@ import {
 import type { EmployeeModel } from "../../interfaces/Models";
 import { emptyStringToNull } from "../../services/zodTransform";
 import { TASK_CATEGORIES } from "../../constants/taskCategories";
-import { noEmptyStr, nullString } from "../../interfaces/ZodTypes";
-import { RECURRENCE_PATTERNS } from "@recyclerie/api/enums";
-const recurrencePatternEnum = z.enum(RECURRENCE_PATTERNS);
-const schema = z.object({
-  name: noEmptyStr("Le nom de la tâche est requis"),
-  hourly_rate: z.coerce.number().optional(),
-  description: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  category: noEmptyStr("La catégorie est requise"),
-  priority: noEmptyStr("La priorité est requise"),
-  // estimated_duration: z.coerce
-  //   .number()
-  //   .min(15, "Minimum 15 minutes")
-  //   .max(480, "Maximum 480 minutes"),
-  location: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  assigned_to: z.union([z.string(), z.number()]).optional().nullable(),
-  required_skills: z.array(z.string()).default([]),
-  equipment_needed: z.array(z.string()).default([]),
-  is_recurring: z.boolean().default(false),
-  recurrence_pattern: z.union([
-    nullString(),
-    recurrencePatternEnum,
-  ]),
-  notes: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  scheduled_date: z.coerce.date(),
-  start_time: z.coerce.date(),
-  end_time: z.coerce.date(),
-});
+import {
+  taskFormSchema,
+  type TaskFormOutput,
+  type TaskFormValues,
+} from "../../services/schema/task";
 
-export type TaskFormSchema = z.infer<typeof schema>;
+export type TaskFormSchema = TaskFormOutput;
+export type { TaskFormOutput, TaskFormValues };
 
-export type TaskFormProps = BaseFormProps<TaskFormSchema> & {
+export type TaskFormProps = BaseFormProps<TaskFormValues, TaskFormOutput> & {
   employees: EmployeeModel[];
 };
 
 export const RecurseWatch = ({
   control,
 }: {
-  control: Control<TaskFormSchema>;
+  control: Control<TaskFormValues>;
 }) => {
   const recurse = useWatch({
     control,
@@ -76,7 +45,7 @@ export const RecurseWatch = ({
     return (
       <FormSelect control={control} name="scheduled_date" label="Jour">
         {DAYS_OF_WEEK.map((day) => (
-          <MenuItem key={day.key} value={day.label}>
+          <MenuItem key={day.value} value={day.value}>
             {day.label}
           </MenuItem>
         ))}
@@ -122,7 +91,7 @@ export const TaskForm = ({
   ];
   const data = defaultValues ? emptyStringToNull(defaultValues) : {};
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -345,7 +314,7 @@ export const TaskForm = ({
               label="Jour"
             >
               {DAYS_OF_WEEK.map((day) => (
-                <MenuItem key={day.key} value={day.label}>
+                <MenuItem key={day.value} value={day.value}>
                   {day.label}
                 </MenuItem>
               ))}

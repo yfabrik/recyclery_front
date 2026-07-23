@@ -13,6 +13,7 @@ import type {
   RefundDataInput,
   SaleTransactionBaseInput,
   TransactionListFilter,
+  TransactionListFilterInput,
   TransactionStatsFilterInput
 } from "@recyclerie/api/schemas/salesTransactions";
 import type { AxiosResponse } from "axios";
@@ -21,7 +22,8 @@ import axiosInstance from "./axios";
 
 // export type { SalesTransactionDto };
 
-export type transactionsFilters = Partial<TransactionListFilter> & {
+export type transactionsFilters = Omit<TransactionListFilterInput, "include"> & {
+  include?: TransactionListFilter["include"];
   page?: number;
 };
 

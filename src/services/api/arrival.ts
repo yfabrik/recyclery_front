@@ -2,14 +2,13 @@ import type {
   CreateArrivalResponse,
   ListArrivalsResponse,
 } from "@recyclerie/api/responses/arrivals";
-import type { arrivalDataInput, ArrivalFilter, ArrivalFilterInput } from "@recyclerie/api/schemas/arrivals";
+import type { arrivalDataInput, ArrivalFilter } from "@recyclerie/api/schemas/arrivals";
 import type { AxiosResponse } from "axios";
 import axiosInstance from "./axios";
 
 export type { ArrivalFilter };
 
 
-//TODO arivalFIlter+paginaion ?
 export type ArrivalQuery = Omit<Partial<ArrivalFilter>, "date_from" | "date_to"> & {
   page?: number;
   date_from?: Date | string;
@@ -17,7 +16,7 @@ export type ArrivalQuery = Omit<Partial<ArrivalFilter>, "date_from" | "date_to">
 };
 
 export const getArrivals = (
-  filters?: ArrivalFilterInput,
+  filters?: ArrivalQuery,
 ): Promise<AxiosResponse<ListArrivalsResponse>> =>
   axiosInstance.get<ListArrivalsResponse>("/api/arrivals", { params: filters });
 

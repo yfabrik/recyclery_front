@@ -112,7 +112,7 @@ export const Calendar = ({
       >
         {DAYS_OF_WEEK.map((day) => (
           <Box
-            key={day.key}
+            key={day.value}
             sx={{
               py: 2,
               textAlign: "center",

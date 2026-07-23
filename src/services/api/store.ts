@@ -21,7 +21,7 @@ import type {
   CloseCashSessionBody,
   OpenCashSessionBody,
 } from "@recyclerie/api/schemas/cashSession";
-import type { RecycleryDataInput, RecycleryFilter } from "@recyclerie/api/schemas/recycleries";
+import type { RecycleryDataInput, RecycleryFilter, RecycleryFilterInput } from "@recyclerie/api/schemas/recycleries";
 import type { AxiosResponse } from "axios";
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
@@ -38,8 +38,8 @@ import axiosInstance from "./axios";
 
 // export type { RecycleryFilter };
 
-type RecycleryQuery = Partial<RecycleryFilter> & {
-  include?: RecycleryFilter["include"] | ("manager" | "caisses" | "employees" | "horaires")[];
+type RecycleryQuery = Omit<RecycleryFilterInput, "include"> & {
+  include?: RecycleryFilter["include"];
 };
 
 const withIncludeParam = (filters?: RecycleryQuery) => ({
@@ -83,7 +83,7 @@ export const createCaisse = (
 ): Promise<AxiosResponse<CreateCashRegisterResponse>> =>
   axiosInstance.post<CreateCashRegisterResponse>(
     `/api/stores/${storeId}/cash-registers`,
-    { ...data, store_id: storeId },
+    data,
   );
 
 export const getActiveCaisses = (): Promise<

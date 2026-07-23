@@ -11,28 +11,32 @@ import {
 import { FormCategorySelect, FormDate, FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import {
-  EMPTY_FILTER_INPUT,
-  filterSchema,
-  type FilterInput,
-  type Filters,
-} from "./labelFiltersSchema";
+  LABEL_FILTER_DEFAULTS,
+  labelFilterSchema,
+  toLabelFilterInput,
+  type LabelFilterInput,
+  type LabelFilters,
+} from "../../../services/schema/label";
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 
 interface FilterFormProps {
-    defaultValues: FilterInput;
-    onChange: (values: Filters) => void;
+    defaultValues: LabelFilterInput;
+    onChange: (values: LabelFilters) => void;
     categories: CategoryModel[]
 }
 
 export const LabelFiltersForm = ({ defaultValues, onChange, categories }: FilterFormProps) => {
 
-    const filters = useForm<FilterInput, unknown, Filters>({
+    const filters = useForm<LabelFilterInput, unknown, LabelFilters>({
         defaultValues,
-        resolver: zodResolver(filterSchema),
+        resolver: zodResolver(labelFilterSchema),
     });
-    const onSubmit = (data: Filters) => {
+    const markEmitted = useSyncFilterDefaults(filters, defaultValues);
+
+    const onSubmit = (data: LabelFilters) => {
+        markEmitted(toLabelFilterInput(data));
         onChange(data);
     };
-
 
     const watch = filters.watch
     const debouncer = useDebouncer(() => {
@@ -48,6 +52,11 @@ export const LabelFiltersForm = ({ defaultValues, onChange, categories }: Filter
         }
     }, [watch]) // watch all changes
 
+    const handleReset = () => {
+        filters.reset(LABEL_FILTER_DEFAULTS);
+        markEmitted(LABEL_FILTER_DEFAULTS);
+        onChange(labelFilterSchema.parse(LABEL_FILTER_DEFAULTS));
+    };
 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
@@ -103,12 +112,7 @@ export const LabelFiltersForm = ({ defaultValues, onChange, categories }: Filter
                         />
                     </Grid>
                     <Grid size="auto" sx={{ ml: "auto" }}>
-                        <ResetFiltersButton
-                            onReset={() => {
-                                filters.reset(EMPTY_FILTER_INPUT);
-                                filters.handleSubmit(onSubmit)();
-                            }}
-                        />
+                        <ResetFiltersButton onReset={handleReset} />
                     </Grid>
                 </Grid>
             </Paper>

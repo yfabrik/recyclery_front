@@ -7,25 +7,30 @@ import type {
   TagLabeledItemSoldResponse,
   UpdateLabeledItemResponse,
 } from "@recyclerie/api/responses/items";
-import type { LabeledItemDataInput, LabeledItemFilter } from "@recyclerie/api/schemas/items";
+import type { LabeledItemDataInput, LabeledItemFilter, LabeledItemFilterInput } from "@recyclerie/api/schemas/items";
 import type { AxiosResponse } from "axios";
 import type { LabeledItemModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
 // export type { LabeledItemFilter as LabeledItemFilters };
 
-const CATEGORY_SUBCATEGORIES_INCLUDE = "category.subcategories";
+const CATEGORY_SUBCATEGORIES_INCLUDE = "category.subcategories" as const;
 
-const withCategoryInclude = <T extends LabeledItemFilter | undefined>(filters?: T) => ({
+type LabeledItemQuery = Omit<LabeledItemFilterInput, "include"> & {
+  include?: LabeledItemFilter["include"];
+  page?: number;
+};
+
+const withCategoryInclude = (filters?: LabeledItemQuery) => ({
   ...filters,
   include: (filters?.include?.length
     ? filters.include
     : [CATEGORY_SUBCATEGORIES_INCLUDE]
-  ).join(","),
+  ).toString(),
 });
 
 export const getLabeledItems = (
-  filters?: LabeledItemFilter & { page?: number },
+  filters?: LabeledItemQuery,
 ): Promise<AxiosResponse<ListLabeledItemsResponse>> =>
   axiosInstance.get<ListLabeledItemsResponse>("/api/labeled-items", {
     params: withCategoryInclude(filters),
@@ -74,7 +79,7 @@ export const getItemFromBarcode = (
   );
 
 export const getItemStats = (
-  filters?: LabeledItemFilter & { page?: number },
+  filters?: LabeledItemQuery,
 ): Promise<AxiosResponse<LabeledItemStatsResponse>> =>
   axiosInstance.get<LabeledItemStatsResponse>("/api/labeled-items/stats", {
     params: withCategoryInclude(filters),

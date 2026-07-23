@@ -5,17 +5,20 @@ import type {
   PatchCategoryResponse,
   UpdateCategoryResponse,
 } from "@recyclerie/api/responses/categories";
-import type { CategoryDataInput, CategoryListFilter, CategoryPatchInput } from "@recyclerie/api/schemas/categories";
+import type { CategoryDataInput, CategoryListFilter, CategoryListFilterInput, CategoryPatchInput } from "@recyclerie/api/schemas/categories";
 import type { AxiosResponse } from "axios";
 import type { CategoryModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
+type CategoryListQuery = Omit<CategoryListFilterInput, "include"> & {
+  include?: CategoryListFilter["include"];
+};
 
 export const fetchCategoryIcons = () =>
   axiosInstance.get("/api/categories/icons");
 
 export const fetchCategories = (
-  filters?: Partial<CategoryListFilter>,
+  filters?: CategoryListQuery,
 ): Promise<AxiosResponse<ListCategoriesResponse>> =>
   axiosInstance.get<ListCategoriesResponse>("/api/categories", {
     params: { ...filters, include: filters?.include?.toString() },

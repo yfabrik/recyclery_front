@@ -4,11 +4,6 @@ import { Grid, IconButton } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
-import {
-    PAYMENT_METHOD_FILTER_VALUES,
-    TRANSACTION_TYPE_FILTER_VALUES,
-} from "../../../interfaces/transactionConstants";
 import {
     FormDate,
     FormInput,
@@ -16,17 +11,12 @@ import {
     FormTransactionTypeSelect,
 } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
-
-const filterSchema = z.object({
-    date_from: z.coerce
-        .date()
-        .transform((val) => val.toISOString().slice(0, 10)),
-    date_to: z.coerce.date().transform((val) => val.toISOString().slice(0, 10)),
-    transaction_number: z.string().trim().optional(),
-    transactionType: z.enum(TRANSACTION_TYPE_FILTER_VALUES).optional(),
-    transactionMethod: z.enum(PAYMENT_METHOD_FILTER_VALUES).optional(),
-});
-export type Filters = z.infer<typeof filterSchema>;
+import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
+import {
+    getSaleHistoryFilterDefaults,
+    saleHistoryFilterSchema,
+    type SaleHistoryFilters as Filters,
+} from "../../../services/schema/sale";
 
 interface FilterFormProps {
     defaultValues: Filters;
@@ -37,22 +27,21 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
 
     const filters = useForm({
         defaultValues,
-        resolver: zodResolver(filterSchema),
+        resolver: zodResolver(saleHistoryFilterSchema),
     });
-    const onSubmit = (data: Filters) => {
-        onChange(data);
-        console.log("data");
-    };
+    const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
+    const onSubmit = (data: Filters) => {
+        markEmitted(data);
+        onChange(data);
+    };
 
     const watch = filters.watch
     const debouncer = useDebouncer(() => {
-        console.log("debouncing")
         filters.handleSubmit(onSubmit, (e) => console.error(e))()
     }, { wait: 1000 })
     useEffect(() => {
-        const subscription = watch((values, { name, type }) => {
-            console.log(values, name, type)
+        const subscription = watch(() => {
             debouncer.maybeExecute()
         })
         return () => {
@@ -61,6 +50,12 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
         }
     }, [watch]) // watch all changes
 
+    const handleReset = () => {
+        const defaults = getSaleHistoryFilterDefaults();
+        filters.reset(defaults);
+        markEmitted(defaults);
+        onChange(defaults);
+    };
 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
@@ -80,9 +75,6 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
                     />
                 </Grid>
 
-
-
-
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormDate
                         control={filters.control}
@@ -98,8 +90,6 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
                     />
                 </Grid>
 
-
-                {/* Recherche par numéro de transaction */}
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormInput
                         control={filters.control}
@@ -124,9 +114,8 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
                     />
                 </Grid>
 
-                {/* Bouton pour effacer tous les filtres */}
                 <Grid size="auto" sx={{ ml: "auto" }}>
-                    <ResetFiltersButton onReset={() => filters.reset()} />
+                    <ResetFiltersButton onReset={handleReset} />
                 </Grid>
             </Grid>
         </form>

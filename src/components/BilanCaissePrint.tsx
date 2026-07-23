@@ -243,7 +243,7 @@ export const BilanCaissePrint = ({
     [transactions],
   );
 
-  const recycleryName = session.CashRegister?.Recyclery?.name ??session.Recyclery?.name ?? "Recyclerie";
+  const recycleryName = session.CashRegister?.Recyclery?.name  ?? "Recyclerie";
   const cashRegisterName = session.CashRegister?.name ?? "Caisse";
   const closedAt = session.closed_at
     ? new Date(session.closed_at).toLocaleString()

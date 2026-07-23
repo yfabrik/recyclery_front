@@ -3,29 +3,30 @@ import { Euro, Scale } from "@mui/icons-material";
 import { Grid } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import type { CategoryModel } from "../../interfaces/Models";
 import { sumPromoCategorie } from "../../services/cartService";
+import {
+  manualItemSchema,
+  type ManualItemFormOutput,
+  type ManualItemFormValues,
+} from "../../services/schema/item";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
   type BaseFormProps,
 } from "./FormBase";
-import {
-  manualItemSchema,
-  type ManualItemSchema,
-} from "./itemCoreSchema";
 
-
-type FormValues = z.input<ReturnType<typeof manualItemSchema>>;
+export type { ManualItemFormValues };
+/** @deprecated Use ManualItemFormOutput */
+export type ManualItemSchema = ManualItemFormOutput;
 
 export const ManualItemForm = ({
   formId,
   onSubmit,
   defaultValues,
   categories,
-}: BaseFormProps<FormValues,ManualItemSchema> & {
+}: BaseFormProps<ManualItemFormValues, ManualItemFormOutput> & {
   categories: CategoryModel[];
 }) => {
   const { prompt, PromptDialog } = usePrompt();

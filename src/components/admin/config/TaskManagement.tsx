@@ -44,10 +44,13 @@ import {
   getTasks,
   normalizeTaskForDisplay,
   removeEmployeeFromTask,
-  taskToFormValues,
   updateTask,
   type TaskDisplay,
 } from "../../../services/api/tasks";
+import {
+  taskPayloadFromForm,
+  taskToFormValues,
+} from "../../../services/mapper/task";
 import { getEmployees } from "../../../services/api/employee";
 import {
   getApiErrorMessage,
@@ -55,6 +58,7 @@ import {
 } from "../../../utils/apiToastMessage";
 import { TaskForm, type TaskFormSchema } from "../../forms/TaskForm";
 import { formatTime } from "../../../services/dateService";
+import type { TaskFormOutput } from "../../../services/schema/task";
 
 /**
  * @deprecated
@@ -157,15 +161,15 @@ const TaskManagement = () => {
     setEditingTaskId(null);
   };
 
-  const handleSave = async (data: TaskFormSchema) => {
+  const handleSave = async (data: TaskFormOutput) => {
     try {
       if (editingTaskId) {
-        const response = await updateTask(editingTaskId, data);
+        const response = await updateTask(editingTaskId, taskPayloadFromForm(data));
         toast.success(
           getApiSuccessMessage(response, "Tâche mise à jour avec succès"),
         );
       } else {
-        const response = await createTask(data);
+        const response = await createTask(taskPayloadFromForm(data));
         toast.success(
           getApiSuccessMessage(response, "Tâche créée avec succès"),
         );

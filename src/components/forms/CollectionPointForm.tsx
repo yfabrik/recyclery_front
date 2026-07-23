@@ -6,30 +6,23 @@ import {
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { idSchema, noEmptyStr, nullString, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
 import type { StoreModel } from "../../interfaces/Models";
+import {
+  collectionPointFormSchema,
+  type CollectionPointFormOutput,
+  type CollectionPointFormValues,
+} from "../../services/schema/collectionPoint";
 
-interface CollectionPointFormProps extends BaseFormProps<SchemaInputValues,Schema> {
+export type { CollectionPointFormOutput, CollectionPointFormValues };
+/** @deprecated Use CollectionPointFormOutput */
+export type Schema = CollectionPointFormOutput;
+/** @deprecated Use CollectionPointFormValues */
+export type SchemaInputValues = CollectionPointFormValues;
+
+interface CollectionPointFormProps extends BaseFormProps<CollectionPointFormValues,CollectionPointFormOutput> {
   recycleries: StoreModel[]
 }
-
-const schema = z.object({
-  name: noEmptyStr("nom requis"),
-  address: noEmptyStr("address requis"),
-  city: noEmptyStr("ville requis"),
-  postal_code: postalSchema("code postal requis"),
-  contact_person: z.string().transform((val) => (val == "" ? null : val)),
-  contact_phone: z.union([nullString(),phoneSchema()]),
-  contact_email: z.union([nullString(),z.email()]),
-  notes: z.string().transform((val) => (val == "" ? null : val)),
-  is_active: z.boolean(),
-  recyclery_id: z.union([nullString(),idSchema()]),
-});
-
-export type Schema = z.infer<typeof schema>;
-export type SchemaInputValues = z.input<typeof schema>;
 
 export const CollectionPointForm = ({
   formId,
@@ -51,7 +44,7 @@ export const CollectionPointForm = ({
       recyclery_id: "",
       ...defaultValues ?? {},
     },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(collectionPointFormSchema),
   });
 
   return (

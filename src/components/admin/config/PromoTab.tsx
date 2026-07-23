@@ -1,6 +1,5 @@
 import { Add, CalendarMonth, Cancel, Category, Edit, Loyalty, Percent, Save, Storefront, SubdirectoryArrowRight } from "@mui/icons-material"
 import { Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from "@mui/material"
-import type { PromotionDataInput } from "@recyclerie/api/schemas/promotions"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "react-toastify"
@@ -8,23 +7,11 @@ import type { PromoModel } from "../../../interfaces/Models"
 import { fetchCategories } from "../../../services/api/categories"
 import { createPromo, listPromos, updatePromo } from "../../../services/api/promo"
 import { fetchStores } from "../../../services/api/store"
+import { promoPayloadFromForm, promoToFormValues, type PromoEditModel } from "../../../services/mapper/promotion"
+import type { PromoFormOutput, PromoFormValues } from "../../../services/schema/promotion"
 import { getApiErrorMessage, getApiSuccessMessage } from "../../../utils/apiToastMessage"
-import { PromoForm, type PromoFormValues, type Schema } from "../../forms/PromoForm"
+import { PromoForm } from "../../forms/PromoForm"
 import { Loading } from "../../Loading"
-
-type PromoEditModel = PromoModel & { subcategory_id?: number | null };
-
-function promoToFormValues(promo: PromoEditModel): Partial<PromoFormValues> {
-    return {
-        category_id: promo.category_id as PromoFormValues["category_id"],
-        subcategory_id: promo.subcategory_id ?? "",
-        promotionValue: promo.promotionValue,
-        startDate: new Date(promo.startDate),
-        endDate: promo.endDate ? new Date(promo.endDate) : "",
-        isActive: promo.isActive,
-        stores: promo.stores?.length ? promo.stores.map((store) => store.id) : [""],
-    };
-}
 
 export const PromoTab = () => {
     const [isModaleOpen, SetIsModaleOpen] = useState(false)
@@ -55,13 +42,8 @@ export const PromoTab = () => {
         queryKey: ["promotions"],
     });
 
-    const createPromoPayloadFromForm = (data: Schema): PromotionDataInput => {
-        const category_id = data.subcategory_id ?? data.category_id
-        const result = { ...data, category_id }
-        return result
-    };
     const addPromo = useMutation({
-        mutationFn: (data: Schema) => createPromo(createPromoPayloadFromForm(data)),
+        mutationFn: (data: PromoFormOutput) => createPromo(promoPayloadFromForm(data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
             toast.success(data.data.message)
@@ -72,7 +54,7 @@ export const PromoTab = () => {
         }
     })
     const editPromo = useMutation({
-        mutationFn: (data: { id: PromoModel["id"], data: Schema }) => updatePromo(data.id, createPromoPayloadFromForm(data.data)),
+        mutationFn: (data: { id: PromoModel["id"], data: PromoFormOutput }) => updatePromo(data.id, promoPayloadFromForm(data.data)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["promotions"] })
             toast.success(getApiSuccessMessage(data, "Promotion mise à jour avec succès"))
@@ -82,7 +64,7 @@ export const PromoTab = () => {
             toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour de la promotion"))
         }
     })
-    const savePromo = (data: Schema) => {
+    const savePromo = (data: PromoFormOutput) => {
         if (editingPromoId)
             editPromo.mutate({ id: editingPromoId, data })
         else

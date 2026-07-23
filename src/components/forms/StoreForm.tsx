@@ -8,34 +8,28 @@ import {
 } from "./FormBase";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import * as z from "zod";
-import { idSchema, noEmptyStr, nullString, phoneSchema, postalSchema } from "../../interfaces/ZodTypes";
 import type { UserModel } from "../../interfaces/Models";
+import {
+  storeFormSchema,
+  type StoreFormOutput,
+  type StoreFormValues,
+} from "../../services/schema/store";
 
-const schema = z.object({
-  name: noEmptyStr("nom requis"),
-  manager_id: z.union([nullString(), idSchema(),]),
-  address: z.string().transform(v => v == "" ? null : v),
-  city: z.string().transform(v => v == "" ? null : v),
-  postal_code: z.union([nullString(), postalSchema()]),
-  phone: z.union([nullString(), phoneSchema()]),
-  email: z.union([nullString(), z.email()]),
-  is_active: z.boolean(),
-});
+export type { StoreFormOutput, StoreFormValues };
+/** @deprecated Use StoreFormOutput */
+export type Schema = StoreFormOutput;
 
-export type Schema = z.infer<typeof schema>;
-export type StoreFormValues = z.input<typeof schema>;
 export const StoreForm = ({
   formId,
   onSubmit,
   managers,
   defaultValues,
-}: BaseFormProps<StoreFormValues, Schema> & {
+}: BaseFormProps<StoreFormValues, StoreFormOutput> & {
   managers: UserModel[];
 }) => {
   const isManagerValid = defaultValues?.manager_id != "" && managers.some(user => user.id == defaultValues?.manager_id);
-  const form = useForm<StoreFormValues, unknown, Schema>({
-    resolver: zodResolver(schema),
+  const form = useForm<StoreFormValues, unknown, StoreFormOutput>({
+    resolver: zodResolver(storeFormSchema),
     defaultValues: {
       name: "",
       address: "",
