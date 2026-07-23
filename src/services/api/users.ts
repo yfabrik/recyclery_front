@@ -17,7 +17,7 @@ import type {
 } from "@recyclerie/api/responses/users";
 import type { Weekday } from "@recyclerie/api/enums";
 import type { AssignEmployeeStoreInput } from "@recyclerie/api/schemas/employeeStore";
-import type { UserAdminUpdatePasswordInput, UserCreateInput, UserListFilterInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserListFilter, UserListFilterInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 import type { AxiosResponse } from "axios";
 import dayjs from "dayjs";
 import type { EmployeeModel, UserModel, WorkdaysModel } from "../../interfaces/Models";
@@ -31,10 +31,16 @@ import axiosInstance from "./axios";
 // }
 // export type { UserListFilter as UserFilters };
 
+type UserListQuery = Omit<UserListFilterInput, "include"> & {
+  include?: UserListFilter["include"];
+};
+
 export const fetchUsers = (
-  filters?: UserListFilterInput,
+  filters?: UserListQuery,
 ): Promise<AxiosResponse<ListUsersResponse>> =>
-  axiosInstance.get<ListUsersResponse>("/api/users", { params: filters });
+  axiosInstance.get<ListUsersResponse>("/api/users", {
+    params: { ...filters, include: filters?.include?.toString() },
+  });
 
 export const createUser = (
   data: UserCreateInput,

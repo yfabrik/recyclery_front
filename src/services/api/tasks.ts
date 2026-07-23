@@ -7,12 +7,16 @@ import type {
   TaskEmployeesResponse,
   UpdateTaskResponse,
 } from "@recyclerie/api/responses/tasks";
-import type { TaskDataInput, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
+import type { TaskDataInput, TaskListFilter, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
 import type { AxiosResponse } from "axios";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
 // export type { TaskListFilter };
+
+type TaskListQuery = Omit<TaskListFilterInput, "include"> & {
+  include?: TaskListFilter["include"];
+};
 
 export function parseTaskJsonArray(
   value: string | string[] | null | undefined,
@@ -45,7 +49,7 @@ export function normalizeTaskForDisplay(task: TaskModel): TaskDisplay {
 }
 
 export const getTasks = (
-  filter?: TaskListFilterInput,
+  filter?: TaskListQuery,
 ): Promise<AxiosResponse<ListTasksResponse>> =>
   axiosInstance.get<ListTasksResponse>("/api/tasks", {
     params: { ...filter, include: filter?.include?.toString() },

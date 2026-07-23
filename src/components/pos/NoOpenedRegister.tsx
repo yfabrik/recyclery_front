@@ -28,7 +28,7 @@ import {
   getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
-import { fetchStores, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
+import { fetchStores, fetchCaisses, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
 import { formatCurrency } from "../../services/cartService";
 import {
   getCashSessionStatusColor,
@@ -179,6 +179,13 @@ interface StoreCardProps {
     handleShowHistory: (register: CaisseModel) => void,
 }
 const StoreCard = ({ store, handleOpenClick, handleShowHistory }: StoreCardProps) => {
+    // Nested store.caisses are refs only; session counts live on the cash-register list DTO.
+    const caisses = useQuery({
+        queryKey: ["caisses", store.id],
+        queryFn: () =>
+            fetchCaisses(store.id).then((response) => response.data.data),
+    });
+
     return (
         <Card>
             <CardHeader
@@ -199,43 +206,45 @@ const StoreCard = ({ store, handleOpenClick, handleShowHistory }: StoreCardProps
             />
             <Divider />
             <CardContent>
-                {!store.caisses?.length ? (
-                    <Typography variant="body2" color="text.secondary">
-                        Aucune caisse configurée pour ce magasin.
-                    </Typography>
-                ) : (
-                    <List dense disablePadding>
-                        {store.caisses.map((register) => (
-                            <ListItem
-                                key={register.id}
-                                sx={{ py: 1.2 }}
-                                secondaryAction={
-                                    <Box>
-                                        <IconButton
-                                            color="primary"
-                                            title="Ouvrir une session"
-                                            onClick={() => handleOpenClick(store.id, register.id)}
-                                        >
-                                            <AccountBalance />
-                                        </IconButton>
-                                        <IconButton
-                                            color="info"
-                                            title="Voir historique"
-                                            onClick={() => handleShowHistory(register)}
-                                        >
-                                            <History />
-                                        </IconButton>
-                                    </Box>
-                                }
-                            >
-                                <ListItemText
-                                    primary={register.name}
-                                    secondary={`Sessions: ${register.total_sessions || 0}`}
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
-                )}
+                <Loading isLoading={caisses.isLoading}>
+                    {!caisses.data?.length ? (
+                        <Typography variant="body2" color="text.secondary">
+                            Aucune caisse configurée pour ce magasin.
+                        </Typography>
+                    ) : (
+                        <List dense disablePadding>
+                            {caisses.data.map((register) => (
+                                <ListItem
+                                    key={register.id}
+                                    sx={{ py: 1.2 }}
+                                    secondaryAction={
+                                        <Box>
+                                            <IconButton
+                                                color="primary"
+                                                title="Ouvrir une session"
+                                                onClick={() => handleOpenClick(store.id, register.id)}
+                                            >
+                                                <AccountBalance />
+                                            </IconButton>
+                                            <IconButton
+                                                color="info"
+                                                title="Voir historique"
+                                                onClick={() => handleShowHistory(register)}
+                                            >
+                                                <History />
+                                            </IconButton>
+                                        </Box>
+                                    }
+                                >
+                                    <ListItemText
+                                        primary={register.name}
+                                        secondary={`Sessions: ${register.total_sessions ?? 0}`}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </Loading>
             </CardContent>
         </Card >
     )

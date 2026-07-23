@@ -28,6 +28,7 @@ import {
   type Schema,
 } from "./forms/CreateCaisseForm";
 import { useState } from "react";
+import type { CashRegisterCreateInput } from "@recyclerie/api/schemas/cashRegister";
 
 interface CreateCaisseDialogProps {
   store: StoreModel;
@@ -62,8 +63,8 @@ export const CreateCaisseDialog = ({
   } | null>(null);
 
   const addCaisse = useMutation({
-    mutationFn: ({ id, name }: { id: number; name: CaisseSchema }) =>
-      createCaisse(id, name),
+    mutationFn: (data: CashRegisterCreateInput) =>
+      createCaisse(store.id, data),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Caisse créée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["caisses"] });
@@ -73,7 +74,11 @@ export const CreateCaisseDialog = ({
   });
 
   const handleAddCashRegister = async (data: CaisseSchema) => {
-    addCaisse.mutate({ id: store.id, name: data });
+    const mapperData: CashRegisterCreateInput = {
+      store_id: store.id,
+      name: data.name,
+    };
+    addCaisse.mutate(mapperData);
   };
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

@@ -3,11 +3,16 @@ import { ArrivalFilterForm } from "./forms/filters/ArrivalFilterForm";
 import { arrivalFilterSchema, getArrivalFilterDefaults } from "../services/schema/arrival";
 import { getArrivals } from "../services/api/arrival";
 import { Box, Chip, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { Business, Home, LocalShipping, VolunteerActivism } from "@mui/icons-material";
+import { Business } from "@mui/icons-material";
 import type { ArrivalModel } from "../interfaces/Models";
 import { useQuery } from "@tanstack/react-query";
 import { muiPageCount } from "../services/api/pagination";
 import { useUrlFilters } from "../hooks/useUrlFilters";
+import {
+  getArrivalSourceLabel,
+  getArrivalSourceType,
+} from "../constants/arrivalSourceTypes";
+import { formatDate } from "../services/dateService";
 
 export const ArrivalHistory = () => {
     const defaults = useMemo(() => getArrivalFilterDefaults(), []);
@@ -32,25 +37,6 @@ export const ArrivalHistory = () => {
                     pagination: result.data.pagination,
                 })),
         });
-    const getSourceTypeLabel = (type: ArrivalModel["source_type"]): string => {
-        const types: Record<ArrivalModel["source_type"], string> = {
-            point: "Point de Collecte",
-            apport: "Apport Volontaire",
-            house_clearance: "Vide Maison",
-        };
-        return types[type] || type;
-    };
-
-    const getSourceTypeIcon = (
-        type: ArrivalModel["source_type"],
-    ): React.ReactNode => {
-        const icons: Record<ArrivalModel["source_type"], React.ReactNode> = {
-            point: <LocalShipping />,
-            apport: <VolunteerActivism />,
-            house_clearance: <Home />,
-        };
-        return icons[type] || <Business />;
-    };
     return (
         <>
             <Paper sx={{ p: 2, mb: 3 }}>
@@ -68,6 +54,7 @@ export const ArrivalHistory = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>N° Arrivage</TableCell>
+                            <TableCell>Date</TableCell>
                             <TableCell>Heure</TableCell>
                             <TableCell>Catégorie</TableCell>
                             <TableCell>Poids</TableCell>
@@ -91,6 +78,9 @@ export const ArrivalHistory = () => {
                                         <Typography variant="body2" fontWeight="bold">
                                             {arrival.id}
                                         </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        {formatDate(new Date(arrival.arrival_date))}
                                     </TableCell>
                                     <TableCell>
                                         {arrival.arrival_time}
@@ -118,10 +108,10 @@ export const ArrivalHistory = () => {
                                         <Box
                                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                                         >
-                                            {getSourceTypeIcon(arrival.source_type)}
+                                            {getArrivalSourceType(arrival.source_type)?.icon ?? <Business />}
                                             <Box>
                                                 <Typography variant="body2">
-                                                    {getSourceTypeLabel(arrival.source_type)}
+                                                    {getArrivalSourceLabel(arrival.source_type)}
                                                 </Typography>
                                                 {arrival.CollectionPoint && (
                                                     <Typography

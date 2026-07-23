@@ -6,19 +6,19 @@ import { useReactToPrint } from "react-to-print";
 import { useSearchParams, Link as RouterLink } from "react-router";
 import { EmployeeTasksTimeline, type EmployeeTaskItem } from "../components/planning/EmployeeTasksTimeline";
 import type { EmployeeModel, TaskModel } from "../interfaces/Models";
-import { getWeekRangeFromDate } from "../services/dateService";
+import { getWeekRangeFromDate, weekdayLabel } from "../services/dateService";
 import { getTasks } from "../services/api/tasks";
 import { fetchStores as fstore } from "../services/api/store";
+import { weekday } from "@recyclerie/api/domain/date";
 
 function toTaskItem(s: TaskModel): EmployeeTaskItem {
   const scheduled = new Date(s.scheduled_date);
-  const dayOfWeek = scheduled.toLocaleDateString("fr-FR", { weekday: "long" });
-  const dayOfWeekCapitalized = dayOfWeek.replace(/^\w/, (c) => c.toUpperCase());
+  const dayOfWeek = weekdayLabel(weekday(scheduled)) 
   return {
     name: s.name,
     start_time: s.start_time,
     end_time: s.end_time,
-    day_of_week: (s as TaskModel & { day_of_week?: string }).day_of_week ?? dayOfWeekCapitalized,
+    day_of_week:dayOfWeek,
     category: s.category,
   };
 }
@@ -48,7 +48,7 @@ export default function PlanningPrint() {
         include: ["user", "store"],
         date_from,
         date_to,
-      }).then((r) => r.data.tasks),
+      }).then((r) => r.data.data),
   });
 
   const storesQuery = useQuery({

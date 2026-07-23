@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -32,8 +31,9 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
+import type { UserAdminUpdatePasswordInput, UserCreateInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -42,8 +42,8 @@ import {
   getUserRoleIcon,
   getUserRoleLabel,
 } from "../../constants/userRoles";
-import { type UserModel } from "../../interfaces/Models";
 import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
+import { type UserModel } from "../../interfaces/Models";
 import { fetchStores as fStores } from "../../services/api/store";
 import {
   createUser,
@@ -62,9 +62,8 @@ import {
   type Schema as PasswordSchema,
 } from "../forms/PasswordChangeForm";
 import { UserForm, type Schema } from "../forms/UserForm";
-import { StatCard } from "../StatCard";
-import type { UserAdminUpdatePasswordInput, UserCreateInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 import { Loading } from "../Loading";
+import { StatCard } from "../StatCard";
 
 export const UsersTab = () => {
   const [userDialog, setUserDialog] = useState(false);
@@ -74,9 +73,9 @@ export const UsersTab = () => {
   const queryClient = useQueryClient();
 
   const users = useQuery({
-    queryKey: ["users", { include: "managedStores" }],
+    queryKey: ["users", { include: ["managedStores"] }],
     queryFn: () =>
-      fUsers({ include: "managedStores" }).then(
+      fUsers({ include: ["managedStores"] }).then(
         (response) => response.data.data,
       ),
   });

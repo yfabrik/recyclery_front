@@ -17,6 +17,7 @@ import {
   WORKDAY_TIME_SLOT_AVATAR_COLORS,
   getWorkdayTimeSlot,
 } from "../../constants/workdayTimeSlots";
+import { WEEKDAYS_MONDAY_FIRST } from "../../services/dateService";
 
 const MORNING_SLOT = getWorkdayTimeSlot("morning")!;
 const AFTERNOON_SLOT = getWorkdayTimeSlot("afternoon")!;
@@ -189,13 +190,18 @@ const WeeklyScheduleGrid = ({
 
   return (
     <Grid container spacing={2}>
-      {Object.entries(employeesByDay).map(([dayKey, daySchedule]) => (
-        <DayScheduleCard
-          key={dayKey}
-          dayKey={dayKey}
-          daySchedule={daySchedule}
-        />
-      ))}
+      {WEEKDAYS_MONDAY_FIRST.map((day) => {
+        const dayKey = String(day);
+        const daySchedule = employeesByDay[dayKey];
+        if (!daySchedule) return null;
+        return (
+          <DayScheduleCard
+            key={dayKey}
+            dayKey={dayKey}
+            daySchedule={daySchedule}
+          />
+        );
+      })}
     </Grid>
   );
 };

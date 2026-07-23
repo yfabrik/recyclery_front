@@ -235,18 +235,18 @@ const Labels = () => {
     else addItem.mutate(data);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (item: LabeledItemModel) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
       return;
     }
-    removeItem.mutate(id);
+    removeItem.mutate(item.id);
   };
 
-  const handleSell = async (id: number) => {
+  const handleSell = async (item: LabeledItemModel) => {
     if (!window.confirm("Marquer cet article comme vendu ?")) {
       return;
     }
-    sell.mutate(id);
+    sell.mutate(item.id);
   };
 
   return (
@@ -324,7 +324,15 @@ const Labels = () => {
         categories={categories.data ?? []}
       />
       {/* Table des articles */}
-      <TableContainer component={Paper}>
+      <LabelTable
+        items={items.data?.items ?? []}
+        isLoading={items.isLoading}
+        onPrint={triggerPrintLabel}
+        onEdit={handleOpenDialog}
+        onSell={handleSell}
+        onDelete={handleDelete}
+      />
+      {/* <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -442,7 +450,7 @@ const Labels = () => {
             </Loading>
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainer> */}
       <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
         <Pagination
           count={Math.max(1, items.data?.pagination?.totalPages ?? 1)}
@@ -485,3 +493,136 @@ const Labels = () => {
 };
 
 export default Labels;
+
+interface LabelTableProps {
+  items: LabeledItemModel[];
+  isLoading: boolean;
+  onPrint: (item: LabeledItemModel) => void;
+  onEdit: (item: LabeledItemModel) => void;
+  onSell: (item: LabeledItemModel) => void;
+  onDelete: (item: LabeledItemModel) => void;
+}
+
+const LabelTable = ({ items, isLoading, onPrint, onEdit, onSell, onDelete }: LabelTableProps) => {
+  return (
+    <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Code-barres</TableCell>
+              <TableCell>Catégorie</TableCell>
+              <TableCell>Sous-catégorie</TableCell>
+              <TableCell>Poids</TableCell>
+              <TableCell>Prix</TableCell>
+              <TableCell>État</TableCell>
+              <TableCell>Statut</TableCell>
+              <TableCell>Date de création</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <Loading isLoading={isLoading} tableCols={9}>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    Aucun article trouvé
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontFamily="monospace">
+                        {item.barcode}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {item?.category?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="textSecondary">
+                        {item?.subcategory?.name || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {item.weight ? formatWeight(item.weight) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {formatCurrency(item.price)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={getLabeledItemConditionLabel(item.condition_state)}
+                        color={getLabeledItemConditionColor(item.condition_state)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={getLabeledItemStatusLabel(item.status)}
+                        color={getLabeledItemStatusColor(item.status)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString("fr-FR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Tooltip title="Imprimer étiquette">
+                          <IconButton
+                            size="small"
+                            onClick={() => onPrint(item)}
+                          >
+                            <Print />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Modifier">
+                          <IconButton
+                            size="small"
+                            onClick={() => onEdit(item)}
+                          >
+                            <Edit />
+                          </IconButton>
+                        </Tooltip>
+                        {item.status === "available" && (
+                          <Tooltip title="Marquer comme vendu">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={() => onSell(item)}
+                            >
+                              <PointOfSale />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(item)}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </Loading>
+          </TableBody>
+        </Table>
+      </TableContainer>
+  )
+}

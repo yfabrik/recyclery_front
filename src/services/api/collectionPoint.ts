@@ -4,7 +4,7 @@ import type {
   ListCollectionPointsResponse,
   UpdateCollectionPointResponse,
 } from "@recyclerie/api/responses/collectionPoints";
-import type { CollectionPointDataInput, CollectionPointFilterInput } from "@recyclerie/api/schemas/collectionPoints";
+import type { CollectionPointDataInput, CollectionPointFilter, CollectionPointFilterInput } from "@recyclerie/api/schemas/collectionPoints";
 import type { AxiosResponse } from "axios";
 import type { CollectionPointModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
@@ -23,11 +23,15 @@ import axiosInstance from "./axios";
 
 // export type { CollectionPointFilter };
 
+type CollectionPointQuery = Omit<CollectionPointFilterInput, "include"> & {
+  include?: CollectionPointFilter["include"];
+};
+
 export const fetchCollectionPoints = (
-  filters?: CollectionPointFilterInput,
+  filters?: CollectionPointQuery,
 ): Promise<AxiosResponse<ListCollectionPointsResponse>> =>
   axiosInstance.get<ListCollectionPointsResponse>("/api/collection-points", {
-    params: filters,
+    params: { ...filters, include: filters?.include?.toString() },
   });
 
 export const createCollectionPoint = (

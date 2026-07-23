@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
-import type { AuthUserModel } from "../interfaces/Models";
-import type { UserRefDto } from "@recyclerie/api/responses/refs";
+import type { CashSession } from "../interfaces/Models";
+import type { UserRefDto } from "@recyclerie/api/responses/users";
 import type { CartItem } from "../components/forms/cartSchema";
 import { getTransactionDetails } from "../services/api/transactions";
 import type {
@@ -8,17 +8,24 @@ import type {
   SalesTransactionItemDto,
 } from "@recyclerie/api/responses/salesTransactions";
 import type { CategoryDto } from "@recyclerie/api/responses/categories";
-import { getTransactionGlobalPromotion } from "../services/cartService";
+import {
+  getTransactionGlobalPromotion,
+  type GlobalPromotionInput,
+} from "../services/cartService";
 
 export type ReceiptSale = SalesTransactionDto;
 
-export type ReceiptPrintTrigger = (payload: {
+/** Shared payload for `useReceiptPrint().triggerPrintReceipt` and reprint helpers. */
+export interface ReceiptPrintPayload {
   sale: ReceiptSale;
   items: CartItem[];
-  cashSession: NonNullable<SalesTransactionDto["CashSession"]>;
-  user: AuthUserModel | UserRefDto;
-  global_promotion?: ReturnType<typeof getTransactionGlobalPromotion>;
-}) => void;
+  cashSession: CashSession;
+  /** POS passes AuthUser; reprint uses CashSession.User (UserRefDto). */
+  user: UserRefDto;
+  global_promotion?: GlobalPromotionInput | null;
+}
+
+export type ReceiptPrintTrigger = (payload: ReceiptPrintPayload) => void;
 
 const getReceiptLineItems = (
   items: SalesTransactionDto["items"],

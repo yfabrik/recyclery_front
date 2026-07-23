@@ -174,10 +174,6 @@ const CustomTaskScheduleManagement = () => {
     deleteSchedule.mutate(scheduleId);
   };
 
-  const getPriorityInfo = (priority: string | null | undefined) => {
-    return TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1];
-  };
-
   const getWeeklyDayLabel = (schedule: ScheduleModel) => {
     if (typeof schedule.day_of_week === "number") {
       return weekdayLabel(schedule.day_of_week);

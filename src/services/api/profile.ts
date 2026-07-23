@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { UpdateProfileBody, UpdatePasswordBody } from "@recyclerie/api/schemas/auth";
+import type { UpdateProfileInput, UpdatePasswordBody } from "@recyclerie/api/schemas/auth";
 import type {
   UpdateProfileResponse,
   UpdatePasswordResponse,
@@ -7,7 +7,7 @@ import type {
 import axiosInstance from "./axios";
 
 export const updateProfile = (
-  data: UpdateProfileBody,
+  data: UpdateProfileInput,
 ): Promise<AxiosResponse<UpdateProfileResponse>> =>
   axiosInstance.put<UpdateProfileResponse>("/api/auth/profile", data);
 

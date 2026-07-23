@@ -5,15 +5,16 @@ interface LoadingProps {
     isLoading: boolean
     children: ReactNode
     tableCols?: number
+    text?: string
 }
-export const Loading = ({ isLoading, children, tableCols = 0 }: LoadingProps) => {
+export const Loading = ({ isLoading, children, tableCols = 0, text = "Chargement..." }: LoadingProps) => {
 
     if (!isLoading)
         return children
     if (tableCols)
         return (
             <TableRow>
-                <TableCell colSpan={tableCols}  align="center">
+                <TableCell colSpan={tableCols} align="center">
                     <Box
                         sx={{
                             display: "flex",
@@ -25,7 +26,7 @@ export const Loading = ({ isLoading, children, tableCols = 0 }: LoadingProps) =>
                         }}
                     >
                         <CircularProgress size={60} />
-                        <Typography variant="body2" color="text.secondary" align="center" >Chargement...</Typography>
+                        <Typography variant="body2" color="text.secondary" align="center" >{text}</Typography>
                     </Box>
                 </TableCell>
             </TableRow>
@@ -44,7 +45,7 @@ export const Loading = ({ isLoading, children, tableCols = 0 }: LoadingProps) =>
             }}
         >
             <CircularProgress size={60} />
-            <Typography variant="body2" color="text.secondary" align="center" >Chargement...</Typography>
+            <Typography variant="body2" color="text.secondary" align="center" >{text}</Typography>
         </Box>
     )
 }

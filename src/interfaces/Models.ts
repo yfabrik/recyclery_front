@@ -13,9 +13,8 @@ import type { EmployeeDto } from "@recyclerie/api/responses/employees";
 import type { RecycleryDto } from "@recyclerie/api/responses/recycleries";
 import type {
   CashRegisterDto,
-  CashSessionRefDto,
 } from "@recyclerie/api/responses/cashRegister";
-import type { CashSessionDto } from "@recyclerie/api/responses/cashSession";
+import type { CashSessionDto,CashSessionRefDto } from "@recyclerie/api/responses/cashSession";
 import type { TaskDto } from "@recyclerie/api/responses/tasks";
 import type {
   TaskScheduleDto,

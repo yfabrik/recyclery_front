@@ -39,7 +39,7 @@ import {
 import { CardStore } from "../../CardStore";
 import { CreateCaisseDialog } from "../../CreateCaisseDialog";
 import { StoreForm } from "../../forms/StoreForm";
-import type { Schema as HoraireSchema, StoreOpeningFormValues } from "../../forms/StoreOpeningForm";
+import type { StoreOpeningFormOutput, StoreOpeningFormValues } from "../../forms/StoreOpeningForm";
 import { StoreOpeningForm } from "../../forms/StoreOpeningForm";
 import { Loading } from "../../Loading";
 import { StatCard } from "../../StatCard";
@@ -63,11 +63,12 @@ const StoresTab = () => {
   const [editingHoursId, setEditingHoursId] = useState<ScheduleModel["id"] | null>(null);
   const [hoursFormDefaults, setHoursFormDefaults] =
     useState<Partial<StoreOpeningFormValues> | null>(null);
+
   const queryClient = useQueryClient();
   const stores = useQuery({
-    queryKey: ["stores", "horaires"],
+    queryKey: ["stores", "horaires", "caisses"],
     queryFn: () =>
-      fStore({ include: ["horaires"] }).then((response) => response.data.data),
+      fStore({ include: ["horaires","caisses"] }).then((response) => response.data.data),
   });
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
@@ -112,7 +113,7 @@ const StoresTab = () => {
 
 
   const saveHoraire = useMutation({
-    mutationFn: (data: HoraireSchema) => createStoreHours(storeHoursPayloadFromForm(data)),
+    mutationFn: (data: StoreOpeningFormOutput) => createStoreHours(storeHoursPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Horaires créés avec succès"));
       queryClient.invalidateQueries({ queryKey: ["stores", "horaires"] });
@@ -124,7 +125,7 @@ const StoresTab = () => {
       ),
   });
   const editHoraire = useMutation({
-    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: HoraireSchema }) =>
+    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: StoreOpeningFormOutput }) =>
       updateStoreHours(id, storeHoursPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(
@@ -197,7 +198,7 @@ const StoresTab = () => {
     setEditingHoursId(null);
     setHoursFormDefaults(null);
   };
-  const handleSaveHours = async (data: HoraireSchema) => {
+  const handleSaveHours = async (data: StoreOpeningFormOutput) => {
 
     if (!editingHoursId) saveHoraire.mutate(data);
     else editHoraire.mutate({ id: editingHoursId, data });

@@ -23,7 +23,10 @@ import {
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
 import { buildTransactionBody } from "../utils/transactionBody";
-import type { ReceiptSale } from "../utils/transactionReceipt";
+import type {
+  ReceiptPrintTrigger,
+  ReceiptSale,
+} from "../utils/transactionReceipt";
 import { useCheckoutFormCore } from "./useCheckoutFormCore";
 import type { ManualItemFormOutput as ManualItemSchema } from "../services/schema/item";
 import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
@@ -39,13 +42,7 @@ interface UsePointOfSaleOptions {
   categories?: CategoryModel[];
   activeSession: CashSession | null;
   user: AuthUserModel | null;
-  triggerPrintReceipt: (payload: {
-    sale: ReceiptSale;
-    items: CartItem[];
-    cashSession: CashSession;
-    user: AuthUserModel;
-    global_promotion: CartSchema["global_promotion"];
-  }) => void;
+  triggerPrintReceipt: ReceiptPrintTrigger;
   onManualItemAdded?: () => void;
 }
 
