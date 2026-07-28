@@ -5,8 +5,11 @@ import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "dayjs/locale/fr";
 import "./main.css";
 
 import App from "./App";
@@ -32,23 +35,25 @@ function ThemedApp() {
 
   return (
     <ThemeProvider theme={getTheme(isTouchLayout)}>
-      <CssBaseline />
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
-        </AuthProvider>
-      </BrowserRouter>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+        <CssBaseline />
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </AuthProvider>
+        </BrowserRouter>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }
