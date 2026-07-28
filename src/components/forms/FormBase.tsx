@@ -50,13 +50,10 @@ import {
   type UseFormSetValue,
 } from "react-hook-form";
 
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker, type DatePickerProps } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import dayjs from "dayjs";
-import "dayjs/locale/fr";
 import {
   PAYMENT_METHODS,
 } from "../../constants/paymentMethods";
@@ -277,23 +274,21 @@ export const FormDate = <
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-          <DatePicker
-            label={label}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                error: fieldState.invalid,
-                helperText: fieldState.invalid && fieldState.error?.message,
-              },
-            }}
-            {...extra}
-            {...field}
-            format={extra?.format ?? "DD/MM/YYYY"}
-            value={field.value ? dayjs(field.value) : null}
-            onChange={(value) => field.onChange(value ? value.toDate() : null)}
-          />
-        </LocalizationProvider>
+        <DatePicker
+          label={label}
+          slotProps={{
+            textField: {
+              fullWidth: true,
+              error: fieldState.invalid,
+              helperText: fieldState.invalid && fieldState.error?.message,
+            },
+          }}
+          {...extra}
+          {...field}
+          format={extra?.format ?? "DD/MM/YYYY"}
+          value={field.value ? dayjs(field.value) : null}
+          onChange={(value) => field.onChange(value ? value.toDate() : null)}
+        />
       )}
     />
   );
@@ -313,26 +308,24 @@ export const FormTime = <
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-          <TimePicker
-            label={label}
-            ampm={false}
-            viewRenderers={{
-              hours: renderTimeViewClock,
-              minutes: renderTimeViewClock,
-            }}
-            slotProps={{
-              textField: {
-                error: fieldState.invalid,
-                helperText: fieldState.invalid && fieldState.error?.message,
-                fullWidth: true,
-              },
-            }}
-            {...field}
-            value={field.value ? dayjs(field.value) : null}
-            onChange={(value) => field.onChange(value ? value.toDate() : null)}
-          />
-        </LocalizationProvider>
+        <TimePicker
+          label={label}
+          ampm={false}
+          viewRenderers={{
+            hours: renderTimeViewClock,
+            minutes: renderTimeViewClock,
+          }}
+          slotProps={{
+            textField: {
+              error: fieldState.invalid,
+              helperText: fieldState.invalid && fieldState.error?.message,
+              fullWidth: true,
+            },
+          }}
+          {...field}
+          value={field.value ? dayjs(field.value) : null}
+          onChange={(value) => field.onChange(value ? value.toDate() : null)}
+        />
       )}
     />
   );

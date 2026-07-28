@@ -51,20 +51,23 @@ export const PaymentPanel = ({
 }: PaymentPanelProps) => {
   const { control, setValue } = useFormContext<CartFormValues, unknown, CartSchema>();
 
-  const cart = useWatch({ control, name: "cart", defaultValue: [] }) as CartSchema["cart"];
+  // Omit useWatch defaultValue: before mount RHF prefers it over form defaultValues.
+  const cart = useWatch({ control, name: "cart" }) as CartSchema["cart"] | undefined;
   const paymentSplits = useWatch({
     control,
     name: "payment_splits",
-    defaultValue: [{ method: "cash", amount: 0 }],
-  }) as CartSchema["payment_splits"];
+  }) as CartSchema["payment_splits"] | undefined;
   const globalPromotion = useWatch({
     control,
     name: "global_promotion",
-    defaultValue: { type: "percent", value: 0 },
-  }) as CartSchema["global_promotion"];
+  }) as CartSchema["global_promotion"] | undefined;
 
-  const cartTotal = getCartTotalWithGlobalPromotion(cart, globalPromotion);
-  const totalPaid = paymentSplits.reduce(
+  const safeCart = cart ?? [];
+  const safePaymentSplits = paymentSplits ?? [];
+  const safeGlobalPromotion = globalPromotion ?? { type: "percent" as const, value: 0 };
+
+  const cartTotal = getCartTotalWithGlobalPromotion(safeCart, safeGlobalPromotion);
+  const totalPaid = safePaymentSplits.reduce(
     (sum, split) => sum + (Number(split.amount) || 0),
     0,
   );
@@ -122,12 +125,12 @@ export const PaymentPanel = ({
 
         {paymentFields.map((payment, index) => (
           <Grid key={payment.id} size={{ xs: 12 }}>
-            {paymentSplits[index]?.method === "giftcard" && (
+            {safePaymentSplits[index]?.method === "giftcard" && (
               <Box sx={{ mb: 1 }}>
                 <Chip
                   size="small"
                   color="secondary"
-                  label={`Avoir: ${paymentSplits[index]?.gift_card_barcode ?? "N/A"} - ${formatCurrency(Number(paymentSplits[index]?.gift_card_current_value || 0))}`}
+                  label={`Avoir: ${safePaymentSplits[index]?.gift_card_barcode ?? "N/A"} - ${formatCurrency(Number(safePaymentSplits[index]?.gift_card_current_value || 0))}`}
                 />
               </Box>
             )}
@@ -146,7 +149,7 @@ export const PaymentPanel = ({
                   extraSelect={{
                     size: "small",
                     disabled:
-                      readOnly || paymentSplits[index]?.method === "giftcard",
+                      readOnly || safePaymentSplits[index]?.method === "giftcard",
                   }}
                 >
                   {POS_PAYMENT_METHODS.map((method) => (
@@ -169,7 +172,7 @@ export const PaymentPanel = ({
                     type: "number",
                     size: "small",
                     disabled:
-                      readOnly || paymentSplits[index]?.method === "giftcard",
+                      readOnly || safePaymentSplits[index]?.method === "giftcard",
                     slotProps: {
                       input: {
                         startAdornment: (
@@ -237,7 +240,7 @@ export const PaymentPanel = ({
               >
                 <Typography variant="body2">% </Typography>
                 <Switch
-                  checked={globalPromotion.type === "fixed"}
+                  checked={safeGlobalPromotion.type === "fixed"}
                   disabled={readOnly}
                   onChange={(_, checked) =>
                     setValue(
@@ -272,7 +275,7 @@ export const PaymentPanel = ({
             </Alert>
           </Grid>
         )}
-        {paymentBalance.remaining > 0 && cart.length > 0 && (
+        {paymentBalance.remaining > 0 && safeCart.length > 0 && (
           <Grid size={{ xs: 12 }}>
             <Alert severity="warning">
               Reste à payer: {formatCurrency(paymentBalance.remaining)}
@@ -305,7 +308,7 @@ export const PaymentPanel = ({
           startIcon={<Payment />}
           type="submit"
           disabled={
-            cart.length === 0 || isPaymentInsufficient(totalPaid, cartTotal)
+            safeCart.length === 0 || isPaymentInsufficient(totalPaid, cartTotal)
           }
           sx={{ mb: 2 }}
         >

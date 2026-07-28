@@ -1,72 +1,80 @@
 import type { CartItem } from "../components/forms/cartSchema";
 import type { CategoryModel, TransactionModel } from "../interfaces/Models";
 import { getPaymentMethodLabel as getPaymentMethodLabelFromConstants } from "../constants/paymentMethods";
+import {type GlobalPromotionInput,amountsEqual,computeTotalAfterPromotion,getCartLinePrice,getCartTotal,getCartTotalWithGlobalPromotion,getGlobalPromotionDiscount,isAmountEqual,isPaymentInsufficient,roundCurrency,sumCashInPayments,sumPromoCategorie} from "@recyclerie/api/domain/cart"
+export {amountsEqual,computeTotalAfterPromotion,getCartLinePrice,getCartTotal,getCartTotalWithGlobalPromotion,getGlobalPromotionDiscount,isAmountEqual,isPaymentInsufficient,roundCurrency,sumCashInPayments,sumPromoCategorie}
+// type CashInTransaction = {
+//   payment_method: string;
+//   transactionType: string;
+//   total_amount: number;
+//   payments?: Array<{ method: string; amount: number }>;
+// };
 
-type CashInTransaction = {
-  payment_method: string;
-  transactionType: string;
-  total_amount: number;
-  payments?: Array<{ method: string; amount: number }>;
-};
+// export type GlobalPromotionType = "percent" | "fixed";
 
-export type GlobalPromotionType = "percent" | "fixed";
+// export interface GlobalPromotionInput {
+//   type: GlobalPromotionType;
+//   value: number;
+// }
+// export const getCartLinePrice = (line: CartItem): number => {
+//   let bundles = 0;
+//   let extraItems = line.quantity;
+//   if (line.bundleQuantity && line.bundleQuantity !== 0) {
+//     bundles = Math.trunc(line.quantity / line.bundleQuantity);
+//     extraItems = line.quantity % line.bundleQuantity;
+//   }
+//   const sum = (price: number, quantity: number) =>
+//     price * quantity * (1 - line.promotion / 100);
+//   return (
+//     sum(line.price, extraItems) + sum(line.bundlePrice || line.price, bundles)
+//   );
+// };
 
-export interface GlobalPromotionInput {
-  type: GlobalPromotionType;
-  value: number;
-}
+// export const getCartTotal = (cart: CartItem[]) => {
+//   return cart.reduce(
+//     (prev, current) =>
+//     (prev +=
+//       getCartLinePrice(current)),
+//     0,
+//   );
+// };
 
-export const getCartLinePrice = (line: CartItem): number => {
-  let bundles = 0;
-  let extraItems = line.quantity;
-  if (line.bundleQuantity && line.bundleQuantity !== 0) {
-    bundles = Math.trunc(line.quantity / line.bundleQuantity);
-    extraItems = line.quantity % line.bundleQuantity;
-  }
-  const sum = (price: number, quantity: number) =>
-    price * quantity * (1 - line.promotion / 100);
-  return (
-    sum(line.price, extraItems) + sum(line.bundlePrice || line.price, bundles)
-  );
-};
+// export const getGlobalPromotionDiscount = (
+//   subtotal: number,
+//   promotion?: GlobalPromotionInput | null,
+// ) => {
+//   if (!promotion) return 0;
+//   const normalizedValue = Math.max(Number(promotion.value) || 0, 0);
+//   const discount =
+//     promotion.type === "percent"
+//       ? subtotal * (Math.min(normalizedValue, 100) / 100)
+//       : normalizedValue;
+//   return Math.min(discount, subtotal);
+// };
 
-export const getCartTotal = (cart: CartItem[]) => {
-  return cart.reduce(
-    (prev, current) =>
-    (prev +=
-      getCartLinePrice(current)),
-    0,
-  );
-};
-
-export const getGlobalPromotionDiscount = (
-  subtotal: number,
-  promotion?: GlobalPromotionInput | null,
-) => {
-  if (!promotion) return 0;
-  const normalizedValue = Math.max(Number(promotion.value) || 0, 0);
-  const discount =
-    promotion.type === "percent"
-      ? subtotal * (Math.min(normalizedValue, 100) / 100)
-      : normalizedValue;
-  return Math.min(discount, subtotal);
-};
-
-export const getCartTotalWithGlobalPromotion = (
-  cart: CartItem[],
-  promotion?: GlobalPromotionInput | null,
-) => {
-  const subtotal = getCartTotal(cart);
-  const discount = getGlobalPromotionDiscount(subtotal, promotion);
-  return Math.max(subtotal - discount, 0);
-};
+// export const getCartTotalWithGlobalPromotion = (
+//   cart: CartItem[],
+//   promotion?: GlobalPromotionInput | null,
+// ) => {
+//   const subtotal = getCartTotal(cart);
+//   const discount = getGlobalPromotionDiscount(subtotal, promotion);
+//   return Math.max(subtotal - discount, 0);
+// };
 
 export const getTransactionGlobalPromotion = (
-  transaction: Pick<TransactionModel, "global_promotion" | "global_promotion_type">,
-): GlobalPromotionInput => ({
-  type: transaction.global_promotion_type ?? "percent",
-  value: Number(transaction.global_promotion ?? 0),
-});
+  transaction: Pick<
+    TransactionModel,
+    "global_promotion" | "global_promotion_type" | "globalPromotions"
+  >,
+): GlobalPromotionInput => {
+  const fromRelation = transaction.globalPromotions?.[0];
+  const type =
+    transaction.global_promotion_type ?? fromRelation?.type ?? "percent";
+  const value = Number(
+    transaction.global_promotion ?? fromRelation?.value ?? 0,
+  );
+  return { type, value };
+};
 
 export const getTransactionSubtotal = (
   transaction: Pick<TransactionModel, "total_amount" | "total_amount_before_promotion">,
@@ -91,31 +99,36 @@ export const formatCurrency = (amount: number) => {
   }).format(amount || 0);
 };
 
+
+//TODO the fuck is this?
 /**
  * Round to EUR cents (same precision as {@link formatCurrency}).
  * Use for payment comparisons and amounts shown to the cashier — not for cart math or API payloads.
  */
-export const roundCurrency = (amount: number) => {
-  const parts = new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).formatToParts(amount || 0);
-  let normalized = "";
-  for (const part of parts) {
-    if (part.type === "integer" || part.type === "group") {
-      normalized += part.value.replace(/\s/g, "");
-    } else if (part.type === "decimal") {
-      normalized += ".";
-    } else if (part.type === "fraction") {
-      normalized += part.value;
-    }
-  }
-  return Number(normalized) || 0;
-};
+//  Math.round((amount || 0) * 100) / 100;
+// Number((amount || 0).toFixed(2));
+
+// export const roundCurrency = (amount: number) => {
+//   const parts = new Intl.NumberFormat("fr-FR", {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   }).formatToParts(amount || 0);
+//   let normalized = "";
+//   for (const part of parts) {
+//     if (part.type === "integer" || part.type === "group") {
+//       normalized += part.value.replace(/\s/g, "");
+//     } else if (part.type === "decimal") {
+//       normalized += ".";
+//     } else if (part.type === "fraction") {
+//       normalized += part.value;
+//     }
+//   }
+//   return Number(normalized) || 0;
+// };
 
 /** Compare paid vs due at cent precision (avoids float noise blocking checkout). */
-export const isPaymentInsufficient = (totalPaid: number, cartTotal: number) =>
-  roundCurrency(totalPaid) < roundCurrency(cartTotal);
+// export const isPaymentInsufficient = (totalPaid: number, cartTotal: number) =>
+//   roundCurrency(totalPaid) < roundCurrency(cartTotal);
 
 /** Cent-rounded paid/due and change (+) or remaining (-) for payment UI. */
 export const getPaymentBalance = (totalPaid: number, cartTotal: number) => {
@@ -165,58 +178,58 @@ export const formatPercentage = (value: number) => {
   }).format(value || 0);
 };
 
-export const sumPromoCategorie = (categorie?: CategoryModel) => {
-  return categorie?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
-}
+// export const sumPromoCategorie = (categorie?: CategoryModel) => {
+//   return categorie?.Promotions?.reduce((prev, current) => prev += current.promotionValue, 0) || 0
+// }
 //same calcul in backend
-export const sumCashInPayments = (transactions: CashInTransaction[], openingAmount: number = 0) => {
-    return transactions.reduce((prev, current) => {
-    if (current.payment_method == "cash")
-      return current.transactionType == "sell" ?
-        prev + current.total_amount :
-        prev - current.total_amount
-    if (!current.payments || current.payments.filter(payment => payment.method == "cash").length == 0)
-      return prev
+// export const sumCashInPayments = (transactions: CashInTransaction[], openingAmount: number = 0) => {
+//     return transactions.reduce((prev, current) => {
+//     if (current.payment_method == "cash")
+//       return current.transactionType == "sell" ?
+//         prev + current.total_amount :
+//         prev - current.total_amount
+//     if (!current.payments || current.payments.filter(payment => payment.method == "cash").length == 0)
+//       return prev
 
-    const cashPayment = current.payments.reduce((acc, pay) => pay.method == "cash" ? acc : acc - pay.amount, current.total_amount)
-    return current.transactionType == "sell" ?
-      prev + cashPayment :
-      prev - cashPayment
+//     const cashPayment = current.payments.reduce((acc, pay) => pay.method == "cash" ? acc : acc - pay.amount, current.total_amount)
+//     return current.transactionType == "sell" ?
+//       prev + cashPayment :
+//       prev - cashPayment
 
-  }, openingAmount)
-  //TODO handle mixed
-  // return transactions.reduce((prev, current) => {
-  //   if (!current.payments)
-  //     return current.payment_method === "cash" ?
-  //       current.transactionType == "sell" ?
-  //         prev + current.total_amount :
-  //         prev - current.total_amount :
-  //       prev
-  //   const payments = current.payments.reduce((p, c) => c.method == "cash" ? p += c.amount : p, 0)
-  //   if (current.transactionType == 'sell')
-  //     prev += payments
-  //   else
-  //     prev -= payments
-  //   return prev
-  // }, openingAmount)
+//   }, openingAmount)
+//   //TODO handle mixed
+//   // return transactions.reduce((prev, current) => {
+//   //   if (!current.payments)
+//   //     return current.payment_method === "cash" ?
+//   //       current.transactionType == "sell" ?
+//   //         prev + current.total_amount :
+//   //         prev - current.total_amount :
+//   //       prev
+//   //   const payments = current.payments.reduce((p, c) => c.method == "cash" ? p += c.amount : p, 0)
+//   //   if (current.transactionType == 'sell')
+//   //     prev += payments
+//   //   else
+//   //     prev -= payments
+//   //   return prev
+//   // }, openingAmount)
 
-  return transactions.reduce((prev: number, current) => {
-    // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
-    if (Array.isArray(current.payments) && current.payments.length > 0) {
-      const totalCashInPayments = current.payments.reduce((p, c) =>
-        c.method === "cash" ? p + c.amount : p,
-        0
-      );
-      // Only add to prev if actual cash present in payments
-      if (totalCashInPayments !== 0) {
-        return prev + totalCashInPayments;
-      }
-    }
-    // Otherwise, if the transaction's payment_method is "cash", add its total_amount
-    if (current.payment_method === "cash") {
-      return prev + current.total_amount;
-    }
-    // Otherwise, leave accumulator unchanged
-    return prev;
-  }, openingAmount)
-}
+//   return transactions.reduce((prev: number, current) => {
+//     // Calculate total cash in payments array, if payments present (i.e. for "mixed" payments)
+//     if (Array.isArray(current.payments) && current.payments.length > 0) {
+//       const totalCashInPayments = current.payments.reduce((p, c) =>
+//         c.method === "cash" ? p + c.amount : p,
+//         0
+//       );
+//       // Only add to prev if actual cash present in payments
+//       if (totalCashInPayments !== 0) {
+//         return prev + totalCashInPayments;
+//       }
+//     }
+//     // Otherwise, if the transaction's payment_method is "cash", add its total_amount
+//     if (current.payment_method === "cash") {
+//       return prev + current.total_amount;
+//     }
+//     // Otherwise, leave accumulator unchanged
+//     return prev;
+//   }, openingAmount)
+// }

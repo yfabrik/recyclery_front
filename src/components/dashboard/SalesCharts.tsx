@@ -13,12 +13,9 @@ import {
 
 
 import { BarChart, PieChart } from "@mui/x-charts";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import "dayjs/locale/fr";
 import { useMemo, useState } from "react";
 import { getTranscationStats, type transactionsFilters } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
@@ -200,57 +197,55 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
         }}
       >
         {view === "custom" ? (
-          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                flexWrap: "wrap",
-                justifyContent: "center",
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <DatePicker
+              label="Date de début"
+              format="DD/MM/YYYY"
+              value={customDateRange.from}
+              onChange={(value) => {
+                if (!value) return;
+                setCustomDateRange((prev) => ({
+                  from: value,
+                  to: value.isAfter(prev.to) ? value : prev.to,
+                }));
               }}
+              slotProps={{
+                textField: { size: "small", sx: { width: 170 } },
+              }}
+            />
+            <Typography variant="body2" color="text.secondary">
+              –
+            </Typography>
+            <DatePicker
+              label="Date de fin"
+              format="DD/MM/YYYY"
+              value={customDateRange.to}
+              onChange={(value) => {
+                if (!value) return;
+                setCustomDateRange((prev) => ({
+                  from: value.isBefore(prev.from) ? value : prev.from,
+                  to: value,
+                }));
+              }}
+              slotProps={{
+                textField: { size: "small", sx: { width: 170 } },
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{ minWidth: 180, textAlign: "center", fontWeight: 500 }}
             >
-              <DatePicker
-                label="Date de début"
-                format="DD/MM/YYYY"
-                value={customDateRange.from}
-                onChange={(value) => {
-                  if (!value) return;
-                  setCustomDateRange((prev) => ({
-                    from: value,
-                    to: value.isAfter(prev.to) ? value : prev.to,
-                  }));
-                }}
-                slotProps={{
-                  textField: { size: "small", sx: { width: 170 } },
-                }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                –
-              </Typography>
-              <DatePicker
-                label="Date de fin"
-                format="DD/MM/YYYY"
-                value={customDateRange.to}
-                onChange={(value) => {
-                  if (!value) return;
-                  setCustomDateRange((prev) => ({
-                    from: value.isBefore(prev.from) ? value : prev.from,
-                    to: value,
-                  }));
-                }}
-                slotProps={{
-                  textField: { size: "small", sx: { width: 170 } },
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{ minWidth: 180, textAlign: "center", fontWeight: 500 }}
-              >
-                {formatPeriodLabel(view, periodOffset, customDateRange)}
-              </Typography>
-            </Box>
-          </LocalizationProvider>
+              {formatPeriodLabel(view, periodOffset, customDateRange)}
+            </Typography>
+          </Box>
         ) : (
           <>
             <Tooltip title="Période précédente">
