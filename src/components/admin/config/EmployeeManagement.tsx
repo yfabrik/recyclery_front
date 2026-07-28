@@ -1,6 +1,7 @@
 import {
   AccessTime,
   Add,
+  BeachAccess,
   Delete,
   Edit,
   Person,
@@ -14,7 +15,6 @@ import {
   Box,
   Button,
   Card,
-  CardActions,
   CardContent,
   Chip,
   Container,
@@ -61,6 +61,7 @@ import {
   type EmployeeFormOutput,
   type EmployeeFormValues,
 } from "../../../services/schema/employee";
+import { VacationDialog } from "../../VacationDialog";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -75,7 +76,7 @@ const EmployeeManagement = () => {
     useState(false);
   const [openWorkdaysDialog, setOpenWorkdaysDialog] = useState(false);
   const [openSkillsDialog, setOpenSkillsDialog] = useState(false);
-
+  const [openVacationsDialog, setOpenVacationsDialog] = useState(false);
   const skills = useQuery({
     queryKey: ["skills"],
     queryFn: () => fetchSkills().then(response => response.data.data ?? [])
@@ -176,6 +177,10 @@ const EmployeeManagement = () => {
     setOpenSkillsDialog(true);
   }
 
+  const handleOpenVacation = (employee: EmployeeModel) => {
+    setSelectedEmployee(employee);
+    setOpenVacationsDialog(true);
+  };
   const handleCloseStoreAssignment = () => {
     setOpenStoreAssignmentDialog(false);
     setSelectedEmployee(null);
@@ -191,6 +196,10 @@ const EmployeeManagement = () => {
     setSelectedEmployee(null);
   };
 
+  const handleCloseVacations = () => {
+    setOpenVacationsDialog(false)
+    setSelectedEmployee(null);
+  };
 
   const handleSave = async (data: EmployeeFormOutput) => {
     if (selectedEmployee?.id) editEmployee.mutate({ id: selectedEmployee.id, data })
@@ -304,12 +313,15 @@ const EmployeeManagement = () => {
         <Grid container spacing={3}>
           {filteredEmployees.map((employee) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
-              <EmployeeCard employee={employee}
+              <EmployeeCard
+                employee={employee}
                 handleOpenDialog={handleOpenDialog}
                 handleDelete={handleDelete}
                 handleOpenSkills={handleOpenSkills}
                 handleOpenStoreAssignment={handleOpenStoreAssignment}
-                handleOpenWorkdays={handleOpenWorkdays} />
+                handleOpenWorkdays={handleOpenWorkdays}
+                handleOpenVacation={handleOpenVacation}
+              />
             </Grid>
           ))}
         </Grid>
@@ -424,6 +436,11 @@ const EmployeeManagement = () => {
 
         </DialogActions>
       </Dialog>
+
+      {/* Dialog de congés */}
+      {selectedEmployee && (
+        <VacationDialog open={openVacationsDialog} handleClose={handleCloseVacations} selectedEmployee={selectedEmployee} />
+      )}
     </Container>
   );
 };
@@ -437,8 +454,18 @@ interface EmployeeCardProps {
   handleOpenSkills: (employee: EmployeeModel) => void;
   handleOpenStoreAssignment: (employee: EmployeeModel) => void;
   handleOpenWorkdays: (employee: EmployeeModel) => void;
+  handleOpenVacation: (employee: EmployeeModel) => void;
 }
-const EmployeeCard = ({ employee, handleOpenDialog, handleDelete, handleOpenSkills, handleOpenStoreAssignment, handleOpenWorkdays }: EmployeeCardProps) => {
+
+const EmployeeCard = ({
+  employee,
+  handleOpenDialog,
+  handleDelete,
+  handleOpenSkills,
+  handleOpenStoreAssignment,
+  handleOpenWorkdays,
+  handleOpenVacation,
+}: EmployeeCardProps) => {
   return (
     <Card
       sx={{ height: "100%", display: "flex", flexDirection: "column" }}
@@ -533,42 +560,64 @@ const EmployeeCard = ({ employee, handleOpenDialog, handleDelete, handleOpenSkil
 
         </Stack>
       </CardContent>
-      {/* Boutons d'action supplémentaires */}
-      <CardActions>
-        <Tooltip title="Définir les compétences des employés">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Quiz />}
-            onClick={() => handleOpenSkills(employee)}
-            sx={{ flex: 1 }}
-          >
-            Skills
-          </Button>
-        </Tooltip>
-        <Tooltip title="Gérer les affectations aux magasins">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Store />}
-            onClick={() => handleOpenStoreAssignment(employee)}
-            sx={{ flex: 1 }}
-          >
-            Magasins
-          </Button>
-        </Tooltip>
-        <Tooltip title="Configurer les jours de travail">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Schedule />}
-            onClick={() => handleOpenWorkdays(employee)}
-            sx={{ flex: 1 }}
-          >
-            Horaires
-          </Button>
-        </Tooltip>
-      </CardActions>
+      {/* Boutons d'action supplémentaires — grille 2×2 */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: 1,
+          px: 1.5,
+          pb: 1.5,
+        }}
+      >
+        {(
+          [
+            {
+              title: "Définir les compétences des employés",
+              icon: <Quiz />,
+              label: "Skills",
+              onClick: () => handleOpenSkills(employee),
+            },
+            {
+              title: "Gérer les affectations aux magasins",
+              icon: <Store />,
+              label: "Magasins",
+              onClick: () => handleOpenStoreAssignment(employee),
+            },
+            {
+              title: "Configurer les jours de travail",
+              icon: <Schedule />,
+              label: "Horaires",
+              onClick: () => handleOpenWorkdays(employee),
+            },
+            {
+              title: "Gérer les congés",
+              icon: <BeachAccess />,
+              label: "Congés",
+              onClick: () => handleOpenVacation(employee),
+            },
+          ] as const
+        ).map(({ title, icon, label, onClick }) => (
+          <Tooltip key={label} title={title}>
+            <Box sx={{ minWidth: 0, width: "100%" }}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={icon}
+                onClick={onClick}
+                fullWidth
+                sx={{
+                  justifyContent: "flex-start",
+                  px: 1,
+                  "& .MuiButton-startIcon": { mr: 0.75 },
+                }}
+              >
+                {label}
+              </Button>
+            </Box>
+          </Tooltip>
+        ))}
+      </Box>
     </Card>
-  )
-}
+  );
+};
