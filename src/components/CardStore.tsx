@@ -183,7 +183,7 @@ export const CardStore = ({
                                 </TableHead>
                                 <TableBody>
 
-                                    {store.TaskSchedules
+                                    {store.TaskSchedules?.filter(t=>t.category=="vente")
                                         ?.sort(
                                             (a, b) => new Date(a.scheduled_date).getDay() -
                                                 new Date(b.scheduled_date).getDay()
