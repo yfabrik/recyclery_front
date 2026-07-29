@@ -1,27 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { ScheduleModel } from "../../interfaces/Models";
 import { Calendar } from "./Calendar";
 
-const nowIso = new Date().toISOString();
+/** Matches the local `Task` shape expected by `Calendar`. */
+type CalendarTask = {
+  scheduled_date: Date;
+  task_employees: { username: string }[];
+  assigned_employees: { username: string }[];
+};
 
-const sampleSchedule: ScheduleModel = {
-  id: 1,
-  createdAt: nowIso,
-  name: "Collecte matin",
-  description: "",
-  category: "collection",
-  priority: "medium",
-  required_skills: null,
-  location: "Point Nord",
-  equipment_needed: null,
-  hourly_rate: null,
-  is_recurring: false,
-  recurrence_pattern: "none",
-  notes: "",
-  status: null,
-  scheduled_date: "2026-01-12T11:10:48.678Z",
-  start_time: "2026-01-12T08:00:00.000Z",
-  end_time: "2026-01-12T12:00:00.000Z",
+const sampleSchedule: CalendarTask = {
+  scheduled_date: new Date("2026-01-12T11:10:48.678Z"),
+  task_employees: [{ username: "marie" }],
+  assigned_employees: [{ username: "jean" }],
 };
 
 const meta = {
@@ -37,8 +27,12 @@ const meta = {
     },
   },
   args: {
+    filteredSchedules: [sampleSchedule],
+    handleOpenDialog: () => {},
     isOpeningTask: () => false,
-    getTaskDisplayName: (s: ScheduleModel) => s.name,
+    isPresenceTask: () => false,
+    getTaskDisplayName: () => "Collecte matin",
+    handleDeleteTask: () => {},
   },
 } satisfies Meta<typeof Calendar>;
 
@@ -46,11 +40,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    filteredSchedules: [sampleSchedule],
-  },
-};
+export const Default: Story = {};
 
 export const MultipleSchedules: Story = {
   args: {
@@ -58,12 +48,9 @@ export const MultipleSchedules: Story = {
       sampleSchedule,
       {
         ...sampleSchedule,
-        id: 2,
-        name: "Vente après-midi",
-        category: "vente",
-        start_time: "2026-01-14T14:00:00.000Z",
-        end_time: "2026-01-14T18:00:00.000Z",
-        scheduled_date: "2026-01-14T11:10:48.678Z",
+        scheduled_date: new Date("2026-01-14T11:10:48.678Z"),
+        task_employees: [],
+        assigned_employees: [{ username: "sophie" }],
       },
     ],
   },
@@ -71,6 +58,6 @@ export const MultipleSchedules: Story = {
 
 export const EmptyWeek: Story = {
   args: {
-    filteredSchedules: [],
+    filteredSchedules: [] as CalendarTask[],
   },
 };

@@ -46,7 +46,7 @@ function StoryWrapper(props: ComponentProps<typeof EcoOrganismForm>) {
     axiosInstance.get = ((url: string, config?: unknown) => {
       if (url === "/api/categories") {
         return Promise.resolve({
-          data: { message: "ok", categories: mockCategories },
+          data: { success: true, data: mockCategories },
         } as never);
       }
       return originalGet(url, config as never);

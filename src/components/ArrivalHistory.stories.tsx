@@ -7,22 +7,11 @@ import { ArrivalHistory } from "./ArrivalHistory";
 
 const nowIso = new Date().toISOString();
 
-const categoryBase = {
-  description: null as string | null,
-  icon: null as string | null,
-  parent_id: null as number | null,
-  defaultWeight: 0.5,
-  defaultPrice: 5,
-  IO: 1,
-  priceBasedOnWeight: false,
-  bundlePrice: 0,
-  bundleQuantity: 0,
-};
-
 const mockArrivals: ArrivalModel[] = [
   {
     id: 1,
     createdAt: nowIso,
+    updatedAt: nowIso,
     category_id: 1,
     subcategory_id: 11,
     weight: 25.5,
@@ -32,28 +21,57 @@ const mockArrivals: ArrivalModel[] = [
     collection_point_id: 1,
     source_details: "",
     notes: "",
-    status: "completed",
+    status: "received",
     processed_by: 1,
-    categorie: { id: 1, createdAt: nowIso, name: "Vêtements", ...categoryBase },
-    subcategorie: { id: 11, createdAt: nowIso, name: "Homme", ...categoryBase, parent_id: 1 },
-    User: { id: 1, createdAt: nowIso, username: "marie", email: "marie@recyclerie.fr", role: "employee", isActive: true, last_login: nowIso },
+    categorie: {
+      id: 1,
+      name: "Vêtements",
+      description: null,
+      icon: null,
+      parent_id: null,
+    },
+    subcategorie: {
+      id: 11,
+      name: "Homme",
+      description: null,
+      icon: null,
+      parent_id: 1,
+    },
+    User: {
+      id: 1,
+      username: "marie",
+      email: "marie@recyclerie.fr",
+      role: "employee",
+    },
   },
   {
     id: 2,
     createdAt: nowIso,
+    updatedAt: nowIso,
     category_id: 2,
-    subcategory_id: 0,
+    subcategory_id: null,
     weight: 8,
     arrival_date: nowIso,
     arrival_time: "14:15",
     source_type: "apport",
-    collection_point_id: 0,
+    collection_point_id: null,
     source_details: "Don volontaire",
     notes: "",
-    status: "completed",
+    status: "received",
     processed_by: 1,
-    categorie: { id: 2, createdAt: nowIso, name: "Livres", ...categoryBase, defaultWeight: 0.3, defaultPrice: 2 },
-    User: { id: 1, createdAt: nowIso, username: "marie", email: "marie@recyclerie.fr", role: "employee", isActive: true, last_login: nowIso },
+    categorie: {
+      id: 2,
+      name: "Livres",
+      description: null,
+      icon: null,
+      parent_id: null,
+    },
+    User: {
+      id: 1,
+      username: "marie",
+      email: "marie@recyclerie.fr",
+      role: "employee",
+    },
   },
 ];
 
@@ -68,24 +86,22 @@ function StoryWrapper({ empty = false }: { empty?: boolean }) {
       if (url === "/api/arrivals") {
         return Promise.resolve({
           data: {
-            message: "ok",
-            arrivals: empty ? [] : mockArrivals,
+            success: true,
+            data: empty ? [] : mockArrivals,
             pagination: {
               total: empty ? 0 : mockArrivals.length,
               page: 1,
-              total_pages: 1,
-              items_per_page: 50,
-              has_next: false,
-              has_previous: false,
-              limit: 50,
-              offset: 0,
+              perPage: 50,
+              totalPages: 1,
+              hasNext: false,
+              hasPrevious: false,
             },
           },
         } as never);
       }
       if (url === "/api/collection-points") {
         return Promise.resolve({
-          data: { message: "ok", collection_points: [] },
+          data: { success: true, data: [] },
         } as never);
       }
       return originalGet(url, config as never);

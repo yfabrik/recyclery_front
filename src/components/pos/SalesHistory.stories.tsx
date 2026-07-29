@@ -11,14 +11,18 @@ const nowIso = new Date().toISOString();
 const activeSession: CashSession = {
   id: 101,
   createdAt: nowIso,
+  updatedAt: nowIso,
   opening_amount: 100,
+  closing_amount: null,
+  expected_amount: null,
   difference_amount: 0,
   status: "open",
+  notes: null,
+  closed_at: null,
   cash_register_id: 11,
   user_id: 1,
   CashRegister: {
     id: 11,
-    createdAt: nowIso,
     name: "Caisse A",
     is_active: true,
     recyclery_id: 1,
@@ -29,6 +33,7 @@ const mockTransactions: TransactionModel[] = [
   {
     id: 2001,
     createdAt: nowIso,
+    updatedAt: nowIso,
     change_amount: 0,
     total_amount: 45.5,
     payment_method: "card",
@@ -38,30 +43,27 @@ const mockTransactions: TransactionModel[] = [
     created_by: 1,
     total_amount_before_promotion: 45.5,
     cash_session_id: 101,
+    customer_name: null,
+    customer_email: null,
+    customer_postal_code: null,
+    transactionId: null,
+    global_promotion: null,
+    global_promotion_type: null,
     CashSession: {
       ...activeSession,
       User: {
         id: 1,
-        createdAt: nowIso,
         username: "caissier",
         email: "caissier@recyclerie.fr",
         role: "employee",
-        isActive: true,
-        last_login: nowIso,
       },
       CashRegister: {
         ...activeSession.CashRegister!,
         Recyclery: {
           id: 1,
-          createdAt: nowIso,
           name: "Recyclerie Centre",
-          address: null,
-          phone: null,
-          email: null,
-          city: null,
-          postal_code: null,
+          city: "Lille",
           is_active: true,
-          manager_id: null,
         },
       },
     },
@@ -78,18 +80,21 @@ function StoryWrapper({ empty = false }: { empty?: boolean }) {
     axiosInstance.get = ((url: string, config?: unknown) => {
       if (url === "/api/categories") {
         return Promise.resolve({
-          data: { categories: mockCategories },
+          data: { success: true, data: mockCategories },
         } as never);
       }
       if (url === "/api/sales-transactions") {
         return Promise.resolve({
           data: {
-            message: "ok",
-            transactions: empty ? [] : mockTransactions,
+            success: true,
+            data: empty ? [] : mockTransactions,
             pagination: {
               total: empty ? 0 : 1,
               page: 1,
-              total_pages: 1,
+              perPage: 50,
+              totalPages: 1,
+              hasNext: false,
+              hasPrevious: false,
             },
           },
         } as never);

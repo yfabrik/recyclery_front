@@ -24,6 +24,8 @@ const mockStoreStats: StoreStat[] = [
       lastMonth: {
         transactions: 298,
         revenue: 10800,
+        averageTransaction: 36.2,
+        sessions: 25,
         start: "2026-05-01",
         end: "2026-05-31",
       },
@@ -49,6 +51,8 @@ const mockStoreStats: StoreStat[] = [
       lastMonth: {
         transactions: 210,
         revenue: 7600,
+        averageTransaction: 36.2,
+        sessions: 24,
         start: "2026-05-01",
         end: "2026-05-31",
       },
@@ -77,6 +81,8 @@ const mockStoreHistory: StoreHistory = {
       lastMonth: {
         transactions: 298,
         revenue: 10800,
+        averageTransaction: 36.2,
+        sessions: 25,
         start: "2026-05-01",
         end: "2026-05-31",
       },
@@ -95,6 +101,8 @@ const mockStoreHistory: StoreHistory = {
       lastMonth: {
         transactions: 275,
         revenue: 9900,
+        averageTransaction: 36.0,
+        sessions: 24,
         start: "2026-04-01",
         end: "2026-04-30",
       },
@@ -113,6 +121,8 @@ const mockStoreHistory: StoreHistory = {
       lastMonth: {
         transactions: 260,
         revenue: 9200,
+        averageTransaction: 35.4,
+        sessions: 22,
         start: "2026-03-01",
         end: "2026-03-31",
       },

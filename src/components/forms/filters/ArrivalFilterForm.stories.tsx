@@ -17,7 +17,7 @@ function StoryWrapper() {
     axiosInstance.get = ((url: string, config?: unknown) => {
       if (url === "/api/collection-points") {
         return Promise.resolve({
-          data: { message: "ok", collection_points: mockCollectionPoints },
+          data: { success: true, data: mockCollectionPoints },
         } as never);
       }
       return originalGet(url, config as never);
