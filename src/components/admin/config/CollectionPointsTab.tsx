@@ -70,7 +70,7 @@ const CollectionPointsTab = () => {
   const queryClient = useQueryClient();
   const collectionPoints = useQuery({
     queryKey: ["points"],
-    queryFn: () => fCol().then((response) => response.data.data || []),
+    queryFn: () => fCol({include:["horaires"]}).then((response) => response.data.data || []),
   });
   useQueryErrorToast(
     collectionPoints.error,
