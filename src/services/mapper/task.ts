@@ -73,8 +73,8 @@ export const planningTaskPayloadFromForm = (
   return {
     ...rest,
     notes: notes || null,
-    recurrence_pattern: recurrence_pattern,
-    store_id: store_id,
+    recurrence_pattern: recurrence_pattern || null,
+    store_id: store_id || null,
     description: null,
     location: null,
     required_skills: [] as string[],

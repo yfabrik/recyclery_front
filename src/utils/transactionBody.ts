@@ -1,5 +1,5 @@
+import type { SaleTransactionBaseInput, TransactionItemInput } from "@recyclerie/api/schemas/salesTransactions";
 import type { Schema as CartSchema } from "../components/forms/cartSchema";
-import type { CreateTransactionBody } from "../services/api/transactions";
 import {
   getCartTotal,
   getCartTotalWithGlobalPromotion,
@@ -18,7 +18,7 @@ export const buildTransactionBody = (
     normalizePostalCodeToNull = true,
     includeTotalPrice = false,
   }: BuildTransactionBodyOptions = {},
-): CreateTransactionBody => {
+): SaleTransactionBaseInput  => {
   const subtotal = getCartTotal(data.cart);
   const total = getCartTotalWithGlobalPromotion(
     data.cart,
@@ -67,6 +67,6 @@ export const buildTransactionBody = (
         ...baseItem,
         total_price: item.quantity * item.price,
       };
-    }) as CreateTransactionBody["items"],
+    }) satisfies TransactionItemInput["id"]//SaleTransactionBaseInput["items"],//TODO useless typing ??
   };
 };

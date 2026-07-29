@@ -23,7 +23,7 @@ export type SchemaInputValues = PlanningFormValues;
 /** @deprecated Use PlanningFormOutput */
 export type Schema = PlanningFormOutput;
 
-type ScheduleFormProps = BaseFormProps<SchemaInputValues, Schema> & {
+type ScheduleFormProps = BaseFormProps<PlanningFormValues, PlanningFormOutput> & {
   stores: Pick<StoreModel, "id" | "name">[];
 };
 
@@ -33,7 +33,7 @@ export const PlaningForm = ({
   defaultValues,
   stores,
 }: ScheduleFormProps) => {
-  const form = useForm<SchemaInputValues, unknown, Schema>({
+  const form = useForm<PlanningFormValues, unknown, PlanningFormOutput>({
     resolver: zodResolver(planningFormSchema),
     defaultValues: {
       name: "",
@@ -72,6 +72,7 @@ export const PlaningForm = ({
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} name="category" label="Tâche">
+            {/* //TODO make enum */}
             <MenuItem value="vente">Vente</MenuItem>
             <MenuItem value="point">Precense point collecte</MenuItem>
             <MenuItem value="collection">Collecte</MenuItem>

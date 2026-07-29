@@ -1,8 +1,7 @@
-import type { CartItem } from "../components/forms/cartSchema";
-import type { CategoryModel, TransactionModel } from "../interfaces/Models";
+import { type GlobalPromotionInput, amountsEqual, computeTotalAfterPromotion, getCartLinePrice, getCartTotal, getCartTotalWithGlobalPromotion, getGlobalPromotionDiscount, isAmountEqual, isPaymentInsufficient, roundCurrency, sumCashInPayments, sumPromoCategorie } from "@recyclerie/api/domain/cart";
 import { getPaymentMethodLabel as getPaymentMethodLabelFromConstants } from "../constants/paymentMethods";
-import {type GlobalPromotionInput,amountsEqual,computeTotalAfterPromotion,getCartLinePrice,getCartTotal,getCartTotalWithGlobalPromotion,getGlobalPromotionDiscount,isAmountEqual,isPaymentInsufficient,roundCurrency,sumCashInPayments,sumPromoCategorie} from "@recyclerie/api/domain/cart"
-export {amountsEqual,computeTotalAfterPromotion,getCartLinePrice,getCartTotal,getCartTotalWithGlobalPromotion,getGlobalPromotionDiscount,isAmountEqual,isPaymentInsufficient,roundCurrency,sumCashInPayments,sumPromoCategorie}
+import type { TransactionModel } from "../interfaces/Models";
+export { amountsEqual, computeTotalAfterPromotion, getCartLinePrice, getCartTotal, getCartTotalWithGlobalPromotion, getGlobalPromotionDiscount, isAmountEqual, isPaymentInsufficient, roundCurrency, sumCashInPayments, sumPromoCategorie };
 // type CashInTransaction = {
 //   payment_method: string;
 //   transactionType: string;
@@ -91,6 +90,10 @@ export const getPaymentMethodLabel = (
 export const getTransactionStoreName = (
   transaction: Pick<TransactionModel, "CashSession">,
 ) => transaction.CashSession?.CashRegister?.Recyclery?.name ?? "N/A";
+
+export const getTransactionEmployeeName = (
+  transaction: Pick<TransactionModel, "created_by" | "CashSession">,
+) => transaction.CashSession?.User?.username ?? transaction.created_by ?? "N/A";
 
 export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("fr-FR", {

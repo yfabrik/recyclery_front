@@ -3,7 +3,7 @@ import { Box, Typography } from "@mui/material";
 import JsBarcode from "jsbarcode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import type { GiftCardDto } from "../../services/api/giftCards";
+import type { GiftCardDto } from "@recyclerie/api/responses/giftCards";
 import { formatCurrency } from "../../services/cartService";
 
 interface GiftCardPrintPayload {

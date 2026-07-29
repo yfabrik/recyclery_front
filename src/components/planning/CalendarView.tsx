@@ -287,8 +287,8 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
             }}
           >
             {/* Employés assignés au type de tâche prédéfinie */}
-            {schedule.task_employees &&
-              schedule.task_employees.length > 0 && (
+            {schedule.Employees &&
+              schedule.Employees.length > 0 && (
                 <Box
                   sx={{
                     display: "flex",
@@ -304,9 +304,9 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                       fontSize: "0.6rem",
                     }}
                   >
-                    +{schedule.task_employees.length} autres
+                    +{schedule.Employees.length} autres
                   </Typography>
-                  {schedule.task_employees
+                  {schedule.Employees
                     .slice(0, 2)
                     .map((emp, index) => (
                       <Avatar
@@ -316,22 +316,22 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                           height: 14,
                           fontSize: "0.5rem",
                           bgcolor: getEmployeeColor(
-                            emp.username,
+                            emp.fullName||emp.prenom,
                           ),
                           color: "white",
                           fontWeight: "bold",
                         }}
-                        title={emp.username}
+                        title={emp.fullName||emp.prenom}
                       >
-                        {getEmployeeInitials(emp.username)}
+                        {getEmployeeInitials(emp.fullName||emp.prenom)}
                       </Avatar>
                     ))}
                 </Box>
               )}
 
             {/* Employés assignés à cette tâche spécifique du planning */}
-            {schedule.assigned_employees &&
-              schedule.assigned_employees.length > 0 && (
+            {schedule.Employees &&
+              schedule.Employees.length > 0 && (
                 <Box
                   sx={{
                     display: "flex",
@@ -358,7 +358,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                   >
                     <Groups sx={{ fontSize: 14, mr: 0.5 }} />
                     Employés assignés (
-                    {schedule.assigned_employees.length})
+                    {schedule.Employees.length})
                   </Typography>
                   <Box
                     sx={{
@@ -368,7 +368,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                       justifyContent: "center",
                     }}
                   >
-                    {schedule.assigned_employees.map(
+                    {schedule.Employees.map(
                       (emp, index) => (
                         <Box
                           key={index}
@@ -389,16 +389,16 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               height: 24,
                               fontSize: "0.8rem",
                               bgcolor: getEmployeeColor(
-                                emp.username,
+                                emp.fullName||emp.prenom,
                               ),
                               color: "white",
                               fontWeight: "bold",
                               border: "2px solid #4caf50",
                             }}
-                            title={emp.username}
+                            title={emp.fullName||emp.prenom}
                           >
                             {getEmployeeInitials(
-                              emp.username,
+                              emp.fullName||emp.prenom,
                             )}
                           </Avatar>
                           <Typography
@@ -413,7 +413,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {emp.username}
+                            {emp.fullName||emp.prenom}
                           </Typography>
                         </Box>
                       ),

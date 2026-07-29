@@ -49,13 +49,16 @@ const recurrencePatternEnum = z.enum(RECURRENCE_PATTERNS);
 export const planningFormSchema = z.object({
   name: noEmptyStr("name requis"),
   category: categoryEnum,
-  scheduled_date: z.coerce.date("La date est requise"),
-  start_time: z.coerce.date("L'heure de début est requise"),
-  end_time: z.coerce.date("L'heure de fin est requise"),
+  // Prefer z.date / z.number over coerce+transform so z.input === z.infer;
+  // otherwise RHF `useForm` + zodResolver types `setValue` as `never`.
+  scheduled_date: z.date("La date est requise"),
+  start_time: z.date("L'heure de début est requise"),
+  end_time: z.date("L'heure de fin est requise"),
   priority: noEmptyStr("La priorité est requise"),
-  store_id: z.union([nullString(), idSchema()]),
-  recurrence_pattern: z.union([nullString(), recurrencePatternEnum]),
-  notes: z.string().transform((v) => (v == "" ? null : v)),
+  // Not idSchema() (coerce.number): keep "" | number in form state without input/output skew.
+  store_id: z.union([z.literal(""), z.number().positive()]),
+  recurrence_pattern: z.union([z.literal(""), recurrencePatternEnum]),
+  notes: z.string(),
 });
 
 export type PlanningFormOutput = z.infer<typeof planningFormSchema>;

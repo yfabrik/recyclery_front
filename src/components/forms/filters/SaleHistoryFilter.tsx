@@ -15,24 +15,27 @@ import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
     getSaleHistoryFilterDefaults,
     saleHistoryFilterSchema,
+    type SaleHistoryFilterInput,
     type SaleHistoryFilters as Filters,
 } from "../../../services/schema/sale";
 
 interface FilterFormProps {
-    defaultValues: Filters;
+    defaultValues: SaleHistoryFilterInput;
     onChange: (values: Filters) => void;
 }
 
 export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) => {
 
-    const filters = useForm({
+    // Explicit input/output generics: filterIsoDate uses coerce+transform, so z.input ≠ z.infer.
+    // Without this, watch(callback) is typed as returning `never` and .unsubscribe breaks.
+    const filters = useForm<SaleHistoryFilterInput, unknown, Filters>({
         defaultValues,
         resolver: zodResolver(saleHistoryFilterSchema),
     });
     const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
     const onSubmit = (data: Filters) => {
-        markEmitted(data);
+        markEmitted(filters.getValues());
         onChange(data);
     };
 

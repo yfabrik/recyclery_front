@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Euro, Scale } from "@mui/icons-material";
 import { Grid } from "@mui/material";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Path, type PathValue } from "react-hook-form";
 import type { CategoryModel } from "../../interfaces/Models";
 import { sumPromoCategorie } from "../../services/cartService";
 import {
@@ -45,8 +45,6 @@ export const ManualItemForm = ({
     },
   });
 
-
-
   const categoryId = form.watch("category_id");
   const subcategoryId = form.watch("subcategory_id");
 
@@ -76,6 +74,20 @@ export const ManualItemForm = ({
     }
 
   }, [categoryId, subcategoryId, categories]);
+  
+  const setNumericField = async (
+    name: "price" | "weight",
+    unit: string,
+  ) => {
+    const field = name as Path<ManualItemFormValues>;
+    const value = Number(
+      (await prompt("", form.getValues(field)?.toString() || "", { unit })) ?? 0,
+    );
+    form.setValue(field, value as PathValue<ManualItemFormValues, Path<ManualItemFormValues>>, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
   // const onDefaults = useCallback(
   //   ({
   //     category,
@@ -111,21 +123,7 @@ export const ManualItemForm = ({
               label="Poids (kg) - Optionnel"
               name="weight"
               extra={{
-                onClick: async () =>
-                  form.setValue(
-                    "weight",
-                    await prompt(
-                      "",
-                      form.getValues("weight")?.toString() || "",
-                      {
-                        unit: "Kg",
-                      },
-                    ),
-                    {
-                      shouldDirty: true,
-                      shouldTouch: true
-                    }
-                  ),
+                onClick: () => setNumericField("weight", "Kg"),
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",
@@ -150,21 +148,7 @@ export const ManualItemForm = ({
               control={form.control}
               name="price"
               extra={{
-                onClick: async () =>
-                  form.setValue(
-                    "price",
-                    await prompt(
-                      "",
-                      form.getValues("price")?.toString() || "",
-                      {
-                        unit: "€",
-                      },
-                    ),
-                    {
-                      shouldDirty: true,
-                      shouldTouch: true
-                    }
-                  ),
+                onClick: () => setNumericField("price", "€"),
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",

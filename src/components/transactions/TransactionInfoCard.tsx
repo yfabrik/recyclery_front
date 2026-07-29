@@ -1,7 +1,6 @@
 import { Description } from "@mui/icons-material";
 import { Card, Chip, Grid, Typography } from "@mui/material";
 import type { TransactionModel } from "../../interfaces/Models";
-import type { RefundTransaction } from "../../services/api/transactions";
 import { getPaymentMethodColor } from "../../constants/paymentMethods";
 import {
   getTransactionTypeColor,
@@ -11,7 +10,7 @@ import { getPaymentMethodLabel, getTransactionStoreName } from "../../services/c
 
 interface TransactionInfoCardProps {
   transaction: TransactionModel;
-  refunds?: RefundTransaction[];
+  refunds?: TransactionModel[];
 }
 
 export const TransactionInfoCard = ({

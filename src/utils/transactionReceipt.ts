@@ -1,16 +1,16 @@
-import { toast } from "react-toastify";
-import type { CashSession } from "../interfaces/Models";
-import type { UserRefDto } from "@recyclerie/api/responses/users";
-import type { CartItem } from "../components/forms/cartSchema";
-import { getTransactionDetails } from "../services/api/transactions";
+import type { GlobalPromotionInput } from "@recyclerie/api/domain/cart";
+import type { CategoryDto } from "@recyclerie/api/responses/categories";
 import type {
   SalesTransactionDto,
-  SalesTransactionItemDto,
+  SalesTransactionItemDto
 } from "@recyclerie/api/responses/salesTransactions";
-import type { CategoryDto } from "@recyclerie/api/responses/categories";
+import type { UserRefDto } from "@recyclerie/api/responses/users";
+import { toast } from "react-toastify";
+import type { CartItem } from "../components/forms/cartSchema";
+import type { CashSession } from "../interfaces/Models";
+import { getTransactionDetails } from "../services/api/transactions";
 import {
   getTransactionGlobalPromotion,
-  type GlobalPromotionInput,
 } from "../services/cartService";
 
 export type ReceiptSale = SalesTransactionDto;
@@ -22,7 +22,7 @@ export interface ReceiptPrintPayload {
   cashSession: CashSession;
   /** POS passes AuthUser; reprint uses CashSession.User (UserRefDto). */
   user: UserRefDto;
-  global_promotion?: GlobalPromotionInput | null;
+  global_promotion?: GlobalPromotionInput|null
 }
 
 export type ReceiptPrintTrigger = (payload: ReceiptPrintPayload) => void;

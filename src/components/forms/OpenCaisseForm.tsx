@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AttachMoney, Euro } from "@mui/icons-material";
 import { Button, Grid, InputAdornment, MenuItem } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import type { StoreModel } from "../../interfaces/Models";
@@ -46,7 +46,9 @@ export const OpenCaisseForm = ({
     enabled: !storesProp,
   });
 
-  const storeOptions = storesProp ?? storesQuery.data ?? [];
+  const storeOptions = useMemo(() => {
+    return storesProp ?? storesQuery.data ?? [];
+  }, [storesProp, storesQuery.data]);
 
   const { prompt, PromptDialog } = usePrompt();
   const form = useForm({

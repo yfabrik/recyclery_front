@@ -94,7 +94,7 @@ export const scheduleCustomPayloadFromForm = (
     end_time: data.end_time,
     category: "custom",
     notes: data.notes || null,
-    store_id: data.store_id,
+    store_id: data.store_id || null,
     is_recurring: !!data.recurrence_pattern,
     recurrence_pattern: data.recurrence_pattern || null,
   };

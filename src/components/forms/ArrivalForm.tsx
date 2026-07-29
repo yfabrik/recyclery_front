@@ -9,7 +9,7 @@ import {
 } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
-import { useForm, useWatch, type UseFormReset } from "react-hook-form";
+import { useForm, useWatch, type Path, type PathValue, type UseFormReset } from "react-hook-form";
 
 import type {
   CategoryModel,
@@ -187,7 +187,19 @@ export const ArrivalForm = ({
   //   form.setValue("subcategory_id", "");
   // }, [categoryId, form]);
 
-
+  const setNumericField = async (
+    name: "price" | "weight",//TODO fieldPath type ??
+    unit: string,
+  ) => {
+    const field = name as Path<ArrivalFormValues>;//TODO fieldPath not path ??
+    const value = Number(
+      (await prompt("", form.getValues(field)?.toString() || "", { unit })) ?? 0,
+    );
+    form.setValue(field, value as PathValue<ArrivalFormValues, Path<ArrivalFormValues>>, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
 
   return (
     <>
@@ -216,14 +228,7 @@ export const ArrivalForm = ({
                   name="weight"
                   label="Poids (kg)"
                   extra={{
-                    onClick: async () =>
-                      form.setValue(
-                        "weight",
-                        await prompt(
-                          "",
-                          form.getValues("weight")?.toString() || "",
-                        ),
-                      ),
+                      onClick: () => setNumericField("weight", "Kg"),
                     placeholder: "Cliquez pour saisir le poids",
                     sx: {
                       "& .MuiInputBase-input": {
