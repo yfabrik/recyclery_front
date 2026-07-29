@@ -6,6 +6,7 @@ export const mockStores: StoreModel[] = [
   {
     id: 1,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Recyclerie Centre",
     address: "12 rue de la Recyclerie",
     city: "Lille",
@@ -14,11 +15,12 @@ export const mockStores: StoreModel[] = [
     email: "centre@recyclerie.fr",
     is_active: true,
     manager_id: 1,
-    caisses: [{ id: 1, createdAt: nowIso, name: "Caisse 1", is_active: true, recyclery_id: 1 }],
+    caisses: [{ id: 1, name: "Caisse 1", is_active: true, recyclery_id: 1 }],
   },
   {
     id: 2,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Recyclerie Nord",
     address: "45 avenue du Nord",
     city: "Tourcoing",
@@ -35,6 +37,7 @@ export const mockEcoOrganisms: EcoOrgModel[] = [
   {
     id: 1,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "EcoVert",
     description: "Traitement textiles",
     contact_email: "contact@ecovert.fr",
@@ -46,6 +49,7 @@ export const mockEcoOrganisms: EcoOrgModel[] = [
   {
     id: 2,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "RecycloPlus",
     description: null,
     contact_email: null,

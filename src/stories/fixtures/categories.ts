@@ -6,6 +6,7 @@ export const mockCategories: CategoryModel[] = [
   {
     id: 1,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Vêtements",
     description: null,
     icon: "Checkroom",
@@ -20,6 +21,7 @@ export const mockCategories: CategoryModel[] = [
       {
         id: 11,
         createdAt: nowIso,
+        updatedAt: nowIso,
         name: "Homme",
         description: null,
         icon: "Person",
@@ -34,6 +36,7 @@ export const mockCategories: CategoryModel[] = [
       {
         id: 12,
         createdAt: nowIso,
+        updatedAt: nowIso,
         name: "Femme",
         description: null,
         icon: null,
@@ -50,6 +53,7 @@ export const mockCategories: CategoryModel[] = [
   {
     id: 2,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Livres",
     description: null,
     icon: "Book",
@@ -65,6 +69,7 @@ export const mockCategories: CategoryModel[] = [
   {
     id: 3,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Mobilier",
     description: null,
     icon: "Chair",
@@ -79,6 +84,7 @@ export const mockCategories: CategoryModel[] = [
       {
         id: 31,
         createdAt: nowIso,
+        updatedAt: nowIso,
         name: "Tables",
         description: null,
         icon: null,
@@ -103,6 +109,7 @@ export const mockCollectionPoints: CollectionPointModel[] = [
   {
     id: 1,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Point collecte Centre",
     address: "12 rue de la Recyclerie",
     city: "Lille",
@@ -118,6 +125,7 @@ export const mockCollectionPoints: CollectionPointModel[] = [
   {
     id: 2,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Point collecte Nord",
     address: "45 avenue du Nord",
     city: "Tourcoing",
