@@ -5,7 +5,7 @@ import {
   getCartTotalWithGlobalPromotion,
   isPaymentInsufficient,
   roundCurrency,
-} from "../../services/cartService";
+} from "../cartService";
 
 export const itemSchema = z.object({
   quantity: z.number().nonnegative(),
@@ -23,7 +23,7 @@ export const itemSchema = z.object({
   bundleQuantity: z.number().nullish(),
 });
 
-export const schema = z
+export const cartFormSchema = z
   .object({
     cart: z.array(itemSchema).min(1, "le panier doit avoir au moins un article"),
     global_promotion: z.object({
@@ -66,7 +66,12 @@ export const schema = z
     }
   });
 
-export type Schema = z.infer<typeof schema>;
-export type CartFormValues = z.input<typeof schema>;
+/** @deprecated Prefer cartFormSchema */
+export const schema = cartFormSchema;
+
+export type CartFormOutput = z.infer<typeof cartFormSchema>;
+/** @deprecated Use CartFormOutput */
+export type Schema = CartFormOutput;
+export type CartFormValues = z.input<typeof cartFormSchema>;
 export type CartItemInput = z.input<typeof itemSchema>;
 export type CartItem = z.infer<typeof itemSchema>;

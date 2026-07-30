@@ -8,7 +8,7 @@ import {
     type PromoFormOutput,
     type PromoFormValues,
 } from "../../services/schema/promotion"
-import { FormCategorySubcategoryFields, FormDate, FormInput, FormMultiSelect, FormSwitch, type BaseFormProps } from "./FormBase"
+import { FormCategorySubcategoryFields, FormDate, FormMultiSelect, FormNumber, FormSwitch, type BaseFormProps } from "./FormBase"
 
 export type { PromoFormOutput, PromoFormValues }
 /** @deprecated Use PromoFormOutput */
@@ -40,7 +40,7 @@ export const PromoForm = ({
             subcategory_id: "",
             promotionValue: "",
             startDate: new Date(),
-            endDate: "",
+            endDate: null,
             isActive: true,
             ...normalizedDefaults,
             stores: normalizedDefaults.stores ?? [""],
@@ -103,21 +103,10 @@ export const PromoForm = ({
 
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput
+                <FormNumber
                     control={form.control}
                     label="promotion (%)"
                     name="promotionValue"
-                    extra={{
-                        type: "number",
-                        onChange: (e) => {
-                            const raw = e.target.value
-                            form.setValue(
-                                "promotionValue",
-                                (raw === "" ? "" : Number(raw)) as never,
-                                { shouldValidate: true, shouldDirty: true },
-                            )
-                        },
-                    }}
                 />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>

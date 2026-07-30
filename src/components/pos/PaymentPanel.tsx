@@ -18,7 +18,7 @@ import type {
   UseFieldArrayRemove,
 } from "react-hook-form";
 import { useFormContext, useWatch } from "react-hook-form";
-import type { CartFormValues, Schema as CartSchema } from "../forms/cartSchema";
+import type { CartFormValues, CartFormOutput as CartSchema } from "../../services/schema/cart";
 import { FormInput, FormSelect } from "../forms/FormBase";
 import {
   formatCurrency,

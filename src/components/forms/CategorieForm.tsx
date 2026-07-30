@@ -8,6 +8,7 @@ import {
 import {
   FormIconSelect,
   FormInput,
+  FormNumber,
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
@@ -45,6 +46,7 @@ export const CategorieForm = ({
   });
 
   const prixAuKg = form.watch("priceBasedOnWeight");
+
   return (
     <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <FormInput
@@ -59,37 +61,31 @@ export const CategorieForm = ({
         name="priceBasedOnWeight"
       />
       {!prixAuKg && (
-        <FormInput
+        <FormNumber
           control={form.control}
           label="poids par défaut"
           name="defaultWeight"
           extra={{ margin: "normal" }}
         />
       )}
-      <FormInput
+      <FormNumber
         control={form.control}
         label="prix par défaut"
         name="defaultPrice"
         extra={{ margin: "normal" }}
       />
 
-      <FormInput
+      <FormNumber
         control={form.control}
         label="produits par lots"
         name="bundleQuantity"
-        extra={{
-          type: "number",
-          margin: "normal",
-        }}
+        extra={{ margin: "normal" }}
       />
-      <FormInput
+      <FormNumber
         control={form.control}
         label="prix des lots"
         name="bundlePrice"
-        extra={{
-          type: "number",
-          margin: "normal",
-        }}
+        extra={{ margin: "normal" }}
       />
       <FormInput
         control={form.control}

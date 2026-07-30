@@ -2,18 +2,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import {
-  USER_ROLE_VALUES,
   USER_ROLES,
 } from "../../constants/userRoles";
 import type { StoreModel } from "../../interfaces/Models";
 import {
-  noEmptyStr,
-  optionalId,
-  phoneSchema,
-} from "../../interfaces/ZodTypes";
-import { emptyToNull } from "../../services/zodTransform";
+  userPayloadFromForm,
+  type UserFormPayload,
+} from "../../services/mapper/user";
+import {
+  userFormSchema,
+  type UserFormOutput,
+  type UserFormValues,
+} from "../../services/schema/user";
 import {
   FormInput,
   FormMultiSelect,
@@ -23,50 +24,9 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-const userFormSchema = z.object({
-  username: noEmptyStr("username requis"),
-  email: z.email("email requis"),
-  first_name: z.string(),
-  last_name: z.string(),
-  phone: z.union([z.literal(""), phoneSchema()]),
-  password: z.string(),
-  role: z.enum(USER_ROLE_VALUES, "role requis"),
-  recyclery_id: optionalId(),
-  isActive: z.boolean(),
-  managedStores: z.array(z.number().positive()),
-});
-
-export type UserFormValues = z.infer<typeof userFormSchema>;
-export type UserFormPayload = {
-  username: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  password: string;
-  role: UserFormValues["role"];
-  recyclery_id: number | null;
-  isActive: boolean;
-  managedStores: number[];
-};
-
+export type { UserFormValues, UserFormOutput, UserFormPayload };
 /** @deprecated Use UserFormPayload */
 export type Schema = UserFormPayload;
-
-export function userPayloadFromForm(data: UserFormValues): UserFormPayload {
-  return {
-    username: data.username,
-    email: data.email,
-    first_name: emptyToNull(data.first_name),
-    last_name: emptyToNull(data.last_name),
-    phone: emptyToNull(data.phone),
-    password: data.password,
-    role: data.role,
-    recyclery_id: data.recyclery_id === "" ? null : data.recyclery_id,
-    isActive: data.isActive,
-    managedStores: data.managedStores,
-  };
-}
 
 export interface UserFormProps
   extends Omit<
@@ -83,7 +43,7 @@ export const UserForm = ({
   defaultValues,
   stores,
 }: UserFormProps) => {
-  const form = useForm<UserFormValues, unknown, UserFormValues>({
+  const form = useForm<UserFormValues, unknown, UserFormOutput>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
       username: "",

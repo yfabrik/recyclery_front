@@ -1,5 +1,6 @@
 import z from "zod";
 import {
+  optionalFormDate,
   optionalId,
   requiredFormId,
   requiredPercentNumber,
@@ -10,7 +11,7 @@ export const promoFormSchema = z.object({
   subcategory_id: optionalId(),
   promotionValue: requiredPercentNumber("promotion requise"),
   startDate: z.date("date de début requise"),
-  endDate: z.union([z.literal(""), z.date()]),
+  endDate: optionalFormDate(),
   isActive: z.boolean(),
   stores: z.array(z.union([z.literal(""), z.number().positive()])),
 });

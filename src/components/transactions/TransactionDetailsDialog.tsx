@@ -11,7 +11,7 @@ import {
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import { useSelectedTransaction } from "../../hooks/useSelectedTransaction";
 import { Loading } from "../Loading";
-import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
+import type { CartFormOutput as EditTransactionSchema } from "../../services/schema/cart";
 import { TransactionDetailsContent } from "./TransactionDetailsContent";
 
 const EDIT_TRANSACTION_FORM_ID = "editTransactionForm";

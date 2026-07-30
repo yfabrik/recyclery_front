@@ -2,17 +2,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import type { EmployeeModel, SkillModel } from "../../interfaces/Models";
 import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 import { detailEmployee } from "../../services/api/employee";
 import { fetchSkills } from "../../services/api/skills";
+import {
+  employeeSkillFormSchema,
+  type EmployeeSkillFormOutput,
+  type EmployeeSkillFormValues,
+} from "../../services/schema/employee";
 import { FormCheckboxGroup, type BaseFormProps } from "./FormBase";
 
-const schema = z.object({
-  skills: z.array(z.number()),
-});
-export type Schema = z.infer<typeof schema>;
+export type { EmployeeSkillFormValues, EmployeeSkillFormOutput };
+/** @deprecated Use EmployeeSkillFormOutput */
+export type Schema = EmployeeSkillFormOutput;
 
 function toSkillIds(skills: SkillModel[] | undefined): number[] {
   return skills?.map((s) => s.id) ?? [];
@@ -22,7 +25,9 @@ export const EmployeeSkillForm = ({
   formId,
   onSubmit,
   employee,
-}: BaseFormProps<Schema> & { employee: EmployeeModel }) => {
+}: BaseFormProps<EmployeeSkillFormValues, EmployeeSkillFormOutput> & {
+  employee: EmployeeModel;
+}) => {
   const skills = useQuery({
     queryKey: ["skills"],
     queryFn: () =>
@@ -45,9 +50,13 @@ export const EmployeeSkillForm = ({
     "Erreur lors du chargement des compétences de l'employée",
   );
 
-  const skillsForm = useForm<Schema>({
+  const skillsForm = useForm<
+    EmployeeSkillFormValues,
+    unknown,
+    EmployeeSkillFormOutput
+  >({
     defaultValues: { skills: [] },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(employeeSkillFormSchema),
   });
 
   useEffect(() => {
@@ -55,17 +64,22 @@ export const EmployeeSkillForm = ({
       skillsForm.reset({ skills: toSkillIds(userSkills.data) });
     }
   }, [userSkills.data, skillsForm]);
-    return (
-        <form id={formId} onSubmit={skillsForm.handleSubmit(onSubmit, (errors) => console.log(errors))}>
-            <FormCheckboxGroup
-                name="skills"
-                control={skillsForm.control}
-                label="Compétences de l'employée"
-                options={(skills.data ?? []).map((skill) => ({
-                    value: skill.id,
-                    label: skill.name,
-                }))}
-            />
-        </form>
-    )
-}
+  return (
+    <form
+      id={formId}
+      onSubmit={skillsForm.handleSubmit(onSubmit, (errors) =>
+        console.log(errors),
+      )}
+    >
+      <FormCheckboxGroup
+        name="skills"
+        control={skillsForm.control}
+        label="Compétences de l'employée"
+        options={(skills.data ?? []).map((skill) => ({
+          value: skill.id,
+          label: skill.name,
+        }))}
+      />
+    </form>
+  );
+};

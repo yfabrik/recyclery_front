@@ -59,7 +59,7 @@ export const CreateCaisseDialog = ({
   useQueryErrorToast(caisses.error, "Erreur lors du chargement des caisses");
 
   const [formMethods, setFormMethods] = useState<{
-    reset: (values?: Schema) => void;
+    reset: (values?: Partial<Schema>) => void;
   } | null>(null);
 
   const addCaisse = useMutation({

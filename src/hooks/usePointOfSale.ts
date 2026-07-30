@@ -4,8 +4,8 @@ import { toast } from "react-toastify";
 import {
   type CartFormValues,
   type CartItem,
-  type Schema as CartSchema,
-} from "../components/forms/cartSchema";
+  type CartFormOutput as CartSchema,
+} from "../services/schema/cart";
 import type {
   CashSession,
   CategoryModel,
@@ -22,12 +22,13 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-import { buildTransactionBody } from "../utils/transactionBody";
+import { buildTransactionBody } from "../services/mapper/cart";
 import type {
   ReceiptPrintTrigger,
   ReceiptSale,
 } from "../utils/transactionReceipt";
 import { useCheckoutFormCore } from "./useCheckoutFormCore";
+import { manualItemPayloadFromForm } from "../services/mapper/label";
 import type { ManualItemFormOutput as ManualItemSchema } from "../services/schema/item";
 import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
 
@@ -236,7 +237,15 @@ export const usePointOfSale = ({
   };
 
   const handleAddManualItem = (data: ManualItemSchema) => {
-    const manualItem = handleitem(data);
+    const mapped = manualItemPayloadFromForm(data);
+    const manualItem = handleitem({
+      category_id: mapped.category_id,
+      subcategory_id: mapped.subcategory_id ?? "",
+      weight: mapped.weight,
+      price: mapped.price,
+      description: mapped.description ?? "",
+      promotion: mapped.promotion,
+    });
     append(manualItem);
     onManualItemAdded?.();
     toast.success(`${manualItem.name} ajouté au panier`);

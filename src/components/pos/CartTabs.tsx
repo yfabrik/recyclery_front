@@ -1,6 +1,6 @@
 import { Add, Close } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
-import type { Schema as CartSchema } from "../forms/cartSchema";
+import type { CartFormOutput as CartSchema } from "../../services/schema/cart";
 
 interface CartTabsProps {
   tabValue: number;

@@ -3,33 +3,20 @@ import { AttachMoney, Euro } from "@mui/icons-material";
 import { Button, Grid, InputAdornment } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
-import { emptyToNull } from "../../services/zodTransform";
+import {
+  closeCaissePayloadFromForm,
+  type CloseCaissePayload,
+} from "../../services/mapper/caisse";
+import {
+  closeCaisseFormSchema,
+  type CloseCaisseFormOutput,
+  type CloseCaisseFormValues,
+} from "../../services/schema/caisse";
 import { usePrompt } from "../Prompt";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
-export type CloseCaissePayload = {
-  closing_amount: number;
-  notes: string | null;
-};
-
-const schema = z.object({
-  closing_amount: z
-    .union([
-      z.literal(""),
-      z
-        .number("Veuillez saisir le montant de fermeture")
-        .positive("Veuillez saisir le montant de fermeture"),
-    ])
-    .refine((v): v is number => v !== "", {
-      message: "Veuillez saisir le montant de fermeture",
-    }),
-  notes: z.string(),
-});
-
-export type CloseCaisseFormValues = z.input<typeof schema>;
-export type CloseCaisseFormOutput = z.infer<typeof schema>;
+export type { CloseCaisseFormValues, CloseCaisseFormOutput, CloseCaissePayload };
 /** @deprecated Use CloseCaissePayload for submit */
 export type Schema = CloseCaissePayload;
 
@@ -49,7 +36,7 @@ export const CloseCaisseForm = ({
   expectedAMount?: number;
 }) => {
   const form = useForm<CloseCaisseFormValues, unknown, CloseCaisseFormOutput>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(closeCaisseFormSchema),
     defaultValues: {
       closing_amount: "",
       notes: "",
@@ -63,14 +50,9 @@ export const CloseCaisseForm = ({
     setState("prepare");
   }, [watchedValues, setState]);
 
-  const toPayload = (data: CloseCaisseFormOutput): CloseCaissePayload => ({
-    closing_amount: data.closing_amount,
-    notes: emptyToNull(data.notes),
-  });
-
   const submited = (data: CloseCaisseFormOutput) => {
     if (state == "prepare") setState("valid");
-    else onSubmit(toPayload(data));
+    else onSubmit(closeCaissePayloadFromForm(data));
   };
 
   return (

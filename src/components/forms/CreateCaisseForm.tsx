@@ -1,33 +1,39 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Button } from "@mui/material";
-import { useForm, type UseFormReset } from "react-hook-form";
-import * as z from "zod";
-import { noEmptyStr } from "../../interfaces/ZodTypes";
-import { FormInput, type BaseFormProps } from "./FormBase";
 import { useEffect } from "react";
+import { useForm, type UseFormReset } from "react-hook-form";
+import {
+  createCaissePayloadFromForm,
+  type CreateCaissePayload,
+} from "../../services/mapper/caisse";
+import {
+  createCaisseFormSchema,
+  type CreateCaisseFormOutput,
+  type CreateCaisseFormValues,
+} from "../../services/schema/caisse";
+import { FormInput, type BaseFormProps } from "./FormBase";
 
-const schema = z.object({
-  name: noEmptyStr("nom requis"),
-});
-
-export type Schema = z.infer<typeof schema>;
+export type { CreateCaisseFormValues, CreateCaisseFormOutput, CreateCaissePayload };
+/** @deprecated Use CreateCaisseFormOutput */
+export type Schema = CreateCaissePayload;
 
 export const CreateCaisseForm = ({
   formId,
   onSubmit,
   onReady,
-}: BaseFormProps<Schema> & {
-  onReady?: (methods: { reset: UseFormReset<Schema> }) => void;
+}: BaseFormProps<CreateCaisseFormValues, CreateCaissePayload> & {
+  onReady?: (methods: {
+    reset: UseFormReset<CreateCaisseFormValues>;
+  }) => void;
 }) => {
-  const form = useForm({
+  const form = useForm<CreateCaisseFormValues, unknown, CreateCaisseFormOutput>({
     defaultValues: {
       name: "",
     },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(createCaisseFormSchema),
   });
 
   const reset = form.reset;
-  // give parent access to reset
   useEffect(() => {
     if (onReady) {
       onReady({ reset });
@@ -35,12 +41,14 @@ export const CreateCaisseForm = ({
   }, [onReady, reset]);
 
   const name = form.watch("name");
-  // useEffect(() => {
-  //   form.reset();
-  // }, [form.formState.isSubmitSuccessful]);
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit((data) =>
+        onSubmit(createCaissePayloadFromForm(data)),
+      )}
+    >
       <Box sx={{ mb: 2, mt: 2 }}>
         <FormInput
           control={form.control}

@@ -20,7 +20,7 @@ import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
 import type { Schema as RefundSchema } from "../forms/RefundForm";
-import type { Schema as EditTransactionSchema } from "../forms/cartSchema";
+import type { CartFormOutput as EditTransactionSchema } from "../../services/schema/cart";
 import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
 import { SaleHistoryFilter } from "../forms/filters/SaleHistoryFilter";
@@ -29,7 +29,7 @@ import {
   saleHistoryFilterSchema,
 } from "../../services/schema/sale";
 import { buildCreateRefundBody } from "../../utils/refundBody";
-import { buildUpdateTransactionBody } from "../../utils/editTransactionBody";
+import { buildUpdateTransactionBody } from "../../services/mapper/cart";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { SalesHistoryExport } from "./SalesHistoryExport";
 import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";

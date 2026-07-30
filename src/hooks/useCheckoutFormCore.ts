@@ -13,10 +13,10 @@ import {
 import { getGiftCardByCode } from "../services/api/giftCards";
 import { getApiErrorMessage } from "../utils/apiToastMessage";
 import {
-  schema,
+  cartFormSchema,
   type CartFormValues,
-  type Schema as CartSchema,
-} from "../components/forms/cartSchema";
+  type CartFormOutput as CartSchema,
+} from "../services/schema/cart";
 
 const recalculatePaymentSplits = (
   currentSplits: CartSchema["payment_splits"],
@@ -66,7 +66,7 @@ export const useCheckoutFormCore = ({
 
   const form = useForm<CartFormValues, unknown, CartSchema>({
     defaultValues: defaultValues as CartFormValues,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(cartFormSchema),
   });
 
   const {

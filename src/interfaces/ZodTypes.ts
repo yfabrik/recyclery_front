@@ -86,6 +86,9 @@ export const requiredPercentNumber = (message?: string) =>
 export const noEmptyStr = (message?: string) =>
   z.string({ message }).trim().nonempty({ message });
 
+/** Optional form date: unset/cleared picker = `null` (matches FormDate clear). */
+export const optionalFormDate = () => z.union([z.null(), z.date()]);
+
 /**
  * @deprecated Prefer `z.string()` / `optionalId` in form schemas + `emptyToNull` in mappers.
  * Transform skews z.input vs z.infer. Filters may keep using this until migrated.

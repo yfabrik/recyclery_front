@@ -21,6 +21,7 @@ import { omitNullish } from "../../services/zodTransform";
 import {
   FormDate,
   FormInput,
+  FormNumber,
   FormSelect,
   FormTime,
   type BaseFormProps,
@@ -150,21 +151,12 @@ export const TaskForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             name="hourly_rate"
             label="Taux horaire (€)"
             extra={{
-              type: "number",
-              inputProps: { step: 0.01 },
-              onChange: (e) => {
-                const raw = e.target.value;
-                form.setValue(
-                  "hourly_rate",
-                  raw === "" ? "" : Number(raw),
-                  { shouldValidate: true, shouldDirty: true },
-                );
-              },
+              slotProps: { htmlInput: { step: 0.01 } },
             }}
           />
         </Grid>

@@ -6,7 +6,7 @@ import type {
 } from "@recyclerie/api/responses/salesTransactions";
 import type { UserRefDto } from "@recyclerie/api/responses/users";
 import { toast } from "react-toastify";
-import type { CartItem } from "../components/forms/cartSchema";
+import type { CartItem } from "../services/schema/cart";
 import type { CashSession } from "../interfaces/Models";
 import { getTransactionDetails } from "../services/api/transactions";
 import {

@@ -183,6 +183,13 @@ export const ArrivalForm = ({
     onReady?.({ reset });
   }, [onReady, reset]);
 
+  const sourceType = useWatch({ control: form.control, name: "source_type" });
+  useEffect(() => {
+    if (sourceType !== "point") {
+      form.setValue("collection_point_id", "");
+    }
+  }, [sourceType, form]);
+
   // Reset subcategory when category changes to avoid out-of-range select values.
   // useEffect(() => {
   //   form.setValue("subcategory_id", "");

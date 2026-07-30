@@ -17,7 +17,8 @@ import {
 import {
   getApiErrorMessage
 } from "../utils/apiToastMessage";
-import { EmployeeStoresForm, type Schema } from "./forms/EmployeeStoresForm";
+import { employeeStoresPayloadFromForm } from "../services/mapper/employee";
+import { EmployeeStoresForm, type EmployeeStoresFormOutput } from "./forms/EmployeeStoresForm";
 interface EmployeeStoreAssignmentProps {
   employeeId: number;
   employeeName: string;
@@ -61,14 +62,14 @@ const EmployeeStoreAssignment = ({
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde des affectations")),
   })
 
-  const handleSave = async (data: Schema) => {
+  const handleSave = async (data: EmployeeStoresFormOutput) => {
     try {
       await removeAssignements.mutateAsync(employeeId);
-      for (const storeId of data.assignedStoreIds) {
+      for (const assignment of employeeStoresPayloadFromForm(data)) {
         await addAssignment.mutateAsync({
           employee_id: employeeId,
-          store_id: storeId,
-          is_primary: storeId === data.primaryStoreId,
+          store_id: assignment.store_id,
+          is_primary: assignment.is_primary,
         });
       }
       queryClient.invalidateQueries({ queryKey: ["assignments"] });

@@ -9,7 +9,7 @@ import { PaymentPanel } from "../pos/PaymentPanel";
 import { RefundHistoryCard } from "./RefundHistoryCard";
 import { TransactionFinancialSummaryCard } from "./TransactionFinancialSummaryCard";
 import { TransactionInfoCard } from "./TransactionInfoCard";
-import { type CartFormValues, type Schema } from "../forms/cartSchema";
+import { type CartFormValues, type CartFormOutput as Schema } from "../../services/schema/cart";
 import { useCheckoutFormCore } from "../../hooks/useCheckoutFormCore";
 import { toast } from "react-toastify";
 import { collectFormErrorMessages } from "../../utils/formErrors";

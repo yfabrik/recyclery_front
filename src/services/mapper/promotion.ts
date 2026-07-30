@@ -13,7 +13,7 @@ export function promoToFormValues(
     subcategory_id: promo.subcategory_id ?? "",
     promotionValue: promo.promotionValue,
     startDate: new Date(promo.startDate),
-    endDate: promo.endDate ? new Date(promo.endDate) : "",
+    endDate: promo.endDate ? new Date(promo.endDate) : null,
     isActive: promo.isActive,
     stores: promo.stores?.length ? promo.stores.map((store) => store.id) : [""],
   };
@@ -30,7 +30,7 @@ export const promoPayloadFromForm = (
       data.subcategory_id !== "" ? data.subcategory_id : data.category_id,
     promotionValue: data.promotionValue,
     startDate: toIsoDate(data.startDate),
-    endDate: data.endDate === "" ? null : toIsoDate(data.endDate),
+    endDate: data.endDate == null ? null : toIsoDate(data.endDate),
     isActive: data.isActive,
     stores: storeIds.length > 0 ? storeIds : null,
   } satisfies PromotionDataInput;

@@ -28,3 +28,22 @@ export const employeeFormSchema = z.object({
 
 export type EmployeeFormOutput = z.infer<typeof employeeFormSchema>;
 export type EmployeeFormValues = z.input<typeof employeeFormSchema>;
+
+export const employeeSkillFormSchema = z.object({
+  skills: z.array(z.number()),
+});
+
+export type EmployeeSkillFormValues = z.input<typeof employeeSkillFormSchema>;
+export type EmployeeSkillFormOutput = z.infer<typeof employeeSkillFormSchema>;
+
+export const employeeStoresFormSchema = z.object({
+  assignedStoreIds: z.array(z.number()),
+  primaryStoreId: z.number(),
+});
+
+export type EmployeeStoresFormValues = z.input<
+  typeof employeeStoresFormSchema
+>;
+export type EmployeeStoresFormOutput = z.infer<
+  typeof employeeStoresFormSchema
+>;

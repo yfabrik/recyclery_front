@@ -4,38 +4,22 @@ import { Button, Grid, InputAdornment, MenuItem } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type { StoreModel } from "../../interfaces/Models";
-import { optionalId } from "../../interfaces/ZodTypes";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
-import { emptyToNull } from "../../services/zodTransform";
+import {
+  openCaissePayloadFromForm,
+  type OpenCaissePayload,
+} from "../../services/mapper/caisse";
+import {
+  openCaisseFormSchema,
+  type OpenCaisseFormOutput,
+  type OpenCaisseFormValues,
+} from "../../services/schema/caisse";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
-export type OpenCaissePayload = {
-  store_id: number;
-  cash_register_id: number;
-  opening_amount: number;
-  notes: string | null;
-};
-
-const schema = z.object({
-  store_id: optionalId("store requis").refine((v): v is number => v !== "", {
-    message: "store requis",
-  }),
-  cash_register_id: optionalId("caisse requis").refine(
-    (v): v is number => v !== "",
-    { message: "caisse requis" },
-  ),
-  opening_amount: z
-    .union([z.literal(""), z.number().positive("solde requis")])
-    .refine((v): v is number => v !== "", { message: "solde requis" }),
-  notes: z.string(),
-});
-
-export type OpenCaisseFormValues = z.input<typeof schema>;
-export type OpenCaisseFormOutput = z.infer<typeof schema>;
+export type { OpenCaisseFormValues, OpenCaisseFormOutput, OpenCaissePayload };
 /** @deprecated Use OpenCaissePayload for submit / OpenCaisseFormValues for form state */
 export type Schema = OpenCaissePayload;
 
@@ -66,7 +50,7 @@ export const OpenCaisseForm = ({
 
   const { prompt, PromptDialog } = usePrompt();
   const form = useForm<OpenCaisseFormValues, unknown, OpenCaisseFormOutput>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(openCaisseFormSchema),
     defaultValues: {
       store_id: "",
       cash_register_id: "",
@@ -117,12 +101,7 @@ export const OpenCaisseForm = ({
       <form
         id={formId}
         onSubmit={form.handleSubmit((data) => {
-          onSubmit({
-            store_id: data.store_id,
-            cash_register_id: data.cash_register_id,
-            opening_amount: data.opening_amount,
-            notes: emptyToNull(data.notes),
-          });
+          onSubmit(openCaissePayloadFromForm(data));
         })}
       >
         <Grid container spacing={2} sx={{ mt: 1 }}>

@@ -1,27 +1,36 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, Grid, MenuItem, Typography } from "@mui/material";
 import { useFieldArray, useForm } from "react-hook-form";
-import z from "zod";
 import { REFUND_PAYMENT_METHODS } from "../../constants/paymentMethods";
-import {
-  REFUND_REASONS,
-  REFUND_REASON_VALUES,
-} from "../../constants/refundReasons";
+import { REFUND_REASONS } from "../../constants/refundReasons";
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import {
   formatCurrency,
   getCartLinePrice,
   getPaymentMethodLabel,
 } from "../../services/cartService";
-import { FormInput, FormSelect, type BaseFormProps } from "../forms/FormBase";
-import { type CartItem } from "../forms/cartSchema";
+import type { CartItem } from "../../services/schema/cart";
+import {
+  refundFormSchema,
+  type RefundFormOutput,
+  type RefundFormValues,
+  type RefundItem,
+} from "../../services/schema/refund";
+import {
+  refundPayloadFromForm,
+  type RefundFormPayload,
+} from "../../services/mapper/refund";
+import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import { CartTable } from "../pos/CartTable";
-import { itemSchema } from "./cartSchema";
-  
+
+export type { RefundFormPayload, RefundFormValues, RefundFormOutput };
+/** Submit payload after mapping empties — preferred by refund API helpers. */
+export type Schema = RefundFormPayload;
+
 const sumRefundPrice = (
-  cart: Schema["cart"],
+  cart: RefundFormOutput["cart"],
   transaction: TransactionModel,
-  alreadyRefunded: ItemToRefund[],
+  alreadyRefunded: RefundItem[],
 ) => {
   const totalPromo =
     transaction.total_amount_before_promotion - transaction.total_amount;
@@ -44,52 +53,12 @@ const sumRefundPrice = (
   }, 0);
 };
 
-const refundItemSchema = itemSchema.extend({
-  refundQuantity: z.number(),
-});
-type ItemToRefund = z.infer<typeof refundItemSchema>;
-
-const REFUND_METHOD_VALUES = REFUND_PAYMENT_METHODS.map(
-  (method) => method.value,
-) as [
-  (typeof REFUND_PAYMENT_METHODS)[number]["value"],
-  ...(typeof REFUND_PAYMENT_METHODS)[number]["value"][],
-];
-
-const requiredSelect = <const T extends readonly [string, ...string[]]>(
-  values: T,
-  message: string,
-) =>
-  z
-    .union([z.literal(""), z.enum(values)])
-    .refine((v): v is T[number] => v !== "", { message });
-
-const schema = z.object({
-  cart: z.array(refundItemSchema),
-  refund_reason: requiredSelect(REFUND_REASON_VALUES, "raison requis"),
-  refund_method: requiredSelect(REFUND_METHOD_VALUES, "methode requis"),
-  gift_card_code: z.string().optional(),
-  notes: z.string(),
-});
-export type RefundFormPayload = {
-  cart: z.infer<typeof refundItemSchema>[];
-  refund_reason: (typeof REFUND_REASON_VALUES)[number];
-  refund_method: (typeof REFUND_METHOD_VALUES)[number];
-  gift_card_code: string | null | undefined;
-  notes: string;
-};
-
-/** Submit payload after mapping empties — preferred by refund API helpers. */
-export type Schema = RefundFormPayload;
-type FormValues = z.input<typeof schema>;
-type FormOutput = z.infer<typeof schema>;
-
 export const RefundForm = ({
   selectedTransaction,
   formId,
   onSubmit,
   categories,
-}: BaseFormProps<FormValues, RefundFormPayload> & {
+}: BaseFormProps<RefundFormValues, RefundFormPayload> & {
   selectedTransaction: TransactionModel;
   categories: CategoryModel[];
 }) => {
@@ -100,7 +69,10 @@ export const RefundForm = ({
     );
     const alreadyRefunded = selectedTransaction.refunds?.reduce(
       (prev, current) => {
-        prev += current.items?.filter((i) => i.barcode === item.barcode).reduce((p, v) => p + (v.TransactionItem?.quantity ?? 0), 0) ?? 0;
+        prev +=
+          current.items
+            ?.filter((i) => i.barcode === item.barcode)
+            .reduce((p, v) => p + (v.TransactionItem?.quantity ?? 0), 0) ?? 0;
         return prev;
       },
       0,
@@ -114,18 +86,18 @@ export const RefundForm = ({
       promotion: item.TransactionItem?.promotionValue ?? 0,
       refundQuantity: alreadyRefunded || 0,
       description: "",
-    } satisfies ItemToRefund;
-  }) as ItemToRefund[];
+    } satisfies RefundItem;
+  }) as RefundItem[];
 
-  const form = useForm<FormValues, unknown, FormOutput>({
+  const form = useForm<RefundFormValues, unknown, RefundFormOutput>({
     defaultValues: {
       cart: cartItems || [],
       refund_reason: "",
       refund_method: "",
       gift_card_code: "",
       notes: "",
-    } satisfies Partial<FormValues>,
-    resolver: zodResolver(schema),
+    } satisfies Partial<RefundFormValues>,
+    resolver: zodResolver(refundFormSchema),
   });
 
   const cart = form.watch("cart");
@@ -139,18 +111,10 @@ export const RefundForm = ({
   return (
     <form
       id={formId}
-      onSubmit={form.handleSubmit((data) => {
-        onSubmit({
-          cart: data.cart,
-          refund_reason: data.refund_reason,
-          refund_method: data.refund_method,
-          gift_card_code:
-            data.gift_card_code === "" || data.gift_card_code == null
-              ? null
-              : data.gift_card_code,
-          notes: data.notes,
-        });
-      }, (err) => console.error(err))}
+      onSubmit={form.handleSubmit(
+        (data) => onSubmit(refundPayloadFromForm(data)),
+        (err) => console.error(err),
+      )}
     >
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12 }}>
@@ -257,10 +221,9 @@ export const RefundForm = ({
                   sumRefundPrice(
                     cart,
                     selectedTransaction,
-                    cartItems ?? ([] as ItemToRefund[]),
+                    cartItems ?? ([] as RefundItem[]),
                   ),
                 )}
-           
               </strong>
             </Typography>
             <Typography variant="body2" color="textSecondary">
@@ -268,7 +231,7 @@ export const RefundForm = ({
               <strong>
                 {giftCardCode
                   ? getPaymentMethodLabel(
-                      giftCardCode as Schema["refund_method"],
+                      giftCardCode as RefundFormPayload["refund_method"],
                     )
                   : "—"}
               </strong>

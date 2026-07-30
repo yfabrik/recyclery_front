@@ -63,6 +63,7 @@ import {
 import type { CategoryModel } from "../../interfaces/Models";
 import { MuiIconSelect, type MuiIconSelectProps } from "../MuiIconSelect";
 import { SelectedIcon } from "../SelectedIcon";
+import { parseHtmlNumberInput } from "./parseHtmlNumberInput";
 export interface BaseFormProps< TFieldValues extends FieldValues = FieldValues,TTransformedValues = TFieldValues> {
   formId: string;
   defaultValues?: Partial<TFieldValues> | null;
@@ -124,6 +125,45 @@ export const FormInput = <
           label={label}
           {...field}
           {...extra}
+          helperText={fieldState.invalid && fieldState.error?.message}
+          error={fieldState.invalid}
+          aria-invalid={fieldState.invalid}
+        />
+      )}
+    />
+  );
+};
+
+/** Number field boundary: DOM string → RHF `"" | number` (like FormDate for dates). */
+export const FormNumber = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
+>({
+  name,
+  control,
+  label,
+  extra,
+}: FormControlProps<TFieldValues, TName, TTransformedValues> & {
+  extra?: Omit<TextFieldProps, "type" | "value" | "onChange">;
+}) => {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <TextField
+          fullWidth
+          label={label}
+          type="number"
+          {...extra}
+          name={field.name}
+          onBlur={field.onBlur}
+          inputRef={field.ref}
+          value={field.value ?? ""}
+          onChange={(e) => {
+            field.onChange(parseHtmlNumberInput(e.target.value));
+          }}
           helperText={fieldState.invalid && fieldState.error?.message}
           error={fieldState.invalid}
           aria-invalid={fieldState.invalid}

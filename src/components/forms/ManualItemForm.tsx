@@ -15,6 +15,7 @@ import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
+  FormNumber,
   type BaseFormProps,
 } from "./FormBase";
 
@@ -111,7 +112,7 @@ export const ManualItemForm = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <FormInput
               control={form.control}
-              label="Poids (kg) - Optionnel"
+              label="Poids (kg)"
               name="weight"
               extra={{
                 onClick: () => setNumericField("weight", "Kg"),
@@ -159,11 +160,10 @@ export const ManualItemForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
               label="Promotion (%)"
               control={form.control}
               name="promotion"
-              extra={{}}
             />
           </Grid>
 

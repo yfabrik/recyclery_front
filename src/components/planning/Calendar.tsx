@@ -54,7 +54,6 @@ export const Calendar = ({
             scheduleDate.getMonth() === currentDate.getMonth() &&
             scheduleDate.getFullYear() === currentDate.getFullYear();
 
-          console.log(schedule);
           return matches;
         })
       : [];
@@ -454,7 +453,6 @@ export const DayTask = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("Modification de la tâche:", schedule);
                   handleOpenDialog(schedule);
                 }}
                 sx={{
@@ -478,7 +476,6 @@ export const DayTask = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("Suppression de la tâche:", schedule);
                   handleDeleteTask(schedule);
                 }}
                 sx={{
