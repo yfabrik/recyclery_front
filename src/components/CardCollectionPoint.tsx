@@ -141,7 +141,7 @@ export const CardCollectionPoint = ({
             </ListItem>
           )}
         </List>
-        {point.TaskSchedules?.length === 0 ? (
+        { !point.TaskSchedules || point.TaskSchedules.length === 0 ? (
           <Box
             display="flex"
             flexDirection="column"

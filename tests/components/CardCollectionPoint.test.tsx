@@ -11,8 +11,8 @@
 
 import { describe, expect, it } from "vitest";
 import type { TaskScheduleRefDto } from "@recyclerie/api/responses/taskSchedule";
-import type { CollectionPointModel } from "../interfaces/Models";
-import { mockCollectionPoints } from "../stories/fixtures";
+import type { CollectionPointModel } from "../../src/interfaces/Models";
+import { mockCollectionPoints } from "../../src/stories/fixtures";
 
 const schedule: TaskScheduleRefDto = {
   id: 5,

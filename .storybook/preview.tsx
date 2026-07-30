@@ -1,5 +1,12 @@
 import type { Preview } from '@storybook/react-vite'
+import CssBaseline from '@mui/material/CssBaseline'
 import { Box, Button } from '@mui/material'
+import { ThemeProvider } from '@mui/material/styles'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import 'dayjs/locale/fr'
+import { MemoryRouter } from 'react-router'
+import theme from '../src/theme'
 
 const preview: Preview = {
   parameters: {
@@ -18,6 +25,16 @@ const preview: Preview = {
     }
   },
   decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+            <CssBaseline />
+            <Story />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    ),
     // Append a submit button to any story that exposes a `formId` arg, so the
     // form can be submitted and its payload logged to the Actions panel.
     // Opt out per-story/meta with `parameters: { formSubmit: false }`.
