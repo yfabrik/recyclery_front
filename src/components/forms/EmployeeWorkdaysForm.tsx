@@ -21,59 +21,97 @@ import {
   WORKDAY_TIME_SLOT_VALUES,
   getWorkdayTimeSlotLabel,
 } from "../../constants/workdayTimeSlots";
-import type { WorkdaysModelTransformed } from "../../services/api/users";
+import type {
+  WorkdaysFormPayload,
+  WorkdaysModelTransformed,
+} from "../../services/api/users";
 import { formatTime, weekdayLabel } from "../../services/dateService";
-import { weekDays } from "../../interfaces/ZodTypes";
+import { formWeekday } from "../../interfaces/ZodTypes";
 import { FormTime, type BaseFormProps } from "./FormBase";
 
 const workdaySchema = z.object({
-  start_time: z.date().transform((val) => formatTime(val)),
-  end_time: z.date().transform((val) => formatTime(val)),
+  start_time: z.date(),
+  end_time: z.date(),
   is_working: z.boolean(),
   time_slot: z.enum(WORKDAY_TIME_SLOT_VALUES),
-  day_of_week: weekDays("jour requis"),
+  day_of_week: formWeekday("jour requis").refine(
+    (v): v is 0 | 1 | 2 | 3 | 4 | 5 | 6 => v !== "",
+    { message: "jour requis" },
+  ),
 });
 const schema = z.object({
   week1: z.array(workdaySchema),
   week2: z.array(workdaySchema),
 });
 
-export type Workday = z.output<typeof workdaySchema>;
-export type WorkdayInput = z.input<typeof workdaySchema>;
-
-export type Schema = z.output<typeof schema>;
+export type WorkdayFormValues = z.input<typeof workdaySchema>;
 export type FormValues = z.input<typeof schema>;
+export type FormOutput = z.infer<typeof schema>;
+/** @deprecated Form output to parent is WorkdaysFormPayload after mapping. */
+export type Schema = WorkdaysFormPayload;
+/** @deprecated Use WorkdayFormValues */
+export type Workday = WorkdaysFormPayload["week1"][number];
+/** @deprecated Use WorkdayFormValues */
+export type WorkdayInput = WorkdayFormValues;
+
+function toWorkdaysPayload(data: FormOutput): WorkdaysFormPayload {
+  const mapDay = (
+    day: FormOutput["week1"][number],
+  ): WorkdaysFormPayload["week1"][number] => ({
+    day_of_week: day.day_of_week,
+    start_time: formatTime(day.start_time),
+    end_time: formatTime(day.end_time),
+    is_working: day.is_working,
+    time_slot: day.time_slot,
+  });
+  return {
+    week1: data.week1.map(mapDay),
+    week2: data.week2.map(mapDay),
+  };
+}
 
 export const EmployeeWorkdaysForm = ({
   formId,
   onSubmit,
-  defaults,//TODO use as default value
-}: BaseFormProps<Schema> & { defaults?: WorkdaysModelTransformed[] }) => {
+  defaults,
+}: BaseFormProps<FormValues, WorkdaysFormPayload> & {
+  defaults?: WorkdaysModelTransformed[];
+}) => {
   const [tabValue, setTabValue] = useState(0);
 
   const fillWithDefault = (
     def?: WorkdaysModelTransformed[],
-  ): WorkdayInput[] => {
+  ): WorkdayFormValues[] => {
     return WEEKDAYS_MONDAY_FIRST.flatMap((day) => {
       return WORKDAY_TIME_SLOT_VALUES.map((slot) => {
-        return (
-          def?.find((d) => d.day_of_week === day && d.time_slot === slot) || {
-            day_of_week: day,
-            start_time: new Date(
-              new Date().setHours(slot == "morning" ? 8 : 13, 0),
-            ),
-            end_time: new Date(
-              new Date().setHours(slot == "morning" ? 12 : 17, 0),
-            ),
-            is_working: false,
-            time_slot: slot,
-          }
+        const found = def?.find(
+          (d) => d.day_of_week === day && d.time_slot === slot,
         );
+        if (found) {
+          return {
+            day_of_week: found.day_of_week,
+            start_time: found.start_time,
+            end_time: found.end_time,
+            is_working: found.is_working,
+            time_slot: found.time_slot,
+          };
+        }
+        return {
+          day_of_week: day,
+          start_time: new Date(
+            new Date().setHours(slot == "morning" ? 8 : 13, 0),
+          ),
+          end_time: new Date(
+            new Date().setHours(slot == "morning" ? 12 : 17, 0),
+          ),
+          is_working: false,
+          time_slot: slot,
+        };
       });
     });
   };
 
-  const form = useForm<FormValues, unknown, Schema>({
+  const form = useForm<FormValues, unknown, FormOutput>({
     defaultValues: {
       week1: [
         ...fillWithDefault(
@@ -98,7 +136,10 @@ export const EmployeeWorkdaysForm = ({
   });
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit((data) => onSubmit(toWorkdaysPayload(data)))}
+    >
       <Tabs
         value={tabValue}
         onChange={(_e, val) => setTabValue(val)}
@@ -159,7 +200,7 @@ const Horaires = ({
   control,
   name,
 }: {
-  control: Control<FormValues, unknown, Schema>;
+  control: Control<FormValues>;
   name: `week1.${number}` | `week2.${number}`;
 }) => {
   const isWorking = useWatch({
@@ -188,9 +229,9 @@ const Horaires = ({
 };
 
 interface HalfDayProps {
-  control: Control<FormValues, unknown, Schema>;
+  control: Control<FormValues>;
   name: `week1.${number}` | `week2.${number}`;
-  slot: Workday["time_slot"];
+  slot: WorkdayFormValues["time_slot"];
   day: Weekday;
 }
 const HalfDay = ({ slot, day, control, name }: HalfDayProps) => {

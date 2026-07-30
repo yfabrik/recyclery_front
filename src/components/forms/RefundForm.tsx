@@ -62,28 +62,34 @@ const requiredSelect = <const T extends readonly [string, ...string[]]>(
 ) =>
   z
     .union([z.literal(""), z.enum(values)])
-    .refine((v) => v !== "", { message })
-    .pipe(z.enum(values, message));
+    .refine((v): v is T[number] => v !== "", { message });
 
 const schema = z.object({
   cart: z.array(refundItemSchema),
   refund_reason: requiredSelect(REFUND_REASON_VALUES, "raison requis"),
   refund_method: requiredSelect(REFUND_METHOD_VALUES, "methode requis"),
-  gift_card_code: z
-    .string()
-    .transform((v) => (v == "" ? null : v))
-    .optional(),
+  gift_card_code: z.string().optional(),
   notes: z.string(),
 });
-export type Schema = z.infer<typeof schema>;
+export type RefundFormPayload = {
+  cart: z.infer<typeof refundItemSchema>[];
+  refund_reason: (typeof REFUND_REASON_VALUES)[number];
+  refund_method: (typeof REFUND_METHOD_VALUES)[number];
+  gift_card_code: string | null | undefined;
+  notes: string;
+};
+
+/** Submit payload after mapping empties — preferred by refund API helpers. */
+export type Schema = RefundFormPayload;
 type FormValues = z.input<typeof schema>;
+type FormOutput = z.infer<typeof schema>;
 
 export const RefundForm = ({
   selectedTransaction,
   formId,
   onSubmit,
   categories,
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<FormValues, RefundFormPayload> & {
   selectedTransaction: TransactionModel;
   categories: CategoryModel[];
 }) => {
@@ -111,7 +117,7 @@ export const RefundForm = ({
     } satisfies ItemToRefund;
   }) as ItemToRefund[];
 
-  const form = useForm<FormValues, unknown, Schema>({
+  const form = useForm<FormValues, unknown, FormOutput>({
     defaultValues: {
       cart: cartItems || [],
       refund_reason: "",
@@ -122,7 +128,7 @@ export const RefundForm = ({
     resolver: zodResolver(schema),
   });
 
-  const cart = form.watch("cart") as Schema["cart"];
+  const cart = form.watch("cart");
   const { fields, update } = useFieldArray({
     control: form.control,
     name: "cart",
@@ -133,7 +139,18 @@ export const RefundForm = ({
   return (
     <form
       id={formId}
-      onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}
+      onSubmit={form.handleSubmit((data) => {
+        onSubmit({
+          cart: data.cart,
+          refund_reason: data.refund_reason,
+          refund_method: data.refund_method,
+          gift_card_code:
+            data.gift_card_code === "" || data.gift_card_code == null
+              ? null
+              : data.gift_card_code,
+          notes: data.notes,
+        });
+      }, (err) => console.error(err))}
     >
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12 }}>

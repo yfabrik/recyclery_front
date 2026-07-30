@@ -21,8 +21,18 @@ export function vacationToFormValues(
 
 export const vacationPayloadFromForm = (
   data: VacationFormOutput,
-): VacationBodyInput => ({ start_date: toIsoDate(data.start_date), end_date: toIsoDate(data.end_date), reason: data.reason });
+): VacationBodyInput =>
+  ({
+    start_date: toIsoDate(data.start_date),
+    end_date: toIsoDate(data.end_date),
+    reason: data.reason,
+  }) satisfies VacationBodyInput;
 
 export const vacationUpdatePayloadFromForm = (
   data: VacationFormOutput,
-): VacationUpdateInput => ({ start_date: toIsoDate(data.start_date), end_date: toIsoDate(data.end_date), reason: data.reason });
+): VacationUpdateInput =>
+  ({
+    start_date: toIsoDate(data.start_date),
+    end_date: toIsoDate(data.end_date),
+    reason: data.reason,
+  }) satisfies VacationUpdateInput;

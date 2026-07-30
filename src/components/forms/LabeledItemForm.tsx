@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Euro, Scale } from "@mui/icons-material";
 import { Grid, MenuItem } from "@mui/material";
-import { useForm, type Path, type PathValue } from "react-hook-form";
+import { useForm, type FieldPath, type Path, type PathValue } from "react-hook-form";
 import {
   LABELED_ITEM_CONDITIONS,
 } from "../../constants/labeledItemConditions";
@@ -19,6 +19,7 @@ import {
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 
 export type { LabeledItemFormValues };
 /** @deprecated Use LabeledItemFormOutput */
@@ -72,19 +73,8 @@ export const LabeledItemForm = ({
       console.log(ctx);
     },
   })
-  const setNumericField = async (
-    name: "price" | "weight",
-    unit: string,
-  ) => {
-    const field = name as Path<FormValues>;
-    const value = Number(
-      (await prompt("", form.getValues(field)?.toString() || "", { unit })) ?? 0,
-    );
-    form.setValue(field, value as PathValue<FormValues, Path<FormValues>>, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
+  const setNumericField = createPromptNumericValue(form,prompt);
+
 
   // useEffect(() => {
   //   //TODO faut remettre les value source default quand on  clean le field

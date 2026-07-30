@@ -1,5 +1,5 @@
 import { Chip, Box, Grid, Paper, Typography, Divider } from "@mui/material";
-import { ArrivalForm, type ArrivalFormSchema } from "./forms/ArrivalForm";
+import { ArrivalForm, type ArrivalFormOutput } from "./forms/ArrivalForm";
 import { createArrival, getArrivals } from "../services/api/arrival";
 import { formatWeight } from "../services/cartService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,8 @@ import { toIsoDate } from "../services/dateService";
 import type { CategoryModel, CollectionPointModel } from "../interfaces/Models";
 import type { UseFormReset } from "react-hook-form";
 import { useState } from "react";
+import { arrivalPayloadFromForm } from "../services/mapper/arrival";
+import type { ArrivalFormValues } from "../services/schema/arrival";
 
 interface ArrivalAddProps {
   categories: CategoryModel[];
@@ -22,7 +24,7 @@ export const ArrivalAdd = ({
   collectionPoints,
 }: ArrivalAddProps) => {
   const [formMethods, setFormMethods] = useState<{
-    reset: UseFormReset<ArrivalFormSchema>;
+    reset: UseFormReset<ArrivalFormValues>;
   } | null>(null);
 
   const todayKey = () => toIsoDate(new Date());
@@ -53,7 +55,8 @@ export const ArrivalAdd = ({
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: ArrivalFormSchema) => createArrival(data),
+    mutationFn: (data: ArrivalFormOutput) =>
+      createArrival(arrivalPayloadFromForm(data)),
     onSuccess: (response) => {
       toast.success(
         getApiSuccessMessage(
@@ -71,7 +74,7 @@ export const ArrivalAdd = ({
     },
   });
 
-  const handleSubmit = (data: ArrivalFormSchema) => {
+  const handleSubmit = (data: ArrivalFormOutput) => {
     createMutation.mutate(data);
   };
 

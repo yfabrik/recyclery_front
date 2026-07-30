@@ -5,38 +5,52 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type { StoreModel } from "../../interfaces/Models";
-import { idSchema } from "../../interfaces/ZodTypes";
+import { optionalId } from "../../interfaces/ZodTypes";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
+import { emptyToNull } from "../../services/zodTransform";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
-interface OpenCaisseFormProps extends BaseFormProps<OpenCaisseFormValues,Schema> {
-  /** Preloaded stores (e.g. from POS) so selects have options before async fetch. */
-  stores?: StoreModel[];
-  setShowMoneyCounter?: (b: boolean) => number;
-  // defaultStoreId?: number;
-  // defaultCashRegisterId?: number;
-  lockStoreAndRegister?: boolean;
-}
+export type OpenCaissePayload = {
+  store_id: number;
+  cash_register_id: number;
+  opening_amount: number;
+  notes: string | null;
+};
 
 const schema = z.object({
-  store_id: idSchema("store requis"),
-  cash_register_id: idSchema("caisse requis"),
-  opening_amount: z.coerce.number().positive("solde requis"),
-  notes: z.string().transform((val) => (val == "" ? null : val)),
+  store_id: optionalId("store requis").refine((v): v is number => v !== "", {
+    message: "store requis",
+  }),
+  cash_register_id: optionalId("caisse requis").refine(
+    (v): v is number => v !== "",
+    { message: "caisse requis" },
+  ),
+  opening_amount: z
+    .union([z.literal(""), z.number().positive("solde requis")])
+    .refine((v): v is number => v !== "", { message: "solde requis" }),
+  notes: z.string(),
 });
 
-export type Schema = z.infer<typeof schema>;
 export type OpenCaisseFormValues = z.input<typeof schema>;
+export type OpenCaisseFormOutput = z.infer<typeof schema>;
+/** @deprecated Use OpenCaissePayload for submit / OpenCaisseFormValues for form state */
+export type Schema = OpenCaissePayload;
+
+interface OpenCaisseFormProps
+  extends BaseFormProps<OpenCaisseFormValues, OpenCaissePayload> {
+  stores?: StoreModel[];
+  setShowMoneyCounter?: (b: boolean) => number;
+  lockStoreAndRegister?: boolean;
+}
 
 export const OpenCaisseForm = ({
   formId,
   onSubmit,
   defaultValues,
   stores: storesProp,
-  // defaultStoreId,//TODO use defualt
-  // defaultCashRegisterId,//TODO use defualt
   lockStoreAndRegister = false,
 }: OpenCaisseFormProps) => {
   const storesQuery = useQuery({
@@ -51,7 +65,7 @@ export const OpenCaisseForm = ({
   }, [storesProp, storesQuery.data]);
 
   const { prompt, PromptDialog } = usePrompt();
-  const form = useForm({
+  const form = useForm<OpenCaisseFormValues, unknown, OpenCaisseFormOutput>({
     resolver: zodResolver(schema),
     defaultValues: {
       store_id: "",
@@ -62,20 +76,20 @@ export const OpenCaisseForm = ({
     },
   });
 
-  //TODO ????? y'avait une error de chargement quand les store sont pas chargé mais qu'on donne des values
-  const defaultStoreId = defaultValues?.store_id
-  const defaultCashRegisterId = defaultValues?.cash_register_id
+  const defaultStoreId = defaultValues?.store_id;
+  const defaultCashRegisterId = defaultValues?.cash_register_id;
 
-  const store = form.watch("store_id") as number;
+  const store = form.watch("store_id");
   const selectedStore = storeOptions.find((s) => s.id == store);
   const registersFromStore = selectedStore?.caisses ?? [];
 
   useEffect(() => {
-    if (!defaultStoreId || !storeOptions.length) return;
+    if (defaultStoreId == null || defaultStoreId === "" || !storeOptions.length)
+      return;
     if (!storeOptions.some((s) => s.id === defaultStoreId)) return;
     form.setValue("store_id", defaultStoreId, { shouldValidate: true });
 
-    if (!defaultCashRegisterId) return;
+    if (defaultCashRegisterId == null || defaultCashRegisterId === "") return;
     const storeForDefaults = storeOptions.find((s) => s.id === defaultStoreId);
     const registers = storeForDefaults?.caisses ?? [];
     if (!registers.some((r) => r.id === defaultCashRegisterId)) return;
@@ -83,17 +97,12 @@ export const OpenCaisseForm = ({
       shouldValidate: true,
     });
   }, [defaultStoreId, defaultCashRegisterId, storeOptions, form]);
-  // const [cashRegisters, setCashRegisters] = useState([]);
-  // const getCaisses = async () => {
-  //   const caisses = await fetchCaisses(store);
-  //   setCashRegisters(caisses.data.data);
-  // };
 
   const cashRegisters = useQuery({
     queryKey: ["cashRegisters", { store_id: store }],
     queryFn: () =>
-      fetchCaisses(store).then((response) => response.data.data),
-    enabled: !!store && registersFromStore.length === 0,
+      fetchCaisses(store as number).then((response) => response.data.data),
+    enabled: typeof store === "number" && registersFromStore.length === 0,
   });
 
   const registerOptions =
@@ -101,12 +110,29 @@ export const OpenCaisseForm = ({
       ? registersFromStore
       : (cashRegisters.data ?? []);
 
+  const setNumericField = createPromptNumericValue(form, prompt);
+
   return (
     <>
-      <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        id={formId}
+        onSubmit={form.handleSubmit((data) => {
+          onSubmit({
+            store_id: data.store_id,
+            cash_register_id: data.cash_register_id,
+            opening_amount: data.opening_amount,
+            notes: emptyToNull(data.notes),
+          });
+        })}
+      >
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
-            <FormSelect name="store_id" control={form.control} label="Magasin" extra={{ disabled: lockStoreAndRegister }}>
+            <FormSelect
+              name="store_id"
+              control={form.control}
+              label="Magasin"
+              extra={{ disabled: lockStoreAndRegister }}
+            >
               {storeOptions.map((storeOption) => (
                 <MenuItem key={storeOption.id} value={storeOption.id}>
                   {storeOption.name}
@@ -136,15 +162,7 @@ export const OpenCaisseForm = ({
               control={form.control}
               label="Fonds de caisse (€)"
               extra={{
-                onClick: async () =>
-                  form.setValue(
-                    "opening_amount",
-                    await prompt(
-                      "",
-                      form.getValues("opening_amount")?.toString() || "",
-                      { unit: "€" },
-                    ),
-                  ),
+                onClick: () => setNumericField("opening_amount", "€"),
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",
@@ -156,7 +174,6 @@ export const OpenCaisseForm = ({
                     startAdornment: (
                       <Euro sx={{ mr: 1, color: "text.secondary" }} />
                     ),
-                    // readOnly: true,
                     endAdornment: (
                       <InputAdornment position="end">
                         <Button
@@ -164,15 +181,10 @@ export const OpenCaisseForm = ({
                           size="small"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            form.setValue(
-                              "opening_amount",
-                              await prompt(
-                                "",
-                                form.getValues("opening_amount")?.toString() ||
-                                "",
-                                { mode: "money", unit: "€" },
-                              ),
-                            );
+                            setNumericField("opening_amount", {
+                              unit: "€",
+                              mode: "money",
+                            });
                           }}
                           startIcon={<AttachMoney />}
                         >
@@ -191,10 +203,7 @@ export const OpenCaisseForm = ({
               name="notes"
               control={form.control}
               label="Notes (optionnel)"
-              extra={{
-                multiline: true,
-                rows: 2,
-              }}
+              extra={{ multiline: true, rows: 2 }}
             />
           </Grid>
         </Grid>

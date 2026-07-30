@@ -1,31 +1,19 @@
 import z from "zod";
-import { nullString } from "../../interfaces/ZodTypes";
-import { idSchema } from "@recyclerie/api/primitives/zod";
-import { toIsoDate } from "../dateService";
+import {
+  optionalId,
+  requiredFormId,
+  requiredPercentNumber,
+} from "../../interfaces/ZodTypes";
 
 export const promoFormSchema = z.object({
-    category_id: idSchema("categorie requis"),
-    subcategory_id: z.union([nullString(),idSchema()]),
-    promotionValue: z.preprocess(
-      (v) => (v === "" ? undefined : v),
-      z.coerce.number("valeur doit etre en 0 et 100").min(0).max(100),
-    ),
-    startDate: z.coerce.date().transform((val) => toIsoDate(val)),
-    endDate: z.preprocess(
-      (v) => (v === "" || v == null ? null : v),
-      z.union([
-        z.null(),
-        z.coerce.date().transform((val) => toIsoDate(val)),
-      ]),
-    ),
-    isActive: z.boolean(),
-    stores: z
-        .array(z.union([z.literal(""),idSchema()]))//TODO remake cleaner
-        .transform((value) => {
-            if (value.length === 1 && value[0] === "") return null
-            return value.filter((store): store is number => typeof store === "number")
-        })
-})
+  category_id: requiredFormId("categorie requis"),
+  subcategory_id: optionalId(),
+  promotionValue: requiredPercentNumber("promotion requise"),
+  startDate: z.date("date de début requise"),
+  endDate: z.union([z.literal(""), z.date()]),
+  isActive: z.boolean(),
+  stores: z.array(z.union([z.literal(""), z.number().positive()])),
+});
 
-export type PromoFormOutput = z.infer<typeof promoFormSchema>
-export type PromoFormValues = z.input<typeof promoFormSchema>
+export type PromoFormOutput = z.infer<typeof promoFormSchema>;
+export type PromoFormValues = z.input<typeof promoFormSchema>;

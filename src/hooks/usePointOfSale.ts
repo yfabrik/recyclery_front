@@ -189,14 +189,20 @@ export const usePointOfSale = ({
     if (source?.priceBasedOnWeight) item.price = item.price * item.weight;
 
     const promotion = !isLabeledItem(item)
-      ? item.promotion
+      ? item.promotion === ""
+        ? 0
+        : item.promotion
       : sumPromoCategorie(selectedCategory) +
-      sumPromoCategorie(selectedSubcategory);
+        sumPromoCategorie(selectedSubcategory);
 
     return {
       barcode,
-      category_id: item.category_id,
-      subcategory_id: item.subcategory_id,
+      category_id:
+        typeof item.category_id === "number" ? item.category_id : Number(item.category_id),
+      subcategory_id:
+        item.subcategory_id === "" || item.subcategory_id == null
+          ? null
+          : item.subcategory_id,
       name: itemName,
       description: item.description || "",
       category_name: selectedCategory?.name || "",

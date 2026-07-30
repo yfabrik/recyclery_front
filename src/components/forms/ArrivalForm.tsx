@@ -9,13 +9,14 @@ import {
 } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
-import { useForm, useWatch, type Path, type PathValue, type UseFormReset } from "react-hook-form";
+import { useForm, useWatch, type UseFormReset } from "react-hook-form";
 
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type {
   CategoryModel,
   CollectionPointModel,
 } from "../../interfaces/Models";
-import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 import {
   arrivalFormSchema,
   type ArrivalFormOutput,
@@ -41,7 +42,7 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormValues, ArrivalFormOutput> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
-  onReady?: (method: { reset: UseFormReset<ArrivalFormOutput> }) => void;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormValues> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -52,7 +53,7 @@ export const ArrivalForm = ({
   loading = false,
   onReady,
 }: ArrivalFormProps) => {
-  const form = useForm({
+  const form = useForm<ArrivalFormValues, unknown, ArrivalFormOutput>({
     resolver: zodResolver(arrivalFormSchema(categories)),
     defaultValues: {
       category_id: "",
@@ -60,7 +61,7 @@ export const ArrivalForm = ({
       weight: "",
       arrival_date: new Date(),
       arrival_time: new Date(),
-      source_type: "point",//TODO pas supposé possible le undefined
+      source_type: "point",
       collection_point_id: "",
       source_details: "",
       notes: "",
@@ -179,7 +180,7 @@ export const ArrivalForm = ({
 
   const reset = form.reset;
   useEffect(() => {
-    onReady?.({ reset: reset as UseFormReset<ArrivalFormOutput> });
+    onReady?.({ reset });
   }, [onReady, reset]);
 
   // Reset subcategory when category changes to avoid out-of-range select values.
@@ -187,19 +188,7 @@ export const ArrivalForm = ({
   //   form.setValue("subcategory_id", "");
   // }, [categoryId, form]);
 
-  const setNumericField = async (
-    name: "price" | "weight",//TODO fieldPath type ??
-    unit: string,
-  ) => {
-    const field = name as Path<ArrivalFormValues>;//TODO fieldPath not path ??
-    const value = Number(
-      (await prompt("", form.getValues(field)?.toString() || "", { unit })) ?? 0,
-    );
-    form.setValue(field, value as PathValue<ArrivalFormValues, Path<ArrivalFormValues>>, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
+  const setNumericField = createPromptNumericValue(form,prompt);
 
   return (
     <>

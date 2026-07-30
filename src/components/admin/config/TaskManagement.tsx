@@ -56,9 +56,12 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
-import { TaskForm, type TaskFormSchema } from "../../forms/TaskForm";
+import { TaskForm } from "../../forms/TaskForm";
 import { formatTime } from "../../../services/dateService";
-import type { TaskFormOutput } from "../../../services/schema/task";
+import type {
+  TaskFormOutput,
+  TaskFormValues,
+} from "../../../services/schema/task";
 
 /**
  * @deprecated
@@ -69,7 +72,7 @@ const TaskManagement = () => {
   const [employees, setEmployees] = useState<EmployeeModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingTask, setEditingTask] = useState<Partial<TaskFormSchema> | null>(
+  const [editingTask, setEditingTask] = useState<Partial<TaskFormValues> | null>(
     null,
   );
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);

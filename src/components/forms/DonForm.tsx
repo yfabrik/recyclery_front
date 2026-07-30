@@ -23,7 +23,7 @@ export const DonForm = ({
   onSubmit,
   defaultValues,
 }: BaseFormProps<DonFormValues,DonFormOutput>) => {
-  const form = useForm<DonFormValues,unknown,DonFormOutput>({
+  const form = useForm<DonFormValues, unknown, DonFormOutput>({
     resolver: zodResolver(donFormSchema),
     defaultValues: {
       donor_name: "",
@@ -74,7 +74,17 @@ export const DonForm = ({
             control={form.control}
             label="Valeur Estimée (€)"
             name="estimated_value"
-            extra={{ type: "number" }}
+            extra={{
+              type: "number",
+              onChange: (e) => {
+                const raw = e.target.value;
+                form.setValue(
+                  "estimated_value",
+                  (raw === "" ? "" : Number(raw)) as never,
+                  { shouldValidate: true, shouldDirty: true },
+                );
+              },
+            }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -82,7 +92,20 @@ export const DonForm = ({
             control={form.control}
             label="Poids (kg)"
             name="weight"
-            extra={{ type: "number" }}
+            extra={{
+              type: "number",
+              onChange: (e) => {
+                const raw = e.target.value;
+                form.setValue(
+                  "weight",
+                  (raw === "" ? "" : Number(raw)) as never,
+                  {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  },
+                );
+              },
+            }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>

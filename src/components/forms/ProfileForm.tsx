@@ -1,31 +1,35 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { phoneSchema } from "@recyclerie/api/primitives/zod";
 import { Grid } from "@mui/material";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-
-import { phoneSchema } from "@recyclerie/api/primitives/zod";
+import { noEmptyStr } from "../../interfaces/ZodTypes";
+import { emptyToNull } from "../../services/zodTransform";
 import { FormInput, type BaseFormProps } from "./FormBase";
-import { noEmptyStr, nullString } from "../../interfaces/ZodTypes";
 
-const schema = z.object({
+const profileFormSchema = z.object({
   username: noEmptyStr("Nom d'utilisateur requis"),
   email: z.email("Email invalide"),
-  phone: z.union([
-    nullString(),
-    phoneSchema("Numéro de téléphone invalide"),
-  ]),
+  phone: z.union([z.literal(""), phoneSchema("Numéro de téléphone invalide")]),
 });
 
-export type Schema = z.infer<typeof schema>;
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+export type ProfileFormPayload = {
+  username: string;
+  email: string;
+  phone: string | null;
+};
+
+/** @deprecated Use ProfileFormPayload */
+export type Schema = ProfileFormPayload;
 
 export const ProfileForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<Schema>) => {
-
-  const form = useForm({
-    resolver: zodResolver(schema),
+}: BaseFormProps<ProfileFormValues, ProfileFormPayload>) => {
+  const form = useForm<ProfileFormValues, unknown, ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       username: defaultValues?.username ?? "",
       email: defaultValues?.email ?? "",
@@ -34,7 +38,16 @@ export const ProfileForm = ({
   });
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit((data) =>
+        onSubmit({
+          username: data.username,
+          email: data.email,
+          phone: emptyToNull(data.phone),
+        }),
+      )}
+    >
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormInput

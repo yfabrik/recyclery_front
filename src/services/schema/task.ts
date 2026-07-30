@@ -1,4 +1,8 @@
-import { RECURRENCE_PATTERNS } from "@recyclerie/api/enums";
+import {
+  RECURRENCE_PATTERNS,
+  TASK_CATEGORIES,
+  TASK_PRIORITIES,
+} from "@recyclerie/api/enums";
 import { z } from "zod";
 import {
   PRIORITY_FILTER_VALUES,
@@ -6,36 +10,30 @@ import {
 import {
   RECURRENCE_FILTER_VALUES,
 } from "../../constants/recurrencePatterns";
-import { idSchema, noEmptyStr, nullString } from "../../interfaces/ZodTypes";
+import { idSchema, noEmptyStr } from "../../interfaces/ZodTypes";
 
 const recurrencePatternEnum = z.enum(RECURRENCE_PATTERNS);
+const categoryEnum = z.enum(TASK_CATEGORIES);
+const priorityEnum = z.enum(TASK_PRIORITIES);
 
 /** Admin TaskForm schema (template / full task fields). Distinct from planningFormSchema. */
 export const taskFormSchema = z.object({
   name: noEmptyStr("Le nom de la tâche est requis"),
-  hourly_rate: z.coerce.number().optional(),
-  description: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  category: noEmptyStr("La catégorie est requise"),
-  priority: noEmptyStr("La priorité est requise"),
-  location: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  assigned_to: z.union([z.string(), z.number()]).optional().nullable(),
-  required_skills: z.array(z.string()).default([]),
-  equipment_needed: z.array(z.string()).default([]),
-  is_recurring: z.boolean().default(false),
-  recurrence_pattern: z.union([nullString(), recurrencePatternEnum]),
-  notes: z
-    .string()
-    .trim()
-    .transform((v) => (v == "" ? null : v)),
-  scheduled_date: z.coerce.date(),
-  start_time: z.coerce.date(),
-  end_time: z.coerce.date(),
+  // Prefer z.number / z.date over coerce+transform so z.input === z.infer.
+  hourly_rate: z.union([z.literal(""), z.number()]),
+  description: z.string(),
+  category: categoryEnum,
+  priority: priorityEnum,
+  location: z.string(),
+  assigned_to: z.union([z.literal(""), z.number().positive()]),
+  required_skills: z.array(z.string()),
+  equipment_needed: z.array(z.string()),
+  is_recurring: z.boolean(),
+  recurrence_pattern: z.union([z.literal(""), recurrencePatternEnum]),
+  notes: z.string(),
+  scheduled_date: z.date("La date est requise"),
+  start_time: z.date("L'heure de début est requise"),
+  end_time: z.date("L'heure de fin est requise"),
 });
 
 export type TaskFormOutput = z.infer<typeof taskFormSchema>;

@@ -32,7 +32,7 @@ export const CollecteForm = ({
   collectionPoints: CollectionPointModel[];
   stores: StoreModel[];
 }) => {
-  const form = useForm({
+  const form = useForm<CollecteFormValues, unknown, CollecteFormOutput>({
     resolver: zodResolver(collecteFormSchema),
     defaultValues: {
       day_of_week: "",

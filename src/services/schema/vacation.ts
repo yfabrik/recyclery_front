@@ -3,12 +3,15 @@ import { VACATION_REASON_VALUES } from "../../constants/vacationReasons";
 
 export const vacationFormSchema = z
   .object({
-    start_date: z.coerce.date("Date de début requise"),
-    end_date: z.coerce.date("Date de fin requise"),
+    start_date: z.date("Date de début requise"),
+    end_date: z.date("Date de fin requise"),
     reason: z
       .union([z.literal(""), z.enum(VACATION_REASON_VALUES)])
-      .refine((value) => value !== "", { message: "Motif requis" })
-      .pipe(z.enum(VACATION_REASON_VALUES)),
+      .refine(
+        (value): value is (typeof VACATION_REASON_VALUES)[number] =>
+          value !== "",
+        { message: "Motif requis" },
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.end_date < data.start_date) {

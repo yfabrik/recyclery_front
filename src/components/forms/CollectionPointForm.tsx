@@ -30,7 +30,11 @@ export const CollectionPointForm = ({
   defaultValues,
   recycleries,
 }: CollectionPointFormProps) => {
-  const form = useForm({
+  const form = useForm<
+    CollectionPointFormValues,
+    unknown,
+    CollectionPointFormOutput
+  >({
     defaultValues: {
       name: "",
       address: "",

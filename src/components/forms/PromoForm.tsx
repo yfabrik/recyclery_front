@@ -39,24 +39,29 @@ export const PromoForm = ({
             category_id: "",
             subcategory_id: "",
             promotionValue: "",
+            startDate: new Date(),
             endDate: "",
             isActive: true,
             ...normalizedDefaults,
+            stores: normalizedDefaults.stores ?? [""],
         }
     })
     const selectedStores = useWatch({
         control: form.control,
         name: "stores",
     })
-    const previousStores = useRef<(number | string)[]>([])
+    const previousStores = useRef<(number | "")[]>([])
 
     useEffect(() => {
-        const currentStores = Array.isArray(selectedStores)
-            ? selectedStores.filter((store): store is string | number => typeof store === "string" || typeof store === "number")
+        const currentStores: (number | "")[] = Array.isArray(selectedStores)
+            ? selectedStores.filter(
+                (store): store is number | "" =>
+                    store === "" || typeof store === "number",
+              )
             : []
 
         if (currentStores.length === 0) {
-            const nextStores = [""]
+            const nextStores: (number | "")[] = [""]
             form.setValue("stores", nextStores, { shouldDirty: true, shouldValidate: true })
             previousStores.current = nextStores
             return
@@ -67,7 +72,7 @@ export const PromoForm = ({
 
         if (hasAllStores && !hadAllStores) {
             if (currentStores.length !== 1) {
-                const nextStores = [""]
+                const nextStores: (number | "")[] = [""]
                 form.setValue("stores", nextStores, { shouldDirty: true, shouldValidate: true })
                 previousStores.current = nextStores
                 return
@@ -98,7 +103,22 @@ export const PromoForm = ({
 
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput control={form.control} label="promotion (%)" name="promotionValue" />
+                <FormInput
+                    control={form.control}
+                    label="promotion (%)"
+                    name="promotionValue"
+                    extra={{
+                        type: "number",
+                        onChange: (e) => {
+                            const raw = e.target.value
+                            form.setValue(
+                                "promotionValue",
+                                (raw === "" ? "" : Number(raw)) as never,
+                                { shouldValidate: true, shouldDirty: true },
+                            )
+                        },
+                    }}
+                />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
                 <FormSwitch control={form.control} name="isActive" label="promo active" />

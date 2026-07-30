@@ -1,4 +1,7 @@
-import type { CreateCollectionPointPresenceDataInput, CreateStoreHoursDataInput } from "@recyclerie/api/schemas/schedules";
+import type {
+  CreateCollectionPointPresenceDataInput,
+  CreateStoreHoursDataInput,
+} from "@recyclerie/api/schemas/schedules";
 import type { TaskScheduleDataInput } from "@recyclerie/api/schemas/taskSchedule";
 import {
   dateFromWeekday,
@@ -6,7 +9,11 @@ import {
   weekday,
 } from "@recyclerie/api/domain/date";
 import dayjs from "dayjs";
-import type { CollectionPointModel, ScheduleModel } from "../../interfaces/Models";
+import type {
+  CollectionPointModel,
+  ScheduleModel,
+} from "../../interfaces/Models";
+
 import type {
   CollecteFormOutput,
   CollecteFormValues,
@@ -17,15 +24,23 @@ import type {
   StoreOpeningFormOutput,
   StoreOpeningFormValues,
 } from "../schema/schedule";
+import { emptyToNull } from "../zodTransform";
 
 /** Parse API HH:mm or ISO datetime into a Date for form TimePickers. */
-function parseTimeToDate(time: string | Date | null | undefined): Date | undefined {
+function parseTimeToDate(
+  time: string | Date | null | undefined,
+): Date | undefined {
   if (time == null || time === "") return undefined;
   if (time instanceof Date) return time;
   const s = String(time);
   if (/^\d{1,2}:\d{2}/.test(s) && !s.includes("T")) {
     const [h, m] = s.split(":").map(Number);
-    return dayjs().hour(h ?? 0).minute(m ?? 0).second(0).millisecond(0).toDate();
+    return dayjs()
+      .hour(h ?? 0)
+      .minute(m ?? 0)
+      .second(0)
+      .millisecond(0)
+      .toDate();
   }
   const d = dayjs(s);
   return d.isValid() ? d.toDate() : undefined;
@@ -57,18 +72,19 @@ export function scheduleToCollectFormValues(
 export const scheduleCollectPayloadFromForm = (
   data: CollecteFormOutput,
 ): TaskScheduleDataInput => {
-  const { is_active, location, store_id, day_of_week, ...rest } = data;
+  const { is_active, location, store_id, day_of_week, notes, ...rest } = data;
   return {
     ...rest,
+    notes: emptyToNull(notes),
     scheduled_date: dateFromWeekday(day_of_week),
     is_recurring: is_active,
     location: location.length > 0 ? location.join(",") : null,
-    store_id: store_id,
+    store_id: store_id === "" ? null : store_id,
     name: "collecte",
     category: "collection",
     recurrence_pattern: "weekly",
     collection_point_id: null,
-  };
+  } satisfies TaskScheduleDataInput;
 };
 
 export const scheduleToCustomFormValues = (
@@ -93,11 +109,12 @@ export const scheduleCustomPayloadFromForm = (
     start_time: data.start_time,
     end_time: data.end_time,
     category: "custom",
-    notes: data.notes || null,
-    store_id: data.store_id || null,
+    notes: emptyToNull(data.notes),
+    store_id: data.store_id === "" ? null : data.store_id,
     is_recurring: !!data.recurrence_pattern,
-    recurrence_pattern: data.recurrence_pattern || null,
-  };
+    recurrence_pattern:
+      data.recurrence_pattern === "" ? null : data.recurrence_pattern,
+  } satisfies TaskScheduleDataInput;
 };
 
 export function storeHoursToFormValues(
@@ -133,8 +150,8 @@ export function storeHoursPayloadFromForm(
     start_time: toIsoTime(data.start_time),
     end_time: toIsoTime(data.end_time),
     is_24h: data.is_24h,
-    notes: data.notes,
-  };
+    notes: emptyToNull(data.notes),
+  } satisfies CreateStoreHoursDataInput;
 }
 
 export function presenceToFormValues(
@@ -171,6 +188,6 @@ export function presencePayloadFromForm(
     is_present: data.is_present,
     start_time: toIsoTime(data.start_time),
     end_time: toIsoTime(data.end_time),
-    notes: data.notes,
-  };
+    notes: emptyToNull(data.notes),
+  } satisfies CreateCollectionPointPresenceDataInput;
 }

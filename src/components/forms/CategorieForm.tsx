@@ -28,7 +28,7 @@ export const CategorieForm = ({
   onSubmit,
   defaultValues,
 }: CategorieFormProps) => {
-  const form = useForm({
+  const form = useForm<CategoryFormValues, unknown, CategoryFormOutput>({
     defaultValues: {
       name: "",
       description: "",

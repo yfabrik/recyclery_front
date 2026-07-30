@@ -27,7 +27,7 @@ export const StoreOpeningForm = ({
   defaultValues,
   stores,
 }: BaseFormProps<StoreOpeningFormValues,StoreOpeningFormOutput> & { stores: StoreModel[] }) => {
-  const form = useForm({
+  const form = useForm<StoreOpeningFormValues, unknown, StoreOpeningFormOutput>({
     resolver: zodResolver(storeOpeningFormSchema),
     defaultValues: {
       store_id: "",

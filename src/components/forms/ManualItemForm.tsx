@@ -2,9 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Euro, Scale } from "@mui/icons-material";
 import { Grid } from "@mui/material";
 import { useEffect } from "react";
-import { useForm, type Path, type PathValue } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { CategoryModel } from "../../interfaces/Models";
 import { sumPromoCategorie } from "../../services/cartService";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import {
   manualItemSchema,
   type ManualItemFormOutput,
@@ -31,7 +32,7 @@ export const ManualItemForm = ({
 }) => {
   const { prompt, PromptDialog } = usePrompt();
   // const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm({
+  const form = useForm<ManualItemFormValues, unknown, ManualItemFormOutput>({
     resolver: zodResolver(manualItemSchema(categories)),
     defaultValues: {
       category_id: "",
@@ -40,7 +41,6 @@ export const ManualItemForm = ({
       price: "",
       description: "",
       promotion: "",
-      // ...data,
       ...defaultValues ??{}
     },
   });
@@ -53,7 +53,8 @@ export const ManualItemForm = ({
     const weightState = form.getFieldState("weight")
     const promoState = form.getFieldState("promotion")
 
-    const promoValue = (form.getValues("promotion") || 0) as number
+    const promoRaw = form.getValues("promotion")
+    const promoValue = promoRaw === "" ? 0 : promoRaw
 
     const category = categories.find((c) => c.id == categoryId);
     const subcategory = category?.subcategories?.find(
@@ -69,25 +70,15 @@ export const ManualItemForm = ({
       form.setValue("weight", source.defaultWeight ?? 0);
     }
     const promo = sumPromoCategorie(category) + sumPromoCategorie(subcategory)
-    if (!promoState.isDirty || promo > (promoValue)) {
+    if (!promoState.isDirty || promo > promoValue) {
       form.setValue("promotion", promo);
     }
 
-  }, [categoryId, subcategoryId, categories]);
+  }, [categoryId, subcategoryId, categories, form]);
   
-  const setNumericField = async (
-    name: "price" | "weight",
-    unit: string,
-  ) => {
-    const field = name as Path<ManualItemFormValues>;
-    const value = Number(
-      (await prompt("", form.getValues(field)?.toString() || "", { unit })) ?? 0,
-    );
-    form.setValue(field, value as PathValue<ManualItemFormValues, Path<ManualItemFormValues>>, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
+
+  const setNumericField = createPromptNumericValue(form,prompt);
+
   // const onDefaults = useCallback(
   //   ({
   //     category,
