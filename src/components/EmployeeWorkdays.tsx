@@ -17,9 +17,10 @@ import {
 import {
   addWorkdaysToUser,
   getUserWorkdays,
-  type WorkdaysFormPayload,
 } from "../services/api/employee";
 import { WORKDAY_TIME_SLOTS } from "../constants/workdayTimeSlots";
+import { workdaysPayloadFromForm } from "../services/mapper/employeeWorkdays";
+import type { EmployeeWorkdaysFormOutput } from "../services/schema/employeeWorkdays";
 import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
 import { Loading } from "./Loading";
 
@@ -58,8 +59,8 @@ const EmployeeWorkdays = ({
   const workdays = workdaysQuery.data ?? [];
 
   const addWorkdays = useMutation({
-    mutationFn: (data: WorkdaysFormPayload) =>
-      addWorkdaysToUser(employeeId, data),
+    mutationFn: (data: EmployeeWorkdaysFormOutput) =>
+      addWorkdaysToUser(employeeId, workdaysPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Jours de travail mis à jour avec succès"));
       queryClient.invalidateQueries({ queryKey: ["workdays", employeeId] });
@@ -71,7 +72,7 @@ const EmployeeWorkdays = ({
     },
   });
 
-  const handleSave = async (data: WorkdaysFormPayload) => {
+  const handleSave = async (data: EmployeeWorkdaysFormOutput) => {
     addWorkdays.mutate(data);
   };
 

@@ -21,8 +21,6 @@ import {
 import { useCategoryItemDefaults } from "../../hooks/useCategoryItemDefaults";
 
 export type { ManualItemFormValues };
-/** @deprecated Use ManualItemFormOutput */
-export type ManualItemSchema = ManualItemFormOutput;
 
 export const ManualItemForm = ({
   formId,

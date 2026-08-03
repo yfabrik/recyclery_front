@@ -16,16 +16,10 @@ import {
   type RefundFormValues,
   type RefundItem,
 } from "../../services/schema/refund";
-import {
-  refundPayloadFromForm,
-  type RefundFormPayload,
-} from "../../services/mapper/refund";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 import { CartTable } from "../pos/CartTable";
 
-export type { RefundFormPayload, RefundFormValues, RefundFormOutput };
-/** Submit payload after mapping empties — preferred by refund API helpers. */
-export type Schema = RefundFormPayload;
+export type { RefundFormValues, RefundFormOutput };
 
 const sumRefundPrice = (
   cart: RefundFormOutput["cart"],
@@ -58,7 +52,7 @@ export const RefundForm = ({
   formId,
   onSubmit,
   categories,
-}: BaseFormProps<RefundFormValues, RefundFormPayload> & {
+}: BaseFormProps<RefundFormValues, RefundFormOutput> & {
   selectedTransaction: TransactionModel;
   categories: CategoryModel[];
 }) => {
@@ -111,10 +105,7 @@ export const RefundForm = ({
   return (
     <form
       id={formId}
-      onSubmit={form.handleSubmit(
-        (data) => onSubmit(refundPayloadFromForm(data)),
-        (err) => console.error(err),
-      )}
+      onSubmit={form.handleSubmit(onSubmit, (err) => console.error(err))}
     >
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12 }}>
@@ -231,7 +222,7 @@ export const RefundForm = ({
               <strong>
                 {giftCardCode
                   ? getPaymentMethodLabel(
-                      giftCardCode as RefundFormPayload["refund_method"],
+                      giftCardCode as RefundFormOutput["refund_method"],
                     )
                   : "—"}
               </strong>

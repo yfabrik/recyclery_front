@@ -11,8 +11,6 @@ import {
 import { FormCategorySubcategoryFields, FormDate, FormMultiSelect, FormNumber, FormSwitch, type BaseFormProps } from "./FormBase"
 
 export type { PromoFormOutput, PromoFormValues }
-/** @deprecated Use PromoFormOutput */
-export type Schema = PromoFormOutput
 
 export const PromoForm = ({
     formId,

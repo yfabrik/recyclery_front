@@ -38,5 +38,3 @@ export const passwordChangeFormSchemaWithCurrent = z
 
 export type PasswordChangeFormValues = z.input<typeof passwordChangeFormSchema>;
 export type PasswordChangeFormOutput = z.infer<typeof passwordChangeFormSchema>;
-/** @deprecated Use PasswordChangeFormOutput */
-export type PasswordChangeSchema = PasswordChangeFormOutput;

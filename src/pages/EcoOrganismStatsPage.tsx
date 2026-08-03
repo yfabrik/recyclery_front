@@ -25,11 +25,10 @@ import {
   type EcoOrganismQuarterStat,
 } from "../services/api/ecoOrganism";
 
-const parseQuarterKey = parseEcoOrgQuarterKey;
 
 const sortQuarterDesc = (a: string, b: string) => {
-  const aKey = parseQuarterKey(a);
-  const bKey = parseQuarterKey(b);
+  const aKey = parseEcoOrgQuarterKey(a);
+  const bKey = parseEcoOrgQuarterKey(b);
   if (!aKey || !bKey) return b.localeCompare(a);
   if (aKey.year !== bKey.year) return bKey.year - aKey.year;
   return bKey.quarterNumber - aKey.quarterNumber;

@@ -35,8 +35,6 @@ import {
 } from "./FormBase";
 
 export type { ArrivalFormOutput, ArrivalFormValues };
-/** @deprecated Use ArrivalFormOutput */
-export type ArrivalFormSchema = ArrivalFormOutput;
 
 type ArrivalFormProps = BaseFormProps<ArrivalFormValues, ArrivalFormOutput> & {
   categories: CategoryModel[];

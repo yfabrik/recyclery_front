@@ -20,12 +20,8 @@ import {
   WORKDAY_TIME_SLOT_VALUES,
   getWorkdayTimeSlotLabel,
 } from "../../constants/workdayTimeSlots";
-import type {
-  WorkdaysFormPayload,
-  WorkdaysModelTransformed,
-} from "../../services/api/users";
+import type { WorkdaysModelTransformed } from "../../services/api/employee";
 import { weekdayLabel } from "../../services/dateService";
-import { workdaysPayloadFromForm } from "../../services/mapper/employeeWorkdays";
 import {
   employeeWorkdaysFormSchema,
   type EmployeeWorkdaysFormOutput,
@@ -35,22 +31,12 @@ import {
 import { FormTime, type BaseFormProps } from "./FormBase";
 
 export type { WorkdayFormValues, EmployeeWorkdaysFormValues, EmployeeWorkdaysFormOutput };
-/** @deprecated Form output to parent is WorkdaysFormPayload after mapping. */
-export type Schema = WorkdaysFormPayload;
-/** @deprecated Use WorkdayFormValues */
-export type Workday = WorkdaysFormPayload["week1"][number];
-/** @deprecated Use WorkdayFormValues */
-export type WorkdayInput = WorkdayFormValues;
-/** @deprecated Use EmployeeWorkdaysFormValues */
-export type FormValues = EmployeeWorkdaysFormValues;
-/** @deprecated Use EmployeeWorkdaysFormOutput */
-export type FormOutput = EmployeeWorkdaysFormOutput;
 
 export const EmployeeWorkdaysForm = ({
   formId,
   onSubmit,
   defaults,
-}: BaseFormProps<EmployeeWorkdaysFormValues, WorkdaysFormPayload> & {
+}: BaseFormProps<EmployeeWorkdaysFormValues, EmployeeWorkdaysFormOutput> & {
   defaults?: WorkdaysModelTransformed[];
 }) => {
   const [tabValue, setTabValue] = useState(0);
@@ -118,9 +104,7 @@ export const EmployeeWorkdaysForm = ({
   return (
     <form
       id={formId}
-      onSubmit={form.handleSubmit((data) =>
-        onSubmit(workdaysPayloadFromForm(data)),
-      )}
+      onSubmit={form.handleSubmit(onSubmit)}
     >
       <Tabs
         value={tabValue}
@@ -182,7 +166,7 @@ const Horaires = ({
   control,
   name,
 }: {
-  control: Control<FormValues>;
+  control: Control<EmployeeWorkdaysFormValues>;
   name: `week1.${number}` | `week2.${number}`;
 }) => {
   const isWorking = useWatch({
@@ -211,7 +195,7 @@ const Horaires = ({
 };
 
 interface HalfDayProps {
-  control: Control<FormValues>;
+  control: Control<EmployeeWorkdaysFormValues>;
   name: `week1.${number}` | `week2.${number}`;
   slot: WorkdayFormValues["time_slot"];
   day: Weekday;

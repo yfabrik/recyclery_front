@@ -19,8 +19,6 @@ import {
 } from "./FormBase";
 
 export type { WasteFormOutput, WasteFormValues };
-/** @deprecated Use WasteFormOutput */
-export type Schema = WasteFormOutput;
 
 type WasteFormProps = BaseFormProps<WasteFormValues, WasteFormOutput> & {
   categories: CategoryModel[];

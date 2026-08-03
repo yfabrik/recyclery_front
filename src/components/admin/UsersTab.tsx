@@ -33,7 +33,6 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import type { UserAdminUpdatePasswordInput, UserCreateInput, UserUpdateInput } from "@recyclerie/api/schemas/users";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -57,13 +56,13 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
-import {
-  PasswordChangeForm,
-  type Schema as PasswordSchema,
-} from "../forms/PasswordChangeForm";
-import { UserForm, type Schema } from "../forms/UserForm";
+import { PasswordChangeForm } from "../forms/PasswordChangeForm";
+import { UserForm } from "../forms/UserForm";
 import { Loading } from "../Loading";
 import { StatCard } from "../StatCard";
+import { userPayloadFromForm } from "../../services/mapper/user";
+import type { PasswordChangeFormOutput } from "../../services/schema/password";
+import type { UserFormOutput } from "../../services/schema/user";
 
 export const UsersTab = () => {
   const [userDialog, setUserDialog] = useState(false);
@@ -92,10 +91,9 @@ export const UsersTab = () => {
     },
   });
 
-  const updateUserPayloadFromForm = (data: Schema): UserUpdateInput => ({ ...data });
   const editUser = useMutation({
-    mutationFn: ({ id, data }: { id: UserModel["id"]; data: Schema }) =>
-      updateUser(id, updateUserPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: UserModel["id"]; data: UserFormOutput }) =>
+      updateUser(id, userPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -105,9 +103,8 @@ export const UsersTab = () => {
       );
     },
   });
-  const createUserPayloadFromForm = (data: Schema): UserCreateInput => ({ ...data });
   const addUser = useMutation({
-    mutationFn: (data: Schema) => createUser(createUserPayloadFromForm(data)),
+    mutationFn: (data: UserFormOutput) => createUser(userPayloadFromForm(data)),
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
     onSuccess: (data) => {
@@ -134,10 +131,9 @@ export const UsersTab = () => {
     },
   });
 
-  const updateUserPasswordPayloadFromForm = (data: PasswordSchema): UserAdminUpdatePasswordInput => ({ ...data });
   const changePassword = useMutation({
-    mutationFn: (data: { id: UserModel["id"]; data: PasswordSchema }) =>
-      updateUserPassword(data.id, updateUserPasswordPayloadFromForm(data.data)),
+    mutationFn: (data: { id: UserModel["id"]; data: PasswordChangeFormOutput }) =>
+      updateUserPassword(data.id, data.data),
     onSuccess: (data) => {
       toast.success(
         getApiSuccessMessage(data, "Mot de passe mis à jour avec succès"),
@@ -165,7 +161,7 @@ export const UsersTab = () => {
     setEditingUser(null);
   };
 
-  const handleSaveUser = async (data: Schema) => {
+  const handleSaveUser = async (data: UserFormOutput) => {
     if (editingUser?.id) editUser.mutate({ id: editingUser.id, data });
     else addUser.mutate(data);
   };
@@ -180,7 +176,7 @@ export const UsersTab = () => {
     setEditingUser(null);
   };
 
-  const handleChangePassword = async (data: PasswordSchema) => {
+  const handleChangePassword = async (data: PasswordChangeFormOutput) => {
     if (!editingUser?.id) return;
     changePassword.mutate({ id: editingUser?.id, data });
   };

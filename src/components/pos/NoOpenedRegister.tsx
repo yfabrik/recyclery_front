@@ -35,8 +35,10 @@ import {
     getCashSessionStatusLabel,
 } from "../../constants/cashSessionStatuses";
 import { useBilanCaissePrint } from "../BilanCaissePrint";
-import { OpenCaisseForm, type OpenCaisseFormValues, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
+import { OpenCaisseForm, type OpenCaisseFormValues } from "../forms/OpenCaisseForm";
 import { Loading } from "../Loading";
+import { openCaissePayloadFromForm } from "../../services/mapper/caisse";
+import type { OpenCaisseFormOutput } from "../../services/schema/caisse";
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
@@ -62,7 +64,8 @@ export const NoOpenedRegister = () => {
     );
 
     const openSession = useMutation({
-        mutationFn: (data: OpenCaisseSchema) => OpenCaisse(data),
+        mutationFn: (data: OpenCaisseFormOutput) =>
+            OpenCaisse(openCaissePayloadFromForm(data)),
         onSuccess: (data) => {
             toast.success(getApiSuccessMessage(data, "Session ouverte avec succès"));
             setOpenSessionDialog(false);
@@ -73,7 +76,7 @@ export const NoOpenedRegister = () => {
         },
     });
 
-    const handleOpenSession = (data: OpenCaisseSchema) => {
+    const handleOpenSession = (data: OpenCaisseFormOutput) => {
         openSession.mutate(data);
     };
 

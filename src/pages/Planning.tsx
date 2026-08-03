@@ -32,10 +32,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import {
-  PlaningForm,
-  type SchemaInputValues,
-} from "../components/forms/planningForm";
+import { PlaningForm } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
 import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
@@ -44,6 +41,7 @@ import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
 import { TASK_STATUSES } from "../constants/taskStatuses";
 import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
+import type { PlanningFormValues } from "../services/schema/schedule";
 import type {
   EmployeeModel,
   StoreModel,
@@ -108,7 +106,7 @@ const Planning = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<TaskModel["id"] | null>(null);
   const [formDefaults, setFormDefaults] =
-    useState<Partial<SchemaInputValues> | null>(null);
+    useState<Partial<PlanningFormValues> | null>(null);
 
   // États pour l'assignation des employés depuis le planning
   const [openTaskAssignmentDialog, setOpenTaskAssignmentDialog] =
@@ -177,9 +175,8 @@ const Planning = () => {
 
 
   const addTask = useMutation({
-    //TODO faudra fix quand on changera les api non lié au form
-    mutationFn: (data: Parameters<typeof createTask>[0]) => createTask(data),
-
+    mutationFn: (data: PlanningFormOutput) =>
+      createTask(planningTaskPayloadFromForm(data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Planning créé avec succès"));
       queryclient.invalidateQueries({ queryKey: ["tasks"] });
@@ -189,8 +186,8 @@ const Planning = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
   const editTask = useMutation({
-    mutationFn: (data: { id: TaskModel["id"]; data: Parameters<typeof updateTask>[1] }) =>
-      updateTask(data.id, data.data),
+    mutationFn: (data: { id: TaskModel["id"]; data: PlanningFormOutput }) =>
+      updateTask(data.id, planningTaskPayloadFromForm(data.data)),
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Planning mis à jour avec succès"));
       handleCloseDialog();
@@ -348,10 +345,9 @@ const Planning = () => {
     setFormDefaults(null);
   };
   const handleSave = async (data: PlanningFormOutput) => {
-    const result = planningTaskPayloadFromForm(data)
     if (editingScheduleId)
-      editTask.mutate({ id: editingScheduleId, data: result });
-    else addTask.mutate(result);
+      editTask.mutate({ id: editingScheduleId, data });
+    else addTask.mutate(data);
   };
 
   const handleDeleteTask = async (schedule: TaskModel) => {

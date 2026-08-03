@@ -3,25 +3,19 @@ import { Box, Button } from "@mui/material";
 import { useEffect } from "react";
 import { useForm, type UseFormReset } from "react-hook-form";
 import {
-  createCaissePayloadFromForm,
-  type CreateCaissePayload,
-} from "../../services/mapper/caisse";
-import {
   createCaisseFormSchema,
   type CreateCaisseFormOutput,
   type CreateCaisseFormValues,
 } from "../../services/schema/caisse";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
-export type { CreateCaisseFormValues, CreateCaisseFormOutput, CreateCaissePayload };
-/** @deprecated Use CreateCaisseFormOutput */
-export type Schema = CreateCaissePayload;
+export type { CreateCaisseFormValues, CreateCaisseFormOutput };
 
 export const CreateCaisseForm = ({
   formId,
   onSubmit,
   onReady,
-}: BaseFormProps<CreateCaisseFormValues, CreateCaissePayload> & {
+}: BaseFormProps<CreateCaisseFormValues, CreateCaisseFormOutput> & {
   onReady?: (methods: {
     reset: UseFormReset<CreateCaisseFormValues>;
   }) => void;
@@ -43,12 +37,7 @@ export const CreateCaisseForm = ({
   const name = form.watch("name");
 
   return (
-    <form
-      id={formId}
-      onSubmit={form.handleSubmit((data) =>
-        onSubmit(createCaissePayloadFromForm(data)),
-      )}
-    >
+    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Box sx={{ mb: 2, mt: 2 }}>
         <FormInput
           control={form.control}

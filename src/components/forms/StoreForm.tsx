@@ -16,8 +16,6 @@ import {
 } from "../../services/schema/store";
 
 export type { StoreFormOutput, StoreFormValues };
-/** @deprecated Use StoreFormOutput */
-export type Schema = StoreFormOutput;
 
 export const StoreForm = ({
   formId,

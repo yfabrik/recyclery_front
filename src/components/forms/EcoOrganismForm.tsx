@@ -14,8 +14,6 @@ import {
 import { fetchCategories } from "../../services/api/categories";
 
 export type { EcoOrganismFormOutput, EcoOrganismFormValues };
-/** @deprecated Use EcoOrganismFormOutput */
-export type Schema = EcoOrganismFormOutput;
 
 export const EcoOrganismForm = ({
   formId,

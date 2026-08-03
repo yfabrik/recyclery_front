@@ -24,8 +24,6 @@ import {
 } from "../../services/schema/employee";
 
 export type { EmployeeStoresFormValues, EmployeeStoresFormOutput };
-/** @deprecated Use EmployeeStoresFormOutput */
-export type Schema = EmployeeStoresFormOutput;
 
 type Assignment = EmployeeStoreAssignmentDto;
 

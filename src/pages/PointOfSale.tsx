@@ -9,8 +9,9 @@ import {
 } from "../utils/apiToastMessage";
 import { ActiveSessionInfos } from "../components/ActiveSessionInfos";
 import { DialogCloseCaisse } from "../components/DialogCloseCaisse";
-import { type Schema as CloseCaisseSchema } from "../components/forms/CloseCaisseForm";
 import { ManualItemForm } from "../components/forms/ManualItemForm";
+import { closeCaissePayloadFromForm } from "../services/mapper/caisse";
+import type { CloseCaisseFormOutput } from "../services/schema/caisse";
 import { CartTable } from "../components/pos/CartTable";
 import { CartTabs } from "../components/pos/CartTabs";
 import { NoOpenedRegister } from "../components/pos/NoOpenedRegister";
@@ -74,8 +75,8 @@ const PointOfSale = () => {
   const closeSession = useMutation({
     mutationFn: (data: {
       id: CashSession["id"];
-      data: { closing_amount: number; notes: string | null };
-    }) => closeCaisse(data.id, data.data),
+      data: CloseCaisseFormOutput;
+    }) => closeCaisse(data.id, closeCaissePayloadFromForm(data.data)),
     onSuccess: (response) => {
       const { difference_amount } = response.data;
 
@@ -96,7 +97,7 @@ const PointOfSale = () => {
     },
   });
 
-  const handleCloseSession = (data: CloseCaisseSchema) => {
+  const handleCloseSession = (data: CloseCaisseFormOutput) => {
     if (activeSession.data) {
       closeSession.mutate({ id: activeSession.data.id, data });
     }

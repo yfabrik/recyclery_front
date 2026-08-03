@@ -40,7 +40,6 @@ import { formatCurrency } from "../../services/cartService";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../transactions/TransactionListTable";
-import type { Schema } from "../forms/RefundForm";
 import { SaleFiltersForm } from "../forms/filters/SaleFiltersForm";
 import {
   getSaleFilterDefaults,
@@ -54,6 +53,7 @@ import { buildCreateRefundBody } from "../../utils/refundBody";
 import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { StatCard } from "../StatCard";
 import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
+import type { RefundFormOutput } from "../../services/schema/refund";
 import { useUrlFilters } from "../../hooks/useUrlFilters";
 
 const toTransactionFilters = ({
@@ -132,7 +132,6 @@ export const SalesAnalyticsTab = () => {
       }).then((response) => response.data.data),
   });
 
-  // const createRefundPayloadFromForm = (data: Schema): RefundDataInput => ({...data});
   const addRefund = useMutation({
     mutationFn: (v: { id: TransactionModel["id"]; data: RefundDataInput }) =>
       createRefund(v.id, v.data),
@@ -149,7 +148,7 @@ export const SalesAnalyticsTab = () => {
     },
   });
 
-  const handleSubmitRefund = async (data: Schema) => {
+  const handleSubmitRefund = async (data: RefundFormOutput) => {
     if (!selectedTransaction?.cash_session_id) {
       toast.error("Session de caisse introuvable pour ce remboursement.");
       return;

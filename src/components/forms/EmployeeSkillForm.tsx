@@ -14,8 +14,6 @@ import {
 import { FormCheckboxGroup, type BaseFormProps } from "./FormBase";
 
 export type { EmployeeSkillFormValues, EmployeeSkillFormOutput };
-/** @deprecated Use EmployeeSkillFormOutput */
-export type Schema = EmployeeSkillFormOutput;
 
 function toSkillIds(skills: SkillModel[] | undefined): number[] {
   return skills?.map((s) => s.id) ?? [];

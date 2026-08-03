@@ -12,17 +12,18 @@ import {
 import type { CategoryModel, TransactionModel } from "../../interfaces/Models";
 import { useSelectedTransaction } from "../../hooks/useSelectedTransaction";
 import { Loading } from "../Loading";
-import { RefundForm, type Schema } from "../forms/RefundForm";
+import { RefundForm } from "../forms/RefundForm";
 import { RefundHistoryCard } from "./RefundHistoryCard";
 import { TransactionFinancialSummaryCard } from "./TransactionFinancialSummaryCard";
 import { TransactionInfoCard } from "./TransactionInfoCard";
+import type { RefundFormOutput } from "../../services/schema/refund";
 
 interface RefundTransactionDialogProps {
   open: boolean;
   onClose: () => void;
   transaction: TransactionModel | null;
   categories: CategoryModel[];
-  onSubmit: (data: Schema) => void;
+  onSubmit: (data: RefundFormOutput) => void;
   formId?: string;
 }
 

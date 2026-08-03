@@ -22,8 +22,6 @@ import {
 } from "./FormBase";
 
 export type { LabeledItemFormValues };
-/** @deprecated Use LabeledItemFormOutput */
-export type LabeledItemSchema = LabeledItemFormOutput;
 
 type FormValues = LabeledItemFormValues;
 

@@ -2,25 +2,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid } from "@mui/material";
 import { useForm } from "react-hook-form";
 import {
-  profilePayloadFromForm,
-  type ProfileFormPayload,
-} from "../../services/mapper/profile";
-import {
   profileFormSchema,
   type ProfileFormOutput,
   type ProfileFormValues,
 } from "../../services/schema/profile";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
-export type { ProfileFormValues, ProfileFormOutput, ProfileFormPayload };
-/** @deprecated Use ProfileFormPayload */
-export type Schema = ProfileFormPayload;
+export type { ProfileFormValues, ProfileFormOutput };
 
 export const ProfileForm = ({
   formId,
   onSubmit,
   defaultValues,
-}: BaseFormProps<ProfileFormValues, ProfileFormPayload>) => {
+}: BaseFormProps<ProfileFormValues, ProfileFormOutput>) => {
   const form = useForm<ProfileFormValues, unknown, ProfileFormOutput>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -31,12 +25,7 @@ export const ProfileForm = ({
   });
 
   return (
-    <form
-      id={formId}
-      onSubmit={form.handleSubmit((data) =>
-        onSubmit(profilePayloadFromForm(data)),
-      )}
-    >
+    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormInput

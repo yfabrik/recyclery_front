@@ -14,10 +14,6 @@ import {
 } from "./FormBase";
 
 export type { CategoryFormOutput, CategoryFormValues };
-/** @deprecated Use CategoryFormOutput */
-export type Schema = CategoryFormOutput;
-/** @deprecated Use CategoryFormValues */
-export type CategorieFormValues = CategoryFormValues;
 
 interface CategorieFormProps extends BaseFormProps<CategoryFormValues,CategoryFormOutput> {
   icons: string[];

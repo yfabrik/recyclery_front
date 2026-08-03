@@ -7,10 +7,6 @@ import {
 } from "../../constants/userRoles";
 import type { StoreModel } from "../../interfaces/Models";
 import {
-  userPayloadFromForm,
-  type UserFormPayload,
-} from "../../services/mapper/user";
-import {
   userFormSchema,
   type UserFormOutput,
   type UserFormValues,
@@ -24,13 +20,11 @@ import {
   type BaseFormProps,
 } from "./FormBase";
 
-export type { UserFormValues, UserFormOutput, UserFormPayload };
-/** @deprecated Use UserFormPayload */
-export type Schema = UserFormPayload;
+export type { UserFormValues, UserFormOutput };
 
 export interface UserFormProps
   extends Omit<
-    BaseFormProps<UserFormValues, UserFormPayload>,
+    BaseFormProps<UserFormValues, UserFormOutput>,
     "defaultValues"
   > {
   stores: StoreModel[];
@@ -68,7 +62,7 @@ export const UserForm = ({
   return (
     <form
       id={formId}
-      onSubmit={form.handleSubmit((data) => onSubmit(userPayloadFromForm(data)))}
+      onSubmit={form.handleSubmit(onSubmit)}
     >
       <Grid container spacing={2} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, md: 6 }}>
