@@ -1,24 +1,20 @@
 import { ARRIVAL_SOURCE_TYPES } from "@recyclerie/api/enums";
-import { idSchema, phoneSchema } from "@recyclerie/api/primitives/zod";
+import { phoneSchema } from "@recyclerie/api/primitives/zod";
 import z from "zod";
 import {
   idSchema as filterIdSchema,
   noEmptyStr,
-  nullString,
 } from "../../interfaces/ZodTypes";
 
 export const ecoOrganismFormSchema = z.object({
   name: noEmptyStr("nom requis"),
-  description: z.string().transform((v) => (v == "" ? null : v)),
-  contact_email: z.union([nullString(), z.email()]),
-  contact_phone: z.union([
-    nullString(),
-    phoneSchema(),
-  ]),
-  address: z.string().transform((v) => (v == "" ? null : v)),
-  website: z.union([nullString(), z.url()]),
-  inCategories: z.array(idSchema()).default([]),
-  sellCategories: z.array(idSchema()).default([]),
+  description: z.string(),
+  contact_email: z.union([z.literal(""), z.email()]),
+  contact_phone: z.union([z.literal(""), phoneSchema()]),
+  address: z.string(),
+  website: z.union([z.literal(""), z.url()]),
+  inCategories: z.array(z.number().positive()),
+  sellCategories: z.array(z.number().positive()),
   is_active: z.boolean(),
 });
 

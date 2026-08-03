@@ -32,8 +32,10 @@ export const WithWorkingMondayMorning: Story = {
     defaults: [
       {
         id: 1,
+        employee_id: 1,
         createdAt: new Date().toISOString(),
-        day_of_week: "lundi",
+        updatedAt: new Date().toISOString(),
+        day_of_week: 1,
         time_slot: "morning",
         is_working: true,
         start_time: new Date(new Date().setHours(8, 0)),

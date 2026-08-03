@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { WbSunny, WbTwilight } from "@mui/icons-material";
 import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { TASK_CATEGORIES } from "../../constants/taskCategories";
 import { TASK_PRIORITIES } from "../../constants/taskPriorities";
 import { WORKDAY_TIME_SLOT_VALUES } from "../../constants/workdayTimeSlots";
 import {
@@ -23,7 +24,7 @@ export type SchemaInputValues = PlanningFormValues;
 /** @deprecated Use PlanningFormOutput */
 export type Schema = PlanningFormOutput;
 
-type ScheduleFormProps = BaseFormProps<SchemaInputValues, Schema> & {
+type ScheduleFormProps = BaseFormProps<PlanningFormValues, PlanningFormOutput> & {
   stores: Pick<StoreModel, "id" | "name">[];
 };
 
@@ -33,7 +34,7 @@ export const PlaningForm = ({
   defaultValues,
   stores,
 }: ScheduleFormProps) => {
-  const form = useForm<SchemaInputValues, unknown, Schema>({
+  const form = useForm<PlanningFormValues, unknown, PlanningFormOutput>({
     resolver: zodResolver(planningFormSchema),
     defaultValues: {
       name: "",
@@ -72,10 +73,14 @@ export const PlaningForm = ({
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} name="category" label="Tâche">
-            <MenuItem value="vente">Vente</MenuItem>
-            <MenuItem value="point">Precense point collecte</MenuItem>
-            <MenuItem value="collection">Collecte</MenuItem>
-            <MenuItem value="custom">tache personnalisé</MenuItem>
+            {TASK_CATEGORIES.map((category) => (
+              <MenuItem key={category.value} value={category.value}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {category.icon}
+                  {category.label}
+                </Box>
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
 

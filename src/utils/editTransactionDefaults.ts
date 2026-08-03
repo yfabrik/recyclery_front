@@ -1,5 +1,5 @@
 import type { CategoryModel, TransactionModel } from "../interfaces/Models";
-import type { Schema as CartSchema } from "../components/forms/cartSchema";
+import type { CartFormOutput as CartSchema } from "../services/schema/cart";
 import { getTransactionGlobalPromotion } from "../services/cartService";
 import { buildCartItemsFromTransaction } from "./transactionReceipt";
 

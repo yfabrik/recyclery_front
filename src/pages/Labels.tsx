@@ -61,7 +61,7 @@ import {
   labelFilterSchema,
   toLabelFilterInput,
 } from "../services/schema/label";
-import { labeledItemToFormValues } from "../services/mapper/label";
+import { labeledItemToFormValues, labeledItemPayloadFromForm } from "../services/mapper/label";
 import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   getLabeledItemConditionColor,
@@ -151,7 +151,8 @@ const Labels = () => {
   });
 
   const addItem = useMutation({
-    mutationFn: (data: LabeledItemFormOutput) => createLabeledItem(data),
+    mutationFn: (data: LabeledItemFormOutput) =>
+      createLabeledItem(labeledItemPayloadFromForm(data)),
     onSuccess: (data) => {
       saved(data);
     },
@@ -159,7 +160,7 @@ const Labels = () => {
   });
   const editItem = useMutation({
     mutationFn: (data: { id: number; data: LabeledItemFormOutput }) =>
-      updateLabeledItem(data.id, data.data),
+      updateLabeledItem(data.id, labeledItemPayloadFromForm(data.data)),
     onSuccess: (data) => {
       return saved(data);
     },

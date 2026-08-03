@@ -1,9 +1,7 @@
 import type { WasteBodyInput } from "@recyclerie/api/schemas/waste";
 import type { WasteModel } from "../../interfaces/Models";
-import type {
-  WasteFormOutput,
-  WasteFormValues,
-} from "../schema/waste";
+import type { WasteFormOutput, WasteFormValues } from "../schema/waste";
+import { emptyToNull } from "../zodTransform";
 
 export function wasteToFormValues(
   disposal: WasteModel,
@@ -28,4 +26,20 @@ export function wasteToFormValues(
 
 export const wastePayloadFromForm = (
   data: WasteFormOutput,
-): WasteBodyInput => ({ ...data });
+): WasteBodyInput => {
+  return {
+    disposal_date: data.disposal_date,
+    disposal_type: data.disposal_type,
+    category_id: data.category_id,
+    subcategory_id:
+      data.subcategory_id === "" ? null : data.subcategory_id,
+    eco_organism_id:
+      data.eco_organism_id === "" ? null : data.eco_organism_id,
+    weight_kg: data.weight_kg,
+    volume_m3: data.volume_m3,
+    transport_method: emptyToNull(data.transport_method),
+    transport_company: emptyToNull(data.transport_company),
+    transport_cost: data.transport_cost,
+    notes: emptyToNull(data.notes),
+  } satisfies WasteBodyInput;
+};

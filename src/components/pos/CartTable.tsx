@@ -13,7 +13,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import type { CartItem, CartItemInput } from "../forms/cartSchema";
+import type { CartItem, CartItemInput } from "../../services/schema/cart";
 import {
   formatCurrency,
   formatWeight,

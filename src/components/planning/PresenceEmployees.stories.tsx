@@ -10,38 +10,32 @@ const mockEmployee = (
 ): EmployeeModel => ({
   id,
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   fullName: `${prenom} ${nom}`,
   nom,
   prenom,
+  phone: null,
+  email: null,
   isActive: true,
 });
 
 const emptyEmployeesByDay = () => {
   const daysOfWeek = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ];
-  const dayLabels = [
-    "Lundi",
-    "Mardi",
-    "Mercredi",
-    "Jeudi",
-    "Vendredi",
-    "Samedi",
-    "Dimanche",
+    { value: 1, label: "Lundi" },
+    { value: 2, label: "Mardi" },
+    { value: 3, label: "Mercredi" },
+    { value: 4, label: "Jeudi" },
+    { value: 5, label: "Vendredi" },
+    { value: 6, label: "Samedi" },
+    { value: 0, label: "Dimanche" },
   ];
   const employeesByDay: Record<
     string,
     { label: string; morning: EmployeeModel[]; afternoon: EmployeeModel[]; allDay: EmployeeModel[] }
   > = {};
-  daysOfWeek.forEach((day, index) => {
-    employeesByDay[day] = {
-      label: dayLabels[index],
+  daysOfWeek.forEach((day) => {
+    employeesByDay[String(day.value)] = {
+      label: day.label,
       morning: [],
       afternoon: [],
       allDay: [],
@@ -81,9 +75,9 @@ export const Populated: Story = {
   args: {
     employeesByDay: (() => {
       const schedule = emptyEmployeesByDay();
-      schedule.monday.morning = [mockEmployee(1, "Marie", "Dupont")];
-      schedule.monday.afternoon = [mockEmployee(2, "Jean", "Martin")];
-      schedule.wednesday.allDay = [mockEmployee(3, "Sophie", "Bernard")];
+      schedule["1"].morning = [mockEmployee(1, "Marie", "Dupont")];
+      schedule["1"].afternoon = [mockEmployee(2, "Jean", "Martin")];
+      schedule["3"].allDay = [mockEmployee(3, "Sophie", "Bernard")];
       return schedule;
     })(),
   },

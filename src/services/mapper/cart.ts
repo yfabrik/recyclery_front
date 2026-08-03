@@ -1,10 +1,13 @@
-import type { Schema as CartSchema } from "../components/forms/cartSchema";
-import type { CreateTransactionBody } from "../services/api/transactions";
+import type {
+  SaleTransactionBaseInput,
+  TransactionItemInput,
+} from "@recyclerie/api/schemas/salesTransactions";
 import {
   getCartTotal,
   getCartTotalWithGlobalPromotion,
   roundCurrency,
-} from "../services/cartService";
+} from "../cartService";
+import type { CartFormOutput } from "../schema/cart";
 
 interface BuildTransactionBodyOptions {
   normalizePostalCodeToNull?: boolean;
@@ -12,13 +15,13 @@ interface BuildTransactionBodyOptions {
 }
 
 export const buildTransactionBody = (
-  data: CartSchema,
+  data: CartFormOutput,
   cashSessionId: number,
   {
     normalizePostalCodeToNull = true,
     includeTotalPrice = false,
   }: BuildTransactionBodyOptions = {},
-): CreateTransactionBody => {
+): SaleTransactionBaseInput => {
   const subtotal = getCartTotal(data.cart);
   const total = getCartTotalWithGlobalPromotion(
     data.cart,
@@ -67,6 +70,15 @@ export const buildTransactionBody = (
         ...baseItem,
         total_price: item.quantity * item.price,
       };
-    }) as CreateTransactionBody["items"],
+    }) satisfies TransactionItemInput["id"],
   };
+};
+
+export const buildUpdateTransactionBody = (
+  data: CartFormOutput,
+  cashSessionId: number,
+): SaleTransactionBaseInput => {
+  return buildTransactionBody(data, cashSessionId, {
+    normalizePostalCodeToNull: true,
+  }) satisfies SaleTransactionBaseInput;
 };

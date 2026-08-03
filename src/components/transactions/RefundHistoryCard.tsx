@@ -13,17 +13,15 @@ import {
 import type { TransactionModel } from "../../interfaces/Models";
 import { getPaymentMethodColor, getPaymentMethodLabel } from "../../constants/paymentMethods";
 import { getRefundReasonLabel } from "../../constants/refundReasons";
-import type { RefundTransaction } from "../../services/api/transactions";
-import { formatCurrency, getTransactionStoreName } from "../../services/cartService";
+import { formatCurrency, getTransactionEmployeeName, getTransactionStoreName } from "../../services/cartService";
 import { useTransactionRefunds } from "../../hooks/useTransactionRefunds";
 import { Loading } from "../Loading";
 
 const getRefundType = (
-  refund: RefundTransaction,
+  refund: TransactionModel,
   parentTotal: number,
   cumulativeRefunded: number,
 ): "full" | "partial" => {
-  if (refund.refund_type) return refund.refund_type;
   if (refund.total_amount >= parentTotal) return "full";
   if (cumulativeRefunded >= parentTotal) return "full";
   return "partial";
@@ -92,6 +90,7 @@ export const RefundHistoryCard = ({ transaction }: RefundHistoryCardProps) => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
+                            {/* TODO FIXME not saved in db */}
                             {getRefundReasonLabel(refund.refund_reason)}
                           </Typography>
                         </TableCell>
@@ -119,9 +118,7 @@ export const RefundHistoryCard = ({ transaction }: RefundHistoryCardProps) => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {refund.created_by ||
-                              refund.CashSession?.User?.username ||
-                              "N/A"}
+                            {getTransactionEmployeeName(refund) }
                           </Typography>
                         </TableCell>
                         <TableCell>

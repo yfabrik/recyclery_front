@@ -1,17 +1,25 @@
 import { z } from "zod";
-import { noEmptyStr, nullString } from "../../interfaces/ZodTypes";
-import { idSchema } from "@recyclerie/api/primitives/zod";
+import {
+  noEmptyStr,
+  requiredNonNegativeNumber,
+} from "../../interfaces/ZodTypes";
 
 export const categoryFormSchema = z.object({
   name: noEmptyStr("name required"),
-  description: z.string().transform(v=>v==""?null:v),
-  icon: z.string().transform(v=>v==""?null:v),
-  defaultPrice: z.coerce.number().nonnegative().default(0),
-  defaultWeight: z.coerce.number().nonnegative().default(0),
-  parent_id: idSchema().nullable(),
-  priceBasedOnWeight: z.boolean().default(false),
-  bundlePrice: z.union([nullString(), z.coerce.number("nombre attendu").nonnegative("le nombre doit etre positif")]),
-  bundleQuantity: z.union([nullString(), z.coerce.number("nombre attendu").nonnegative("le nombre doit etre positif")]),
+  description: z.string(),
+  icon: z.string(),
+  defaultPrice: requiredNonNegativeNumber("prix requis"),
+  defaultWeight: requiredNonNegativeNumber("poids requis"),
+  parent_id: z.number().positive().nullable(),
+  priceBasedOnWeight: z.boolean(),
+  bundlePrice: z.union([
+    z.literal(""),
+    z.number("nombre attendu").nonnegative("le nombre doit etre positif"),
+  ]),
+  bundleQuantity: z.union([
+    z.literal(""),
+    z.number("nombre attendu").nonnegative("le nombre doit etre positif"),
+  ]),
 });
 
 export type CategoryFormOutput = z.infer<typeof categoryFormSchema>;

@@ -27,3 +27,12 @@ dist-ssr
 storybook-static
 
 .env
+.env.e2e
+
+# Playwright / Vitest artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/trace/
+/coverage/

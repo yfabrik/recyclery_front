@@ -34,6 +34,7 @@ export const saleHistoryFilterSchema = z.object({
   transactionMethod: z.enum(PAYMENT_METHOD_FILTER_VALUES).optional(),
 });
 export type SaleHistoryFilters = z.infer<typeof saleHistoryFilterSchema>;
+export type SaleHistoryFilterInput = z.input<typeof saleHistoryFilterSchema>;
 
 export const getSaleHistoryFilterDefaults = (): SaleHistoryFilters => {
   const today = new Date();

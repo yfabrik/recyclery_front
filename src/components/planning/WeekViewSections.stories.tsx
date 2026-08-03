@@ -8,6 +8,7 @@ const sampleSchedules: TaskModel[] = [
   {
     id: 60,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Vente matin",
     description: null,
     category: "vente",
@@ -22,11 +23,14 @@ const sampleSchedules: TaskModel[] = [
     notes: null,
     status: null,
     schedule_id: 60,
-    day_of_week: "lundi",
+    store_id: 1,
+    collection_point_id: null,
+    day_of_week: 1,
   },
   {
     id: 61,
     createdAt: nowIso,
+    updatedAt: nowIso,
     name: "Collecte après-midi",
     description: null,
     category: "collection",
@@ -41,7 +45,9 @@ const sampleSchedules: TaskModel[] = [
     notes: null,
     status: null,
     schedule_id: 61,
-    day_of_week: "mardi",
+    store_id: null,
+    collection_point_id: 1,
+    day_of_week: 2,
   },
 ];
 

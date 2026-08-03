@@ -1,8 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Grid, MenuItem } from "@mui/material";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-
+import {
+  USER_ROLES,
+} from "../../constants/userRoles";
+import type { StoreModel } from "../../interfaces/Models";
+import {
+  userPayloadFromForm,
+  type UserFormPayload,
+} from "../../services/mapper/user";
+import {
+  userFormSchema,
+  type UserFormOutput,
+  type UserFormValues,
+} from "../../services/schema/user";
 import {
   FormInput,
   FormMultiSelect,
@@ -11,39 +23,18 @@ import {
   FormSwitch,
   type BaseFormProps,
 } from "./FormBase";
-import { idSchema, noEmptyStr, nullString, phoneSchema } from "../../interfaces/ZodTypes";
-import type { StoreModel } from "../../interfaces/Models";
-import { emptyStringToNull } from "../../services/zodTransform";
-import { useEffect } from "react";
-import {
-  USER_ROLE_VALUES,
-  USER_ROLES,
-} from "../../constants/userRoles";
 
-const schema = z.object({
-  username: noEmptyStr("username requis"),
-  email: z.email("email requis"),
-  first_name: z
-    .string()
-    .trim()
-    .transform((val) => (val == "" ? null : val)),
-  last_name: z
-    .string()
-    .trim()
-    .transform((val) => (val == "" ? null : val)),
-  phone: z.union([nullString(),phoneSchema()]),
-  password: z.string(),
-  role: z.enum(USER_ROLE_VALUES, "role requis"),
-  recyclery_id: z.union([nullString(),idSchema()]),
-  isActive: z.boolean().default(true),
-  managedStores: z.array(idSchema())
-});
+export type { UserFormValues, UserFormOutput, UserFormPayload };
+/** @deprecated Use UserFormPayload */
+export type Schema = UserFormPayload;
 
-export type Schema = z.infer<typeof schema>;
-
-export interface UserFormProps extends Omit<BaseFormProps<Schema>, "defaultValues"> {
+export interface UserFormProps
+  extends Omit<
+    BaseFormProps<UserFormValues, UserFormPayload>,
+    "defaultValues"
+  > {
   stores: StoreModel[];
-  defaultValues?: (Partial<Schema> & { id?: number }) | null;
+  defaultValues?: (Partial<UserFormValues> & { id?: number }) | null;
 }
 
 export const UserForm = ({
@@ -52,10 +43,8 @@ export const UserForm = ({
   defaultValues,
   stores,
 }: UserFormProps) => {
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-
-  const form = useForm({
-    resolver: zodResolver(schema),
+  const form = useForm<UserFormValues, unknown, UserFormOutput>({
+    resolver: zodResolver(userFormSchema),
     defaultValues: {
       username: "",
       email: "",
@@ -67,15 +56,20 @@ export const UserForm = ({
       recyclery_id: "",
       isActive: true,
       managedStores: [],
-      ...data
+      ...defaultValues,
     },
   });
 
-  const role = form.watch("role")
-  useEffect(() => { if (role == "employee") form.setValue("managedStores", []) }, [role])
+  const role = form.watch("role");
+  useEffect(() => {
+    if (role == "employee") form.setValue("managedStores", []);
+  }, [role, form]);
 
   return (
-    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit((data) => onSubmit(userPayloadFromForm(data)))}
+    >
       <Grid container spacing={2} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput
@@ -88,7 +82,11 @@ export const UserForm = ({
           <FormInput control={form.control} label="Email" name="email" />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <FormInput control={form.control} label="Prénom" name="first_name" />
+          <FormInput
+            control={form.control}
+            label="Prénom"
+            name="first_name"
+          />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormInput control={form.control} label="Nom" name="last_name" />
@@ -107,26 +105,19 @@ export const UserForm = ({
         )}
         <Grid size={{ xs: 12, md: 6 }}>
           <FormSelect control={form.control} label="Rôle" name="role">
-            {USER_ROLES.map((role) => (
-              <MenuItem key={role.value} value={role.value}>
-                {role.label}
+            {USER_ROLES.map((roleOption) => (
+              <MenuItem key={roleOption.value} value={roleOption.value}>
+                {roleOption.label}
               </MenuItem>
             ))}
           </FormSelect>
         </Grid>
-        {role != "employee" &&
+        {role != "employee" && (
           <Grid size={{ xs: 12, md: 6 }}>
             <FormMultiSelect
               control={form.control}
               label="Manager de :"
               name="managedStores"
-            // renderValue={(selected) => {
-            //   return selected.map(item => {
-            //     const [type, id] = item.split(".");
-            //     return stores.find(store => store.id === +id)?.name;
-            //   }).join(", ");
-
-            // }}
             >
               <MenuItem key="no-store" value="">
                 Aucun magasin assigné
@@ -136,24 +127,9 @@ export const UserForm = ({
                   {store.name}
                 </MenuItem>
               ))}
-
             </FormMultiSelect>
-            {/* <FormSelect
-            control={form.control}
-            label="Magasin"
-            name="recyclery_id"
-          >
-            <MenuItem key="no-store" value="">
-              Aucun magasin assigné
-            </MenuItem>
-            {stores.map((store) => (
-              <MenuItem key={store.id} value={store.id}>
-                {store.name}
-              </MenuItem>
-            ))}
-          </FormSelect> */}
           </Grid>
-        }
+        )}
         <Grid size={{ xs: 12 }}>
           <FormSwitch
             control={form.control}

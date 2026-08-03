@@ -11,11 +11,12 @@ import { Box, Button, Grid, MenuItem, Paper, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { useForm, useWatch, type UseFormReset } from "react-hook-form";
 
+import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type {
   CategoryModel,
   CollectionPointModel,
 } from "../../interfaces/Models";
-import { ARRIVAL_SOURCE_TYPES } from "../../constants/arrivalSourceTypes";
 import {
   arrivalFormSchema,
   type ArrivalFormOutput,
@@ -41,7 +42,7 @@ type ArrivalFormProps = BaseFormProps<ArrivalFormValues, ArrivalFormOutput> & {
   categories: CategoryModel[];
   collectionPoints: CollectionPointModel[];
   loading: boolean;
-  onReady?: (method: { reset: UseFormReset<ArrivalFormOutput> }) => void;
+  onReady?: (method: { reset: UseFormReset<ArrivalFormValues> }) => void;
 };
 
 export const ArrivalForm = ({
@@ -52,7 +53,7 @@ export const ArrivalForm = ({
   loading = false,
   onReady,
 }: ArrivalFormProps) => {
-  const form = useForm({
+  const form = useForm<ArrivalFormValues, unknown, ArrivalFormOutput>({
     resolver: zodResolver(arrivalFormSchema(categories)),
     defaultValues: {
       category_id: "",
@@ -60,7 +61,7 @@ export const ArrivalForm = ({
       weight: "",
       arrival_date: new Date(),
       arrival_time: new Date(),
-      source_type: "point",//TODO pas supposé possible le undefined
+      source_type: "point",
       collection_point_id: "",
       source_details: "",
       notes: "",
@@ -179,15 +180,22 @@ export const ArrivalForm = ({
 
   const reset = form.reset;
   useEffect(() => {
-    onReady?.({ reset: reset as UseFormReset<ArrivalFormOutput> });
+    onReady?.({ reset });
   }, [onReady, reset]);
+
+  const sourceType = useWatch({ control: form.control, name: "source_type" });
+  useEffect(() => {
+    if (sourceType !== "point") {
+      form.setValue("collection_point_id", "");
+    }
+  }, [sourceType, form]);
 
   // Reset subcategory when category changes to avoid out-of-range select values.
   // useEffect(() => {
   //   form.setValue("subcategory_id", "");
   // }, [categoryId, form]);
 
-
+  const setNumericField = createPromptNumericValue(form,prompt);
 
   return (
     <>
@@ -216,14 +224,7 @@ export const ArrivalForm = ({
                   name="weight"
                   label="Poids (kg)"
                   extra={{
-                    onClick: async () =>
-                      form.setValue(
-                        "weight",
-                        await prompt(
-                          "",
-                          form.getValues("weight")?.toString() || "",
-                        ),
-                      ),
+                      onClick: () => setNumericField("weight", "Kg"),
                     placeholder: "Cliquez pour saisir le poids",
                     sx: {
                       "& .MuiInputBase-input": {

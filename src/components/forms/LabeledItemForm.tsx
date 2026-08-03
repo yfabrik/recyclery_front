@@ -1,12 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Euro, Scale } from "@mui/icons-material";
 import { Grid, MenuItem } from "@mui/material";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldPath, type Path, type PathValue } from "react-hook-form";
 import {
   LABELED_ITEM_CONDITIONS,
 } from "../../constants/labeledItemConditions";
+import { useCategoryItemDefaults } from "../../hooks/useCategoryItemDefaults";
 import type { CategoryModel } from "../../interfaces/Models";
+import {
+  labeledItemSchema,
+  type LabeledItemFormOutput,
+  type LabeledItemFormValues,
+} from "../../services/schema/item";
 import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
@@ -14,11 +19,7 @@ import {
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
-import {
-  labeledItemSchema,
-  type LabeledItemFormOutput,
-  type LabeledItemFormValues,
-} from "../../services/schema/item";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 
 export type { LabeledItemFormValues };
 /** @deprecated Use LabeledItemFormOutput */
@@ -38,6 +39,12 @@ export const LabeledItemForm = ({
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
 
+  // RHF `useForm<Values, Ctx, Output>` + Zod `z.input` vs `z.infer` mismatch:
+  // `z.coerce.number()` / `.transform()` (and `preprocess`) make input ≠ output, so
+  // `setValue`/`getValues` for those fields resolve to `never`. `as Path` / `as PathValue`
+  // are escape hatches, not real proofs — prefer aligning form state with what the UI
+  // holds (e.g. price: number) or mapping type-changing transforms outside the form schema.
+  // Switching coerce → preprocess does not fix this.
   const form = useForm<FormValues, unknown, LabeledItemFormOutput>({
     defaultValues: {
       category_id: "",
@@ -54,30 +61,45 @@ export const LabeledItemForm = ({
   const categoryId = form.watch("category_id");
   const subcategoryId = form.watch("subcategory_id");
 
-  useEffect(() => {
-    //TODO faut remettre les value source default quand on  clean le field
-    if(defaultValues?.price && defaultValues?.weight) {
-      return;
-    }
-    const priceState = form.getFieldState("price")
-    const weightState = form.getFieldState("weight")
+  useCategoryItemDefaults({
+    form,
+    categories,
+    categoryId,
+    subcategoryId,
+    skipWhenPrefilled: true,
+    prefilledPrice: defaultValues?.price as number|undefined,
+    prefilledWeight: defaultValues?.weight as number|undefined,
+    onDefaults: (ctx) => {
+      console.log(ctx);
+    },
+  })
+  const setNumericField = createPromptNumericValue(form,prompt);
 
 
-    const category = categories.find((c) => c.id == categoryId);
-    const subcategory = category?.subcategories?.find(
-      (c) => c.id == subcategoryId,
-    );
-    const source = subcategory ?? category;
-    if (!source) return;
+  // useEffect(() => {
+  //   //TODO faut remettre les value source default quand on  clean le field
+  //   if(defaultValues?.price && defaultValues?.weight) {
+  //     return;
+  //   }
+  //   const priceState = form.getFieldState("price")
+  //   const weightState = form.getFieldState("weight")
 
-    if (!priceState.isDirty) {
-      form.setValue("price", source.defaultPrice ?? 0);
-    }
-    if (!weightState.isDirty) {
-      form.setValue("weight", source.defaultWeight ?? 0);
-    }
 
-  }, [categoryId, subcategoryId, categories]);
+  //   const category = categories.find((c) => c.id == categoryId);
+  //   const subcategory = category?.subcategories?.find(
+  //     (c) => c.id == subcategoryId,
+  //   );
+  //   const source = subcategory ?? category;
+  //   if (!source) return;
+
+  //   if (!priceState.isDirty) {
+  //     form.setValue("price", source.defaultPrice ?? 0);
+  //   }
+  //   if (!weightState.isDirty) {
+  //     form.setValue("weight", source.defaultWeight ?? 0);
+  //   }
+
+  // }, [categoryId, subcategoryId, categories]);
 
   return (
     <>
@@ -99,21 +121,9 @@ export const LabeledItemForm = ({
               label="Poids (kg)"
               extra={{
                 type: "number",
-                onClick: async () =>
-                  form.setValue(
-                    "weight",
-                    await prompt(
-                      "",
-                      form.getValues("weight")?.toString() || "",
-                      {
-                        unit: "Kg",
-                      }),
-                    {
-                      shouldDirty: true,
-                      shouldTouch: true
-                    }
-
-                  ),
+                onClick: () => setNumericField("weight", "Kg"),
+                  
+                  
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",
@@ -140,18 +150,7 @@ export const LabeledItemForm = ({
               label="Prix de vente (€)"
               extra={{
                 type: "number",
-                onClick: async () =>
-                  form.setValue(
-                    "price",
-                    await prompt(
-                      "",
-                      form.getValues("price")?.toString() || "",
-                      { unit: "€" }),
-                    {
-                      shouldDirty: true,
-                      shouldTouch: true
-                    }
-                  ),
+                onClick: () => setNumericField("price", "€"),
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",

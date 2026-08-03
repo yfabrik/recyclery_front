@@ -1,21 +1,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Grid, InputAdornment } from "@mui/material";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
 import { AttachMoney, Euro } from "@mui/icons-material";
+import { Button, Grid, InputAdornment } from "@mui/material";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
+import {
+  closeCaissePayloadFromForm,
+  type CloseCaissePayload,
+} from "../../services/mapper/caisse";
+import {
+  closeCaisseFormSchema,
+  type CloseCaisseFormOutput,
+  type CloseCaisseFormValues,
+} from "../../services/schema/caisse";
 import { usePrompt } from "../Prompt";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
-const schema = z.object({
-  closing_amount: z.coerce
-    .number("Veuillez saisir le montant de fermeture")
-    .positive("Veuillez saisir le montant de fermeture"),
-  notes: z.string().transform((val) => (val == "" ? null : val)),
-});
-
-export type Schema = z.infer<typeof schema>;
+export type { CloseCaisseFormValues, CloseCaisseFormOutput, CloseCaissePayload };
+/** @deprecated Use CloseCaissePayload for submit */
+export type Schema = CloseCaissePayload;
 
 export const CloseCaisseForm = ({
   formId,
@@ -24,32 +27,32 @@ export const CloseCaisseForm = ({
   setState,
   closingAmount,
   setClosingAmount,
-  expectedAMount
-}: BaseFormProps<Schema> & {
+  expectedAMount,
+}: BaseFormProps<CloseCaisseFormValues, CloseCaissePayload> & {
   state: "prepare" | "valid";
   setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
   closingAmount: number;
   setClosingAmount: React.Dispatch<React.SetStateAction<number>>;
-  expectedAMount?:number
+  expectedAMount?: number;
 }) => {
-  const form = useForm({
-    resolver: zodResolver(schema),
+  const form = useForm<CloseCaisseFormValues, unknown, CloseCaisseFormOutput>({
+    resolver: zodResolver(closeCaisseFormSchema),
     defaultValues: {
       closing_amount: "",
       notes: "",
     },
   });
   const { prompt, PromptDialog } = usePrompt();
-
+  const setNumericField = createPromptNumericValue(form, prompt);
   const watchedValues = form.watch("closing_amount");
 
   useEffect(() => {
     setState("prepare");
   }, [watchedValues, setState]);
 
-  const submited = (data: Schema) => {
+  const submited = (data: CloseCaisseFormOutput) => {
     if (state == "prepare") setState("valid");
-    else onSubmit(data);
+    else onSubmit(closeCaissePayloadFromForm(data));
   };
 
   return (
@@ -62,16 +65,7 @@ export const CloseCaisseForm = ({
               control={form.control}
               name="closing_amount"
               extra={{
-                onClick: async () =>
-                  form.setValue(
-                    "closing_amount",
-                    await prompt(
-                      "",
-                      form.getValues("closing_amount")?.toString() || "",
-                      { unit: "€" },
-                    ),
-                    { shouldDirty: true, shouldTouch: true },
-                  ),
+                onClick: () => setNumericField("closing_amount", "€"),
                 sx: {
                   "& .MuiInputBase-input": {
                     cursor: "pointer",
@@ -92,16 +86,11 @@ export const CloseCaisseForm = ({
                           size="small"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            form.setValue(
-                              "closing_amount",
-                              await prompt(
-                                "",
-                                form.getValues("closing_amount")?.toString() ||
-                                  "",
-                                { unit: "€", mode: "money","valueToReach":expectedAMount },
-                              ),
-                              { shouldDirty: true, shouldTouch: true },
-                            );
+                            setNumericField("closing_amount", {
+                              unit: "€",
+                              mode: "money",
+                              valueToReach: expectedAMount,
+                            });
                           }}
                           startIcon={<AttachMoney />}
                         >

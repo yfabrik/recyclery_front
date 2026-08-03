@@ -5,6 +5,7 @@ import type {
   PlanningFormValues,
 } from "../schema/schedule";
 import type { TaskFormOutput, TaskFormValues } from "../schema/task";
+import { emptyToNull } from "../zodTransform";
 
 function parseTaskJsonArray(
   value: string | string[] | null | undefined,
@@ -21,7 +22,7 @@ function parseTaskJsonArray(
 
 /** Map API task → admin TaskForm defaults. */
 export function taskToFormValues(
-  task: TaskModel & {
+  task: Omit<TaskModel, "required_skills" | "equipment_needed"> & {
     required_skills?: string | string[] | null;
     equipment_needed?: string | string[] | null;
   },
@@ -34,7 +35,7 @@ export function taskToFormValues(
     location: task.location ?? "",
     required_skills: parseTaskJsonArray(task.required_skills),
     equipment_needed: parseTaskJsonArray(task.equipment_needed),
-    hourly_rate: task.hourly_rate != null ? Number(task.hourly_rate) : undefined,
+    hourly_rate: task.hourly_rate != null ? Number(task.hourly_rate) : "",
     is_recurring: false,
     recurrence_pattern: "",
     notes: task.notes ?? "",
@@ -44,9 +45,27 @@ export function taskToFormValues(
   };
 }
 
-export const taskPayloadFromForm = (data: TaskFormOutput): TaskDataInput => ({
-  ...data,
-});
+export const taskPayloadFromForm = (data: TaskFormOutput): TaskDataInput => {
+  const {
+    description,
+    location,
+    notes,
+    recurrence_pattern,
+    assigned_to,
+    hourly_rate: _hourlyRate,
+    ...rest
+  } = data;
+
+  return {
+    ...rest,
+    description: emptyToNull(description),
+    location: emptyToNull(location),
+    notes: emptyToNull(notes),
+    recurrence_pattern: recurrence_pattern === "" ? null : recurrence_pattern,
+    assigned_to: assigned_to === "" ? null : assigned_to,
+    is_recurring: !!recurrence_pattern,
+  } satisfies TaskDataInput;
+};
 
 /** Map API task → planning page form defaults. */
 export function taskToPlanningFormValues(
@@ -72,13 +91,13 @@ export const planningTaskPayloadFromForm = (
   const { store_id, recurrence_pattern, notes, ...rest } = data;
   return {
     ...rest,
-    notes: notes || null,
-    recurrence_pattern: recurrence_pattern,
-    store_id: store_id,
+    notes: emptyToNull(notes),
+    recurrence_pattern: recurrence_pattern === "" ? null : recurrence_pattern,
+    store_id: store_id === "" ? null : store_id,
     description: null,
     location: null,
     required_skills: [] as string[],
     equipment_needed: [] as string[],
     is_recurring: !!recurrence_pattern,
-  };
+  } satisfies TaskDataInput;
 };

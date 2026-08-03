@@ -3,6 +3,7 @@ import { Grid, MenuItem } from "@mui/material";
 import { useForm } from "react-hook-form";
 import {
   FormInput,
+  FormNumber,
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
@@ -23,7 +24,7 @@ export const DonForm = ({
   onSubmit,
   defaultValues,
 }: BaseFormProps<DonFormValues,DonFormOutput>) => {
-  const form = useForm<DonFormValues,unknown,DonFormOutput>({
+  const form = useForm<DonFormValues, unknown, DonFormOutput>({
     resolver: zodResolver(donFormSchema),
     defaultValues: {
       donor_name: "",
@@ -70,19 +71,17 @@ export const DonForm = ({
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             label="Valeur Estimée (€)"
             name="estimated_value"
-            extra={{ type: "number" }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             label="Poids (kg)"
             name="weight"
-            extra={{ type: "number" }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>

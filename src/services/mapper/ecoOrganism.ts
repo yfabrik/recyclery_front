@@ -1,13 +1,17 @@
 import type { EcoOrganismDataInput } from "@recyclerie/api/schemas/ecoOrganism";
 import type { EcoOrgModel } from "../../interfaces/Models";
-import type { EcoOrganismFormOutput, EcoOrganismFormValues } from "../schema/ecoOrganism";
+import type {
+  EcoOrganismFormOutput,
+  EcoOrganismFormValues,
+} from "../schema/ecoOrganism";
+import { emptyToNull } from "../zodTransform";
 
-export function ecoOrganismToFormValues(org: EcoOrgModel): Partial<EcoOrganismFormValues> {
+export function ecoOrganismToFormValues(
+  org: EcoOrgModel,
+): Partial<EcoOrganismFormValues> {
   const raw = org as EcoOrgModel & {
     incategories?: Array<{ id: number }>;
     sellcategories?: Array<{ id: number }>;
-    // inCategories?: Array<{ id: number }>;
-    // sellCategories?: Array<{ id: number }>;
   };
   const inCats = raw.inCategories ?? raw.incategories ?? [];
   const sellCats = raw.sellCategories ?? raw.sellcategories ?? [];
@@ -20,8 +24,23 @@ export function ecoOrganismToFormValues(org: EcoOrgModel): Partial<EcoOrganismFo
     website: org.website ?? "",
     is_active: org.is_active,
     inCategories: inCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
-    sellCategories: sellCats.map((cat) => (typeof cat === "number" ? cat : cat.id)),
+    sellCategories: sellCats.map((cat) =>
+      typeof cat === "number" ? cat : cat.id,
+    ),
   };
 }
 
-export const ecoOrganismPayloadFromForm = (data: EcoOrganismFormOutput): EcoOrganismDataInput => ({ ...data });
+export const ecoOrganismPayloadFromForm = (
+  data: EcoOrganismFormOutput,
+): EcoOrganismDataInput =>
+  ({
+    name: data.name,
+    description: emptyToNull(data.description),
+    contact_email: emptyToNull(data.contact_email),
+    contact_phone: emptyToNull(data.contact_phone),
+    address: emptyToNull(data.address),
+    website: emptyToNull(data.website),
+    inCategories: data.inCategories,
+    sellCategories: data.sellCategories,
+    is_active: data.is_active,
+  }) satisfies EcoOrganismDataInput;

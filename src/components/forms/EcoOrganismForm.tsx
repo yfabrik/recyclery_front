@@ -40,7 +40,7 @@ export const EcoOrganismForm = ({
 
   const categoriesIn = categoriesQuery.data ?? [];
   const categoriesSell = categoriesSellQuery.data ?? [];
-  const form = useForm({
+  const form = useForm<EcoOrganismFormValues, unknown, EcoOrganismFormOutput>({
     resolver: zodResolver(ecoOrganismFormSchema),
     defaultValues: {
       name: restDefaults.name ?? "",

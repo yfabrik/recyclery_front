@@ -12,19 +12,20 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
-import z from "zod";
 import type { BaseFormProps } from "./FormBase";
 import type { StoreModel } from "../../interfaces/Models";
 import type { EmployeeStoreAssignmentDto } from "@recyclerie/api/responses/employeeStore";
 import { Place, Star, Store } from "@mui/icons-material";
 import { DevTool } from "@hookform/devtools";
+import {
+  employeeStoresFormSchema,
+  type EmployeeStoresFormOutput,
+  type EmployeeStoresFormValues,
+} from "../../services/schema/employee";
 
-const schema = z.object({
-  assignedStoreIds: z.array(z.number()),
-  primaryStoreId: z.number(),
-});
-
-export type Schema = z.infer<typeof schema>;
+export type { EmployeeStoresFormValues, EmployeeStoresFormOutput };
+/** @deprecated Use EmployeeStoresFormOutput */
+export type Schema = EmployeeStoresFormOutput;
 
 type Assignment = EmployeeStoreAssignmentDto;
 
@@ -33,18 +34,22 @@ export const EmployeeStoresForm = ({
   onSubmit,
   stores,
   assignments = [],//TODO use as default value
-}: BaseFormProps<Schema> & {
+}: BaseFormProps<EmployeeStoresFormValues, EmployeeStoresFormOutput> & {
   stores: StoreModel[];
   assignments?: Assignment[];
 }) => {
   const primaryAssignment = assignments.find((a) => a.is_primary);
 
-  const form = useForm<Schema>({
+  const form = useForm<
+    EmployeeStoresFormValues,
+    unknown,
+    EmployeeStoresFormOutput
+  >({
     defaultValues: {
       assignedStoreIds: assignments.map((a) => a.id),
       primaryStoreId: primaryAssignment?.id ?? assignments[0]?.id ?? 0,
     },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(employeeStoresFormSchema),
   });
 
   return (

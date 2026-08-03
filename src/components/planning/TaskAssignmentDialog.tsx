@@ -27,7 +27,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
 import {
   getApiErrorMessage,
@@ -40,6 +40,7 @@ import {
   getEmployeesForTask,
   removeEmployeeFromTask,
 } from "../../services/api/tasks";
+import type { AvailableEmployeeDto } from "@recyclerie/api/responses/taskSchedule";
 
 interface TaskAssignmentDialogTitleProps {
   taskName: string;
@@ -104,244 +105,234 @@ const TaskAssignmentDialogInfo = ({
   );
 };
 
-interface TaskAssignmentEmployeeCardProps {
-  employee: EmployeeModel & { is_assigned_to_task: boolean; conflicts: TaskModel[]; already_assigned: boolean; };
-  type: "assigned" | "available";
-  onAssign?: (employeeId: number) => void;
-  onUnassign?: (employeeId: number) => void;
-  isAssignedToOtherTask: boolean;
-}
-// Employee Card Component
-const TaskAssignmentEmployeeCard = ({
-  employee,
-  type = "available", // "assigned" or "available"
-  onAssign = () => { },
-  onUnassign = () => { },
-  isAssignedToOtherTask = false,
-}: TaskAssignmentEmployeeCardProps) => {
-  const isAssigned = type === "assigned";
+type EmployeeCardLayoutProps = {
+  cardSx?: object;
+  avatar: ReactNode;
+  name: string;
+  nameSx?: object;
+  roleChipColor?: "primary" | "info";
+  status: ReactNode;
+  action: ReactNode;
+  footer?: ReactNode;
+};
 
-  if (isAssigned) {
-    return (
-      <Card
-        variant="outlined"
+const EmployeeCardLayout = ({
+  cardSx,
+  avatar,
+  name,
+  nameSx,
+  roleChipColor = "info",
+  status,
+  action,
+  footer,
+}: EmployeeCardLayoutProps) => (
+  <Card variant="outlined" sx={cardSx}>
+    <CardContent sx={{ py: 1, px: 2 }}>
+      <Box
         sx={{
-          bgcolor: "#e3f2fd",
-          border: "2px solid #2196f3",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <CardContent sx={{ py: 1, px: 2 }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Tooltip title="Employé assigné à cette tâche">
-                <Person color="primary" />
-              </Tooltip>
-              <Typography
-                variant="body2"
-                fontWeight="medium"
-                sx={{ color: "#1976d2" }}
-              >
-                {employee.fullName}
-              </Typography>
-              <Chip
-                label="employee"
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontSize: "0.7rem" }}
-              />
-              <Chip
-                icon={<CheckCircle />}
-                label="Assigné"
-                size="small"
-                color="primary"
-                variant="filled"
-                sx={{ fontSize: "0.7rem" }}
-              />
-            </Box>
-            <Tooltip title="Retirer cet employé de la tâche">
-              <IconButton
-                size="small"
-                onClick={() => onUnassign?.(employee.id)}
-                color="error"
-                sx={{
-                  bgcolor: "#ffebee",
-                  "&:hover": {
-                    bgcolor: "#ffcdd2",
-                    transform: "scale(1.1)",
-                  },
-                }}
-              >
-                <Delete />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  }
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {avatar}
+          <Typography variant="body2" fontWeight="medium" sx={nameSx}>
+            {name}
+          </Typography>
+          <Chip
+            label="employee"
+            size="small"
+            color={roleChipColor}
+            variant="outlined"
+            sx={{ fontSize: "0.7rem" }}
+          />
+          {status}
+        </Box>
+        {action}
+      </Box>
+      {footer}
+    </CardContent>
+  </Card>
+);
 
-  // Available employee card
+interface AssignedEmployeeCardProps {
+  employee: EmployeeModel;
+  onUnassign: (employeeId: number) => void;
+}
+
+const AssignedEmployeeCard = ({
+  employee,
+  onUnassign,
+}: AssignedEmployeeCardProps) => (
+  <EmployeeCardLayout
+    cardSx={{
+      bgcolor: "#e3f2fd",
+      border: "2px solid #2196f3",
+    }}
+    avatar={
+      <Tooltip title="Employé assigné à cette tâche">
+        <Person color="primary" />
+      </Tooltip>
+    }
+    name={employee.fullName ?? `${employee.prenom} ${employee.nom}`}
+    nameSx={{ color: "#1976d2" }}
+    roleChipColor="primary"
+    status={
+      <Chip
+        icon={<CheckCircle />}
+        label="Assigné"
+        size="small"
+        color="primary"
+        variant="filled"
+        sx={{ fontSize: "0.7rem" }}
+      />
+    }
+    action={
+      <Tooltip title="Retirer cet employé de la tâche">
+        <IconButton
+          size="small"
+          onClick={() => onUnassign(employee.id)}
+          color="error"
+          sx={{
+            bgcolor: "#ffebee",
+            "&:hover": {
+              bgcolor: "#ffcdd2",
+              transform: "scale(1.1)",
+            },
+          }}
+        >
+          <Delete />
+        </IconButton>
+      </Tooltip>
+    }
+  />
+);
+
+interface AvailableEmployeeCardProps {
+  employee: AvailableEmployeeDto;
+  onAssign: (employeeId: number) => void;
+  isAssignedToOtherTask: boolean;
+}
+
+const AvailableEmployeeCard = ({
+  employee,
+  onAssign,
+  isAssignedToOtherTask,
+}: AvailableEmployeeCardProps) => {
+  const avatar = isAssignedToOtherTask ? (
+    <Tooltip title="Employé occupé à ce moment">
+      <Block color="error" sx={{ fontSize: 20 }} />
+    </Tooltip>
+  ) : employee.already_assigned ? (
+    <Tooltip title="Déjà assigné à cette tâche">
+      <Person color="primary" sx={{ fontSize: 20 }} />
+    </Tooltip>
+  ) : (
+    <Tooltip title="Disponible">
+      <Person color="success" sx={{ fontSize: 20 }} />
+    </Tooltip>
+  );
+
+  const status = isAssignedToOtherTask ? (
+    <Tooltip title="Occupé par une autre tâche à ce moment">
+      <Chip
+        icon={<AccessTime />}
+        label="Occupé"
+        size="small"
+        color="error"
+        variant="filled"
+        sx={{ fontSize: "0.7rem" }}
+      />
+    </Tooltip>
+  ) : employee.already_assigned ? (
+    <Tooltip title="Déjà assigné à cette tâche">
+      <Chip
+        icon={<Person />}
+        label="Assigné"
+        size="small"
+        color="primary"
+        variant="filled"
+        sx={{ fontSize: "0.7rem" }}
+      />
+    </Tooltip>
+  ) : (
+    <Tooltip title="Libre pour cette tâche">
+      <Chip
+        icon={<CheckCircle />}
+        label="Libre"
+        size="small"
+        color="success"
+        variant="filled"
+        sx={{ fontSize: "0.7rem" }}
+      />
+    </Tooltip>
+  );
+
+  const action = isAssignedToOtherTask ? (
+    <Tooltip title="Impossible d'assigner - Employé occupé">
+      <span>
+        <IconButton size="small" color="error" disabled>
+          <Block />
+        </IconButton>
+      </span>
+    </Tooltip>
+  ) : (
+    <Tooltip title="Assigner cet employé">
+      <IconButton
+        size="small"
+        onClick={() => onAssign(employee.id)}
+        color="success"
+        sx={{
+          bgcolor: "#e8f5e8",
+          "&:hover": {
+            bgcolor: "#c8e6c9",
+            transform: "scale(1.1)",
+          },
+        }}
+      >
+        <Add />
+      </IconButton>
+    </Tooltip>
+  );
+
+  const footer =
+    isAssignedToOtherTask && employee.conflicts.length > 0 ? (
+      <Box
+        sx={{
+          mt: 1,
+          p: 1,
+          bgcolor: "#fff3e0",
+          borderRadius: 1,
+          border: "1px solid #ffcc02",
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ color: "#e65100", fontSize: "0.7rem" }}
+        >
+          <Warning sx={{ fontSize: 12, mr: 0.5 }} />
+          Conflit d'horaires détecté
+        </Typography>
+      </Box>
+    ) : null;
+
   return (
-    <Card
-      variant="outlined"
-      sx={{
+    <EmployeeCardLayout
+      cardSx={{
         mb: 1,
         bgcolor: isAssignedToOtherTask ? "#ffebee" : "#f1f8e9",
         border: isAssignedToOtherTask
           ? "2px solid #f44336"
           : "1px solid #e0e0e0",
       }}
-    >
-      <CardContent sx={{ py: 1, px: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            {/* Icône selon le statut */}
-            {isAssignedToOtherTask ? (
-              <Tooltip title="Employé occupé à ce moment">
-                <Block color="error" sx={{ fontSize: 20 }} />
-              </Tooltip>
-            ) : employee.already_assigned ? (
-              <Tooltip title="Déjà assigné à cette tâche">
-                <Person color="primary" sx={{ fontSize: 20 }} />
-              </Tooltip>
-            ) : (
-              <Tooltip title="Disponible">
-                <Person color="success" sx={{ fontSize: 20 }} />
-              </Tooltip>
-            )}
-
-            <Typography
-              variant="body2"
-              fontWeight="medium"
-              sx={{
-                color: isAssignedToOtherTask ? "#d32f2f" : "inherit",
-              }}
-            >
-              {employee.fullName}
-            </Typography>
-
-            <Chip
-              label="employee"
-              size="small"
-              color="info"
-              variant="outlined"
-            />
-
-            {/* Statut avec icône */}
-            {isAssignedToOtherTask ? (
-              <Tooltip title="Occupé par une autre tâche à ce moment">
-                <Chip
-                  icon={<AccessTime />}
-                  label="Occupé"
-                  size="small"
-                  color="error"
-                  variant="filled"
-                  sx={{ fontSize: "0.7rem" }}
-                />
-              </Tooltip>
-            ) : employee.already_assigned ? (
-              <Tooltip title="Déjà assigné à cette tâche">
-                <Chip
-                  icon={<Person />}
-                  label="Assigné"
-                  size="small"
-                  color="primary"
-                  variant="filled"
-                  sx={{ fontSize: "0.7rem" }}
-                />
-              </Tooltip>
-            ) : (
-              <Tooltip title="Libre pour cette tâche">
-                <Chip
-                  icon={<CheckCircle />}
-                  label="Libre"
-                  size="small"
-                  color="success"
-                  variant="filled"
-                  sx={{ fontSize: "0.7rem" }}
-                />
-              </Tooltip>
-            )}
-          </Box>
-
-          {/* Bouton d'assignation avec icône appropriée */}
-          {isAssignedToOtherTask ? (
-            <Tooltip title="Impossible d'assigner - Employé occupé">
-              <span>
-                <IconButton size="small" color="error" disabled>
-                  <Block />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <Tooltip title="Assigner cet employé">
-              <IconButton
-                size="small"
-                onClick={() => onAssign(employee.id)}
-                color="success"
-                sx={{
-                  bgcolor: "#e8f5e8",
-                  "&:hover": {
-                    bgcolor: "#c8e6c9",
-                    transform: "scale(1.1)",
-                  },
-                }}
-              >
-                <Add />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-
-        {/* Message d'information pour les employés occupés */}
-        {isAssignedToOtherTask &&
-          employee.conflicts &&
-          employee.conflicts.length > 0 && (
-            <Box
-              sx={{
-                mt: 1,
-                p: 1,
-                bgcolor: "#fff3e0",
-                borderRadius: 1,
-                border: "1px solid #ffcc02",
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ color: "#e65100", fontSize: "0.7rem" }}
-              >
-                <Warning sx={{ fontSize: 12, mr: 0.5 }} />
-                Conflit d'horaires détecté
-              </Typography>
-            </Box>
-          )}
-      </CardContent>
-    </Card>
+      avatar={avatar}
+      name={employee.fullName ?? `${employee.prenom} ${employee.nom}`}
+      nameSx={{ color: isAssignedToOtherTask ? "#d32f2f" : "inherit" }}
+      status={status}
+      action={action}
+      footer={footer}
+    />
   );
 };
 
@@ -458,12 +449,10 @@ const TaskAssignmentDialog = ({
               {assignedEmployees.data && assignedEmployees.data?.length > 0 ? (
                 <Stack spacing={1}>
                   {assignedEmployees.data?.map((employee) => (
-                    <TaskAssignmentEmployeeCard
+                    <AssignedEmployeeCard
                       key={employee.id}
                       employee={employee}
-                      type="assigned"
                       onUnassign={handleUnassignEmployee}
-                      isAssignedToOtherTask={false}
                     />
                   ))}
                 </Stack>
@@ -501,14 +490,11 @@ const TaskAssignmentDialog = ({
             </Typography>
             <Box sx={{ maxHeight: 300, overflow: "auto" }}>
               {filteredAvailableEmployees.map((employee) => (
-                <TaskAssignmentEmployeeCard
+                <AvailableEmployeeCard
                   key={employee.id}
                   employee={employee}
-                  type="available"
                   onAssign={handleAssignEmployee}
-                  isAssignedToOtherTask={
-                    employee.has_conflicts || false
-                  }
+                  isAssignedToOtherTask={employee.has_conflicts || false}
                 />
               ))}
             </Box>
@@ -525,6 +511,7 @@ const TaskAssignmentDialog = ({
 // Export sub-components for potential reuse
 TaskAssignmentDialog.Title = TaskAssignmentDialogTitle;
 TaskAssignmentDialog.Info = TaskAssignmentDialogInfo;
-TaskAssignmentDialog.EmployeeCard = TaskAssignmentEmployeeCard;
+TaskAssignmentDialog.AssignedEmployeeCard = AssignedEmployeeCard;
+TaskAssignmentDialog.AvailableEmployeeCard = AvailableEmployeeCard;
 
 export default TaskAssignmentDialog;

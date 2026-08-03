@@ -1,5 +1,5 @@
 import { Box, Divider, Paper, Typography } from "@mui/material";
-import type { Schema as CartSchema } from "../forms/cartSchema";
+import type { CartFormOutput as CartSchema } from "../../services/schema/cart";
 import { formatCurrency, formatWeight } from "../../services/cartService";
 
 interface OrderSummaryProps {

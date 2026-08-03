@@ -1,4 +1,3 @@
-import { idSchema } from "@recyclerie/api/primitives/zod";
 import * as z from "zod";
 import {
   DISPOSAL_TYPE_FILTER_VALUES,
@@ -8,7 +7,8 @@ import type { CategoryModel } from "../../interfaces/Models";
 import {
   filterIsoDate,
   idSchema as filterIdSchema,
-  nullString,
+  optionalId,
+  requiredFormId,
 } from "../../interfaces/ZodTypes";
 import { dayjs, toIsoDate } from "../dateService";
 
@@ -22,20 +22,22 @@ const disposalTypeEnum = z.enum(
 export const wasteFormSchema = (categories: CategoryModel[]) =>
   z
     .object({
-      disposal_date: z.coerce.date("La date de sortie est requise"),
+      disposal_date: z.date("La date de sortie est requise"),
       disposal_type: disposalTypeEnum,
-      category_id: idSchema("categorie requis"),
-      subcategory_id: z.union([nullString(), idSchema()]),
-      eco_organism_id: z.union([nullString(), idSchema()]),
-      weight_kg: z.coerce.number().positive("Le poids est requis"),
-      volume_m3: z.coerce.number().nonnegative().default(0),
-      transport_method: z.string().transform((v) => (v == "" ? null : v)),
-      transport_company: z.string().transform((v) => (v == "" ? null : v)),
-      transport_cost: z.coerce.number().nonnegative().default(0),
-      notes: z.string().transform((v) => (v == "" ? null : v)),
+      category_id: requiredFormId("categorie requis"),
+      subcategory_id: optionalId(),
+      eco_organism_id: optionalId(),
+      weight_kg: z.number().positive("Le poids est requis"),
+      volume_m3: z.number().nonnegative(),
+      transport_method: z.string(),
+      transport_company: z.string(),
+      transport_cost: z.number().nonnegative(),
+      notes: z.string(),
     })
     .superRefine((data, ctx) => {
-      const selectedCategory = categories.find((c) => c.id === data.category_id);
+      const selectedCategory = categories.find(
+        (c) => c.id === data.category_id,
+      );
       const hasSubcategories =
         (selectedCategory?.subcategories?.length ?? 0) > 0;
       if (hasSubcategories && !data.subcategory_id) {

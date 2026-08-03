@@ -1,3 +1,4 @@
+import { TASK_PRIORITIES as API_TASK_PRIORITIES } from "@recyclerie/api/enums";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Chip, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm, useWatch, type Control } from "react-hook-form";
@@ -8,25 +9,30 @@ import {
 import {
   RECURRENCE_PATTERN_FORM_OPTIONS,
 } from "../../constants/recurrencePatterns";
-import { TASK_PRIORITIES } from "../../constants/taskPriorities";
-import {
-  FormDate,
-  FormInput,
-  FormSelect,
-  FormTime,
-  type BaseFormProps,
-} from "./FormBase";
-import type { EmployeeModel } from "../../interfaces/Models";
-import { emptyStringToNull } from "../../services/zodTransform";
 import { TASK_CATEGORIES } from "../../constants/taskCategories";
+import { TASK_PRIORITIES } from "../../constants/taskPriorities";
+import type { EmployeeModel } from "../../interfaces/Models";
 import {
   taskFormSchema,
   type TaskFormOutput,
   type TaskFormValues,
 } from "../../services/schema/task";
+import { omitNullish } from "../../services/zodTransform";
+import {
+  FormDate,
+  FormInput,
+  FormNumber,
+  FormSelect,
+  FormTime,
+  type BaseFormProps,
+} from "./FormBase";
 
 export type TaskFormSchema = TaskFormOutput;
 export type { TaskFormOutput, TaskFormValues };
+
+const FORM_PRIORITIES = TASK_PRIORITIES.filter((priority) =>
+  (API_TASK_PRIORITIES as readonly string[]).includes(priority.value),
+);
 
 export type TaskFormProps = BaseFormProps<TaskFormValues, TaskFormOutput> & {
   employees: EmployeeModel[];
@@ -89,18 +95,14 @@ export const TaskForm = ({
     "Balance",
     "Scanner",
   ];
-  const data = defaultValues ? emptyStringToNull(defaultValues) : {};
-  const form = useForm({
+  const data = defaultValues ? omitNullish(defaultValues) : {};
+  const form = useForm<TaskFormValues, unknown, TaskFormOutput>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: "",
       description: "",
       category: "collection",
       priority: "medium",
-      // estimated_duration:
-      //   defaultValues?.estimated_duration !== undefined
-      //     ? defaultValues.estimated_duration
-      //     : 60,
       required_skills: [],
       location: "",
       equipment_needed: [],
@@ -149,13 +151,12 @@ export const TaskForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             name="hourly_rate"
             label="Taux horaire (€)"
             extra={{
-              type: "number",
-              inputProps: { step: 0.01 },
+              slotProps: { htmlInput: { step: 0.01 } },
             }}
           />
         </Grid>
@@ -187,7 +188,7 @@ export const TaskForm = ({
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormSelect control={form.control} name="priority" label="Priorité">
-            {TASK_PRIORITIES.map((priority) => (
+            {FORM_PRIORITIES.map((priority) => (
               <MenuItem key={priority.value} value={priority.value}>
                 {priority.label}
               </MenuItem>

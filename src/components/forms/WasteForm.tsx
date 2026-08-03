@@ -36,7 +36,7 @@ export const WasteForm = ({
   ecoOrganisms,
   onWeightFieldClick,
 }: WasteFormProps) => {
-  const form = useForm({
+  const form = useForm<WasteFormValues, unknown, WasteFormOutput>({
     resolver: zodResolver(wasteFormSchema(categories)),
     defaultValues: {
       disposal_date: new Date(),

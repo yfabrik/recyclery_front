@@ -26,7 +26,7 @@ export const EmployeeForm = ({
 }: BaseFormProps<EmployeeFormValues,EmployeeFormOutput> & {
   stores: StoreModel[];
 }) => {
-  const form = useForm({
+  const form = useForm<EmployeeFormValues, unknown, EmployeeFormOutput>({
     defaultValues: {
       prenom: "",
       nom: "",

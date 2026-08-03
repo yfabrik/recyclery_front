@@ -6,8 +6,8 @@ import { NoOpenedRegister } from "./NoOpenedRegister";
 
 const nowIso = new Date().toISOString();
 const storesResponse = {
-  message: "ok",
-  stores: [
+  success: true,
+  data: [
     {
       id: 1,
       createdAt: nowIso,
@@ -23,21 +23,41 @@ const storesResponse = {
       caisses: [
         {
           id: 11,
-          createdAt: nowIso,
-          updatedAt: nowIso,
           name: "Caisse A",
           is_active: true,
           recyclery_id: 1,
-          total_sessions: 12,
         },
       ],
     },
   ],
 };
 
+const caissesListResponse = {
+  success: true,
+  data: [
+    {
+      id: 11,
+      name: "Caisse A",
+      is_active: true,
+      recyclery_id: 1,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      store_name: "Recyclerie Centre",
+      total_sessions: 2,
+      last_session: nowIso,
+    },
+  ],
+};
+
 const registerDetailsResponse = {
-  message: "ok",
+  success: true,
   data: {
+    id: 11,
+    name: "Caisse A",
+    is_active: true,
+    recyclery_id: 1,
+    createdAt: nowIso,
+    updatedAt: nowIso,
     store_name: "Recyclerie Centre",
     total_sessions: 2,
     last_session: new Date().toISOString(),
@@ -73,9 +93,10 @@ const registerDetailsResponse = {
 };
 
 const sessionDetailsResponse = {
-  message: "ok",
-  session: {
+  success: true,
+  data: {
     ...registerDetailsResponse.data.sessions[0],
+    notes: null,
     SalesTransactions: [],
   },
 };
@@ -98,6 +119,9 @@ function StoryWrapper() {
       if (url === "/api/recycleries") {
         return Promise.resolve({ data: storesResponse } as never);
       }
+      if (url === "/api/stores/1/cash-registers") {
+        return Promise.resolve({ data: caissesListResponse } as never);
+      }
       if (url === "/api/cash-registers/11") {
         return Promise.resolve({ data: registerDetailsResponse } as never);
       }
@@ -110,7 +134,11 @@ function StoryWrapper() {
     axiosInstance.post = ((url: string, data?: unknown, config?: unknown) => {
       if (url === "/api/cash-sessions/open") {
         return Promise.resolve({
-          data: { message: "Session ouverte", session: sessionDetailsResponse.session },
+          data: {
+            success: true,
+            message: "Session ouverte",
+            data: sessionDetailsResponse.data,
+          },
         } as never);
       }
       return originalPost(url, data as never, config as never);

@@ -3,7 +3,7 @@ import type { Activity } from "../../services/api/dashboard";
 import { ActivityItem } from "./ActivityItem";
 
 const baseActivity: Activity = {
-  id: 1,
+  id: "1",
   type: "sale",
   description: "Vente en caisse",
   amount: "45,00 €",
@@ -40,7 +40,7 @@ export const Donation: Story = {
   args: {
     activity: {
       ...baseActivity,
-      id: 2,
+      id: "2",
       type: "donation",
       description: "Don reçu",
       amount: "",
@@ -56,7 +56,7 @@ export const Collection: Story = {
   args: {
     activity: {
       ...baseActivity,
-      id: 3,
+      id: "3",
       type: "collection",
       description: "Collecte point Nord",
       amount: "120 kg",
@@ -72,7 +72,7 @@ export const Inventory: Story = {
   args: {
     activity: {
       ...baseActivity,
-      id: 4,
+      id: "4",
       type: "inventory",
       description: "Étiquetage articles",
       icon: "Inventory",
