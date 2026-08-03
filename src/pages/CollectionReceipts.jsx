@@ -36,6 +36,9 @@ import { getCollectionSchedules } from '../services/api/collectionSchedules';
 import { fetchUsers } from '../services/api/users';
 import { getApiErrorMessage } from '../utils/apiToastMessage';
 
+/**
+ * @deprecated 
+ */
 const CollectionReceipts = () => {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState([]);

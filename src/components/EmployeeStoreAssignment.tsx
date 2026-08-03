@@ -13,7 +13,7 @@ import {
   addAssignedStore,
   getAssignedStores,
   removeAssignedStores,
-} from "../services/api/users";
+} from "../services/api/employee";
 import {
   getApiErrorMessage
 } from "../utils/apiToastMessage";

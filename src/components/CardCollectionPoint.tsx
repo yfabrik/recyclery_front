@@ -167,8 +167,7 @@ export const CardCollectionPoint = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {/* TODO remake fetch pour pas filter sale comme ça */}
-                {point.TaskSchedules?.filter(t=>t.category=="point").sort(
+                {point.TaskSchedules?.sort(
                   (a, b) =>
                     new Date(a.scheduled_date ?? 0).getDay() -
                     new Date(b.scheduled_date ?? 0).getDay(),

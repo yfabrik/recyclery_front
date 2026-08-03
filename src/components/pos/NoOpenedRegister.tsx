@@ -24,15 +24,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
+    getApiErrorMessage,
+    getApiSuccessMessage,
 } from "../../utils/apiToastMessage";
 import type { CaisseModel, CashSession, StoreModel } from "../../interfaces/Models";
 import { fetchStores, fetchCaisses, getCaisseDetails, getSessionDetails, OpenCaisse } from "../../services/api/store";
 import { formatCurrency } from "../../services/cartService";
 import {
-  getCashSessionStatusColor,
-  getCashSessionStatusLabel,
+    getCashSessionStatusColor,
+    getCashSessionStatusLabel,
 } from "../../constants/cashSessionStatuses";
 import { useBilanCaissePrint } from "../BilanCaissePrint";
 import { OpenCaisseForm, type OpenCaisseFormValues, type Schema as OpenCaisseSchema } from "../forms/OpenCaisseForm";
@@ -40,11 +40,9 @@ import { Loading } from "../Loading";
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
-    // const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-    // const [selectedCashRegisterId, setSelectedCashRegisterId] = useState<number | null>(null);
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [historyRegister, setHistoryRegister] = useState<CaisseModel | null>(null);
-    const [formDefaults,setFormDefaults] = useState<Partial<OpenCaisseFormValues>|null>(null)
+    const [formDefaults, setFormDefaults] = useState<Partial<OpenCaisseFormValues> | null>(null)
 
     const queryClient = useQueryClient()
     const stores = useQuery({
@@ -84,14 +82,15 @@ export const NoOpenedRegister = () => {
             store_id: storeId,
             cash_register_id: cashRegisterId,
         })
-        // setSelectedStoreId(storeId);
-        // setSelectedCashRegisterId(cashRegisterId);
         setOpenSessionDialog(true);
     };
+    const handleCloseDialogSession = () => {
+        setOpenSessionDialog(false);
+        setFormDefaults(null)
+    }
 
     const handleShowHistory = (register: CaisseModel) => {
         setHistoryRegister(register);
-        // setHistorySessions(buildMockSessions(registerId));
         setHistoryDialogOpen(true);
     };
 
@@ -124,38 +123,27 @@ export const NoOpenedRegister = () => {
 
             <Dialog
                 open={openSessionDialog}
-                onClose={() => {
-                    setOpenSessionDialog(false);
-                    setFormDefaults(null)
-                    // setSelectedStoreId(null);
-                    // setSelectedCashRegisterId(null);
-                }}
+                onClose={handleCloseDialogSession}
                 maxWidth="sm"
                 fullWidth
             >
                 <DialogTitle>Ouverture de Caisse</DialogTitle>
                 <DialogContent>
                     {openSessionDialog && (
-                    <OpenCaisseForm
-                        key={`${formDefaults?.store_id ?? ""}-${formDefaults?.cash_register_id ?? ""}`}
-                        formId="OpenCaisseForm"
-                        onSubmit={handleOpenSession}
-                        stores={availableStores}
-                        defaultValues={formDefaults}
-                        // defaultStoreId={selectedStoreId ?? undefined}
-                        // defaultCashRegisterId={selectedCashRegisterId ?? undefined}
+                        <OpenCaisseForm
+                            key={`${formDefaults?.store_id ?? ""}-${formDefaults?.cash_register_id ?? ""}`}
+                            formId="OpenCaisseForm"
+                            onSubmit={handleOpenSession}
+                            stores={availableStores}
+                            defaultValues={formDefaults}
+
                         // lockStoreAndRegister={formDefaults?.cash_register_id !== null && formDefaults?.store_id !== null}
-                    />
+                        />
                     )}
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        onClick={() => {
-                            setOpenSessionDialog(false);
-                            setFormDefaults(null)
-                            // setSelectedStoreId(null);
-                            // setSelectedCashRegisterId(null);
-                        }}
+                        onClick={handleCloseDialogSession}
                     >
                         Annuler
                     </Button>
@@ -273,10 +261,10 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                 session: detail,
                 transactions: (detail.SalesTransactions ?? []).map(
                     (transaction) => ({
-                      ...transaction,
-                      payments: transaction.payments ?? [],
+                        ...transaction,
+                        payments: transaction.payments ?? [],
                     }),
-                  ),
+                ),
                 closingAmount: detail.closing_amount ?? 0,
             });
             toast.info(`Reimpression du bilan de la session #${session.id}`);
@@ -308,11 +296,10 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                                     <ListItemText
                                         primary={
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <span>{`Session #${session.id} - ${
-                                                  session.createdAt
-                                                    ? new Date(session.createdAt).toLocaleString("fr-FR")
-                                                    : "—"
-                                                } -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
+                                                <span>{`Session #${session.id} - ${session.createdAt
+                                                        ? new Date(session.createdAt).toLocaleString("fr-FR")
+                                                        : "—"
+                                                    } -> ${session.closed_at ? new Date(session.closed_at).toLocaleString("fr-FR") : "Pas fermée"}`}</span>
                                                 <Chip
                                                     size="small"
                                                     label={getCashSessionStatusLabel(session.status)}
@@ -320,11 +307,10 @@ const HistoryDialog = ({ open, onClose, register }: historyDialogProps) => {
                                                 />
                                             </Box>
                                         }
-                                        secondary={`Ouverture: ${formatCurrency(session.opening_amount)} | Fermeture: ${
-                                            session.closing_amount != null
+                                        secondary={`Ouverture: ${formatCurrency(session.opening_amount)} | Fermeture: ${session.closing_amount != null
                                                 ? formatCurrency(session.closing_amount)
                                                 : "—"
-                                        }`}
+                                            }`}
                                     />
                                     <Button
                                         size="small"

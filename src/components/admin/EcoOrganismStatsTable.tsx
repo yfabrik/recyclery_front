@@ -12,8 +12,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-
-export type EcoMetricSource = "quarterIn" | "quarterOut" | "quarterSell";
+import type { EcoOrgMetricSource } from "@recyclerie/api/enums";
+import { getArrivalSourceLabel } from "../../constants/arrivalSourceTypes";
+import { getEcoOrgMetricSourceLabel } from "../../constants/ecoOrgMetricSources";
 
 export interface EcoOrganismStatsRow {
   ecoOrganism: string;
@@ -28,9 +29,10 @@ export interface EcoOrganismStatsRow {
 interface EcoOrganismStatsTableProps {
   rows: EcoOrganismStatsRow[];
   loading?: boolean;
-  metricSource: EcoMetricSource;
+  metricSource: EcoOrgMetricSource;
 }
 
+//TODO use the one from cartservice ?
 const formatWeight = (value: number) =>
   new Intl.NumberFormat("fr-FR", {
     maximumFractionDigits: 2,
@@ -42,24 +44,12 @@ const formatQuantity = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const sourceTypeLabelMap: Record<string, string> = {
-  point: "Point de collecte",
-  apport: "Apport",
-  house_clearance: "Débarras",
-};
-
 const getSourceLabel = (value?: string) => {
   if (!value) return "—";
-  return sourceTypeLabelMap[value] ?? value;
+  return getArrivalSourceLabel(value);
 };
 
-const getMetricLabel = (metricSource: EcoMetricSource) => {
-  if (metricSource === "quarterIn") return "Entrant";
-  if (metricSource === "quarterOut") return "Sortant";
-  return "Vendu";
-};
-
-const getCategoryGroupKey = (row: EcoOrganismStatsRow, metricSource: EcoMetricSource) =>
+const getCategoryGroupKey = (row: EcoOrganismStatsRow, metricSource: EcoOrgMetricSource) =>
   [
     row.ecoOrganism,
     row.quarter,
@@ -123,7 +113,7 @@ export const EcoOrganismStatsTable: React.FC<EcoOrganismStatsTableProps> = ({
           variant="outlined"
         />
         <Chip
-          label={`${getMetricLabel(metricSource)} total: ${formatWeight(totalWeight)} kg`}
+          label={`${getEcoOrgMetricSourceLabel(metricSource)} total: ${formatWeight(totalWeight)} kg`}
           color="primary"
           variant="filled"
         />

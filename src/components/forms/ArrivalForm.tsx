@@ -68,60 +68,6 @@ export const ArrivalForm = ({
     },
   });
 
-  // const SubCategories = ({ control }: { control: typeof form.control }) => {
-  //   const category = useWatch({
-  //     control: control,
-  //     name: "category_id",
-  //   });
-  //   const subcategoryId = useWatch({
-  //     control: control,
-  //     name: "subcategory_id",
-  //   });
-  //   const subcats =
-  //     categories.find((c) => c.id == category)?.subcategories ?? [];
-
-  //   const hasValidSubcategory =
-  //     subcategoryId === "" ||
-  //     subcats.some((cat) => String(cat.id) === String(subcategoryId));
-
-  //   useEffect(() => {
-  //     if (!hasValidSubcategory) {
-  //       form.setValue("subcategory_id", "");
-  //     }
-  //   }, [hasValidSubcategory]);
-
-  //   if (subcats.length === 0 || !hasValidSubcategory) return null;
-
-  //   return (
-  //     <FormSelect
-  //       control={control}
-  //       name="subcategory_id"
-  //       label="Sous-catégorie"
-  //       extra={{ disabled: subcats.length < 1 }}
-  //     >
-  //       <MenuItem value="">Aucune</MenuItem>
-  //       {subcats.map((cat) => (
-  //         <MenuItem key={cat.id} value={cat.id}>
-  //           <Box
-  //             sx={{
-  //               display: "flex",
-  //               alignItems: "center",
-  //               gap: 1,
-  //             }}
-  //           >
-  //             {cat.icon ? (
-  //               <SelectedIcon iconName={cat.icon || "Category"} />
-  //             ) : (
-  //               <Category />
-  //             )}
-  //             {cat.name}
-  //           </Box>
-  //         </MenuItem>
-  //       ))}
-  //     </FormSelect>
-  //   );
-  // };
-
   const CollectionPoint = ({ control }: { control: typeof form.control }) => {
     const sourceType = useWatch({
       control: control,
@@ -302,27 +248,6 @@ export const ArrivalForm = ({
                 <CollectionPoint control={form.control} />
               </Grid>
 
-
-              {/* {(sourceType === "apport" ||
-                sourceType === "house_clearance") && (
-                  <Grid size={{ xs: 12 }}>
-                    <FormInput
-                      control={form.control}
-                      name="source_details"
-                      label="Détails supplémentaires"
-                      extra={{
-                        multiline: true,
-                        rows: 2,
-                        placeholder:
-                          "Informations complémentaires sur la provenance...",
-                        sx: {
-                          "& .MuiInputBase-input": { fontSize: "1.1rem" },
-                        },
-                      }}
-                    />
-                  </Grid>
-                )} */}
-
               {/* Notes */}
               <Grid size={{ xs: 12 }}>
                 <FormInput
@@ -358,7 +283,6 @@ export const ArrivalForm = ({
                 size="large"
                 type="submit"
                 form={formId}
-                // disabled={loading || !categoryId || !weight || !sourceType}
                 startIcon={<Save />}
                 sx={{ minWidth: 200, fontSize: "1.1rem" }}
                 loading={loading}

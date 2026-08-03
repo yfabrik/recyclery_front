@@ -30,8 +30,9 @@ import { toast } from "react-toastify";
 import {
   getRecurrencePatternLabel,
 } from "../../../constants/recurrencePatterns";
-import { getTaskPriority, TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { getTaskPriority } from "../../../constants/taskPriorities";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
+import { useUrlFilters } from "../../../hooks/useUrlFilters";
 import type { ScheduleModel, StoreModel } from "../../../interfaces/Models";
 import {
   createPlanning,
@@ -51,15 +52,14 @@ import {
 } from "../../../services/mapper/schedule";
 import type { PlanningFormOutput, PlanningFormValues } from "../../../services/schema/schedule";
 import {
+  CUSTOM_TASK_FILTER_DEFAULTS,
+  customTaskFilterSchema,
+} from "../../../services/schema/task";
+import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../../../utils/apiToastMessage";
 import { CustomTaskFiltersForm } from "../../forms/filters/CustomTaskFiltersForm";
-import {
-  CUSTOM_TASK_FILTER_DEFAULTS,
-  customTaskFilterSchema,
-} from "../../../services/schema/task";
-import { useUrlFilters } from "../../../hooks/useUrlFilters";
 import { PlaningForm } from "../../forms/planningForm";
 import { Loading } from "../../Loading";
 

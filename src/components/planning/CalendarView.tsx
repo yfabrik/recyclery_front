@@ -19,7 +19,7 @@ import {
 } from "./planningTaskStyles";
 
 interface CalendarViewProps {
-  filteredSchedules: TaskModel[];
+  schedules: TaskModel[];
   handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
   handleAssignEmployeesToTask: (t: TaskModel) => void;
@@ -34,13 +34,13 @@ interface CalendarDay {
 export const CalendarView = ({
   handleOpenDialog,
   handleDeleteTask,
-  filteredSchedules,
+  schedules,
   selectedDate,
   handleAssignEmployeesToTask,
 }: CalendarViewProps) => {
   const getScheduleDays = (currentDate: Date) => {
-    const daySchedules = Array.isArray(filteredSchedules)
-      ? filteredSchedules.filter((schedule) => {
+    const daySchedules = Array.isArray(schedules)
+      ? schedules.filter((schedule) => {
         const scheduleDate = new Date(schedule.scheduled_date);
         const matches =
           scheduleDate.getDate() === currentDate.getDate() &&
@@ -88,7 +88,7 @@ export const CalendarView = ({
     <Box>
       {/* Grille du calendrier */}
       {/* <Calendar
-        filteredSchedules={filteredSchedules}
+        schedules={schedules}
         getTaskDisplayName={getTaskDisplayName}
         handleDeleteTask={handleDeleteTask}
         isOpeningTask={isOpeningTask}

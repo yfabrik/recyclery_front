@@ -1,9 +1,13 @@
 import type { SxProps, Theme } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
+import {
+  TASK_CATEGORY_VALUES,
+  type TaskCategoryValue,
+} from "../../constants/taskCategories";
 
 export type TaskVariant = "opening" | "presence" | "default" | "collection";
 
-export type CategoryKey = "vente" | "point" | "custom" | "collection";
+export type CategoryKey = TaskCategoryValue;
 
 export interface TaskCss {
   color: string;
@@ -134,7 +138,7 @@ export const categoryStyles: Record<CategoryKey, CategoryStyle> = {
   },
 };
 
-const CATEGORY_KEYS: CategoryKey[] = ["vente", "point", "custom", "collection"];
+const CATEGORY_KEYS: CategoryKey[] = [...TASK_CATEGORY_VALUES];
 
 export const getCategoryKey = (schedule: TaskModel): CategoryKey => {
   const c = schedule.category;

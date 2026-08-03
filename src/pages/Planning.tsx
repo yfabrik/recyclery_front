@@ -1,14 +1,10 @@
 import {
-  Add,
   Assignment,
   Person,
   PersonAdd,
-  PlayArrow,
   Print,
   Save,
   Settings,
-  Stop,
-  Task,
   Warning
 } from "@mui/icons-material";
 import {
@@ -46,7 +42,7 @@ import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
 import { EmployeePresenceSchedule } from "../components/planning/PresenceEmployees";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
-import { TASK_PRIORITIES } from "../constants/taskPriorities";
+import { TASK_STATUSES } from "../constants/taskStatuses";
 import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import type {
   EmployeeModel,
@@ -76,41 +72,6 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-
-type TaskStatus =
-  | "new"
-  | "planned"
-  | "in_progress"
-  | "completed"
-  | "cancelled";
-
-export type StatusOption = {
-  value: TaskStatus;
-  label: string;
-  color: string;
-  icon: React.ReactNode;
-};
-
-type HasUniqueValues<
-  T extends readonly StatusOption[],
-  Seen = never,
-> = T extends readonly [infer Head, ...infer Tail]
-  ? Head extends { value: infer V }
-  ? V extends Seen
-  ? false
-  : Tail extends readonly StatusOption[]
-  ? HasUniqueValues<Tail, Seen | V>
-  : false
-  : false
-  : true;
-
-function defineStatusOptions<const T extends readonly StatusOption[]>(
-  options: T &
-    (TaskStatus extends T[number]["value"] ? unknown : never) &
-    (HasUniqueValues<T> extends true ? unknown : never),
-): T {
-  return options;
-}
 
 const Planning = () => {
   // Fonction pour générer une couleur basée sur le nom de l'employé
@@ -161,19 +122,6 @@ const Planning = () => {
 
   const [missingEmployeesDialogDismissed, setMissingEmployeesDialogDismissed] =
     useState(false);
-
-  const statusOptions = defineStatusOptions([
-    { value: "new", label: "Nouveau", color: "grey", icon: <Add /> },
-    { value: "planned", label: "Planifié", color: "primary", icon: <Task /> },
-    {
-      value: "in_progress",
-      label: "En cours",
-      color: "warning",
-      icon: <PlayArrow />,
-    },
-    { value: "completed", label: "Terminé", color: "success", icon: <Save /> },
-    { value: "cancelled", label: "Annulé", color: "error", icon: <Stop /> },
-  ] as const);
 
   const date_from = () => {
     if (viewMode == "week") {
@@ -279,6 +227,7 @@ const Planning = () => {
   const showMissingEmployeesDialog =
     missingEmployees.length > 0 && !missingEmployeesDialogDismissed;
 
+    //TODO use dayjs here to simplify
   // Fonction pour organiser les employés par jour de la semaine
   const getEmployeesByDay = (): {
     [key: string]: {
@@ -454,23 +403,6 @@ const Planning = () => {
     setSelectedTaskForAssignment(null);
   };
 
-
-  const formatTime = (timeString: string) => {
-    if (!timeString) return "";
-    return timeString.substring(0, 5);
-  };
-  const getStatusInfo = (status: string | null) => {
-    return statusOptions.find((s) => s.value === status) || statusOptions[1]; // Utiliser 'planned' par défaut
-  };
-
-
-  const getPriorityInfo = (priority: string | null) => {
-    return (
-      TASK_PRIORITIES.find((p) => p.value === priority) || TASK_PRIORITIES[1]
-    );
-  };
-
-
   return (
     <Box>
       {/* Sélecteurs de magasin et lieu */}
@@ -532,7 +464,7 @@ const Planning = () => {
           onDateChange={setSelectedDate}
           onNewTask={() => handleOpenDialog()}
           statusFilters={
-            viewMode === "calendar" ? [...statusOptions] : undefined
+            viewMode === "calendar" ? [...TASK_STATUSES] : undefined
           }
           filterStatus={viewMode === "calendar" ? filterStatus : undefined}
           onFilterStatusChange={
@@ -554,7 +486,7 @@ const Planning = () => {
         )}
         {viewMode === "calendar" && (
           <CalendarView
-            filteredSchedules={schedules.data || []}
+          schedules={schedules.data || []}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
             handleAssignEmployeesToTask={handleAssignEmployeesToTask}
@@ -574,10 +506,8 @@ const Planning = () => {
         )}
         {viewMode === "day" && (
           <DayView
-            filteredSchedules={schedules.data || []}
-            formatTime={formatTime}
-            getPriorityInfo={getPriorityInfo}
-            getStatusInfo={getStatusInfo}
+            schedules={schedules.data || []}
+            handleAssignEmployeesToTask={handleAssignEmployeesToTask}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}
             selectedDate={selectedDate}

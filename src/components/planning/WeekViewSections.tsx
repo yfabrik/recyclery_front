@@ -156,7 +156,7 @@ const WeekViewSections = ({
         borderColor="#ff9800"
         rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("point", 8, 12).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
@@ -192,7 +192,7 @@ const WeekViewSections = ({
           );
         })}
 
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("point", 13, 17).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
@@ -244,7 +244,7 @@ const WeekViewSections = ({
         // onAddClick={(day) => handleOpenDialog(null, day)}
         rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("custom", 8, 12).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
@@ -282,7 +282,7 @@ const WeekViewSections = ({
           );
         })}
 
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("custom", 13, 17).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
@@ -334,7 +334,7 @@ const WeekViewSections = ({
         borderColor="#9c27b0"
         rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("collection", 8, 12).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
@@ -370,7 +370,7 @@ const WeekViewSections = ({
           );
         })}
      
-        {weekDays.map((day, index) => {
+        {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
             ? filteredSchedules("collection", 13, 17).filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);

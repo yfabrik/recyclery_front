@@ -18,7 +18,7 @@ import {
   addWorkdaysToUser,
   getUserWorkdays,
   type WorkdaysFormPayload,
-} from "../services/api/users";
+} from "../services/api/employee";
 import { WORKDAY_TIME_SLOTS } from "../constants/workdayTimeSlots";
 import { EmployeeWorkdaysForm } from "./forms/EmployeeWorkdaysForm";
 import { Loading } from "./Loading";

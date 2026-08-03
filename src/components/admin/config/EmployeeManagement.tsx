@@ -65,7 +65,6 @@ import { VacationDialog } from "../../VacationDialog";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  // const [editingEmployeeId, setEditingEmployeeId] = useState<EmployeeModel["id"] | null>(null);
   const [employeeFormDefaults, setEmployeeFormDefaults] = useState<Partial<EmployeeFormValues> | null>(
     null,
   );
@@ -113,6 +112,7 @@ const EmployeeManagement = () => {
   })
   useQueryErrorToast(stores.error, "Erreur lors du chargement des stores");
 
+  //TODO query with pages, update search
   const employees = useQuery({
     queryKey: ["employees"],
     queryFn: () => getEmployees().then(response => response.data.data)

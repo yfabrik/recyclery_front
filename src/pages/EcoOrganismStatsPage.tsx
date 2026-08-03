@@ -8,8 +8,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { EcoOrganismStatsExport } from "../components/admin/EcoOrganismStatsExport";
+import type { EcoOrgMetricSource } from "@recyclerie/api/enums";
 import EcoOrganismStatsTable, {
-  type EcoMetricSource,
   type EcoOrganismStatsRow,
 } from "../components/admin/EcoOrganismStatsTable";
 import { EcoOrgStatsFilters } from "../components/forms/filters/EcoOrgStatsFilters";
@@ -46,7 +46,7 @@ const monthToQuarterLabel = (date: Date) => {
 const getMetricRows = (
   stat: EcoOrganismQuarterStat,
   quarter: EcoOrganismQuarterStat["quarters"][number],
-  metricSource: EcoMetricSource,
+  metricSource: EcoOrgMetricSource,
 ): EcoOrganismStatsRow[] => {
   const rows: EcoOrganismStatsRow[] = [];
   const quarterLabel = makeQuarterLabel(quarter);
