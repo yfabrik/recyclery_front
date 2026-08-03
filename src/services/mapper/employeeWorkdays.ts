@@ -1,4 +1,4 @@
-import type { WorkdaysFormPayload } from "../api/users";
+import type { WorkdaysFormPayload } from "../api/employee";
 import { formatTime } from "../dateService";
 import type { EmployeeWorkdaysFormOutput } from "../schema/employeeWorkdays";
 

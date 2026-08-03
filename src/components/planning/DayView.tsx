@@ -18,35 +18,44 @@ import {
   Stack,
   Typography
 } from "@mui/material";
-import type { TaskPriority } from "../../constants/taskPriorities";
+import { useMemo } from "react";
+import {
+  getTaskPriority,
+  TASK_PRIORITIES
+} from "../../constants/taskPriorities";
+import {
+  getTaskStatus
+} from "../../constants/taskStatuses";
 import type { TaskModel } from "../../interfaces/Models";
-import type { StatusOption } from "../../pages/Planning";
+import { formatTime } from "../../services/dateService";
 import { getTaskVariant, taskCardStyles } from "./planningTaskStyles";
 
-
 interface DayViewProps {
-  filteredSchedules: TaskModel[];
+  schedules: TaskModel[];
   handleOpenDialog: (a?: TaskModel | null, b?: Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
-  formatTime: (s: string) => string;
-  getStatusInfo: (status: string | null) => StatusOption;
-  getPriorityInfo: (priority: string |null) => TaskPriority;
   isManuallyCreatedTask?: (t: TaskModel) => boolean;
+  handleAssignEmployeesToTask: (e: TaskModel) => void;
 }
-//TODO fixme repetition of code
+
+const getStartHour = (schedule: TaskModel) =>
+  new Date(schedule.start_time).getHours();
+
+const getPriorityInfo = (priority: string | null) =>
+  getTaskPriority(priority ?? "") ?? TASK_PRIORITIES[1];
+
 export const DayView = ({
   handleOpenDialog,
   handleDeleteTask,
-  filteredSchedules,
+  schedules,
   selectedDate,
-  formatTime,
-  getStatusInfo,
-  getPriorityInfo,
   isManuallyCreatedTask = () => false,
+  handleAssignEmployeesToTask,
 }: DayViewProps) => {
-  const daySchedules = Array.isArray(filteredSchedules)
-    ? filteredSchedules.filter((schedule) => {
+  const daySchedules = useMemo(() => {
+    return Array.isArray(schedules)
+      ? schedules.filter((schedule) => {
         const scheduleDate = new Date(schedule.scheduled_date);
         return (
           scheduleDate.getDate() === selectedDate.getDate() &&
@@ -54,7 +63,26 @@ export const DayView = ({
           scheduleDate.getFullYear() === selectedDate.getFullYear()
         );
       })
-    : [];
+      : [];
+  }, [schedules, selectedDate]);
+
+  const morningSchedules = useMemo(
+    () =>
+      daySchedules.filter((s) => {
+        const startHour = getStartHour(s);
+        return startHour >= 8 && startHour < 12;
+      }),
+    [daySchedules],
+  );
+
+  const afternoonSchedules = useMemo(
+    () =>
+      daySchedules.filter((s) => {
+        const startHour = getStartHour(s);
+        return startHour >= 13 && startHour < 17;
+      }),
+    [daySchedules],
+  );
 
   return (
     <Box>
@@ -74,23 +102,8 @@ export const DayView = ({
                     Matin (8h - 12h)
                   </Typography>
                   <Chip
-                    label={`${
-                      daySchedules.filter((s) => {
-                        const startHour = parseInt(
-                          s.start_time.toString().split(":")[0] || "0",
-                        );
-                        return startHour >= 8 && startHour < 12;
-                      }).length
-                    } tâche${
-                      daySchedules.filter((s) => {
-                        const startHour = parseInt(
-                          s.start_time.toString().split(":")[0] || "0",
-                        );
-                        return startHour >= 8 && startHour < 12;
-                      }).length > 1
-                        ? "s"
-                        : ""
-                    }`}
+                    label={`${morningSchedules.length} tâche${morningSchedules.length > 1 ? "s" : ""
+                      }`}
                     size="small"
                     sx={{ bgcolor: "#e8f5e8", color: "#4caf50" }}
                   />
@@ -113,195 +126,18 @@ export const DayView = ({
             />
             <CardContent>
               <Stack spacing={2}>
-                {daySchedules.filter((schedule) => {
-                  const startHour = parseInt(
-                    schedule.start_time.toString().split(":")[0] || "0",
-                  );
-                  return startHour >= 8 && startHour < 12;
-                }).length > 0 ? (
-                  daySchedules
-                    .filter((schedule) => {
-                      const startHour = parseInt(
-                        schedule.start_time.toString().split(":")[0] || "0",
-                      );
-                      return startHour >= 8 && startHour < 12;
-                    })
+                {morningSchedules.length > 0 ? (
+                  morningSchedules
                     .map((schedule, index) => {
-                      const statusInfo = getStatusInfo(schedule.status);
-                      const priorityInfo = getPriorityInfo(schedule.priority||"");
 
-                      return (
-                        <Card
-                          key={index}
-                          onClick={() => handleOpenDialog(schedule)}
-                          sx={{
-                            cursor: "pointer",
-                            border: `1px solid ${statusInfo.color}`,
-                            "&:hover": {
-                              boxShadow: 2,
-                              transform: "translateY(-1px)",
-                            },
-                            transition: "all 0.2s ease",
-                            ...taskCardStyles[getTaskVariant(schedule)],
-                          }}
-                        >
-                          <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ mb: 1 }}>
-                              <Typography
-                                variant="subtitle2"
-                                fontWeight="bold"
-                                noWrap
-                                sx={{
-                                  color: schedule.category=="vente"
-                                    ? "#4caf50"
-                                    : schedule.category=="point"
-                                      ? "#ff9800"
-                                      : "inherit",
-                                }}
-                              >
-                                {schedule.name}
-                              </Typography>
-                              {schedule.category=="vente" && (
-                                <Chip
-                                  icon={<Store sx={{ color: "white !important" }} />}
-                                  label="Ouverture"
-                                  size="small"
-                                  sx={{
-                                    bgcolor: "#4caf50",
-                                    color: "white",
-                                    fontWeight: "bold",
-                                    fontSize: "0.7rem",
-                                    mt: 0.5,
-                                  }}
-                                />
-                              )}
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: 0.5,
-                                mt: 1,
-                              }}
-                            >
-                              {/* BOUTON DE TEST - TOUJOURS VISIBLE */}
-                              <Button
-                                size="small"
-                                variant="contained"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  alert("Bouton cliqué !");
-                                }}
-                                sx={{
-                                  bgcolor: "#4caf50",
-                                  color: "white",
-                                  fontSize: "0.6rem",
-                                  height: 24,
-                                  minWidth: 60,
-                                  "&:hover": {
-                                    bgcolor: "#45a049",
-                                  },
-                                }}
-                              >
-                                + EMPLOYÉS
-                              </Button>
-
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Modification de la tâche:",
-                                    schedule,
-                                  );
-                                  handleOpenDialog(schedule);
-                                }}
-                                sx={{
-                                  color: "#2196f3",
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                  width: 24,
-                                  height: 24,
-                                  bgcolor: "rgba(33, 150, 243, 0.1)",
-                                  border: "1px solid rgba(33, 150, 243, 0.3)",
-                                  "&:hover": {
-                                    bgcolor: "#e3f2fd",
-                                    transform: "scale(1.2)",
-                                    border: "1px solid #2196f3",
-                                  },
-                                }}
-                              >
-                                <Edit sx={{ fontSize: 14 }} />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Suppression de la tâche:",
-                                    schedule,
-                                  );
-                                  handleDeleteTask(schedule);
-                                }}
-                                sx={{
-                                  color: "#f44336",
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                  width: 24,
-                                  height: 24,
-                                  bgcolor: "rgba(244, 67, 54, 0.1)",
-                                  border: "1px solid rgba(244, 67, 54, 0.3)",
-                                  "&:hover": {
-                                    bgcolor: "#ffebee",
-                                    transform: "scale(1.2)",
-                                    border: "1px solid #f44336",
-                                  },
-                                }}
-                              >
-                                <Delete sx={{ fontSize: 14 }} />
-                              </IconButton>
-                            </Box>
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
-                            >
-                              <Store sx={{ fontSize: 14 }} />
-                              {schedule.Recyclery?.name || "Magasin non assigné"}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              {formatTime(schedule.start_time.toString())} -{" "}
-                              {formatTime(schedule.end_time.toString())}
-                            </Typography>
-                            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                              <Chip
-                                label={statusInfo.label}
-                                size="small"
-                                sx={{
-                                  bgcolor: isManuallyCreatedTask(schedule)
-                                    ? "#e0e0e0"
-                                    : statusInfo.color,
-                                  color: isManuallyCreatedTask(schedule)
-                                    ? "#333"
-                                    : "white",
-                                  fontSize: "0.7rem",
-                                }}
-                              />
-                              <Chip
-                                label={priorityInfo.label}
-                                size="small"
-                                variant="outlined"
-                                color={priorityInfo.color}
-                                sx={{ fontSize: "0.7rem" }}
-                              />
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      );
+                      return <TaskCard
+                        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                        key={index}
+                        schedule={schedule}
+                        handleOpenDialog={handleOpenDialog}
+                        handleDeleteTask={handleDeleteTask}
+                        isManuallyCreatedTask={isManuallyCreatedTask}
+                      />
                     })
                 ) : (
                   <Box
@@ -335,23 +171,8 @@ export const DayView = ({
                     Après-midi (13h30 - 17h)
                   </Typography>
                   <Chip
-                    label={`${
-                      daySchedules.filter((s) => {
-                        const startHour = parseInt(
-                          s.start_time.toString().split(":")[0] || "0",
-                        );
-                        return startHour >= 13 && startHour < 17;
-                      }).length
-                    } tâche${
-                      daySchedules.filter((s) => {
-                        const startHour = parseInt(
-                          s.start_time.toString().split(":")[0] || "0",
-                        );
-                        return startHour >= 13 && startHour < 17;
-                      }).length > 1
-                        ? "s"
-                        : ""
-                    }`}
+                    label={`${afternoonSchedules.length} tâche${afternoonSchedules.length > 1 ? "s" : ""
+                      }`}
                     size="small"
                     sx={{ bgcolor: "#fff3e0", color: "#ff9800" }}
                   />
@@ -374,195 +195,20 @@ export const DayView = ({
             />
             <CardContent>
               <Stack spacing={2}>
-                {daySchedules.filter((schedule) => {
-                  const startHour = parseInt(
-                    schedule.start_time.toString().split(":")[0] || "0",
-                  );
-                  return startHour >= 13 && startHour < 17;
-                }).length > 0 ? (
-                  daySchedules
-                    .filter((schedule) => {
-                      const startHour = parseInt(
-                        schedule.start_time.toString().split(":")[0] || "0",
-                      );
-                      return startHour >= 13 && startHour < 17;
-                    })
+                {afternoonSchedules.length > 0 ? (
+                  afternoonSchedules
                     .map((schedule, index) => {
-                      const statusInfo = getStatusInfo(schedule.status);
-                      const priorityInfo = getPriorityInfo(schedule.priority||"");
 
-                      return (
-                        <Card
-                          key={index}
-                          onClick={() => handleOpenDialog(schedule)}
-                          sx={{
-                            cursor: "pointer",
-                            border: `1px solid ${statusInfo.color}`,
-                            "&:hover": {
-                              boxShadow: 2,
-                              transform: "translateY(-1px)",
-                            },
-                            transition: "all 0.2s ease",
-                            ...taskCardStyles[getTaskVariant(schedule)],
-                          }}
-                        >
-                          <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ mb: 1 }}>
-                              <Typography
-                                variant="subtitle2"
-                                fontWeight="bold"
-                                noWrap
-                                sx={{
-                                  color: schedule.category=="vente"
-                                    ? "#4caf50"
-                                    : schedule.category=="point"
-                                      ? "#ff9800"
-                                      : "inherit",
-                                }}
-                              >
-                                {schedule.name}
-                              </Typography>
-                              {schedule.category=="vente" && (
-                                <Chip
-                                  icon={<Store sx={{ color: "white !important" }} />}
-                                  label="Ouverture"
-                                  size="small"
-                                  sx={{
-                                    bgcolor: "#4caf50",
-                                    color: "white",
-                                    fontWeight: "bold",
-                                    fontSize: "0.7rem",
-                                    mt: 0.5,
-                                  }}
-                                />
-                              )}
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: 0.5,
-                                mt: 1,
-                              }}
-                            >
-                              {/* BOUTON DE TEST - TOUJOURS VISIBLE */}
-                              <Button
-                                size="small"
-                                variant="contained"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  alert("Bouton cliqué !");
-                                }}
-                                sx={{
-                                  bgcolor: "#4caf50",
-                                  color: "white",
-                                  fontSize: "0.6rem",
-                                  height: 24,
-                                  minWidth: 60,
-                                  "&:hover": {
-                                    bgcolor: "#45a049",
-                                  },
-                                }}
-                              >
-                                + EMPLOYÉS
-                              </Button>
+                      return <TaskCard
+                        handleAssignEmployeesToTask={handleAssignEmployeesToTask}
+                        key={index}
+                        schedule={schedule}
 
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Modification de la tâche:",
-                                    schedule,
-                                  );
-                                  handleOpenDialog(schedule);
-                                }}
-                                sx={{
-                                  color: "#2196f3",
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                  width: 24,
-                                  height: 24,
-                                  bgcolor: "rgba(33, 150, 243, 0.1)",
-                                  border: "1px solid rgba(33, 150, 243, 0.3)",
-                                  "&:hover": {
-                                    bgcolor: "#e3f2fd",
-                                    transform: "scale(1.2)",
-                                    border: "1px solid #2196f3",
-                                  },
-                                }}
-                              >
-                                <Edit sx={{ fontSize: 14 }} />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Suppression de la tâche:",
-                                    schedule,
-                                  );
-                                  handleDeleteTask(schedule);
-                                }}
-                                sx={{
-                                  color: "#f44336",
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                  width: 24,
-                                  height: 24,
-                                  bgcolor: "rgba(244, 67, 54, 0.1)",
-                                  border: "1px solid rgba(244, 67, 54, 0.3)",
-                                  "&:hover": {
-                                    bgcolor: "#ffebee",
-                                    transform: "scale(1.2)",
-                                    border: "1px solid #f44336",
-                                  },
-                                }}
-                              >
-                                <Delete sx={{ fontSize: 14 }} />
-                              </IconButton>
-                            </Box>
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
-                            >
-                              <Store sx={{ fontSize: 14 }} />
-                              {schedule.Recyclery?.name || "Magasin non assigné"}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              {formatTime(schedule.start_time.toString())} -{" "}
-                              {formatTime(schedule.end_time.toString())}
-                            </Typography>
-                            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                              <Chip
-                                label={statusInfo.label}
-                                size="small"
-                                sx={{
-                                  bgcolor: isManuallyCreatedTask(schedule)
-                                    ? "#e0e0e0"
-                                    : statusInfo.color,
-                                  color: isManuallyCreatedTask(schedule)
-                                    ? "#333"
-                                    : "white",
-                                  fontSize: "0.7rem",
-                                }}
-                              />
-                              <Chip
-                                label={priorityInfo.label}
-                                size="small"
-                                variant="outlined"
-                                color={priorityInfo.color}
-                                sx={{ fontSize: "0.7rem" }}
-                              />
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      );
+                        handleOpenDialog={handleOpenDialog}
+                        handleDeleteTask={handleDeleteTask}
+                        isManuallyCreatedTask={isManuallyCreatedTask}
+                      />
+
                     })
                 ) : (
                   <Box
@@ -585,3 +231,187 @@ export const DayView = ({
     </Box>
   );
 };
+
+interface TaskCardProps {
+  schedule: TaskModel;
+
+  handleOpenDialog: (schedule: TaskModel) => void;
+  handleDeleteTask: (schedule: TaskModel) => void;
+  isManuallyCreatedTask: (schedule: TaskModel) => boolean;
+  handleAssignEmployeesToTask: (e: TaskModel) => void;
+}
+const TaskCard = ({ schedule, handleAssignEmployeesToTask, handleOpenDialog, handleDeleteTask, isManuallyCreatedTask }: TaskCardProps) => {
+  const statusInfo = getTaskStatus(schedule.status);
+  const priorityInfo = getPriorityInfo(schedule.priority || "");
+  return (
+    <Card
+      onClick={() => handleOpenDialog(schedule)}
+      sx={{
+        cursor: "pointer",
+        border: `1px solid ${statusInfo.color}`,
+        "&:hover": {
+          boxShadow: 2,
+          transform: "translateY(-1px)",
+        },
+        transition: "all 0.2s ease",
+        ...taskCardStyles[getTaskVariant(schedule)],
+      }}
+    >
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ mb: 1 }}>
+          <Typography
+            variant="subtitle2"
+            fontWeight="bold"
+            noWrap
+            sx={{
+              color: schedule.category == "vente"
+                ? "#4caf50"
+                : schedule.category == "point"
+                  ? "#ff9800"
+                  : "inherit",
+            }}
+          >
+            {schedule.name}
+          </Typography>
+          {schedule.category == "vente" && (
+            <Chip
+              icon={<Store sx={{ color: "white !important" }} />}
+              label="Ouverture"
+              size="small"
+              sx={{
+                bgcolor: "#4caf50",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "0.7rem",
+                mt: 0.5,
+              }}
+            />
+          )}
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 0.5,
+            mt: 1,
+          }}
+        >
+          {/* BOUTON DE TEST - TOUJOURS VISIBLE */}
+          <Button
+            size="small"
+            variant="contained"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAssignEmployeesToTask(schedule);
+            }}
+            sx={{
+              bgcolor: "#4caf50",
+              color: "white",
+              fontSize: "0.6rem",
+              height: 24,
+              minWidth: 60,
+              "&:hover": {
+                bgcolor: "#45a049",
+              },
+            }}
+          >
+            + EMPLOYÉS
+          </Button>
+
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(
+                "Modification de la tâche:",
+                schedule,
+              );
+              handleOpenDialog(schedule);
+            }}
+            sx={{
+              color: "#2196f3",
+              minWidth: 24,
+              minHeight: 24,
+              width: 24,
+              height: 24,
+              bgcolor: "rgba(33, 150, 243, 0.1)",
+              border: "1px solid rgba(33, 150, 243, 0.3)",
+              "&:hover": {
+                bgcolor: "#e3f2fd",
+                transform: "scale(1.2)",
+                border: "1px solid #2196f3",
+              },
+            }}
+          >
+            <Edit sx={{ fontSize: 14 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(
+                "Suppression de la tâche:",
+                schedule,
+              );
+              handleDeleteTask(schedule);
+            }}
+            sx={{
+              color: "#f44336",
+              minWidth: 24,
+              minHeight: 24,
+              width: 24,
+              height: 24,
+              bgcolor: "rgba(244, 67, 54, 0.1)",
+              border: "1px solid rgba(244, 67, 54, 0.3)",
+              "&:hover": {
+                bgcolor: "#ffebee",
+                transform: "scale(1.2)",
+                border: "1px solid #f44336",
+              },
+            }}
+          >
+            <Delete sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Box>
+        <Typography
+          variant="caption"
+          display="block"
+          sx={{ fontWeight: "bold", color: "#2196f3", display: "flex", alignItems: "center", gap: 0.5 }}
+        >
+          <Store sx={{ fontSize: 14 }} />
+          {schedule.Recyclery?.name || "Magasin non assigné"}
+        </Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+        >
+          {formatTime(new Date(schedule.start_time))} -{" "}
+          {formatTime(new Date(schedule.end_time))}
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+          <Chip
+            label={statusInfo.label}
+            size="small"
+            sx={{
+              bgcolor: isManuallyCreatedTask(schedule)
+                ? "#e0e0e0"
+                : statusInfo.color,
+              color: isManuallyCreatedTask(schedule)
+                ? "#333"
+                : "white",
+              fontSize: "0.7rem",
+            }}
+          />
+          <Chip
+            label={priorityInfo.label}
+            size="small"
+            variant="outlined"
+            color={priorityInfo.color}
+            sx={{ fontSize: "0.7rem" }}
+          />
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}

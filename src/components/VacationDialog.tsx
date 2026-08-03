@@ -85,11 +85,12 @@ export const VacationDialog = ({
     });
 
     const updateVacationMutation = useMutation({
-        mutationFn: (data: VacationFormOutput) =>
-            updateVacation(
-                selectedEmployee.id,
-                vacationUpdatePayloadFromForm(data),
-            ),
+        mutationFn: (data: VacationFormOutput) => {
+            if (!selectedVacation) throw new Error("Selected vacation is required");
+            return updateVacation(
+                selectedVacation.id,
+                vacationUpdatePayloadFromForm(data))
+        }       ,
         onSuccess: () => {
             resetForm();
             invalidateVacations();

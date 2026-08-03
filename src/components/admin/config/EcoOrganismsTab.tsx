@@ -114,26 +114,6 @@ export const EcoOrganismsTab = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression"))
   })
 
-  // const fetchEcoOrganisms = async () => {
-  //   try {
-  //     const response = await getEcoOrganisms();
-  //     setEcoOrganisms(response.data.eco_organisms || []);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des éco-organismes:", error);
-  //     toast.error("Erreur lors du chargement des éco-organismes");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const fetchEcoOrganismStats = async () => {
-  //   try {
-  //     const response = await fetchEcoOrganismsStats();
-  //     setEcoOrganismStats(response.data.stats);
-  //   } catch (error) {
-  //     console.error("Erreur lors du chargement des statistiques:", error);
-  //   }
-  // };
 
   const handleOpenEcoOrganismDialog = (
     ecoOrganism: EcoOrgModel | null = null

@@ -16,8 +16,6 @@ import {
 } from "../../services/schema/don";
 
 export type { DonFormOutput, DonFormValues };
-/** @deprecated Use DonFormOutput */
-export type Schema = DonFormOutput;
 
 export const DonForm = ({
   formId,

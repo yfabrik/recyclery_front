@@ -5,10 +5,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import {
-  closeCaissePayloadFromForm,
-  type CloseCaissePayload,
-} from "../../services/mapper/caisse";
-import {
   closeCaisseFormSchema,
   type CloseCaisseFormOutput,
   type CloseCaisseFormValues,
@@ -16,9 +12,7 @@ import {
 import { usePrompt } from "../Prompt";
 import { FormInput, type BaseFormProps } from "./FormBase";
 
-export type { CloseCaisseFormValues, CloseCaisseFormOutput, CloseCaissePayload };
-/** @deprecated Use CloseCaissePayload for submit */
-export type Schema = CloseCaissePayload;
+export type { CloseCaisseFormValues, CloseCaisseFormOutput };
 
 export const CloseCaisseForm = ({
   formId,
@@ -28,7 +22,7 @@ export const CloseCaisseForm = ({
   closingAmount,
   setClosingAmount,
   expectedAMount,
-}: BaseFormProps<CloseCaisseFormValues, CloseCaissePayload> & {
+}: BaseFormProps<CloseCaisseFormValues, CloseCaisseFormOutput> & {
   state: "prepare" | "valid";
   setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
   closingAmount: number;
@@ -52,7 +46,7 @@ export const CloseCaisseForm = ({
 
   const submited = (data: CloseCaisseFormOutput) => {
     if (state == "prepare") setState("valid");
-    else onSubmit(closeCaissePayloadFromForm(data));
+    else onSubmit(data);
   };
 
   return (

@@ -12,8 +12,6 @@ export type {
   PasswordChangeFormOutput,
   PasswordChangeFormValues,
 };
-/** @deprecated Use PasswordChangeFormOutput */
-export type Schema = PasswordChangeFormOutput;
 
 interface PasswordChangeFormProps
   extends BaseFormProps<PasswordChangeFormValues, PasswordChangeFormOutput> {

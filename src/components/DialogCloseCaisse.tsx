@@ -13,15 +13,16 @@ import type { CashSession } from "../interfaces/Models";
 import { getTransactions } from "../services/api/transactions";
 import type { ListSalesTransactionsResponse } from "@recyclerie/api/responses/salesTransactions";
 import { useBilanCaissePrint } from "./BilanCaissePrint";
-import { CloseCaisseForm, type Schema } from "./forms/CloseCaisseForm";
+import { CloseCaisseForm } from "./forms/CloseCaisseForm";
 import { formatCurrency, roundCurrency, sumCashInPayments } from "../services/cartService";
 import { Print } from "@mui/icons-material";
+import type { CloseCaisseFormOutput } from "../services/schema/caisse";
 
 interface DialogCloseCaisseProps {
   closeSessionDialog: boolean;
   setCloseSessionDialog: (value: React.SetStateAction<boolean>) => void;
   currentSession: CashSession;
-  handleCloseSession: (d: Schema) => void;
+  handleCloseSession: (d: CloseCaisseFormOutput) => void;
 }
 export const DialogCloseCaisse = ({
   closeSessionDialog,

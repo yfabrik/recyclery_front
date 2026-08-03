@@ -19,8 +19,6 @@ import {
 } from "../../services/schema/schedule";
 
 export type { CollecteFormOutput, CollecteFormValues };
-/** @deprecated Use CollecteFormOutput */
-export type Schema = CollecteFormOutput;
 
 export const CollecteForm = ({
   formId,

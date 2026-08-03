@@ -15,8 +15,6 @@ import {
 } from "./FormBase";
 
 export type { EmployeeFormOutput, EmployeeFormValues };
-/** @deprecated Use EmployeeFormOutput */
-export type Schema = EmployeeFormOutput;
 
 export const EmployeeForm = ({
   formId,

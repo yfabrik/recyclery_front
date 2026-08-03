@@ -15,10 +15,6 @@ import {
 } from "../../services/schema/collectionPoint";
 
 export type { CollectionPointFormOutput, CollectionPointFormValues };
-/** @deprecated Use CollectionPointFormOutput */
-export type Schema = CollectionPointFormOutput;
-/** @deprecated Use CollectionPointFormValues */
-export type SchemaInputValues = CollectionPointFormValues;
 
 interface CollectionPointFormProps extends BaseFormProps<CollectionPointFormValues,CollectionPointFormOutput> {
   recycleries: StoreModel[]

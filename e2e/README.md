@@ -41,3 +41,4 @@ Playwright starts Vite (`npm run dev`) unless something is already listening on 
 | Login UI | `#email`, `#password`, button « Se connecter », URL `/dashboard`, `localStorage.token` |
 | Unauth redirect | `/dashboard` → `/login` |
 | Dashboard smoke | URL stays `/dashboard`, text matching `/^Bonjour,/` (greeting in `Dashboard.tsx`) |
+| POS sell/edit | `/pos` with open caisse; manual item + global promo; Encaisser; edit keeps promo totals (skips if no credentials / API / session) |

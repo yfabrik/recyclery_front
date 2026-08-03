@@ -17,17 +17,14 @@ import {
   type PresenceFormValues,
 } from "../../services/schema/schedule";
 
-export type { PresenceFormOutput };
-export type PresencePointFormValues = PresenceFormValues;
-/** @deprecated Use PresenceFormOutput */
-export type Schema = PresenceFormOutput;
+export type { PresenceFormOutput, PresenceFormValues };
 
 export const PresencePointForm = ({
   formId,
   onSubmit,
   collectionPoints,
   defaultValues,
-}: BaseFormProps<PresencePointFormValues,Schema> & {
+}: BaseFormProps<PresenceFormValues, PresenceFormOutput> & {
   collectionPoints: CollectionPointModel[];
 }) => {
   // const scheduledDate =
@@ -38,7 +35,7 @@ export const PresencePointForm = ({
   //   defaultValues?.day_of_week ??
   //   (scheduledDate != null ? new Date(scheduledDate).getDay() : undefined);
 
-  const form = useForm<PresencePointFormValues,unknown,Schema>({
+  const form = useForm<PresenceFormValues, unknown, PresenceFormOutput>({
     resolver: zodResolver(presenceFormSchema),
     defaultValues: {
       collection_point_id: "",

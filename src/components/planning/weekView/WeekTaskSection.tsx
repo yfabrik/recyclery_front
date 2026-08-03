@@ -364,7 +364,6 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
         <Typography variant="caption" color="text.secondary" display="block">
           {periode}
         </Typography>
-        {/* //TODO assigned doesnt exist */}
         {schedule.Employees && schedule.Employees.length > 0 && (
           <Box
             sx={{

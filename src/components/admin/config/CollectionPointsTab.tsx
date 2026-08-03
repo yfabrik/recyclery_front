@@ -35,10 +35,6 @@ import {
 import { fetchStores } from "../../../services/api/store";
 import { CardCollectionPoint } from "../../CardCollectionPoint";
 import { CollectionPointForm } from "../../forms/CollectionPointForm";
-import type {
-  PresencePointFormValues,
-  Schema as PresenceSchema,
-} from "../../forms/PresencePointForm";
 import { PresencePointForm } from "../../forms/PresencePointForm";
 import {
   presencePayloadFromForm,
@@ -48,6 +44,10 @@ import {
   collectionPointPayloadFromForm,
   collectionPointToFormValues,
 } from "../../../services/mapper/collectionPoint";
+import type {
+  PresenceFormOutput,
+  PresenceFormValues,
+} from "../../../services/schema/schedule";
 import type {
   CollectionPointFormOutput,
   CollectionPointFormValues,
@@ -64,7 +64,7 @@ const CollectionPointsTab = () => {
     null,
   );
   const [presenceFormDefaults, setPresenceFormDefaults] = useState<
-    | (Partial<PresencePointFormValues>)
+    | (Partial<PresenceFormValues>)
     | null
   >(null);
   const queryClient = useQueryClient();
@@ -131,10 +131,9 @@ const CollectionPointsTab = () => {
     setPointFormDefaults(null);
   };
   const handleSave = async (data: CollectionPointFormOutput) => {
-    const payload = collectionPointPayloadFromForm(data);
     if (editingPointId)
-      updatePoint.mutate({ id: editingPointId, data: payload });
-    else createPoint.mutate(payload);
+      updatePoint.mutate({ id: editingPointId, data });
+    else createPoint.mutate(data);
   };
   const handleDelete = async (point: CollectionPointModel) => {
     if (
@@ -158,7 +157,7 @@ const CollectionPointsTab = () => {
   };
 
   const updatePresence = useMutation({
-    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: PresenceSchema }) =>
+    mutationFn: ({ id, data }: { id: ScheduleModel["id"]; data: PresenceFormOutput }) =>
       updatePointPresence(id, presencePayloadFromForm(data)),
     onError: (error) =>
       toast.error(
@@ -176,7 +175,7 @@ const CollectionPointsTab = () => {
     },
   });
   const createPresence = useMutation({
-    mutationFn: (data: PresenceSchema) => createPointPresence(presencePayloadFromForm(data)),
+    mutationFn: (data: PresenceFormOutput) => createPointPresence(presencePayloadFromForm(data)),
     onError: (error) =>
       toast.error(
         getApiErrorMessage(
@@ -206,7 +205,7 @@ const CollectionPointsTab = () => {
       queryClient.invalidateQueries({ queryKey: ["points"] });
     },
   });
-  const handleSavePresence = async (data: PresenceSchema) => {
+  const handleSavePresence = async (data: PresenceFormOutput) => {
     if (editingPresenceId)
       updatePresence.mutate({ id: editingPresenceId, data });
     else createPresence.mutate(data);

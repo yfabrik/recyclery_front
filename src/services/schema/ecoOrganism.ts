@@ -1,4 +1,7 @@
-import { ARRIVAL_SOURCE_TYPES } from "@recyclerie/api/enums";
+import {
+  ARRIVAL_SOURCE_TYPES,
+  ECO_ORG_METRIC_SOURCES,
+} from "@recyclerie/api/enums";
 import { phoneSchema } from "@recyclerie/api/primitives/zod";
 import z from "zod";
 import {
@@ -21,11 +24,10 @@ export const ecoOrganismFormSchema = z.object({
 export type EcoOrganismFormOutput = z.infer<typeof ecoOrganismFormSchema>;
 export type EcoOrganismFormValues = z.input<typeof ecoOrganismFormSchema>;
 
-const ECO_ORG_METRIC_SOURCES = ["quarterIn", "quarterOut", "quarterSell"] as const;
-
 export const ecoOrgFilterSchema = z.object({
   eco_organism_id: z.union([filterIdSchema(), z.literal("")]),
   metric_source: z.enum(ECO_ORG_METRIC_SOURCES),
+
   quarter: z.string(),
   month_year: z.coerce.date().nullable(),
   source_type: z.enum([...ARRIVAL_SOURCE_TYPES, ""]),

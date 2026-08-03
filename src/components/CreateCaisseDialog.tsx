@@ -22,13 +22,13 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import {
-  CreateCaisseForm,
-  type Schema as CaisseSchema,
-  type Schema,
-} from "./forms/CreateCaisseForm";
+import { CreateCaisseForm } from "./forms/CreateCaisseForm";
 import { useState } from "react";
-import type { CashRegisterCreateInput } from "@recyclerie/api/schemas/cashRegister";
+import { createCaissePayloadFromForm } from "../services/mapper/caisse";
+import type {
+  CreateCaisseFormOutput,
+  CreateCaisseFormValues,
+} from "../services/schema/caisse";
 
 interface CreateCaisseDialogProps {
   store: StoreModel;
@@ -59,12 +59,17 @@ export const CreateCaisseDialog = ({
   useQueryErrorToast(caisses.error, "Erreur lors du chargement des caisses");
 
   const [formMethods, setFormMethods] = useState<{
-    reset: (values?: Partial<Schema>) => void;
+    reset: (values?: Partial<CreateCaisseFormValues>) => void;
   } | null>(null);
 
   const addCaisse = useMutation({
-    mutationFn: (data: CashRegisterCreateInput) =>
-      createCaisse(store.id, data),
+    mutationFn: (data: CreateCaisseFormOutput) => {
+      const payload = createCaissePayloadFromForm(data);
+      return createCaisse(store.id, {
+        store_id: store.id,
+        name: payload.name,
+      });
+    },
     onSuccess: (data) => {
       toast.success(getApiSuccessMessage(data, "Caisse créée avec succès"));
       queryClient.invalidateQueries({ queryKey: ["caisses"] });
@@ -73,12 +78,8 @@ export const CreateCaisseDialog = ({
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la création de la caisse")),
   });
 
-  const handleAddCashRegister = async (data: CaisseSchema) => {
-    const mapperData: CashRegisterCreateInput = {
-      store_id: store.id,
-      name: data.name,
-    };
-    addCaisse.mutate(mapperData);
+  const handleAddCashRegister = async (data: CreateCaisseFormOutput) => {
+    addCaisse.mutate(data);
   };
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

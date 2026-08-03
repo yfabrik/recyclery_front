@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Euro, Scale } from "@mui/icons-material";
 import { Grid, MenuItem } from "@mui/material";
-import { useForm, type FieldPath, type Path, type PathValue } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   LABELED_ITEM_CONDITIONS,
 } from "../../constants/labeledItemConditions";
 import { useCategoryItemDefaults } from "../../hooks/useCategoryItemDefaults";
+import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type { CategoryModel } from "../../interfaces/Models";
 import {
   labeledItemSchema,
@@ -19,11 +20,8 @@ import {
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
-import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 
 export type { LabeledItemFormValues };
-/** @deprecated Use LabeledItemFormOutput */
-export type LabeledItemSchema = LabeledItemFormOutput;
 
 type FormValues = LabeledItemFormValues;
 

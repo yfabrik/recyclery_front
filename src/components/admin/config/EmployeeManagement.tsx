@@ -29,7 +29,6 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import type { EmployeeSkillsInput } from "@recyclerie/api/schemas/employees";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -52,20 +51,24 @@ import EmployeeWorkdays from "../../EmployeeWorkdays";
 import { EmployeeFilterForm } from "../../forms/filters/EmployeeFilterForm";
 import { useUrlFilters } from "../../../hooks/useUrlFilters";
 import { EmployeeForm } from "../../forms/EmployeeForm";
-import { EmployeeSkillForm, type Schema as EmployeeSkillSchema } from "../../forms/EmployeeSkillForm";
+import { EmployeeSkillForm } from "../../forms/EmployeeSkillForm";
 import { Loading } from "../../Loading";
-import { employeePayloadFromForm, employeeToFormValues } from "../../../services/mapper/employee";
+import {
+  employeePayloadFromForm,
+  employeeSkillPayloadFromForm,
+  employeeToFormValues,
+} from "../../../services/mapper/employee";
 import {
   EMPLOYEE_FILTER_DEFAULTS,
   employeeFilterSchema,
   type EmployeeFormOutput,
   type EmployeeFormValues,
+  type EmployeeSkillFormOutput,
 } from "../../../services/schema/employee";
 import { VacationDialog } from "../../VacationDialog";
 
 const EmployeeManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  // const [editingEmployeeId, setEditingEmployeeId] = useState<EmployeeModel["id"] | null>(null);
   const [employeeFormDefaults, setEmployeeFormDefaults] = useState<Partial<EmployeeFormValues> | null>(
     null,
   );
@@ -113,6 +116,7 @@ const EmployeeManagement = () => {
   })
   useQueryErrorToast(stores.error, "Erreur lors du chargement des stores");
 
+  //TODO query with pages, update search
   const employees = useQuery({
     queryKey: ["employees"],
     queryFn: () => getEmployees().then(response => response.data.data)
@@ -256,9 +260,9 @@ const EmployeeManagement = () => {
         matchesStore;
     }) || [];
 
-  const updateEmployeeSkillsPayloadFromForm = (data: EmployeeSkillSchema): EmployeeSkillsInput => ({ ...data });
   const updateEmployeeSkillsMutation = useMutation({
-    mutationFn: ({ id, data }: { id: EmployeeModel["id"], data: EmployeeSkillSchema }) => updateEmployeeSkills(id, updateEmployeeSkillsPayloadFromForm(data)),
+    mutationFn: ({ id, data }: { id: EmployeeModel["id"]; data: EmployeeSkillFormOutput }) =>
+      updateEmployeeSkills(id, employeeSkillPayloadFromForm(data)),
     onSuccess: (data) => {
       handleCloseSkills()
       toast.success(getApiSuccessMessage(data, "Compétences mises à jour avec succès"));
@@ -267,7 +271,7 @@ const EmployeeManagement = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la mise à jour des compétences")),
   })
 
-  const handleSaveSkills = (data: EmployeeSkillSchema) => {
+  const handleSaveSkills = (data: EmployeeSkillFormOutput) => {
     if (selectedEmployee?.id) updateEmployeeSkillsMutation.mutate({ id: selectedEmployee.id, data: data })
   }
 

@@ -18,11 +18,9 @@ import {
   type PlanningFormOutput,
   type PlanningFormValues,
 } from "../../services/schema/schedule";
+import { RECURRENCE_PATTERN_FORM_OPTIONS } from "../../constants/recurrencePatterns";
 
-export type { PlanningFormOutput };
-export type SchemaInputValues = PlanningFormValues;
-/** @deprecated Use PlanningFormOutput */
-export type Schema = PlanningFormOutput;
+export type { PlanningFormOutput, PlanningFormValues };
 
 type ScheduleFormProps = BaseFormProps<PlanningFormValues, PlanningFormOutput> & {
   stores: Pick<StoreModel, "id" | "name">[];
@@ -93,10 +91,12 @@ export const PlaningForm = ({
             name="recurrence_pattern"
             label="Récurrence"
           >
-            <MenuItem value="">Aucune</MenuItem>
-            <MenuItem value="daily">Journaliere</MenuItem>
-            <MenuItem value="weekly">hebdomadaire</MenuItem>
-            <MenuItem value="monthly">mensuel</MenuItem>
+            {RECURRENCE_PATTERN_FORM_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+
           </FormSelect>
         </Grid>
 

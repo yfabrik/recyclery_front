@@ -52,10 +52,6 @@ export type LabeledItemFormOutput = z.infer<
 export type LabeledItemFormValues = z.input<
   ReturnType<typeof labeledItemSchema>
 >;
-/** @deprecated Use LabeledItemFormOutput */
-export type LabeledItemSchema = LabeledItemFormOutput;
-/** @deprecated Use LabeledItemFormOutput */
-export type LabeledItemPayload = LabeledItemFormOutput;
 
 /** Manual POS: weight/price start as `""` so the user must fill them; promo optional. */
 export const manualItemSchema = (categories: CategoryModel[]) =>
@@ -73,5 +69,3 @@ export type ManualItemFormOutput = z.infer<
 export type ManualItemFormValues = z.input<
   ReturnType<typeof manualItemSchema>
 >;
-/** @deprecated Use ManualItemFormOutput */
-export type ManualItemSchema = ManualItemFormOutput;

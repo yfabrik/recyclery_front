@@ -11,6 +11,7 @@ import { FormDate, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
+import { ECO_ORG_METRIC_SOURCES } from "../../../constants/ecoOrgMetricSources";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
   ecoOrgFilterSchema,
@@ -58,35 +59,6 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
     queryFn: () => fetchCollectionPoints().then((response) => response.data.data),
   });
 
-  // const SourceType = ({ control }: { control: typeof form.control }) => {
-  //   const metric_source = useWatch({
-  //     control: control,
-  //     name: "metric_source",
-  //   });
-  //   const typeArrival = metric_source == "quarterIn"
-
-  //   useEffect(() => {
-  //     if (!typeArrival) {
-  //       form.setValue("source_type", "");
-  //     }
-  //   }, [typeArrival]);
-
-  //   if (!typeArrival) return null;
-
-  //   return (
-  //     <FormSelect
-  //       control={form.control}
-  //       name="source_type"
-  //       label="Source"
-  //     >
-  //       <MenuItem value="">Toutes les sources</MenuItem>
-  //       <MenuItem value="apport">Apport</MenuItem>
-  //       <MenuItem value="point">déchetterie</MenuItem>
-  //       <MenuItem value="house_clearance">vide maison</MenuItem>
-
-  //     </FormSelect>
-  //   );
-  // };
 
   const ecoOrganismOptions = useMemo(() => {
     return (statsRows || []).map((item) => ({
@@ -165,9 +137,11 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
 
         <Grid size={{ xs: 12, md: 3 }}>
           <FormSelect control={form.control} name="metric_source" label="Type de flux">
-            <MenuItem value="quarterIn">Entrant</MenuItem>
-            <MenuItem value="quarterOut">Sortant</MenuItem>
-            <MenuItem value="quarterSell">Vendu</MenuItem>
+            {ECO_ORG_METRIC_SOURCES.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
           </FormSelect>
         </Grid>
 

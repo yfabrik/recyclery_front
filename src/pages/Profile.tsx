@@ -28,20 +28,17 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import {
-  PasswordChangeForm,
-  type Schema as PasswordSchema,
-} from '../components/forms/PasswordChangeForm';
-import {
-  ProfileForm,
-  type Schema as ProfileSchema,
-} from '../components/forms/ProfileForm';
+import { PasswordChangeForm } from '../components/forms/PasswordChangeForm';
+import { ProfileForm } from '../components/forms/ProfileForm';
 import {
   getUserRoleColor,
   getUserRoleLabel,
 } from '../constants/userRoles';
 import { useAuth } from '../contexts/AuthContext';
 import { updateProfilePassword } from '../services/api/profile';
+import { profilePayloadFromForm } from '../services/mapper/profile';
+import type { PasswordChangeFormOutput } from '../services/schema/password';
+import type { ProfileFormOutput } from '../services/schema/profile';
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -62,14 +59,15 @@ const Profile = () => {
     user?.managedStores?.map((store) => store.name).join(', ') || '—';
 
   const saveProfile = useMutation({
-    mutationFn: (data: ProfileSchema) => updateProfile(data),
+    mutationFn: (data: ProfileFormOutput) =>
+      updateProfile(profilePayloadFromForm(data)),
     onSuccess: (result) => {
       if (result.success) setFormKey((key) => key + 1);
     },
   });
 
   const changePassword = useMutation({
-    mutationFn: (data: PasswordSchema) =>
+    mutationFn: (data: PasswordChangeFormOutput) =>
       updateProfilePassword({ ...data, currentPassword: data.currentPassword ?? "" }),
     onSuccess: (response) => {
       toast.success(
@@ -83,11 +81,11 @@ const Profile = () => {
       ),
   });
 
-  const handleSaveProfile = (data: ProfileSchema) => {
+  const handleSaveProfile = (data: ProfileFormOutput) => {
     saveProfile.mutate(data);
   };
 
-  const handleChangePassword = (data: PasswordSchema) => {
+  const handleChangePassword = (data: PasswordChangeFormOutput) => {
     changePassword.mutate(data);
   };
 

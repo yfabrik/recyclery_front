@@ -18,7 +18,7 @@ import {
 } from "../services/api/auth";
 import axiosInstance from "../services/api/axios";
 import type { AuthUserModel } from "../interfaces/Models";
-import type { Schema as ProfileSchema } from "../components/forms/ProfileForm";
+import type { ProfileFormPayload } from "../services/mapper/profile";
 
 const PERMISSIONS = {
   admin: {
@@ -87,7 +87,7 @@ interface AuthContextValue {
   ) => boolean;
   isAuthenticated: boolean;
   updateProfile: (
-    data: ProfileSchema,
+    data: ProfileFormPayload,
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -218,7 +218,7 @@ export const AuthProvider = ({ children }: AuthProps) => {
     return (PERMISSIONS[role][module] as readonly string[]).includes(action);
   };
 
-  const updateProfile = async (data: ProfileSchema) => {
+  const updateProfile = async (data: ProfileFormPayload) => {
     try {
       const response = await updateProfileApi(data);
       setUser(response.data.data);

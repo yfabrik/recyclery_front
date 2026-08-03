@@ -2,13 +2,11 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { ExportCsvButton, type ExportScope } from "../ExportCsvButton";
 import { downloadCsv, rowsToCsv, type CsvColumn } from "../../utils/csv";
-import type {
-  EcoMetricSource,
-  EcoOrganismStatsRow,
-} from "./EcoOrganismStatsTable";
+import type { EcoOrgMetricSource } from "@recyclerie/api/enums";
+import type { EcoOrganismStatsRow } from "./EcoOrganismStatsTable";
 
 const getCsvColumns = (
-  metricSource: EcoMetricSource,
+  metricSource: EcoOrgMetricSource,
 ): CsvColumn<EcoOrganismStatsRow>[] => {
   const columns: CsvColumn<EcoOrganismStatsRow>[] = [
     { header: "Eco-organisme", key: "ecoOrganism" },
@@ -51,7 +49,7 @@ const getCsvColumns = (
 type EcoOrganismStatsExportProps = {
   filteredRows: EcoOrganismStatsRow[];
   allRows: EcoOrganismStatsRow[];
-  metricSource: EcoMetricSource;
+  metricSource: EcoOrgMetricSource;
   disabled?: boolean;
 };
 

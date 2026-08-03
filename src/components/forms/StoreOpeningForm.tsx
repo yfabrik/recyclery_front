@@ -18,8 +18,6 @@ import {
 } from "../../services/schema/schedule";
 
 export type { StoreOpeningFormOutput, StoreOpeningFormValues };
-/** @deprecated Use StoreOpeningFormOutput */
-export type Schema = StoreOpeningFormOutput;
 
 export const StoreOpeningForm = ({
   formId,

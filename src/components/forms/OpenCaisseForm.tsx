@@ -8,10 +8,6 @@ import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
 import type { StoreModel } from "../../interfaces/Models";
 import { fetchCaisses, fetchStores } from "../../services/api/store";
 import {
-  openCaissePayloadFromForm,
-  type OpenCaissePayload,
-} from "../../services/mapper/caisse";
-import {
   openCaisseFormSchema,
   type OpenCaisseFormOutput,
   type OpenCaisseFormValues,
@@ -19,12 +15,10 @@ import {
 import { usePrompt } from "../Prompt";
 import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
 
-export type { OpenCaisseFormValues, OpenCaisseFormOutput, OpenCaissePayload };
-/** @deprecated Use OpenCaissePayload for submit / OpenCaisseFormValues for form state */
-export type Schema = OpenCaissePayload;
+export type { OpenCaisseFormValues, OpenCaisseFormOutput };
 
 interface OpenCaisseFormProps
-  extends BaseFormProps<OpenCaisseFormValues, OpenCaissePayload> {
+  extends BaseFormProps<OpenCaisseFormValues, OpenCaisseFormOutput> {
   stores?: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
   lockStoreAndRegister?: boolean;
@@ -100,9 +94,7 @@ export const OpenCaisseForm = ({
     <>
       <form
         id={formId}
-        onSubmit={form.handleSubmit((data) => {
-          onSubmit(openCaissePayloadFromForm(data));
-        })}
+        onSubmit={form.handleSubmit(onSubmit)}
       >
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
