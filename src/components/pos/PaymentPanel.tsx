@@ -19,7 +19,7 @@ import type {
 } from "react-hook-form";
 import { useFormContext, useWatch } from "react-hook-form";
 import type { CartFormValues, CartFormOutput as CartSchema } from "../../services/schema/cart";
-import { FormInput, FormSelect } from "../forms/FormBase";
+import { FormInput, FormNumber, FormSelect } from "../forms/FormBase";
 import {
   formatCurrency,
   getCartTotalWithGlobalPromotion,
@@ -164,12 +164,11 @@ export const PaymentPanel = ({
                 </FormSelect>
               </Box>
               <Box sx={{ width: "42%" }}>
-                <FormInput
+                <FormNumber
                   label="Montant (€)"
                   control={control}
                   name={`payment_splits.${index}.amount`}
                   extra={{
-                    type: "number",
                     size: "small",
                     disabled:
                       readOnly || safePaymentSplits[index]?.method === "giftcard",
@@ -255,12 +254,11 @@ export const PaymentPanel = ({
               </Box>
             </Box>
             <Box sx={{ width: "50%" }}>
-              <FormInput
+              <FormNumber
                 label="Valeur"
                 control={control}
                 name="global_promotion.value"
                 extra={{
-                  type: "number",
                   size: "small",
                   disabled: readOnly,
                 }}

@@ -5,6 +5,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { mockCategories } from "../../stories/fixtures";
 import {
   formatCurrency,
+  getCartTotal,
   getCartTotalWithGlobalPromotion,
   roundCurrency,
 } from "../../services/cartService";
@@ -16,6 +17,10 @@ import {
   globalPromo33Form,
   makeSellTransaction,
 } from "../../stories/fixtures/posCart";
+import {
+  matchFormattedCurrency,
+  normalizeMoneyText,
+} from "../../stories/matchCurrency";
 import { TransactionDetailsDialog } from "./TransactionDetailsDialog";
 
 type HarnessProps = {
@@ -29,15 +34,18 @@ type SubmitSpy = ReturnType<typeof fn>;
 const SUBMIT_SPY_KEY = "__posEditSubmitSpy";
 
 const getSubmitSpy = () =>
-  (globalThis as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY];
+  (globalThis as unknown as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY];
 
 const setSubmitSpy = (spy: SubmitSpy) => {
-  (globalThis as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY] = spy;
+  (globalThis as unknown as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY] =
+    spy;
 };
 
-/** Dialog portals to document.body — query there, not canvasElement. */
-const body = (canvasElement: HTMLElement) =>
-  within(canvasElement.ownerDocument.body);
+/** Dialog portals to document.body — locate portal there, then scope to dialog. */
+const dialogScreen = (canvasElement: HTMLElement) => {
+  const body = within(canvasElement.ownerDocument.body);
+  return within(body.getByRole("dialog"));
+};
 
 function DialogHarness({
   form,
@@ -120,16 +128,27 @@ function DialogHarness({
 
 const meta = {
   title: "POS/TransactionDetailsDialog",
-  component: DialogHarness,
   tags: ["autodocs"],
   parameters: {
     layout: "fullscreen",
   },
-} satisfies Meta<typeof DialogHarness>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
+
+const expectDueAmount = (
+  screen: ReturnType<typeof within>,
+  amount: number,
+) => {
+  const dueLabel = screen.getByText("Total à payer");
+  const row = dueLabel.parentElement;
+  expect(row).toBeTruthy();
+  expect(normalizeMoneyText(row!.textContent ?? "")).toContain(
+    normalizeMoneyText(formatCurrency(amount)),
+  );
+};
 
 export const EditShowsGlobalPromoTotals: Story = {
   render: () => {
@@ -137,7 +156,7 @@ export const EditShowsGlobalPromoTotals: Story = {
     return <DialogHarness form={globalPromo33Form} onSubmit={onSubmit} />;
   },
   play: async ({ canvasElement }) => {
-    const screen = body(canvasElement);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
     await waitFor(() =>
       expect(screen.getByText(/Modifier la Transaction #/)).toBeInTheDocument(),
     );
@@ -146,8 +165,17 @@ export const EditShowsGlobalPromoTotals: Story = {
         screen.getByText(/Promotion globale \(33%\)/),
       ).toBeInTheDocument(),
     );
-    await expect(screen.getByText(formatCurrency(4.02))).toBeInTheDocument();
-    await expect(screen.getByText(formatCurrency(6))).toBeInTheDocument();
+    const due = roundCurrency(
+      getCartTotalWithGlobalPromotion(
+        globalPromo33Form.cart,
+        globalPromo33Form.global_promotion,
+      ),
+    );
+    const subtotal = roundCurrency(getCartTotal(globalPromo33Form.cart));
+    expectDueAmount(screen, due);
+    await expect(
+      screen.getAllByText(matchFormattedCurrency(subtotal)).length,
+    ).toBeGreaterThan(0);
   },
 };
 
@@ -157,27 +185,32 @@ export const EditChangePromoUpdatesDue: Story = {
     return <DialogHarness form={globalPromo33Form} onSubmit={onSubmit} />;
   },
   play: async ({ canvasElement }) => {
-    const screen = body(canvasElement);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
     await waitFor(() =>
       expect(
         screen.getByText(/Promotion globale \(33%\)/),
       ).toBeInTheDocument(),
     );
 
-    const promoInputs = screen.getAllByRole("spinbutton");
-    const promoValue = promoInputs.find(
-      (el) => (el as HTMLInputElement).value === "33",
+    const promoValue = screen.getByLabelText(/^Valeur$/i);
+    await userEvent.clear(promoValue);
+    await userEvent.type(promoValue, "10");
+
+    const expectedDue = roundCurrency(
+      getCartTotalWithGlobalPromotion(globalPromo33Form.cart, {
+        type: "percent",
+        value: 10,
+      }),
     );
-    expect(promoValue).toBeTruthy();
-    await userEvent.clear(promoValue!);
-    await userEvent.type(promoValue!, "10");
 
     await waitFor(() =>
       expect(
         screen.getByText(/Promotion globale \(10%\)/),
       ).toBeInTheDocument(),
     );
-    await expect(screen.getByText(formatCurrency(5.4))).toBeInTheDocument();
+    await waitFor(() => {
+      expectDueAmount(screen, expectedDue);
+    });
   },
 };
 
@@ -193,7 +226,7 @@ export const EditSaveSuccess: Story = {
     );
   },
   play: async ({ canvasElement }) => {
-    const screen = body(canvasElement);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
     await waitFor(() =>
       expect(
         screen.getByRole("button", { name: /Enregistrer/i }),
@@ -225,7 +258,7 @@ export const EditUnderpayDoesNotSubmit: Story = {
     );
   },
   play: async ({ canvasElement }) => {
-    const screen = body(canvasElement);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
     const save = await waitFor(() =>
       screen.getByRole("button", { name: /Enregistrer/i }),
     );
@@ -245,12 +278,18 @@ export const FractionalGlobalPromoTotals: Story = {
     );
   },
   play: async ({ canvasElement }) => {
-    const screen = body(canvasElement);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const due = roundCurrency(
+      getCartTotalWithGlobalPromotion(
+        fractionalGlobalPromo10Form.cart,
+        fractionalGlobalPromo10Form.global_promotion,
+      ),
+    );
     await waitFor(() =>
       expect(
         screen.getByText(/Promotion globale \(10%\)/),
       ).toBeInTheDocument(),
     );
-    await expect(screen.getByText(formatCurrency(20.98))).toBeInTheDocument();
+    expectDueAmount(screen, due);
   },
 };

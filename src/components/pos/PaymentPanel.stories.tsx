@@ -21,6 +21,18 @@ type HarnessProps = {
   onSubmit?: (data: CartFormOutput) => void;
 };
 
+type SubmitSpy = ReturnType<typeof fn>;
+
+const SUBMIT_SPY_KEY = "__posPaymentSubmitSpy";
+
+const getSubmitSpy = () =>
+  (globalThis as unknown as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY];
+
+const setSubmitSpy = (spy: SubmitSpy) => {
+  (globalThis as unknown as Record<string, SubmitSpy | undefined>)[SUBMIT_SPY_KEY] =
+    spy;
+};
+
 function PaymentPanelHarness({ defaults, onSubmit }: HarnessProps) {
   const form = useForm<CartFormValues, unknown, CartFormOutput>({
     defaultValues: defaults,
@@ -53,21 +65,22 @@ function PaymentPanelHarness({ defaults, onSubmit }: HarnessProps) {
 
 const meta = {
   title: "POS/PaymentPanel",
-  component: PaymentPanelHarness,
   tags: ["autodocs"],
-} satisfies Meta<typeof PaymentPanelHarness>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const UnderpayDisabled: Story = {
-  args: {
-    defaults: buildCartForm(globalPromoCart, {
-      global_promotion: { type: "percent", value: 33 },
-      payment_splits: [{ method: "cash", amount: 1 }],
-    }),
-  },
+  render: () => (
+    <PaymentPanelHarness
+      defaults={buildCartForm(globalPromoCart, {
+        global_promotion: { type: "percent", value: 33 },
+        payment_splits: [{ method: "cash", amount: 1 }],
+      })}
+    />
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const submit = canvas.getByRole("button", { name: /Encaisser/i });
@@ -76,9 +89,9 @@ export const UnderpayDisabled: Story = {
 };
 
 export const ExactPayFloatEnabled: Story = {
-  args: {
-    defaults: buildCartForm(floatThreeLinesCart),
-  },
+  render: () => (
+    <PaymentPanelHarness defaults={buildCartForm(floatThreeLinesCart)} />
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const submit = canvas.getByRole("button", { name: /Encaisser/i });
@@ -87,13 +100,19 @@ export const ExactPayFloatEnabled: Story = {
 };
 
 export const GlobalPromoExactPaySubmit: Story = {
-  args: {
-    defaults: buildCartForm(fractionalGlobalPromoCart, {
-      global_promotion: { type: "percent", value: 10 },
-    }),
-    onSubmit: fn((data: CartFormOutput) => data).mockName("onSubmit"),
+  render: () => {
+    const onSubmit = fn((data: CartFormOutput) => data).mockName("onSubmit");
+    setSubmitSpy(onSubmit);
+    return (
+      <PaymentPanelHarness
+        defaults={buildCartForm(fractionalGlobalPromoCart, {
+          global_promotion: { type: "percent", value: 10 },
+        })}
+        onSubmit={onSubmit as (data: CartFormOutput) => void}
+      />
+    );
   },
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const due = roundCurrency(
       getCartTotalWithGlobalPromotion(fractionalGlobalPromoCart, {
@@ -107,7 +126,7 @@ export const GlobalPromoExactPaySubmit: Story = {
     await expect(submit).toBeEnabled();
     await userEvent.click(submit);
 
-    const onSubmit = args.onSubmit as ReturnType<typeof fn>;
+    const onSubmit = getSubmitSpy()!;
     await expect(onSubmit).toHaveBeenCalled();
     const payload = onSubmit.mock.calls[0]?.[0] as CartFormOutput;
     expect(payload.global_promotion).toEqual({ type: "percent", value: 10 });
@@ -120,15 +139,17 @@ export const GlobalPromoExactPaySubmit: Story = {
 };
 
 export const MultiPaymentMethodsEnabled: Story = {
-  args: {
-    defaults: multiPayForm,
-  },
+  render: () => <PaymentPanelHarness defaults={multiPayForm} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
       canvas.getByRole("button", { name: /Encaisser/i }),
     ).toBeEnabled();
-    await expect(canvas.getByText(/Mode de paiement #1/i)).toBeInTheDocument();
-    await expect(canvas.getByText(/Mode de paiement #2/i)).toBeInTheDocument();
+    await expect(
+      canvas.getByLabelText(/Mode de paiement #1/i),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByLabelText(/Mode de paiement #2/i),
+    ).toBeInTheDocument();
   },
 };
