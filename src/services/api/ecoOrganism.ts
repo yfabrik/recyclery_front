@@ -22,8 +22,8 @@ type EcoOrganismQuery = Omit<EcoOrganismFilterInput, "include"> & {
 };
 
 export const formatEcoOrgQuarterLabel = (quarter: EcoOrgQuarterLabel | string): string => {
-  const match = String(quarter).match(/^(\d{4})-T([1-4])$/);
-  if (match) return `Q${match[2]} ${match[1]}`;
+  // const match = String(quarter).match(/^(\d{4})-T([1-4])$/);
+  // if (match) return `T${match[2]} ${match[1]}`;
   return String(quarter);
 };
 
