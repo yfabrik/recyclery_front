@@ -122,6 +122,11 @@ export const SalesHistory = ({
             code: refundGiftCard.code,
             initial_value: Number(refundGiftCard.currentBalance ?? 0),
             current_value: Number(refundGiftCard.currentBalance ?? 0),
+            expires_at: null,
+            issued_at: null,
+            //TODO faut changer dans le backend pour renvoyer les dates de creation et d'expiration
+            // expires_at: refundGiftCard.expires_at ? new Date(refundGiftCard.expires_at).toISOString() : null,
+            // issued_at: refundGiftCard.issued_at ? new Date(refundGiftCard.issued_at).toISOString() : null,
             createdAt: new Date().toISOString(),
           },
           storeAddress: undefined,

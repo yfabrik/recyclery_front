@@ -51,11 +51,12 @@ export const GiftCardCard = ({
             color={getGiftCardStatusColor(giftCard.status)}
           />
         </Box>
-        <Typography variant="h6" color="primary" fontWeight={700}>
+        <Typography variant="body2" color="text.secondary">
+          Montant initial:{" "}
           {formatCurrency(Number(giftCard.initial_value || 0))}
         </Typography>
         <Typography variant="h6" color="primary" fontWeight={700}>
-          {formatCurrency(Number(giftCard.current_value || 0))}
+          Solde: {formatCurrency(Number(giftCard.current_value || 0))}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Bénéficiaire: {giftCard.recipient_name || "N/A"}

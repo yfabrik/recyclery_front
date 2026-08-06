@@ -9,4 +9,4 @@ export const createGiftCardSchema = z.object({
     recipient_email: z.union([z.literal(""), z.email()]),
   });
   export type CreateGiftCardFormValues = z.input<typeof createGiftCardSchema>;
-  export type CreateGiftCardFormOutput = z.infer<typeof createGiftCardSchema>;
+    export type CreateGiftCardFormOutput = z.infer<typeof createGiftCardSchema>;

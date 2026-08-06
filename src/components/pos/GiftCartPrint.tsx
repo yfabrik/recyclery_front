@@ -7,7 +7,15 @@ import type { GiftCardDto } from "@recyclerie/api/responses/giftCards";
 import { formatCurrency } from "../../services/cartService";
 
 interface GiftCardPrintPayload {
-  giftCard: Pick<GiftCardDto, "code" | "current_value" | "initial_value" | "createdAt">;
+  giftCard: Pick<
+    GiftCardDto,
+    | "code"
+    | "current_value"
+    | "initial_value"
+    | "createdAt"
+    | "expires_at"
+    | "issued_at"
+  >;
   storeAddress?: string | null;
 }
 
@@ -36,9 +44,17 @@ export const GiftCartPrint = ({
   return (
     <Box
       className="giftcard-print-root"
-      sx={{ px: 2, py: 1, width: "80mm", fontFamily: "monospace", fontSize: "12px" }}
+      sx={{
+        px: 2,
+        py: 1,
+        width: "80mm",
+        fontFamily: "monospace",
+        fontSize: "12px",
+      }}
     >
-      <Typography sx={{ textAlign: "center", fontFamily: "monospace", fontWeight: 700 }}>
+      <Typography
+        sx={{ textAlign: "center", fontFamily: "monospace", fontWeight: 700 }}
+      >
         AVOIR
       </Typography>
       <Typography sx={{ textAlign: "center", fontFamily: "monospace", mb: 1 }}>
@@ -52,10 +68,16 @@ export const GiftCartPrint = ({
       <Box sx={{ borderBottom: "1px dashed #000", mb: 1 }} />
 
       <Typography sx={{ fontFamily: "monospace" }}>
-        Valeur: {formatCurrency(Number(giftCard.current_value ?? giftCard.initial_value ?? 0))}
+        Valeur:{" "}
+        {formatCurrency(
+          Number(giftCard.current_value ?? giftCard.initial_value ?? 0),
+        )}
       </Typography>
       <Typography sx={{ fontFamily: "monospace" }}>
-        Cree le: {new Date(giftCard.createdAt).toLocaleDateString("fr-FR")}
+        Emis le: {new Date(giftCard.createdAt).toLocaleDateString("fr-FR")}
+      </Typography>
+      <Typography sx={{ fontFamily: "monospace" }}>
+        Expires le: {giftCard.expires_at ? new Date(giftCard.expires_at).toLocaleDateString("fr-FR") : "—"}
       </Typography>
       <Typography sx={{ fontFamily: "monospace" }}>
         Adresse: {storeAddress?.trim() || "Adresse non renseignee"}

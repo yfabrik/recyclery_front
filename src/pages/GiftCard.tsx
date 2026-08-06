@@ -76,30 +76,18 @@ const GiftCard = () => {
         initial_value: Number(giftCard.initial_value ?? 0),
         current_value: Number(giftCard.current_value ?? 0),
         createdAt: giftCard.createdAt ?? new Date().toISOString(),
+        issued_at: giftCard.issued_at
+          ? new Date(giftCard.issued_at).toISOString()
+          : null,
+        expires_at: giftCard.expires_at
+          ? new Date(giftCard.expires_at).toISOString()
+          : null,
       },
       storeAddress: undefined,
     });
   };
 
   const handleCreateGiftCard = (data: CreateGiftCardFormOutput) => {
-    // const initialValue = Number(createForm.initial_value);
-    // if (!Number.isFinite(initialValue) || initialValue <= 0) {
-    //   toast.error("Le montant initial doit être supérieur à 0");
-    //   return;
-    // }
-
-    // Code généré côté frontend pour éviter de demander à l'utilisateur de le saisir.
-    // Le backend peut toujours décider de le remplacer/valider selon ses règles.
-    // const generatedCode = `GC-${Date.now().toString(36).toUpperCase()}`;
-
-    // addGiftCard.mutate({
-    //   // code: generatedCode,
-    //   initial_value: data.initial_value,
-    //   expires_at: data.expires_at,
-    //   note: data.note,
-    //   recipient_name: data.recipient_name,
-    //   recipient_email: data.recipient_email,
-    // });
     addGiftCard.mutate(data);
   };
 
@@ -161,60 +149,6 @@ const GiftCard = () => {
               formId="createGiftCardForm"
               onSubmit={handleCreateGiftCard}
             />
-            {/* <TextField
-              label="Montant initial"
-              type="number"
-              value={createForm.initial_value}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  initial_value: e.target.value,
-                }))
-              }
-              required
-            />
-            <TextField
-              label="Date d'expiration"
-              type="date"
-              value={createForm.expires_at}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  expires_at: e.target.value,
-                }))
-              }
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-            <TextField
-              label="Nom du bénéficiaire"
-              value={createForm.recipient_name}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  recipient_name: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="Email du bénéficiaire"
-              type="email"
-              value={createForm.recipient_email}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  recipient_email: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="Note"
-              multiline
-              minRows={2}
-              value={createForm.note}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, note: e.target.value }))
-              }
-            /> */}
           </Box>
         </DialogContent>
         <DialogActions>
