@@ -17,7 +17,11 @@ import { toast } from "react-toastify";
 import { GiftCardCard } from "../components/GiftCardCard";
 import { Loading } from "../components/Loading";
 import { GiftCardForm } from "../components/forms/GiftCardForm";
-import { createGiftCard, listGiftCards } from "../services/api/giftCards";
+import {
+  createGiftCard,
+  listGiftCards,
+  cancelGiftCard,
+} from "../services/api/giftCards";
 import { createGiftCardPayloadFromForm } from "../services/mapper/giftcard";
 import { type CreateGiftCardFormOutput } from "../services/schema/giftcard";
 import {
@@ -27,25 +31,8 @@ import {
 import type { GiftCardDto } from "@recyclerie/api/responses/giftCards";
 import { useGiftCardPrint } from "../components/pos/GiftCartPrint";
 
-// type CreateGiftCardForm = {
-//   initial_value: string;
-//   expires_at: string;
-//   note: string;
-//   recipient_name: string;
-//   recipient_email: string;
-// };
-
-// const emptyForm: CreateGiftCardForm = {
-//   initial_value: "",
-//   expires_at: "",
-//   note: "",
-//   recipient_name: "",
-//   recipient_email: "",
-// };
-
 const GiftCard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  // const [createForm, setCreateForm] = useState<CreateGiftCardForm>(emptyForm);
   const queryClient = useQueryClient();
   const { triggerPrintGiftCard, giftCardPrintNode } = useGiftCardPrint();
   const giftCards = useQuery({
@@ -59,7 +46,6 @@ const GiftCard = () => {
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);
-      // setCreateForm(emptyForm);
       queryClient.invalidateQueries({ queryKey: ["giftCards"] });
     },
     onError: (error) => {
@@ -68,8 +54,20 @@ const GiftCard = () => {
       );
     },
   });
+
+  const cancelGiftCardMutation = useMutation({
+    mutationFn: (giftCard: GiftCardDto) => cancelGiftCard(giftCard.id),
+    onSuccess: (response) => {
+      toast.success(getApiSuccessMessage(response, "Avoir annulé avec succès"));
+      queryClient.invalidateQueries({ queryKey: ["giftCards"] });
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de l'annulation de l'avoir"),
+      );
+    },
+  });
   const handlePrintGiftCard = (giftCard: GiftCardDto) => {
-    console.log(giftCard);
     triggerPrintGiftCard({
       giftCard: {
         code: giftCard.code,
@@ -89,6 +87,11 @@ const GiftCard = () => {
 
   const handleCreateGiftCard = (data: CreateGiftCardFormOutput) => {
     addGiftCard.mutate(data);
+  };
+  const handleCancelGiftCard = (giftCard: GiftCardDto) => {
+    if (confirm("Voulez-vous annuler cet avoir ?")) {
+      cancelGiftCardMutation.mutate(giftCard);
+    }
   };
 
   return (
@@ -130,6 +133,7 @@ const GiftCard = () => {
               <GiftCardCard
                 giftCard={giftCard}
                 handlePrintGiftCard={handlePrintGiftCard}
+                handleCancelGiftCard={handleCancelGiftCard}
               />
             </Grid>
           ))}
