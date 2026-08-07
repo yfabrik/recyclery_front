@@ -8,6 +8,7 @@ import {
   roundCurrency,
 } from "../cartService";
 import type { CartFormOutput } from "../schema/cart";
+import { emptyToNull } from "../zodTransform";
 
 interface BuildTransactionBodyOptions {
   normalizePostalCodeToNull?: boolean;
@@ -41,9 +42,7 @@ export const buildTransactionBody = (
     total_amount_before_promotion: roundCurrency(subtotal),
     global_promotion: Number(data.global_promotion.value) || 0,
     global_promotion_type: data.global_promotion.type,
-    customer_postal_code: normalizePostalCodeToNull
-      ? data.customer_postal_code || null
-      : data.customer_postal_code,
+    customer_postal_code:emptyToNull(data.customer_postal_code),
     payment_amount: roundCurrency(paymentAmount),
     payments: nonZeroSplits.map((split) => ({
       method: split.method,
