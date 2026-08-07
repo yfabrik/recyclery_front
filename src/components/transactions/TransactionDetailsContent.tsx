@@ -6,10 +6,14 @@ import { buildTransactionCartFormValues } from "../../utils/editTransactionDefau
 import { CartTable } from "../pos/CartTable";
 import { OrderSummary } from "../pos/OrderSummary";
 import { PaymentPanel } from "../pos/PaymentPanel";
+import { IssuedGiftCardsCard } from "./IssuedGiftCardsCard";
 import { RefundHistoryCard } from "./RefundHistoryCard";
 import { TransactionFinancialSummaryCard } from "./TransactionFinancialSummaryCard";
 import { TransactionInfoCard } from "./TransactionInfoCard";
-import { type CartFormValues, type CartFormOutput as Schema } from "../../services/schema/cart";
+import {
+  type CartFormValues,
+  type CartFormOutput as Schema,
+} from "../../services/schema/cart";
 import { useCheckoutFormCore } from "../../hooks/useCheckoutFormCore";
 import { toast } from "react-toastify";
 import { collectFormErrorMessages } from "../../utils/formErrors";
@@ -29,7 +33,10 @@ export const TransactionDetailsContent = ({
   formId,
   onSubmit,
 }: TransactionDetailsContentProps) => {
-  const resolvedDefaults = buildTransactionCartFormValues(transaction, categories);
+  const resolvedDefaults = buildTransactionCartFormValues(
+    transaction,
+    categories,
+  );
   const {
     form,
     cartFields,
@@ -61,19 +68,24 @@ export const TransactionDetailsContent = ({
     }
   };
 
-  const noop = () => { };
+  const noop = () => {};
 
   const content = (
     <FormProvider {...form}>
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12 }}>
-          <TransactionInfoCard transaction={transaction} refunds={editable ? undefined : refunds} />
+          <TransactionInfoCard
+            transaction={transaction}
+            refunds={editable ? undefined : refunds}
+          />
         </Grid>
 
         <Grid size={{ xs: 12 }}>
           <CartTable
             fields={cartFields}
-            update={(index, value) => updateCartItem(index, value as Schema["cart"][number])}
+            update={(index, value) =>
+              updateCartItem(index, value as Schema["cart"][number])
+            }
             remove={editable ? removeCartItem : noop}
             allowRemove={editable}
             minQuantity={0}
@@ -83,6 +95,11 @@ export const TransactionDetailsContent = ({
             emptyMessage="Aucun article"
           />
         </Grid>
+        {Boolean(transaction.giftCards?.length) && (
+          <Grid size={{ xs: 12 }}>
+            <IssuedGiftCardsCard transaction={transaction} />
+          </Grid>
+        )}
 
         <Grid size={{ xs: 12, lg: 5 }}>
           <OrderSummary
@@ -120,7 +137,11 @@ export const TransactionDetailsContent = ({
 
   if (editable && onSubmit) {
     return (
-      <Box component="form" id={formId} onSubmit={form.handleSubmit(onSubmit,onSubmitError)}>
+      <Box
+        component="form"
+        id={formId}
+        onSubmit={form.handleSubmit(onSubmit, onSubmitError)}
+      >
         {content}
       </Box>
     );
