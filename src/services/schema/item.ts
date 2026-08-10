@@ -43,6 +43,7 @@ export const labeledItemSchema = (categories: CategoryModel[]) =>
     .extend({
       condition_state: z.enum(LABELED_ITEM_CONDITION_VALUES),
       location: z.string(),
+      quantity: z.number().int().positive().max(100).default(1),
     })
     .superRefine(withCategorySubcategoryRefine(categories));
 

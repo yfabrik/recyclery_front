@@ -33,6 +33,7 @@ export const labeledItemPayloadFromForm = (
     description: emptyToNull(data.description),
     condition_state: data.condition_state,
     location: emptyToNull(data.location),
+    quantity: data.quantity,
   } satisfies LabeledItemDataInput;
 };
 

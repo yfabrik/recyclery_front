@@ -28,6 +28,7 @@ type FormValues = LabeledItemFormValues;
 
 interface LabeledFormProps extends BaseFormProps<FormValues, LabeledItemFormOutput> {
   categories: CategoryModel[];
+  showQuantity?: boolean;
 }
 
 export const LabeledItemForm = ({
@@ -35,6 +36,7 @@ export const LabeledItemForm = ({
   onSubmit,
   defaultValues,
   categories,
+  showQuantity = false,
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
 
@@ -53,6 +55,7 @@ export const LabeledItemForm = ({
       condition_state: "excellent" as const,
       location: "",
       description: "",
+      quantity: 1,
       ...defaultValues ?? {},
     },
     resolver: zodResolver(labeledItemSchema(categories)),
@@ -168,6 +171,21 @@ export const LabeledItemForm = ({
               }}
             />
           </Grid>
+
+          {showQuantity && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormNumber
+                control={form.control}
+                name="quantity"
+                label="Quantité"
+                extra={{
+                  slotProps: {
+                    htmlInput: { min: 1, max: 100 },
+                  },
+                }}
+              />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, md: 6 }}>
             <FormSelect
