@@ -17,6 +17,7 @@ import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
+  FormNumber,
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
@@ -113,12 +114,12 @@ export const LabeledItemForm = ({
           />
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              // hideSpinners={true}
               control={form.control}
               name="weight"
               label="Poids (kg)"
               extra={{
-                type: "number",
                 onClick: () => setNumericField("weight", "Kg"),
                   
                   
@@ -142,12 +143,12 @@ export const LabeledItemForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              // hideSpinners={true}
               control={form.control}
               name="price"
               label="Prix de vente (€)"
               extra={{
-                type: "number",
                 onClick: () => setNumericField("price", "€"),
                 sx: {
                   "& .MuiInputBase-input": {

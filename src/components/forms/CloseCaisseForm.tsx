@@ -10,7 +10,7 @@ import {
   type CloseCaisseFormValues,
 } from "../../services/schema/caisse";
 import { usePrompt } from "../Prompt";
-import { FormInput, type BaseFormProps } from "./FormBase";
+import { FormInput, FormNumber, type BaseFormProps } from "./FormBase";
 
 export type { CloseCaisseFormValues, CloseCaisseFormOutput };
 
@@ -54,7 +54,8 @@ export const CloseCaisseForm = ({
       <form id={formId} onSubmit={form.handleSubmit(submited)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
-            <FormInput
+            <FormNumber
+              hideSpinners={true}
               label="Montant en caisse (€)"
               control={form.control}
               name="closing_amount"

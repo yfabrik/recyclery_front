@@ -134,6 +134,16 @@ export const FormInput = <
   );
 };
 
+const hideNumberSpinnersSx = {
+  "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+    WebkitAppearance: "none",
+    margin: 0,
+  },
+  "& input[type=number]": {
+    MozAppearance: "textfield",
+  },
+} as const;
+
 /** Number field boundary: DOM string → RHF `"" | number` (like FormDate for dates). */
 export const FormNumber = <
   TFieldValues extends FieldValues = FieldValues,
@@ -144,8 +154,10 @@ export const FormNumber = <
   control,
   label,
   extra,
+  hideSpinners = false
 }: FormControlProps<TFieldValues, TName, TTransformedValues> & {
   extra?: Omit<TextFieldProps, "type" | "value" | "onChange">;
+  hideSpinners?: boolean;
 }) => {
   return (
     <Controller
@@ -167,6 +179,18 @@ export const FormNumber = <
           helperText={fieldState.invalid && fieldState.error?.message}
           error={fieldState.invalid}
           aria-invalid={fieldState.invalid}
+          slotProps={{
+            ...extra?.slotProps,
+            htmlInput: {
+              step: "any",
+              inputMode: "decimal",
+              ...extra?.slotProps?.htmlInput,
+            },
+          }}
+          sx={[
+            hideSpinners ? hideNumberSpinnersSx : undefined,
+            ...(Array.isArray(extra?.sx) ? extra.sx : [extra?.sx]),
+          ]}
         />
       )}
     />

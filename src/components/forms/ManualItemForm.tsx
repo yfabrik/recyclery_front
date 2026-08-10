@@ -93,7 +93,8 @@ export const ManualItemForm = ({
           />
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              hideSpinners={true}
               control={form.control}
               label="Poids (kg)"
               name="weight"
@@ -118,7 +119,8 @@ export const ManualItemForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              hideSpinners={true}
               label="Prix de vente (€)"
               control={form.control}
               name="price"

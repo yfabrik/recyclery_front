@@ -390,7 +390,6 @@ const WasteManagement = () => {
             onSubmit={handleSaveDisposal}
             categories={categories.data || []}
             ecoOrganisms={ecoOrganisms.data || []}
-            onWeightFieldClick={() => { }}
           />
 
         </DialogContent>
