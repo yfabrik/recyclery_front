@@ -62,3 +62,9 @@ export const recreditGiftCard = (
     `/api/gift-cards/${id}/recredit`,
     data,
   );
+
+//TODO need a proper delete response ??
+export const cancelGiftCard = (
+  id: GiftCardModel["id"],
+): Promise<AxiosResponse<DetailGiftCardResponse>> =>
+  axiosInstance.delete<DetailGiftCardResponse>(`/api/gift-cards/${id}`);

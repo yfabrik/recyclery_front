@@ -27,6 +27,7 @@ import {
   FormCategorySubcategoryFields,
   FormDate,
   FormInput,
+  FormNumber,
   FormRadio,
   FormRadioCard,
   FormSelect,
@@ -163,7 +164,8 @@ export const ArrivalForm = ({
 
               {/* Poids */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput
+                <FormNumber
+                  hideSpinners={true}
                   control={form.control}
                   name="weight"
                   label="Poids (kg)"

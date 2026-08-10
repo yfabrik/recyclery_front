@@ -14,6 +14,7 @@ import {
   FormCategorySubcategoryFields,
   FormDate,
   FormInput,
+  FormNumber,
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
@@ -23,7 +24,6 @@ export type { WasteFormOutput, WasteFormValues };
 type WasteFormProps = BaseFormProps<WasteFormValues, WasteFormOutput> & {
   categories: CategoryModel[];
   ecoOrganisms: EcoOrgModel[];
-  onWeightFieldClick: () => void;
 };
 
 export const WasteForm = ({
@@ -32,7 +32,6 @@ export const WasteForm = ({
   defaultValues,
   categories,
   ecoOrganisms,
-  onWeightFieldClick,
 }: WasteFormProps) => {
   const form = useForm<WasteFormValues, unknown, WasteFormOutput>({
     resolver: zodResolver(wasteFormSchema(categories)),
@@ -111,13 +110,11 @@ export const WasteForm = ({
         />
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             name="weight_kg"
             label="Poids (kg)"
             extra={{
-              type: "number",
-              onClick: onWeightFieldClick,
               sx: {
                 cursor: "pointer",
                 "& .MuiInputBase-input": {
@@ -134,12 +131,11 @@ export const WasteForm = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             name="volume_m3"
             label="Volume (m³)"
             extra={{
-              type: "number",
               inputProps: { step: 0.01 },
             }}
           />
@@ -162,12 +158,11 @@ export const WasteForm = ({
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <FormInput
+          <FormNumber
             control={form.control}
             name="transport_cost"
             label="Coût du transport (€)"
             extra={{
-              type: "number",
               inputProps: { step: 0.01 },
             }}
           />

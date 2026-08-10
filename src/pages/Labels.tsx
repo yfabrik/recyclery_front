@@ -188,20 +188,25 @@ const Labels = () => {
     data: AxiosResponse<CreateLabeledItemResponse | UpdateLabeledItemResponse>,
   ) => {
     if (autoPrint && data.data.data) {
-      const item = data.data.data;
-      if (!item.category && item.category_id && categories.data) {
-        const cat = categories.data.find((c) => c.id === item.category_id);
-        if (cat) item.category = cat;
+      const payload = data.data.data;
+      const items = Array.isArray(payload) ? payload : [payload];
+      for (const item of items) {
+        if (!item.category && item.category_id && categories.data) {
+          const cat = categories.data.find((c) => c.id === item.category_id);
+          if (cat) item.category = cat;
+        }
+        if (
+          item.subcategory_id != null &&
+          !item.subcategory &&
+          item.category?.subcategories
+        ) {
+          const sub = item.category.subcategories.find(
+            (c) => c.id === item.subcategory_id,
+          );
+          if (sub) item.subcategory = sub;
+        }
       }
-      if (
-        item.subcategory_id != null &&
-        !item.subcategory &&
-        item.category?.subcategories
-      ) {
-        const sub = item.category.subcategories.find((c) => c.id === item.subcategory_id);
-        if (sub) item.subcategory = sub;
-      }
-      triggerPrintLabel(data.data.data);
+      triggerPrintLabel(items);
     }
     toast.success(
       getApiSuccessMessage(
@@ -477,6 +482,7 @@ const Labels = () => {
             categories={categories.data || []}
             onSubmit={handleSave}
             defaultValues={formDefaults}
+            showQuantity={!editingItemId}
           />
           <AutoPrintToggle checked={autoPrint} onChange={setAutoPrint} />
         </DialogContent>

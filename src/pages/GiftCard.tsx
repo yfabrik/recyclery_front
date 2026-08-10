@@ -3,98 +3,99 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
-  Chip,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { GiftCardCard } from "../components/GiftCardCard";
+import { Loading } from "../components/Loading";
+import { GiftCardForm } from "../components/forms/GiftCardForm";
+import {
+  createGiftCard,
+  listGiftCards,
+  cancelGiftCard,
+} from "../services/api/giftCards";
+import { createGiftCardPayloadFromForm } from "../services/mapper/giftcard";
+import { type CreateGiftCardFormOutput } from "../services/schema/giftcard";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
-import {
-  createGiftCard,
-  listGiftCards,
-} from "../services/api/giftCards";
-import {
-  getGiftCardStatusColor,
-  getGiftCardStatusLabel,
-} from "../constants/giftCardStatuses";
-import { formatCurrency } from "../services/cartService";
-import { Loading } from "../components/Loading";
-import type { GiftCardIssueInput } from "@recyclerie/api/schemas/giftCards";
-
-type CreateGiftCardForm = {
-  initial_value: string;
-  expires_at: string;
-  note: string;
-  recipient_name: string;
-  recipient_email: string;
-};
-
-const emptyForm: CreateGiftCardForm = {
-  initial_value: "",
-  expires_at: "",
-  note: "",
-  recipient_name: "",
-  recipient_email: "",
-};
+import type { GiftCardDto } from "@recyclerie/api/responses/giftCards";
+import { useGiftCardPrint } from "../components/pos/GiftCartPrint";
 
 const GiftCard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateGiftCardForm>(emptyForm);
   const queryClient = useQueryClient();
-
+  const { triggerPrintGiftCard, giftCardPrintNode } = useGiftCardPrint();
   const giftCards = useQuery({
     queryKey: ["giftCards"],
     queryFn: () => listGiftCards().then((response) => response.data.data),
   });
 
   const addGiftCard = useMutation({
-    mutationFn: (payload: GiftCardIssueInput) => createGiftCard(payload),
+    mutationFn: (payload: CreateGiftCardFormOutput) =>
+      createGiftCard(createGiftCardPayloadFromForm(payload)),
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "Avoir créé avec succès"));
       setIsCreateDialogOpen(false);
-      setCreateForm(emptyForm);
       queryClient.invalidateQueries({ queryKey: ["giftCards"] });
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Erreur lors de la création de l'avoir"));
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la création de l'avoir"),
+      );
     },
   });
 
-  const handleCreateGiftCard = () => {
-    const initialValue = Number(createForm.initial_value);
-    if (!Number.isFinite(initialValue) || initialValue <= 0) {
-      toast.error("Le montant initial doit être supérieur à 0");
-      return;
-    }
-
-    // Code généré côté frontend pour éviter de demander à l'utilisateur de le saisir.
-    // Le backend peut toujours décider de le remplacer/valider selon ses règles.
-    const generatedCode = `GC-${Date.now().toString(36).toUpperCase()}`;
-
-    addGiftCard.mutate({
-      code: generatedCode,
-      initial_value: initialValue,
-      expires_at: createForm.expires_at || undefined,
-      note: createForm.note || undefined,
-      recipient_name: createForm.recipient_name || undefined,
-      recipient_email: createForm.recipient_email || undefined,
+  const cancelGiftCardMutation = useMutation({
+    mutationFn: (giftCard: GiftCardDto) => cancelGiftCard(giftCard.id),
+    onSuccess: (response) => {
+      toast.success(getApiSuccessMessage(response, "Avoir annulé avec succès"));
+      queryClient.invalidateQueries({ queryKey: ["giftCards"] });
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de l'annulation de l'avoir"),
+      );
+    },
+  });
+  const handlePrintGiftCard = (giftCard: GiftCardDto) => {
+    triggerPrintGiftCard({
+      giftCard: {
+        code: giftCard.code,
+        initial_value: Number(giftCard.initial_value ?? 0),
+        current_value: Number(giftCard.current_value ?? 0),
+        createdAt: giftCard.createdAt ?? new Date().toISOString(),
+        issued_at: giftCard.issued_at
+          ? new Date(giftCard.issued_at).toISOString()
+          : null,
+        expires_at: giftCard.expires_at
+          ? new Date(giftCard.expires_at).toISOString()
+          : null,
+      },
+      storeAddress: undefined,
     });
   };
 
+  const handleCreateGiftCard = (data: CreateGiftCardFormOutput) => {
+    addGiftCard.mutate(data);
+  };
+  const handleCancelGiftCard = (giftCard: GiftCardDto) => {
+    if (confirm("Voulez-vous annuler cet avoir ?")) {
+      cancelGiftCardMutation.mutate(giftCard);
+    }
+  };
+
   return (
-    <Box>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box
         sx={{
           display: "flex",
@@ -129,61 +130,11 @@ const GiftCard = () => {
         <Grid container spacing={3}>
           {(giftCards.data ?? []).map((giftCard) => (
             <Grid key={giftCard.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: 3,
-                  boxShadow: 3,
-                }}
-              >
-                <CardContent
-                  sx={{
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                  }}
-                >
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      {giftCard.code}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={getGiftCardStatusLabel(giftCard.status)}
-                      color={getGiftCardStatusColor(giftCard.status)}
-                    />
-                  </Box>
-                  <Typography variant="h6" color="primary" fontWeight={700}>
-                    {formatCurrency(Number(giftCard.initial_value || 0))}
-                  </Typography>
-                  <Typography variant="h6" color="primary" fontWeight={700}>
-                    {formatCurrency(Number(giftCard.current_value || 0))}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Bénéficiaire: {giftCard.recipient_name || "N/A"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Email: {giftCard.recipient_email || "N/A"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Expiration:{" "}
-                    {giftCard.expires_at
-                      ? new Date(giftCard.expires_at).toLocaleDateString("fr-FR")
-                      : "Aucune"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Créé le{" "}
-                    {giftCard.createdAt
-                      ? new Date(giftCard.createdAt).toLocaleDateString("fr-FR")
-                      : "—"}
-                  </Typography>
-                </CardContent>
-              </Card>
+              <GiftCardCard
+                giftCard={giftCard}
+                handlePrintGiftCard={handlePrintGiftCard}
+                handleCancelGiftCard={handleCancelGiftCard}
+              />
             </Grid>
           ))}
         </Grid>
@@ -198,71 +149,33 @@ const GiftCard = () => {
         <DialogTitle>Nouvel Avoir</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
-            <TextField
-              label="Montant initial"
-              type="number"
-              value={createForm.initial_value}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, initial_value: e.target.value }))
-              }
-              required
-            />
-            <TextField
-              label="Date d'expiration"
-              type="date"
-              value={createForm.expires_at}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, expires_at: e.target.value }))
-              }
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-            <TextField
-              label="Nom du bénéficiaire"
-              value={createForm.recipient_name}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  recipient_name: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="Email du bénéficiaire"
-              type="email"
-              value={createForm.recipient_email}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  recipient_email: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="Note"
-              multiline
-              minRows={2}
-              value={createForm.note}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, note: e.target.value }))
-              }
+            <GiftCardForm
+              formId="createGiftCardForm"
+              onSubmit={handleCreateGiftCard}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsCreateDialogOpen(false)} startIcon={<Cancel />}>
+          <Button
+            type="button"
+            onClick={() => setIsCreateDialogOpen(false)}
+            startIcon={<Cancel />}
+          >
             Annuler
           </Button>
           <Button
             variant="contained"
+            type="submit"
+            form="createGiftCardForm"
             startIcon={<Save />}
-            onClick={handleCreateGiftCard}
             loading={addGiftCard.isPending}
           >
             Créer
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+      {giftCardPrintNode}
+    </Container>
   );
 };
 

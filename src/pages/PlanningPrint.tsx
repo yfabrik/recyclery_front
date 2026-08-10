@@ -1,24 +1,25 @@
 import { Print } from "@mui/icons-material";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef } from "react";
+import { Fragment, useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useSearchParams, Link as RouterLink } from "react-router";
+import { dayjs, toIsoDate, toIsoTime, weekday } from "@recyclerie/api/domain/date";
+import type { TimeSlot } from "@recyclerie/api/enums";
 import { EmployeeTasksTimeline, type EmployeeTaskItem } from "../components/planning/EmployeeTasksTimeline";
 import type { EmployeeModel, TaskModel } from "../interfaces/Models";
 import { getWeekRangeFromDate, weekdayLabel } from "../services/dateService";
 import { getTasks } from "../services/api/tasks";
 import { fetchStores as fstore } from "../services/api/store";
-import { weekday } from "@recyclerie/api/domain/date";
 
 function toTaskItem(s: TaskModel): EmployeeTaskItem {
   const scheduled = new Date(s.scheduled_date);
-  const dayOfWeek = weekdayLabel(weekday(scheduled)) 
+  const dayOfWeek = weekdayLabel(weekday(scheduled));
   return {
     name: s.name,
     start_time: s.start_time,
     end_time: s.end_time,
-    day_of_week:dayOfWeek,
+    day_of_week: dayOfWeek,
     category: s.category,
   };
 }
@@ -26,9 +27,17 @@ function toTaskItem(s: TaskModel): EmployeeTaskItem {
 function getEmployeeName(emp: EmployeeModel): string {
   return (
     (emp.fullName ??
-    `${emp.prenom ?? ""} ${emp.nom ?? ""}`.trim()) ||
+      `${emp.prenom ?? ""} ${emp.nom ?? ""}`.trim()) ||
     "Employé"
   );
+}
+
+function formatTaskCell(task: TaskModel): string {
+  return `${toIsoTime(task.start_time)}-${toIsoTime(task.end_time)} ${task.name}`;
+}
+
+function getTaskSlot(task: TaskModel): TimeSlot {
+  return new Date(task.start_time).getHours() < 13 ? "morning" : "afternoon";
 }
 
 export default function PlanningPrint() {
@@ -61,7 +70,7 @@ export default function PlanningPrint() {
       ? storesQuery.data.find((s) => s.id === storeId)?.name
       : null;
 
-  const byEmployee = (() => {
+  const byEmployee = useMemo(() => {
     const list = tasksQuery.data ?? [];
     const map = new Map<
       string,
@@ -82,28 +91,61 @@ export default function PlanningPrint() {
         employees.forEach((emp: EmployeeModel) => {
           add(getEmployeeName(emp), emp.id, s);
         });
-      } else {
-        // add("Non assigné", undefined, s);
       }
     });
 
     const sortByDateThenTime = (a: TaskModel, b: TaskModel) => {
-      const dateA = new Date(a.scheduled_date).toISOString().slice(0,10)
-      const dateB = new Date(b.scheduled_date).toISOString().slice(0,10)
-      if (dateA !== dateB) return new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime();
-      const timeA = new Date(a.start_time).getTime();
-      const timeB = new Date(b.start_time).getTime();
-      return timeA - timeB;
+      const dateA = toIsoDate(a.scheduled_date);
+      const dateB = toIsoDate(b.scheduled_date);
+      if (dateA !== dateB) {
+        return new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime();
+      }
+      return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
     };
 
-    return Array.from(map.values()).map((g) => ({
-      employeeName: g.employeeName,
-      employeeId: g.employeeId,
-      tasks: g.rawTasks
-        .sort(sortByDateThenTime)
-        .map((s) => toTaskItem(s)),
-    }));
-  })();
+    return Array.from(map.values()).map((g) => {
+      const rawTasks = [...g.rawTasks].sort(sortByDateThenTime);
+      return {
+        employeeName: g.employeeName,
+        employeeId: g.employeeId,
+        rawTasks,
+        tasks: rawTasks.map((s) => toTaskItem(s)),
+      };
+    });
+  }, [tasksQuery.data]);
+
+  const weekDays = useMemo(() => {
+    const start = dayjs(date_from);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = start.add(i, "day");
+      const short = d.locale("fr").format("ddd");
+      const capitalized = short.charAt(0).toUpperCase() + short.slice(1);
+      return {
+        iso: toIsoDate(d.toDate()),
+        morningLabel: `${capitalized} matin`,
+        afternoonLabel: `${capitalized} après-midi`,
+      };
+    });
+  }, [date_from]);
+
+  const gridRows = useMemo(() => {
+    return byEmployee.map(({ employeeName, employeeId, rawTasks }) => {
+      const cells: Record<string, string> = {};
+      for (const day of weekDays) {
+        cells[`${day.iso}-morning`] = "";
+        cells[`${day.iso}-afternoon`] = "";
+      }
+      for (const task of rawTasks) {
+        const dayKey = toIsoDate(task.scheduled_date);
+        const slot = getTaskSlot(task);
+        const key = `${dayKey}-${slot}`;
+        if (!(key in cells)) continue;
+        const line = formatTaskCell(task);
+        cells[key] = cells[key] ? `${cells[key]}\n${line}` : line;
+      }
+      return { employeeName, employeeId, cells };
+    });
+  }, [byEmployee, weekDays]);
 
   const weekLabel = useMemo(() => {
     const dateOptions: Intl.DateTimeFormatOptions = {
@@ -116,8 +158,8 @@ export default function PlanningPrint() {
     const to = new Date(date_to).toLocaleDateString("fr-FR", dateOptions);
     return `${from} - ${to}`;
   }, [date_from, date_to]);
-  
-// TODO remake this cleaner 
+
+  // TODO remake this cleaner
   const printPageStyle = `
     @page {
       margin: 12mm;
@@ -161,6 +203,51 @@ export default function PlanningPrint() {
     }
   `;
 
+  const gridPrintPageStyle = `
+    @page {
+      size: landscape;
+      margin: 8mm;
+    }
+    .planning-grid-print-root {
+      display: block !important;
+    }
+    .planning-grid-print-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+      table-layout: fixed;
+    }
+    .planning-grid-print-table thead {
+      display: table-header-group;
+    }
+    .planning-grid-print-table th,
+    .planning-grid-print-table td {
+      border: 1px solid #333;
+      padding: 2px 3px;
+      vertical-align: top;
+      text-align: left;
+      word-break: break-word;
+      white-space: pre-line;
+    }
+    .planning-grid-print-table th {
+      font-weight: bold;
+      background: #f0f0f0;
+      text-align: center;
+    }
+    .planning-grid-print-table .employee-col {
+      width: 10%;
+      font-weight: bold;
+      white-space: normal;
+    }
+    .planning-grid-print-table tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .planning-grid-print-header {
+      margin-bottom: 4mm;
+    }
+  `;
+
   const employeeRows = useMemo(() => {
     const rows: (typeof byEmployee)[] = [];
     for (let i = 0; i < byEmployee.length; i += 2) {
@@ -170,10 +257,18 @@ export default function PlanningPrint() {
   }, [byEmployee]);
 
   const printContentRef = useRef<HTMLDivElement>(null);
+  const gridPrintRef = useRef<HTMLDivElement>(null);
+
   const handlePrint = useReactToPrint({
     contentRef: printContentRef,
     pageStyle: printPageStyle,
     documentTitle: `Planning semaine ${date_from} ${storeName ?? ""}`.trim(),
+  });
+
+  const handleGridPrint = useReactToPrint({
+    contentRef: gridPrintRef,
+    pageStyle: gridPrintPageStyle,
+    documentTitle: `Planning tableau ${date_from} ${storeName ?? ""}`.trim(),
   });
 
   return (
@@ -189,6 +284,14 @@ export default function PlanningPrint() {
         </Button>
         <Button variant="contained" startIcon={<Print />} onClick={handlePrint}>
           Imprimer
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<Print />}
+          onClick={handleGridPrint}
+          disabled={!tasksQuery.isSuccess || byEmployee.length === 0}
+        >
+          Imprimer tableau
         </Button>
       </Box>
 
@@ -295,6 +398,80 @@ export default function PlanningPrint() {
             </Box>
           </>
         )}
+      </Box>
+
+      {/* Excel-style grid: print-only content for second print button */}
+      <Box
+        ref={gridPrintRef}
+        className="planning-grid-print-root"
+        sx={{ display: "none" }}
+        aria-hidden
+      >
+        <Box className="planning-grid-print-header">
+          <Typography
+            variant="h6"
+            component="p"
+            sx={{ fontWeight: "bold", mb: 0.25, fontSize: "1rem" }}
+          >
+            Planning de la semaine (tableau)
+          </Typography>
+          <Typography variant="body2">
+            {weekLabel}
+            {storeName && ` — ${storeName}`}
+          </Typography>
+        </Box>
+        <Box
+          component="table"
+          className="planning-grid-print-table"
+          sx={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "9px",
+            tableLayout: "fixed",
+            "& th, & td": {
+              border: "1px solid #333",
+              padding: "2px 3px",
+              verticalAlign: "top",
+              textAlign: "left",
+              wordBreak: "break-word",
+              whiteSpace: "pre-line",
+            },
+            "& th": {
+              fontWeight: "bold",
+              backgroundColor: "#f0f0f0",
+              textAlign: "center",
+            },
+          }}
+        >
+          <Box component="thead">
+            <Box component="tr">
+              <Box component="th" className="employee-col">
+                Employé
+              </Box>
+              {weekDays.map((day) => (
+                <Fragment key={day.iso}>
+                  <Box component="th">{day.morningLabel}</Box>
+                  <Box component="th">{day.afternoonLabel}</Box>
+                </Fragment>
+              ))}
+            </Box>
+          </Box>
+          <Box component="tbody">
+            {gridRows.map(({ employeeName, employeeId, cells }) => (
+              <Box component="tr" key={employeeId ?? employeeName}>
+                <Box component="td" className="employee-col" sx={{ fontWeight: "bold" }}>
+                  {employeeName}
+                </Box>
+                {weekDays.map((day) => (
+                  <Fragment key={day.iso}>
+                    <Box component="td">{cells[`${day.iso}-morning`]}</Box>
+                    <Box component="td">{cells[`${day.iso}-afternoon`]}</Box>
+                  </Fragment>
+                ))}
+              </Box>
+            ))}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

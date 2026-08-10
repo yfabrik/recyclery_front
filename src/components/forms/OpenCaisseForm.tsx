@@ -13,12 +13,19 @@ import {
   type OpenCaisseFormValues,
 } from "../../services/schema/caisse";
 import { usePrompt } from "../Prompt";
-import { FormInput, FormSelect, type BaseFormProps } from "./FormBase";
+import {
+  FormInput,
+  FormNumber,
+  FormSelect,
+  type BaseFormProps,
+} from "./FormBase";
 
 export type { OpenCaisseFormValues, OpenCaisseFormOutput };
 
-interface OpenCaisseFormProps
-  extends BaseFormProps<OpenCaisseFormValues, OpenCaisseFormOutput> {
+interface OpenCaisseFormProps extends BaseFormProps<
+  OpenCaisseFormValues,
+  OpenCaisseFormOutput
+> {
   stores?: StoreModel[];
   setShowMoneyCounter?: (b: boolean) => number;
   lockStoreAndRegister?: boolean;
@@ -50,7 +57,7 @@ export const OpenCaisseForm = ({
       cash_register_id: "",
       opening_amount: "",
       notes: "",
-      ...defaultValues ?? {},
+      ...(defaultValues ?? {}),
     },
   });
 
@@ -92,10 +99,7 @@ export const OpenCaisseForm = ({
 
   return (
     <>
-      <form
-        id={formId}
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
+      <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12 }}>
             <FormSelect
@@ -128,7 +132,8 @@ export const OpenCaisseForm = ({
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <FormInput
+            <FormNumber
+              hideSpinners={true}
               name="opening_amount"
               control={form.control}
               label="Fonds de caisse (€)"

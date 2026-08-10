@@ -17,6 +17,7 @@ import { usePrompt } from "../Prompt";
 import {
   FormCategorySubcategoryFields,
   FormInput,
+  FormNumber,
   FormSelect,
   type BaseFormProps,
 } from "./FormBase";
@@ -27,6 +28,7 @@ type FormValues = LabeledItemFormValues;
 
 interface LabeledFormProps extends BaseFormProps<FormValues, LabeledItemFormOutput> {
   categories: CategoryModel[];
+  showQuantity?: boolean;
 }
 
 export const LabeledItemForm = ({
@@ -34,6 +36,7 @@ export const LabeledItemForm = ({
   onSubmit,
   defaultValues,
   categories,
+  showQuantity = false,
 }: LabeledFormProps) => {
   const { prompt, PromptDialog } = usePrompt();
 
@@ -52,6 +55,7 @@ export const LabeledItemForm = ({
       condition_state: "excellent" as const,
       location: "",
       description: "",
+      quantity: 1,
       ...defaultValues ?? {},
     },
     resolver: zodResolver(labeledItemSchema(categories)),
@@ -113,12 +117,12 @@ export const LabeledItemForm = ({
           />
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              // hideSpinners={true}
               control={form.control}
               name="weight"
               label="Poids (kg)"
               extra={{
-                type: "number",
                 onClick: () => setNumericField("weight", "Kg"),
                   
                   
@@ -142,12 +146,12 @@ export const LabeledItemForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormInput
+            <FormNumber
+              // hideSpinners={true}
               control={form.control}
               name="price"
               label="Prix de vente (€)"
               extra={{
-                type: "number",
                 onClick: () => setNumericField("price", "€"),
                 sx: {
                   "& .MuiInputBase-input": {
@@ -167,6 +171,21 @@ export const LabeledItemForm = ({
               }}
             />
           </Grid>
+
+          {showQuantity && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormNumber
+                control={form.control}
+                name="quantity"
+                label="Quantité"
+                extra={{
+                  slotProps: {
+                    htmlInput: { min: 1, max: 100 },
+                  },
+                }}
+              />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, md: 6 }}>
             <FormSelect

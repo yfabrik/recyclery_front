@@ -13,9 +13,8 @@ const barcodeOptions = {
   fontSize: 14,
 };
 
-type LabeledItemForPrint = LabeledItemModel 
+type LabeledItemForPrint = LabeledItemModel;
 // & Required<Pick<LabeledItemModel, "category" | "subcategory">>;
-
 
 const LabelPrintContent = ({ item }: { item: LabeledItemForPrint }) => {
   const canvasRef = useRef<SVGSVGElement>(null);
@@ -81,34 +80,42 @@ const LabelPrintContent = ({ item }: { item: LabeledItemForPrint }) => {
 const printPageStyle = `
   @page { size: 62mm 40mm; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; overflow: hidden; }
-  .label-print-root { page-break-inside: avoid; page-break-after: avoid; }
+  .label-print-root { page-break-inside: avoid; page-break-after: always; }
+  .label-print-root:last-child { page-break-after: auto; }
 `;
 
 export function useLabelPrint() {
-  const [itemToPrint, setItemToPrint] = useState<LabeledItemForPrint | null>(null);
+  const [itemsToPrint, setItemsToPrint] = useState<LabeledItemForPrint[]>([]);
   const labelPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: labelPrintRef,
     pageStyle: printPageStyle,
-    onAfterPrint: () => setItemToPrint(null),
-    documentTitle: itemToPrint
-      ? `Étiquette - ${itemToPrint.barcode}`
-      : "Étiquette",
+    onAfterPrint: () => setItemsToPrint([]),
+    documentTitle:
+      itemsToPrint.length === 1
+        ? `Étiquette - ${itemsToPrint[0].barcode}`
+        : itemsToPrint.length > 1
+          ? `Étiquettes (${itemsToPrint.length})`
+          : "Étiquette",
   });
 
   useEffect(() => {
-    if (!itemToPrint) return;
+    if (itemsToPrint.length === 0) return;
     handlePrint();
-    // const t = setTimeout(() => handlePrint(), 300);
-    // return () => clearTimeout(t);
-  }, [itemToPrint, handlePrint]);
+  }, [itemsToPrint, handlePrint]);
 
-  const triggerPrintLabel = (item: LabeledItemForPrint) => setItemToPrint(item);
+  const triggerPrintLabel = (
+    itemOrItems: LabeledItemForPrint | LabeledItemForPrint[],
+  ) => {
+    setItemsToPrint(Array.isArray(itemOrItems) ? itemOrItems : [itemOrItems]);
+  };
 
   const labelPrintNode = (
     <Box sx={{ display: "none", displayPrint: "block" }} ref={labelPrintRef}>
-      {itemToPrint && <LabelPrintContent item={itemToPrint} />}
+      {itemsToPrint.map((item) => (
+        <LabelPrintContent key={item.id} item={item} />
+      ))}
     </Box>
   );
 
