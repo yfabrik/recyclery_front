@@ -1,4 +1,9 @@
-import { BeachAccess, CalendarToday, Person, Warning } from "@mui/icons-material";
+import {
+  BeachAccess,
+  CalendarToday,
+  Person,
+  Warning,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -122,11 +127,9 @@ const EmployeePresenceHeader = ({
             Planning des Employés par Jour
           </Typography>
           <Typography variant="body2" sx={{ color: "#666", mt: 0.5 }}>
-            {selectedStore ? (
-              `Magasin sélectionné: ${selectedStore?.name}`
-            ) : (
-              "Tous les magasins"
-            )}
+            {selectedStore
+              ? `Magasin sélectionné: ${selectedStore?.name}`
+              : "Tous les magasins"}
           </Typography>
         </Box>
       </Box>
@@ -426,8 +429,10 @@ const EmployeeBadge = ({
   timeSlot,
   onVacation,
 }: EmployeeBadgeProps) => {
-  const avatarColor = getTimeSlotColor(timeSlot);
   const Icon = onVacation ? BeachAccess : Person;
+  const avatarColor = onVacation
+    ? "text.disabled"
+    : getTimeSlotColor(timeSlot);
 
   return (
     <Box
