@@ -32,6 +32,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
+import type { Weekday } from "@recyclerie/api/enums";
 import { PlaningForm } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
@@ -61,11 +62,14 @@ import {
 } from "../services/mapper/task";
 import type { PlanningFormOutput } from "../services/schema/schedule";
 import {
+  dayjs,
   getWeekRangeFromDate,
   toIsoDate,
   WEEKDAY_LABELS_FR,
   WEEKDAYS_MONDAY_FIRST,
 } from "../services/dateService";
+import { getVacations } from "../services/api/vacations";
+import { employeeIdsOnVacationOnDate } from "../services/planning/presenceVacation";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -212,6 +216,27 @@ const Planning = () => {
     queryFn: () => getEmployees().then((response) => response.data.data),
   });
   useQueryErrorToast(employees.error, "Erreur lors du chargement des employés");
+
+  const vacations = useQuery({
+    queryKey: ["vacations"],
+    queryFn: () => getVacations().then((response) => response.data.data),
+  });
+  useQueryErrorToast(vacations.error, "Erreur lors du chargement des congés");
+
+  const vacationEmployeeIdsByDay = useMemo(() => {
+    const { date_from, date_to } = getWeekRangeFromDate(selectedDate);
+    const list = (vacations.data ?? []).filter(
+      (vacation) =>
+        vacation.start_date <= date_to && vacation.end_date >= date_from,
+    );
+    const monday = dayjs(date_from);
+    const byDay: Partial<Record<Weekday, ReadonlySet<number>>> = {};
+    WEEKDAYS_MONDAY_FIRST.forEach((day, index) => {
+      const iso = toIsoDate(monday.add(index, "day").toDate());
+      byDay[day] = employeeIdsOnVacationOnDate(list, iso);
+    });
+    return byDay;
+  }, [vacations.data, selectedDate]);
 
   const missingEmployees = useMemo(() => {
     const data = employees.data;
@@ -447,6 +472,7 @@ const Planning = () => {
       {/* Planning des employés par jour */}
       <EmployeePresenceSchedule
         employeesByDay={getEmployeesByDay()}
+        vacationEmployeeIdsByDay={vacationEmployeeIdsByDay}
         isLoading={employees.isLoading}
         selectedStore={selectedStore || null}
         onShowMissingEmployees={() => setMissingEmployeesDialogDismissed(false)}

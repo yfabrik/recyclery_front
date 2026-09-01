@@ -31,6 +31,7 @@ export interface EmployeeTaskItem {
   day_of_week: Weekday | number | string;
   /** Task category used to pick the timeline icon (e.g. vente, point, collection, custom). */
   category?: string;
+  storeName?: string | null;
 }
 
 function formatDayOfWeek(day: EmployeeTaskItem["day_of_week"]): string {
@@ -173,6 +174,15 @@ export function EmployeeTasksTimeline({
                 <Typography variant="body1" fontWeight="medium">
                   {task.name}
                 </Typography>
+                {task.storeName ? (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", fontSize: "0.75rem", mt: 0.25 }}
+                  >
+                    {task.storeName}
+                  </Typography>
+                ) : null}
               </Paper>
             </TimelineContent>
           </TimelineItem>

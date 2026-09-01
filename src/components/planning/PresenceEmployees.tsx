@@ -1,4 +1,4 @@
-import { CalendarToday, Person, Warning } from "@mui/icons-material";
+import { BeachAccess, CalendarToday, Person, Warning } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -17,6 +17,7 @@ import {
   WORKDAY_TIME_SLOT_AVATAR_COLORS,
   getWorkdayTimeSlot,
 } from "../../constants/workdayTimeSlots";
+import type { Weekday } from "@recyclerie/api/enums";
 import { WEEKDAYS_MONDAY_FIRST } from "../../services/dateService";
 
 const MORNING_SLOT = getWorkdayTimeSlot("morning")!;
@@ -43,11 +44,16 @@ interface EmployeeScheduleByWeek {
 // MAIN COMPONENT
 // ============================================================================
 
+type VacationEmployeeIdsByDay = Readonly<
+  Partial<Record<Weekday, ReadonlySet<number>>>
+>;
+
 interface EmployeePresenceScheduleProps {
   selectedStore: StoreModel | null;
   onShowMissingEmployees: () => void;
   isLoading: boolean;
   employeesByDay: EmployeeScheduleByWeek;
+  vacationEmployeeIdsByDay: VacationEmployeeIdsByDay;
 }
 
 /**
@@ -58,6 +64,7 @@ export const EmployeePresenceSchedule = ({
   onShowMissingEmployees,
   isLoading,
   employeesByDay,
+  vacationEmployeeIdsByDay,
 }: EmployeePresenceScheduleProps) => {
   return (
     <Box sx={{ mb: 3 }}>
@@ -73,6 +80,7 @@ export const EmployeePresenceSchedule = ({
           ) : (
             <WeeklyScheduleGrid
               employeesByDay={employeesByDay}
+              vacationEmployeeIdsByDay={vacationEmployeeIdsByDay}
               selectedStore={selectedStore}
             />
           )}
@@ -161,11 +169,13 @@ const EmployeePresenceLoader = () => {
 
 interface WeeklyScheduleGridProps {
   employeesByDay: EmployeeScheduleByWeek;
+  vacationEmployeeIdsByDay: VacationEmployeeIdsByDay;
   selectedStore: StoreModel | null;
 }
 
 const WeeklyScheduleGrid = ({
   employeesByDay,
+  vacationEmployeeIdsByDay,
   selectedStore,
 }: WeeklyScheduleGridProps) => {
   if (!employeesByDay || Object.keys(employeesByDay).length === 0) {
@@ -199,6 +209,7 @@ const WeeklyScheduleGrid = ({
             key={dayKey}
             dayKey={dayKey}
             daySchedule={daySchedule}
+            vacationEmployeeIds={vacationEmployeeIdsByDay[day]}
           />
         );
       })}
@@ -213,9 +224,14 @@ const WeeklyScheduleGrid = ({
 interface DayScheduleCardProps {
   dayKey: string;
   daySchedule: DaySchedule;
+  vacationEmployeeIds: ReadonlySet<number> | undefined;
 }
 
-const DayScheduleCard = ({ dayKey, daySchedule }: DayScheduleCardProps) => {
+const DayScheduleCard = ({
+  dayKey,
+  daySchedule,
+  vacationEmployeeIds,
+}: DayScheduleCardProps) => {
   const totalEmployees =
     daySchedule.allDay.length +
     daySchedule.morning.length +
@@ -244,7 +260,10 @@ const DayScheduleCard = ({ dayKey, daySchedule }: DayScheduleCardProps) => {
 
           {hasEmployees ? (
             <Stack spacing={1}>
-              <DayEmployeeList daySchedule={daySchedule} />
+              <DayEmployeeList
+                daySchedule={daySchedule}
+                vacationEmployeeIds={vacationEmployeeIds}
+              />
             </Stack>
           ) : (
             <EmptyDayMessage />
@@ -291,9 +310,13 @@ const DayScheduleHeader = ({
 
 interface DayEmployeeListProps {
   daySchedule: DaySchedule;
+  vacationEmployeeIds: ReadonlySet<number> | undefined;
 }
 
-const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
+const DayEmployeeList = ({
+  daySchedule,
+  vacationEmployeeIds,
+}: DayEmployeeListProps) => {
   return (
     <>
       {daySchedule.allDay.length > 0 && (
@@ -302,6 +325,7 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
           timeSlot="allday"
           label={ALLDAY_PRESENCE_SLOT.label}
           color={ALLDAY_PRESENCE_SLOT.avatarColor}
+          vacationEmployeeIds={vacationEmployeeIds}
         />
       )}
 
@@ -318,6 +342,7 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
             </>
           }
           color={WORKDAY_TIME_SLOT_AVATAR_COLORS.morning}
+          vacationEmployeeIds={vacationEmployeeIds}
         />
       )}
 
@@ -334,6 +359,7 @@ const DayEmployeeList = ({ daySchedule }: DayEmployeeListProps) => {
             </>
           }
           color={WORKDAY_TIME_SLOT_AVATAR_COLORS.afternoon}
+          vacationEmployeeIds={vacationEmployeeIds}
         />
       )}
     </>
@@ -349,6 +375,7 @@ interface TimeSlotSectionProps {
   timeSlot: TimeSlot;
   label: ReactNode;
   color: string;
+  vacationEmployeeIds: ReadonlySet<number> | undefined;
 }
 
 const TimeSlotSection = ({
@@ -356,6 +383,7 @@ const TimeSlotSection = ({
   timeSlot,
   label,
   color,
+  vacationEmployeeIds,
 }: TimeSlotSectionProps) => {
   return (
     <Box>
@@ -376,6 +404,7 @@ const TimeSlotSection = ({
           key={`${employee.id}-${timeSlot}-${index}`}
           employee={employee}
           timeSlot={timeSlot}
+          onVacation={vacationEmployeeIds?.has(employee.id) === true}
         />
       ))}
     </Box>
@@ -389,10 +418,16 @@ const TimeSlotSection = ({
 interface EmployeeBadgeProps {
   employee: EmployeeModel;
   timeSlot: TimeSlot;
+  onVacation: boolean;
 }
 
-const EmployeeBadge = ({ employee, timeSlot }: EmployeeBadgeProps) => {
+const EmployeeBadge = ({
+  employee,
+  timeSlot,
+  onVacation,
+}: EmployeeBadgeProps) => {
   const avatarColor = getTimeSlotColor(timeSlot);
+  const Icon = onVacation ? BeachAccess : Person;
 
   return (
     <Box
@@ -411,13 +446,14 @@ const EmployeeBadge = ({ employee, timeSlot }: EmployeeBadgeProps) => {
           fontSize: 10,
         }}
       >
-        <Person sx={{ fontSize: 12 }} />
+        <Icon sx={{ fontSize: 12 }} />
       </Avatar>
       <Typography
         variant="caption"
         sx={{
           fontSize: "0.7rem",
           fontWeight: "medium",
+          color: onVacation ? "text.disabled" : undefined,
         }}
       >
         {employee.fullName}
