@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ import {
   createGiftCard,
   listGiftCards,
   cancelGiftCard,
+  recreditGiftCard,
 } from "../services/api/giftCards";
 import { createGiftCardPayloadFromForm } from "../services/mapper/giftcard";
 import { type CreateGiftCardFormOutput } from "../services/schema/giftcard";
@@ -33,6 +35,10 @@ import { useGiftCardPrint } from "../components/pos/GiftCartPrint";
 
 const GiftCard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
+  const [selectedGiftCard, setSelectedGiftCard] = useState<GiftCardDto | null>(
+    null,
+  );
   const queryClient = useQueryClient();
   const { triggerPrintGiftCard, giftCardPrintNode } = useGiftCardPrint();
   const giftCards = useQuery({
@@ -67,6 +73,24 @@ const GiftCard = () => {
       );
     },
   });
+  const creditGiftCardMutation = useMutation({
+    mutationFn: (amount: number) => {
+      if (!selectedGiftCard) throw new Error("Avoir non sélectionné");
+      return recreditGiftCard(selectedGiftCard.id, { amount });
+    },
+    onSuccess: (response) => {
+      toast.success(
+        getApiSuccessMessage(response, "Avoir crédité avec succès"),
+      );
+      queryClient.invalidateQueries({ queryKey: ["giftCards"] });
+      handleCloseCreditDialog();
+    },
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error, "Erreur lors de la créditation de l'avoir"),
+      );
+    },
+  });
   const handlePrintGiftCard = (giftCard: GiftCardDto) => {
     triggerPrintGiftCard({
       giftCard: {
@@ -93,7 +117,22 @@ const GiftCard = () => {
       cancelGiftCardMutation.mutate(giftCard);
     }
   };
-
+  const handleCreditGiftCard = (giftCard: GiftCardDto) => {
+    setIsCreditDialogOpen(true);
+    setSelectedGiftCard(giftCard);
+  };
+  const handleCloseCreditDialog = () => {
+    setIsCreditDialogOpen(false);
+    setSelectedGiftCard(null);
+  };
+  const submitCreditGiftCard = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    const amount = formData.get("amount");
+    if (amount && Number(amount) > 0) {
+      creditGiftCardMutation.mutate(Number(amount));
+    }
+  };
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box
@@ -134,6 +173,7 @@ const GiftCard = () => {
                 giftCard={giftCard}
                 handlePrintGiftCard={handlePrintGiftCard}
                 handleCancelGiftCard={handleCancelGiftCard}
+                handleCreditGiftCard={handleCreditGiftCard}
               />
             </Grid>
           ))}
@@ -171,6 +211,48 @@ const GiftCard = () => {
             loading={addGiftCard.isPending}
           >
             Créer
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isCreditDialogOpen}
+        onClose={() => setIsCreditDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Créditer l'avoir {selectedGiftCard?.code}</DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{ display: "grid", gap: 2, mt: 1 }}
+            component="form"
+            id="creditGiftCardForm"
+            onSubmit={submitCreditGiftCard}
+          >
+            <TextField
+              label="Montant"
+              type="number"
+              name="amount"
+              fullWidth
+              required
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            type="button"
+            onClick={handleCloseCreditDialog}
+            startIcon={<Cancel />}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            type="submit"
+            form="creditGiftCardForm"
+            startIcon={<Save />}
+            loading={creditGiftCardMutation.isPending}
+          >
+            Créditer
           </Button>
         </DialogActions>
       </Dialog>
