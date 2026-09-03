@@ -277,7 +277,7 @@ const StoreHistorySales = ({
       maxWidth="xl"
       fullWidth
     >
-      <DialogTitle>Historique du magasin : {store.name}</DialogTitle>
+      <DialogTitle>Historique du magasin au prorata du mois : {store.name}</DialogTitle>
 
       <DialogContent sx={{ overflowX: "auto", pb: 2 }}>
         <Loading isLoading={history.isLoading}>
