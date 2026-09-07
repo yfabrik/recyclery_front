@@ -27,7 +27,6 @@
     "@mui/material": "^7.3.6",
     "@mui/x-charts": "^8.24.0",
     "@mui/x-date-pickers": "^8.21.0",
-    "@recyclerie/api": "file:../packages/api",
     "@tanstack/react-pacer": "^0.20.0",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-query-devtools": "^5.91.3",
@@ -42,7 +41,8 @@
     "react-router": "^7.10.1",
     "react-to-print": "^3.2.0",
     "react-toastify": "^11.0.5",
-    "zod": "^4.3.2"
+    "zod": "^4.3.2",
+    "@recyclerie/api": "git+ssh://git@github.com/yfabrik/api-recyclerie.git#v0.5.3"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.3",
@@ -70,8 +70,5 @@
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
     "vitest": "^4.0.16"
-  },
-  "allowScripts": {
-    "file:../../../packages/api": true
   }
 }
