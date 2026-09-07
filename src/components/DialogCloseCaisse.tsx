@@ -87,6 +87,7 @@ export const DialogCloseCaisse = ({
           closingAmount={closingAmount}
           setClosingAmount={setClosingAmount}
           expectedAMount={roundCurrency(expectedCashAmount)}
+          sessionId={currentSession.id}
         />
         {state == "valid" && (
           <>

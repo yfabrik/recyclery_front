@@ -12,6 +12,7 @@ import {
   type OpenCaisseFormOutput,
   type OpenCaisseFormValues,
 } from "../../services/schema/caisse";
+import { moneyCounterPersistence } from "../../utils/moneyCounterStorage";
 import { usePrompt } from "../Prompt";
 import {
   FormInput,
@@ -160,6 +161,7 @@ export const OpenCaisseForm = ({
                             setNumericField("opening_amount", {
                               unit: "€",
                               mode: "money",
+                              persistence: moneyCounterPersistence.open,
                             });
                           }}
                           startIcon={<AttachMoney />}
