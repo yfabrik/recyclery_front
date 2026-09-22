@@ -21,7 +21,7 @@ import { formatCurrency } from "../../services/cartService";
 interface IssuedGiftCardsCardProps {
   transaction: TransactionModel;
 }
-
+//TODO giftcard show wrong current balance
 export const IssuedGiftCardsCard = ({
   transaction,
 }: IssuedGiftCardsCardProps) => {

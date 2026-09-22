@@ -4,11 +4,13 @@ import { Button, Grid, InputAdornment } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { createPromptNumericValue } from "../../hooks/useSetNumericValue";
+import type { CashSession } from "../../interfaces/Models";
 import {
   closeCaisseFormSchema,
   type CloseCaisseFormOutput,
   type CloseCaisseFormValues,
 } from "../../services/schema/caisse";
+import { moneyCounterPersistence } from "../../utils/moneyCounterStorage";
 import { usePrompt } from "../Prompt";
 import { FormInput, FormNumber, type BaseFormProps } from "./FormBase";
 
@@ -22,12 +24,14 @@ export const CloseCaisseForm = ({
   closingAmount,
   setClosingAmount,
   expectedAMount,
+  sessionId,
 }: BaseFormProps<CloseCaisseFormValues, CloseCaisseFormOutput> & {
   state: "prepare" | "valid";
   setState: React.Dispatch<React.SetStateAction<"prepare" | "valid">>;
   closingAmount: number;
   setClosingAmount: React.Dispatch<React.SetStateAction<number>>;
   expectedAMount?: number;
+  sessionId: CashSession["id"];
 }) => {
   const form = useForm<CloseCaisseFormValues, unknown, CloseCaisseFormOutput>({
     resolver: zodResolver(closeCaisseFormSchema),
@@ -85,6 +89,7 @@ export const CloseCaisseForm = ({
                               unit: "€",
                               mode: "money",
                               valueToReach: expectedAMount,
+                              persistence: moneyCounterPersistence.close(sessionId),
                             });
                           }}
                           startIcon={<AttachMoney />}

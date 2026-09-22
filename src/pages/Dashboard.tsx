@@ -341,8 +341,8 @@ const Dashboard = () => {
           <StatCard
             title="Taux de vente"
             value={`${(
-              (stats.data?.soldThisMonth ||
-                0 / (stats.data?.availableItems || 0)) * 100
+              ((stats.data?.soldThisMonth ||
+                0 )/ (stats.data?.availableItems || 0)) * 100
             ).toFixed(1)}%`}
             subtitle="ce mois"
             icon={<Assessment />}
@@ -523,7 +523,7 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
               <Typography variant="h4" color="primary">
-                {((stats.data?.soldThisMonth || 0 / 200) * 100).toFixed(0)}%
+                {(((stats.data?.soldThisMonth || 0) / 200) * 100).toFixed(0)}%
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 de l'objectif (200 ventes)

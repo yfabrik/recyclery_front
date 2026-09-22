@@ -288,6 +288,18 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
           }}
         >
           <Box sx={{ flex: "1 1 400px", minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 600, mb: 0.5, textAlign: "center" }}
+            >
+              Total : {formatCurrency(Number(salesStats.data.total_sales))}
+              {" · "}
+              {salesStats.data.total_transactions} transaction
+              {salesStats.data.total_transactions > 1 ? "s" : ""}
+              {" · "}
+              {Number(salesStats.data.sessions_count)} session
+              {salesStats.data.sessions_count > 1 ? "s" : ""}
+            </Typography>
             <BarChart
               height={350}
               series={[

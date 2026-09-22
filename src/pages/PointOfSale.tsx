@@ -30,6 +30,10 @@ import {
   roundCurrency,
 } from "../services/cartService";
 import type { CashSession } from "../interfaces/Models";
+import {
+  clearMoneyCounterCounts,
+  moneyCounterPersistence,
+} from "../utils/moneyCounterStorage";
 
 const PointOfSale = () => {
   const { user } = useAuth();
@@ -86,6 +90,11 @@ const PointOfSale = () => {
       }
 
       toast.success(message);
+      if (activeSession.data) {
+        clearMoneyCounterCounts(
+          moneyCounterPersistence.close(activeSession.data.id),
+        );
+      }
       setCloseSessionDialog(false);
       pos.resetCheckoutForm();
       queryClient.invalidateQueries({ queryKey: ["activeSession"] });

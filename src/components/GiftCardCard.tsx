@@ -13,17 +13,19 @@ import {
   getGiftCardStatusLabel,
 } from "../constants/giftCardStatuses";
 import { formatCurrency } from "../services/cartService";
-import { Block, Print } from "@mui/icons-material";
+import { Add, Block, CreditCard, Print } from "@mui/icons-material";
 
 interface GiftCardCardProps {
   giftCard: GiftCardDto;
   handlePrintGiftCard: (giftCard: GiftCardDto) => void;
   handleCancelGiftCard: (giftCard: GiftCardDto) => void;
+  handleCreditGiftCard: (giftCard: GiftCardDto) => void;
 }
 export const GiftCardCard = ({
   giftCard,
   handlePrintGiftCard,
   handleCancelGiftCard,
+  handleCreditGiftCard,
 }: GiftCardCardProps) => {
   return (
     <Card
@@ -95,6 +97,14 @@ export const GiftCardCard = ({
           onClick={()=>handleCancelGiftCard(giftCard)}
         >
           <Block />
+        </IconButton>
+        <IconButton
+          aria-label="Créditer l'avoir"
+          size="small"
+          color="success"
+          onClick={()=>handleCreditGiftCard(giftCard)}
+        >
+          <Add />
         </IconButton>
       </CardActions>
     </Card>

@@ -7,6 +7,7 @@ import {
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import type { ReactNode } from "react";
 import { ViewSelector, type ViewMode } from "./ViewSelector";
+import {dayjs} from "./../../services/dateService";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -150,6 +151,7 @@ export const PlanningViewHeader = ({
         const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
         startOfWeek.setDate(diff);
         const endOfWeek = new Date(new Date(startOfWeek).setDate(startOfWeek.getDate() + 6))
+        const weekNumber = dayjs(selectedDate).week()
 
         // const weekDays = [];
         // for (let i = 0; i < 7; i++) {
@@ -160,7 +162,7 @@ export const PlanningViewHeader = ({
 
         return (
           <Typography variant="h5" sx={{ color: "#333", fontWeight: "bold" }}>
-            Semaine du {startOfWeek.toLocaleDateString("fr-FR")} au{" "}
+            Semaine ({weekNumber}) du {startOfWeek.toLocaleDateString("fr-FR")} au{" "}
             {endOfWeek.toLocaleDateString("fr-FR")}
           </Typography>
         );

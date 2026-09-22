@@ -39,6 +39,10 @@ import { OpenCaisseForm, type OpenCaisseFormValues } from "../forms/OpenCaisseFo
 import { Loading } from "../Loading";
 import { openCaissePayloadFromForm } from "../../services/mapper/caisse";
 import type { OpenCaisseFormOutput } from "../../services/schema/caisse";
+import {
+  clearMoneyCounterCounts,
+  moneyCounterPersistence,
+} from "../../utils/moneyCounterStorage";
 
 export const NoOpenedRegister = () => {
     const [openSessionDialog, setOpenSessionDialog] = useState(false)
@@ -68,6 +72,7 @@ export const NoOpenedRegister = () => {
             OpenCaisse(openCaissePayloadFromForm(data)),
         onSuccess: (data) => {
             toast.success(getApiSuccessMessage(data, "Session ouverte avec succès"));
+            clearMoneyCounterCounts(moneyCounterPersistence.open);
             setOpenSessionDialog(false);
             queryClient.invalidateQueries({ queryKey: ["activeSession"] });
         },

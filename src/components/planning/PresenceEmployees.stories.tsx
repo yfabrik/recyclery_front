@@ -62,6 +62,7 @@ const meta = {
     onShowMissingEmployees: () => {},
     isLoading: false,
     employeesByDay: emptyEmployeesByDay(),
+    vacationEmployeeIdsByDay: {},
   },
 } satisfies Meta<typeof PrecenseEmployees>;
 

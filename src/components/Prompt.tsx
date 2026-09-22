@@ -26,6 +26,13 @@ import {
   Remove,
 } from "@mui/icons-material";
 import { formatCurrency } from "../services/cartService";
+import {
+  clearMoneyCounterCounts,
+  readMoneyCounterCounts,
+  writeMoneyCounterCounts,
+  type MoneyCounterCounts,
+  type MoneyCounterPersistence,
+} from "../utils/moneyCounterStorage";
 
 type Resolver<T> = (value: T) => void;
 
@@ -35,12 +42,14 @@ type NumericPromptOptions = {
   mode?: "numeric";
   unit?: string;
   valueToReach?: never;
+  persistence?: never;
 };
 
 type MoneyPromptOptions = {
   mode: "money";
   unit?: string;
   valueToReach?: number;
+  persistence?: MoneyCounterPersistence;
 };
 
 export type PromptOptions = NumericPromptOptions | MoneyPromptOptions;
@@ -54,6 +63,9 @@ export function usePrompt() {
   const [unit, setUnit] = useState("kg");
   const [mode, setMode] = useState<PromptMode>("numeric");
   const [valueToreach, setValueToReach] = useState<number | null>(null)
+  const [persistence, setPersistence] = useState<
+    MoneyCounterPersistence | undefined
+  >(undefined);
   const resolverRef = useRef<Resolver<string | null> | null>(null);
 
   const prompt = useCallback(
@@ -69,6 +81,9 @@ export function usePrompt() {
       setOpen(true);
       setValueToReach(
         options?.mode === "money" ? (options.valueToReach ?? null) : null,
+      );
+      setPersistence(
+        options?.mode === "money" ? options.persistence : undefined,
       );
 
 
@@ -108,6 +123,7 @@ export function usePrompt() {
             value={value}
             setValue={setValue}
             valueToReach={valueToreach ?? undefined}
+            persistence={persistence}
           />
         ) : (
           <NumericKeypad
@@ -489,7 +505,8 @@ interface MoneyCounterPromptProps {
   onClose: () => void;
   value: string;
   setValue: React.Dispatch<React.SetStateAction<string>>;
-  valueToReach?: number
+  valueToReach?: number;
+  persistence?: MoneyCounterPersistence;
 }
 
 // Définition des pièces et billets français
@@ -517,24 +534,20 @@ const MONEY_DENOMINATIONS = [
 const MoneyCounterPrompt = ({
   value,
   setValue,
-  defaultValue,
   onClose,
-  valueToReach
+  valueToReach,
+  persistence,
 }: MoneyCounterPromptProps) => {
 
-  const [counts, setCounts] = useState<Record<number, number>>({});
+  const [counts, setCounts] = useState<MoneyCounterCounts>(() =>
+    persistence ? readMoneyCounterCounts(persistence) : {},
+  );
 
-  // Initialize counts from defaultValue if provided
   useEffect(() => {
-    const defaultNum = parseFloat(defaultValue?.toString() || "0");
-    if (defaultNum > 0) {
-      // Try to parse the default value into counts
-      // For simplicity, we'll just set the total value
-      // The user can adjust the counts manually
-    }
-  }, [defaultValue]);
+    if (!persistence) return;
+    writeMoneyCounterCounts(persistence, counts);
+  }, [counts, persistence]);
 
-  // Calculate total and update value
   useEffect(() => {
     const newTotal = MONEY_DENOMINATIONS.reduce((sum, denom) => {
       const count = counts[denom.value] || 0;
@@ -542,6 +555,13 @@ const MoneyCounterPrompt = ({
     }, 0);
     setValue(newTotal.toFixed(2));
   }, [counts, setValue]);
+
+  const resetCounts = () => {
+    setCounts({});
+    if (persistence) {
+      clearMoneyCounterCounts(persistence);
+    }
+  };
 
   const updateCount = (denomValue: number, change: number) => {
     setCounts((prev) => ({
@@ -815,8 +835,24 @@ const MoneyCounterPrompt = ({
         </Grid>
       </Grid>
 
-      {/* Bouton fermer en bas */}
-      <Box sx={{ mt: 2, textAlign: "center" }}>
+      <Box
+        sx={{
+          mt: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <Button
+          variant="outlined"
+          color="warning"
+          onClick={resetCounts}
+          startIcon={<Clear />}
+          sx={{ minWidth: 120 }}
+        >
+          Effacer
+        </Button>
         <Button
           variant="outlined"
           onClick={onClose}
