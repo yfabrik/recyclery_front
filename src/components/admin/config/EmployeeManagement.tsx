@@ -406,7 +406,7 @@ const EmployeeManagement = () => {
           {selectedEmployee && (
             <EmployeeWorkdays
               employeeId={selectedEmployee.id}
-              employeeName={selectedEmployee.nom}
+              employeeName={`${selectedEmployee.prenom} ${selectedEmployee.nom}`}
               onClose={handleCloseWorkdays}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés
