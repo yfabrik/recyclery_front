@@ -64,8 +64,9 @@ import type {
 } from "../../../services/schema/task";
 
 /**
- * @deprecated
- * @returns
+ * @deprecated Assigns employees without going through Time ranges (creates an
+ * Assignment with no range, which the server no longer allows). Use
+ * `TaskAssignmentDialog` instead if this screen comes back.
  */
 const TaskManagement = () => {
   const [tasks, setTasks] = useState<TaskDisplay[]>([]);

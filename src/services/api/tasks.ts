@@ -1,5 +1,4 @@
 import type {
-  AssignEmployeeTaskResponse,
   CreateTaskResponse,
   DeleteTaskResponse,
   ListTasksResponse,
@@ -7,7 +6,15 @@ import type {
   TaskEmployeesResponse,
   UpdateTaskResponse,
 } from "@recyclerie/api/responses/tasks";
+import type {
+  AssignEmployeeTaskRangeResponse,
+  CreateTimeRangeResponse,
+  DeleteTimeRangeResponse,
+  TaskAvailableEmployeesResponse,
+  UpdateTimeRangeResponse,
+} from "@recyclerie/api/responses/timeRanges";
 import type { TaskDataInput, TaskListFilter, TaskListFilterInput } from "@recyclerie/api/schemas/tasks";
+import type { TimeRangeBodyInput } from "@recyclerie/api/schemas/timeRanges";
 import type { AxiosResponse } from "axios";
 import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
@@ -76,12 +83,15 @@ export const deleteTask = (
 ): Promise<AxiosResponse<DeleteTaskResponse>> =>
   axiosInstance.delete<DeleteTaskResponse>(`/api/tasks/${id}`);
 
+/** With no `range`, the server assigns the Employee's first free window on the Task (409 if none). */
 export const addEmployeeToTask = (
   id: TaskModel["id"],
   employee_id: EmployeeModel["id"],
-): Promise<AxiosResponse<AssignEmployeeTaskResponse>> =>
-  axiosInstance.post<AssignEmployeeTaskResponse>(`/api/tasks/${id}/employees`, {
+  range?: TimeRangeBodyInput,
+): Promise<AxiosResponse<AssignEmployeeTaskRangeResponse>> =>
+  axiosInstance.post<AssignEmployeeTaskRangeResponse>(`/api/tasks/${id}/employees`, {
     employee_id,
+    ...range,
   });
 
 export const removeEmployeeFromTask = (
@@ -90,4 +100,41 @@ export const removeEmployeeFromTask = (
 ): Promise<AxiosResponse<RemoveEmployeeTaskResponse>> =>
   axiosInstance.delete<RemoveEmployeeTaskResponse>(
     `/api/tasks/${id}/employees/${employee_id}`,
+  );
+
+export const getAvailableEmployeesForTask = (
+  id: TaskModel["id"],
+): Promise<AxiosResponse<TaskAvailableEmployeesResponse>> =>
+  axiosInstance.get<TaskAvailableEmployeesResponse>(
+    `/api/tasks/${id}/available-employees`,
+  );
+
+export const createTimeRange = (
+  taskId: TaskModel["id"],
+  employeeId: EmployeeModel["id"],
+  body: TimeRangeBodyInput,
+): Promise<AxiosResponse<CreateTimeRangeResponse>> =>
+  axiosInstance.post<CreateTimeRangeResponse>(
+    `/api/tasks/${taskId}/employees/${employeeId}/time-ranges`,
+    body,
+  );
+
+export const updateTimeRange = (
+  taskId: TaskModel["id"],
+  employeeId: EmployeeModel["id"],
+  rangeId: number,
+  body: TimeRangeBodyInput,
+): Promise<AxiosResponse<UpdateTimeRangeResponse>> =>
+  axiosInstance.put<UpdateTimeRangeResponse>(
+    `/api/tasks/${taskId}/employees/${employeeId}/time-ranges/${rangeId}`,
+    body,
+  );
+
+export const deleteTimeRange = (
+  taskId: TaskModel["id"],
+  employeeId: EmployeeModel["id"],
+  rangeId: number,
+): Promise<AxiosResponse<DeleteTimeRangeResponse>> =>
+  axiosInstance.delete<DeleteTimeRangeResponse>(
+    `/api/tasks/${taskId}/employees/${employeeId}/time-ranges/${rangeId}`,
   );
