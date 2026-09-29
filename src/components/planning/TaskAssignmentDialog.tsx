@@ -32,7 +32,7 @@ import {
   removeEmployeeFromTask,
   updateTimeRange,
 } from "../../services/api/tasks";
-import { createTimeRangeWriteQueue } from "./timeRangeWriteQueue";
+import { createTimeRangeWriteQueue, type TimeRangeWriteQueue } from "./timeRangeWriteQueue";
 import { AssignedEmployeeRow } from "./taskAssignment/AssignedEmployeeRow";
 import { AvailableEmployeeRow } from "./taskAssignment/AvailableEmployeeRow";
 import { CoverageTimeline } from "./taskAssignment/CoverageTimeline";
@@ -129,7 +129,7 @@ const TaskAssignmentDialog = ({
   const pendingRemovalRef = useRef<Set<string>>(new Set());
   const nextLocalId = useRef(0);
 
-  const writeQueueRef = useRef<ReturnType<typeof createTimeRangeWriteQueue> | null>(null);
+  const writeQueueRef = useRef<TimeRangeWriteQueue | null>(null);
   if (!writeQueueRef.current) {
     writeQueueRef.current = createTimeRangeWriteQueue((error) => {
       void revertToServerRef.current();
@@ -152,7 +152,8 @@ const TaskAssignmentDialog = ({
     onSuccess?: (result: T) => void,
   ) => {
     try {
-      onSuccess?.(await write());
+      const result = await write();
+      onSuccess?.(result);
     } catch (error) {
       await revertToServerRef.current();
       toast.error(getApiErrorMessage(error, errorMessage));
