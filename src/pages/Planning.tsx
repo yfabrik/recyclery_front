@@ -74,6 +74,7 @@ import {
   getApiErrorMessage,
   getApiSuccessMessage,
 } from "../utils/apiToastMessage";
+import { getWeekNumber } from "@recyclerie/api/domain/date";
 
 const Planning = () => {
   // Fonction pour générer une couleur basée sur le nom de l'employé
@@ -279,11 +280,14 @@ const Planning = () => {
       ];
     }
 
-    const newYear = new Date(selectedDate.getFullYear(), 0, 1);
-    const dayNumber = Math.floor(
-      (selectedDate.getTime() - newYear.getTime()) / (24 * 60 * 60 * 1000),
-    );
-    const weekNumber = Math.ceil((selectedDate.getDay() + dayNumber + 1) / 7);
+    // const newYear = new Date(selectedDate.getFullYear(), 0, 1);
+    // const dayNumber = Math.floor(
+    //   (selectedDate.getTime() - newYear.getTime()) / (24 * 60 * 60 * 1000),
+    // );
+    // const weekNumber = Math.ceil((selectedDate.getDay() + dayNumber + 1) / 7);
+    // const weekNumber = dayjs(selectedDate).week()
+    const weekNumber = getWeekNumber(selectedDate)
+
     const weekToProcess =
       viewMode != "calendar" ? (weekNumber % 2 ? "week2" : "week1") : null;
     const employeesByDay: {

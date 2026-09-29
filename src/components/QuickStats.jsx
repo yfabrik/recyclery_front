@@ -17,9 +17,8 @@ import {
 /**
  * @deprecated
  */
-const QuickStat = ({ title, value, target, color = 'primary', icon }) => {
-  const percentage = target ? (value / target) * 100 : 0;
-  
+const QuickStat = ({ title, value, target, color = 'primary', icon,unit="" }) => {
+  const percentage = target ? (((value||0) / target) * 100) : 0;
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
@@ -29,11 +28,11 @@ const QuickStat = ({ title, value, target, color = 'primary', icon }) => {
               {title}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-              {value}
+              {value}{unit}
             </Typography>
             {target && (
               <Typography variant="body2" color="textSecondary">
-                Objectif: {target}
+                Objectif: {target}{unit}
               </Typography>
             )}
           </Box>
@@ -77,7 +76,8 @@ const QuickStats = ({ stats }) => {
       />
       <QuickStat
         title="Chiffre d'affaires"
-        value={`${stats.totalRevenue || 0}€`}
+        value={stats.totalRevenue || 0}
+        unit='€'
         target={5000}
         color="info"
         icon={<AttachMoney />}

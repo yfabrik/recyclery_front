@@ -112,8 +112,8 @@ export const EmployeeWorkdaysForm = ({
         variant="fullWidth"
         sx={{ width: "100%", marginBottom: 2 }}
       >
-        <Tab label="semaine 1" value={0} />
-        <Tab label="semaine 2" value={1} />
+        <Tab label="semaine paire" value={0} />
+        <Tab label="semaine impaire" value={1} />
       </Tabs>
       <Grid container spacing={2} alignItems="center">
         {tabValue == 0 &&

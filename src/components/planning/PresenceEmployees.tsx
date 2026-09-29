@@ -235,11 +235,17 @@ const DayScheduleCard = ({
   daySchedule,
   vacationEmployeeIds,
 }: DayScheduleCardProps) => {
-  const totalEmployees =
-    daySchedule.allDay.length +
-    daySchedule.morning.length +
-    daySchedule.afternoon.length;
+const scheduledEmployees =
+  daySchedule.allDay.length +
+  daySchedule.morning.length +
+  daySchedule.afternoon.length;
 
+const vacationEmployees = vacationEmployeeIds?.size ?? 0;
+
+const totalEmployees = Math.max(
+  0,
+  scheduledEmployees - vacationEmployees
+);
   const hasEmployees =
     daySchedule.allDay.length > 0 ||
     daySchedule.morning.length > 0 ||
@@ -430,9 +436,7 @@ const EmployeeBadge = ({
   onVacation,
 }: EmployeeBadgeProps) => {
   const Icon = onVacation ? BeachAccess : Person;
-  const avatarColor = onVacation
-    ? "text.disabled"
-    : getTimeSlotColor(timeSlot);
+  const avatarColor = onVacation ? "text.disabled" : getTimeSlotColor(timeSlot);
 
   return (
     <Box
