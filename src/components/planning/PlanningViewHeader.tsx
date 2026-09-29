@@ -5,9 +5,9 @@ import {
   CalendarToday,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, Typography } from "@mui/material";
+import { getWeekNumber } from "@recyclerie/api/domain/date";
 import type { ReactNode } from "react";
 import { ViewSelector, type ViewMode } from "./ViewSelector";
-import {dayjs} from "./../../services/dateService";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -151,7 +151,8 @@ export const PlanningViewHeader = ({
         const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
         startOfWeek.setDate(diff);
         const endOfWeek = new Date(new Date(startOfWeek).setDate(startOfWeek.getDate() + 6))
-        const weekNumber = dayjs(selectedDate).week()
+        // const weekNumber = dayjs(selectedDate).week()
+        const weekNumber = getWeekNumber(selectedDate)
 
         // const weekDays = [];
         // for (let i = 0; i < 7; i++) {
