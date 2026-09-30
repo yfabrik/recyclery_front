@@ -39,6 +39,7 @@ import { CoverageTimeline } from "./taskAssignment/CoverageTimeline";
 import { TaskAssignmentDialogInfo, TaskAssignmentDialogTitle } from "./taskAssignment/DialogHeader";
 import { otherLocalRangesForEmployee, toMinuteWindow, type EmployeeInfo, type LocalRange } from "./taskAssignment/geometry";
 import { AssignedColumnLegend } from "./taskAssignment/Legend";
+import { Loading } from "../Loading";
 
 /** How long to wait after the last drag tick before sending a Time range's new position. */
 const RANGE_WRITE_DEBOUNCE_MS = 400;
@@ -110,12 +111,16 @@ const TaskAssignmentDialog = ({
 
   const hasSeededRef = useRef(false);
   useEffect(() => {
-    if (assignedQuery.data && !hasSeededRef.current) {
+    // Wait for the fetch to settle before seeding: on remount, react-query can
+    // synchronously return a stale cached value (e.g. from before an employee
+    // was assigned) while it refetches in the background. Seeding from that
+    // stale snapshot would mark `hasSeededRef` done and ignore the fresh data.
+    if (assignedQuery.data && !assignedQuery.isFetching && !hasSeededRef.current) {
       seedFromServer(assignedQuery.data);
       hasSeededRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignedQuery.data]);
+  }, [assignedQuery.data, assignedQuery.isFetching]);
 
   const revertToServer = async () => {
     const result = await assignedQuery.refetch();
@@ -360,73 +365,97 @@ const TaskAssignmentDialog = ({
 
         <CoverageTimeline task={taskWindow} ranges={ranges} />
 
-        <Grid container spacing={3} sx={{ mt: 0.5 }}>
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Person color="primary" />
-              Employés assignés ({assignedEmployeeIds.length})
-            </Typography>
-            <AssignedColumnLegend />
-            {assignedEmployeeIds.length > 0 ? (
-              <Stack spacing={1.5}>
-                {assignedEmployeeIds.map((employeeId) => {
-                  const info = employeeInfoById.get(employeeId);
-                  if (!info) return null;
-                  return (
-                    <AssignedEmployeeRow
-                      key={employeeId}
-                      task={taskWindow}
-                      info={info}
-                      employeeRanges={ranges
-                        .filter((range) => range.employeeId === employeeId)
-                        .sort((a, b) => a.start - b.start)}
-                      allRanges={ranges}
-                      onUpdateRange={updateRange}
-                      onAddRange={addRange}
-                      onRemoveRange={removeRange}
-                      onRemoveEmployee={unassignEmployee}
-                    />
-                  );
-                })}
-              </Stack>
-            ) : (
-              <Box
-                sx={{
-                  textAlign: "center",
-                  py: 3,
-                  bgcolor: "#f5f5f5",
-                  borderRadius: 1,
-                  border: "2px dashed #ccc",
-                }}
-              >
-                <PersonOff sx={{ fontSize: 40, color: "#ccc", mb: 1 }} />
-                <Typography variant="body2" color="textSecondary">
-                  Aucun employé assigné
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  Cliquez sur "+" pour assigner des employés
-                </Typography>
-              </Box>
-            )}
-          </Grid>
+        <Loading isLoading={assignedQuery.isLoading || availableQuery.isLoading}>
 
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PersonAdd color="action" />
-              Employés disponibles
-            </Typography>
-            <Box sx={{ maxHeight: 480, overflow: "auto" }}>
-              {availableToAssign.map((employee) => (
-                <AvailableEmployeeRow
-                  key={employee.id}
-                  task={taskWindow}
-                  employee={employee}
-                  onAssign={assignEmployee}
-                />
-              ))}
-            </Box>
+          <Grid container spacing={3} sx={{ mt: 0.5 }}>
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Person color="primary" />
+                Employés assignés ({assignedEmployeeIds.length})
+              </Typography>
+              <AssignedColumnLegend />
+              {assignedEmployeeIds.length > 0 ? (
+                <Stack spacing={1.5}>
+                  {assignedEmployeeIds.map((employeeId) => {
+                    const info = employeeInfoById.get(employeeId);
+                    if (!info) return null;
+                    return (
+                      <AssignedEmployeeRow
+                        key={employeeId}
+                        task={taskWindow}
+                        info={info}
+                        employeeRanges={ranges
+                          .filter((range) => range.employeeId === employeeId)
+                          .sort((a, b) => a.start - b.start)}
+                        allRanges={ranges}
+                        onUpdateRange={updateRange}
+                        onAddRange={addRange}
+                        onRemoveRange={removeRange}
+                        onRemoveEmployee={unassignEmployee}
+                      />
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 3,
+                    bgcolor: "#f5f5f5",
+                    borderRadius: 1,
+                    border: "2px dashed #ccc",
+                  }}
+                >
+                  <PersonOff sx={{ fontSize: 40, color: "#ccc", mb: 1 }} />
+                  <Typography variant="body2" color="textSecondary">
+                    Aucun employé assigné
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    Cliquez sur "+" pour assigner des employés
+                  </Typography>
+                </Box>
+              )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <PersonAdd color="action" />
+                Employés disponibles
+              </Typography>
+              {availableToAssign.length > 0 ? (
+
+                <Box sx={{ maxHeight: 480, overflow: "auto" }}>
+                  {availableToAssign.map((employee) => (
+                    <AvailableEmployeeRow
+                      key={employee.id}
+                      task={taskWindow}
+                      employee={employee}
+                      onAssign={assignEmployee}
+                    />
+                  ))}
+                </Box>
+              ) :
+                (
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      py: 3,
+                      bgcolor: "#f5f5f5",
+                      borderRadius: 1,
+                      border: "2px dashed #ccc",
+                    }}
+                  >
+                    <PersonOff sx={{ fontSize: 40, color: "#ccc", mb: 1 }} />
+                    <Typography variant="body2" color="textSecondary">
+                      Aucun employé disponible
+                    </Typography>
+
+                  </Box>
+                )}
+
+            </Grid>
           </Grid>
-        </Grid>
+        </Loading>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Fermer</Button>
