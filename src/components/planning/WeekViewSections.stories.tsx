@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { TaskModel } from "../../interfaces/Models";
+import { employeeColor, employeeInitials } from "../../employee";
 import WeekViewSections from "./WeekViewSections";
 
 const nowIso = new Date().toISOString();
@@ -52,8 +53,8 @@ const sampleSchedules: TaskModel[] = [
 ];
 
 const handlers = {
-  getEmployeeColor: () => "#1976d2",
-  getEmployeeInitials: (name: string) => name.slice(0, 2).toUpperCase(),
+  getEmployeeColor: employeeColor,
+  getEmployeeInitials: employeeInitials,
   handleAssignEmployeesToTask: () => {},
   handleOpenDialog: () => {},
   handleDeleteTask: () => {},

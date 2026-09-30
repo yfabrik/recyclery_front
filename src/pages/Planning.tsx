@@ -41,6 +41,7 @@ import { EmployeePresenceSchedule } from "../components/planning/PresenceEmploye
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
 import { TASK_STATUSES } from "../constants/taskStatuses";
+import { employeeColor, employeeInitials } from "../employee";
 import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import type { PlanningFormValues } from "../services/schema/schedule";
 import type {
@@ -77,36 +78,6 @@ import {
 import { getWeekNumber } from "@recyclerie/api/domain/date";
 
 const Planning = () => {
-  // Fonction pour générer une couleur basée sur le nom de l'employé
-  const getEmployeeColor = (employeeName: string) => {
-    if (!employeeName) return "#999";
-    const colors = [
-      "#4caf50",
-      "#2196f3",
-      "#ff9800",
-      "#9c27b0",
-      "#f44336",
-      "#00bcd4",
-      "#795548",
-      "#607d8b",
-    ];
-    const hash = employeeName.split("").reduce((a, b) => {
-      a = (a << 5) - a + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    return colors[Math.abs(hash) % colors.length];
-  };
-
-  // Fonction pour obtenir les initiales d'un employé
-  const getEmployeeInitials = (employeeName: string) => {
-    if (!employeeName) return "?";
-    return employeeName
-      .split(" ")
-      .map((name) => name.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
   const [selectedStore, setSelectedStore] = useState<StoreModel | null>();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<TaskModel["id"] | null>(null);
@@ -522,8 +493,8 @@ const Planning = () => {
         {viewMode === "week" && (
           <WeekViewSections
             schedules={schedules.data || []}
-            getEmployeeColor={getEmployeeColor}
-            getEmployeeInitials={getEmployeeInitials}
+            getEmployeeColor={employeeColor}
+            getEmployeeInitials={employeeInitials}
             handleAssignEmployeesToTask={handleAssignEmployeesToTask}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}

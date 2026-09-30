@@ -11,7 +11,7 @@ import {
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
 import { weekDays } from "../../services/dateService";
-import { useEmployee } from "../../services/useEmployee";
+import { employeeColor, employeeInitials } from "../../employee";
 import {
   calendarTaskStyles,
   getTaskVariant,
@@ -228,8 +228,6 @@ interface EventCardProps {
 }
 
 const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignEmployeesToTask }: EventCardProps) => {
-  const { getEmployeeColor, getEmployeeInitials } = useEmployee();
-
   const variant = getTaskVariant(schedule);
   const styles = calendarTaskStyles[variant];
 
@@ -315,15 +313,13 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                           width: 14,
                           height: 14,
                           fontSize: "0.5rem",
-                          bgcolor: getEmployeeColor(
-                            emp.fullName||emp.prenom,
-                          ),
+                          bgcolor: employeeColor(emp),
                           color: "white",
                           fontWeight: "bold",
                         }}
                         title={emp.fullName||emp.prenom}
                       >
-                        {getEmployeeInitials(emp.fullName||emp.prenom)}
+                        {employeeInitials(emp)}
                       </Avatar>
                     ))}
                 </Box>
@@ -388,18 +384,14 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               width: 24,
                               height: 24,
                               fontSize: "0.8rem",
-                              bgcolor: getEmployeeColor(
-                                emp.fullName||emp.prenom,
-                              ),
+                              bgcolor: employeeColor(emp),
                               color: "white",
                               fontWeight: "bold",
                               border: "2px solid #4caf50",
                             }}
                             title={emp.fullName||emp.prenom}
                           >
-                            {getEmployeeInitials(
-                              emp.fullName||emp.prenom,
-                            )}
+                            {employeeInitials(emp)}
                           </Avatar>
                           <Typography
                             variant="caption"

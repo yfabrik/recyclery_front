@@ -17,7 +17,7 @@ import {
   type Theme,
 } from "@mui/material";
 import React, { type ReactNode } from "react";
-import type { TaskModel } from "../../../interfaces/Models";
+import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import {
   categoryStyles as sharedCategoryStyles,
   getCategoryKey,
@@ -64,8 +64,8 @@ interface TaskCardProps {
 
 interface TaskCardContentProps {
   schedule: TaskModel;
-  getEmployeeColor: (username: string) => string;
-  getEmployeeInitials: (username: string) => string;
+  getEmployeeColor: (employee: EmployeeModel) => string;
+  getEmployeeInitials: (employee: EmployeeModel) => string;
   handleAssignEmployeesToTask: (schedule: TaskModel) => void;
   handleOpenDialog: (schedule: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (schedule: TaskModel) => void;
@@ -421,13 +421,13 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       width: 16,
                       height: 16,
                       fontSize: taskCss.fontSize,
-                      bgcolor: getEmployeeColor(emp.fullName||""),
+                      bgcolor: getEmployeeColor(emp),
                       color: "white",
                       fontWeight: "bold",
                     }}
                     title={emp.fullName}
                   >
-                    {getEmployeeInitials(emp.fullName||"")}
+                    {getEmployeeInitials(emp)}
                   </Avatar>
                   <Typography
                     variant="caption"

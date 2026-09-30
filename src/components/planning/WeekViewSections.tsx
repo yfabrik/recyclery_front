@@ -5,7 +5,7 @@ import {
   WbSunny,
 } from "@mui/icons-material";
 import { Box } from "@mui/material";
-import type { TaskModel } from "../../interfaces/Models";
+import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
 import WeekTaskSection, {
   TaskCard,
   TaskCardContent,
@@ -13,8 +13,8 @@ import WeekTaskSection, {
 
 interface WeekViewSectionsProps {
   schedules: TaskModel[];
-  getEmployeeColor: (s: string) => string;
-  getEmployeeInitials: (s: string) => string;
+  getEmployeeColor: (employee: EmployeeModel) => string;
+  getEmployeeInitials: (employee: EmployeeModel) => string;
   handleAssignEmployeesToTask: (e: TaskModel) => void;
   handleOpenDialog: (t: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
