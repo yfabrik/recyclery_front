@@ -57,8 +57,11 @@ export const weekDaysArray = () =>
 
 export const getDay = (n: number) => weekdayLabel(n);
 
-/** Display DD/MM/YYYY (UI only). */
-export const formatDate = (d: Date) => dayjs(d).format("DD/MM/YYYY");
+/** Display DD/MM/YYYY in Europe/Paris (UI only). */
+export const formatDate = (d: Date | string) => {
+  const [y, m, day] = toIsoDate(d).split("-");
+  return `${day}/${m}/${y}`;
+};
 
 /** Display HH:mm (UI only). */
 export const formatTime = (d: Date) => toIsoTime(d);

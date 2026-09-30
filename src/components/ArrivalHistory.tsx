@@ -28,7 +28,7 @@ import {
   getArrivalSourceLabel,
   getArrivalSourceType,
 } from "../constants/arrivalSourceTypes";
-import { formatDate } from "../services/dateService";
+import { dayjs, formatDate, now } from "../services/dateService";
 import { toast } from "react-toastify";
 import {
   getApiErrorMessage,
@@ -98,7 +98,7 @@ export const ArrivalHistory = () => {
       </Paper>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Arrivages du jour ({new Date().toLocaleDateString("fr-FR")})
+          Arrivages du jour ({formatDate(now().toDate())})
         </Typography>
         <TableContainer>
           <Table>
@@ -131,9 +131,7 @@ export const ArrivalHistory = () => {
                         {arrival.id}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      {formatDate(new Date(arrival.arrival_date))}
-                    </TableCell>
+                    <TableCell>{formatDate(arrival.arrival_date)}</TableCell>
                     <TableCell>{arrival.arrival_time}</TableCell>
                     <TableCell>
                       <Box>
@@ -179,15 +177,16 @@ export const ArrivalHistory = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {new Date(new Date(arrival.createdAt).getTime() + 1000 * 60 * 30) <
-                        new Date() &&
+                      {dayjs(arrival.createdAt).add(30, "minute").isAfter(now()) &&
                         arrival.processed_by === user?.id && (
+                          
                           <IconButton
                             onClick={() => onDelete(arrival.id)}
                             color="error"
                           >
                             <Delete />
                           </IconButton>
+                          
                         )}
                     </TableCell>
                   </TableRow>
