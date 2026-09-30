@@ -6,26 +6,6 @@ import {
 } from "@recyclerie/api/domain/timeRange";
 import type { WorkWindowDto } from "@recyclerie/api/responses/timeRanges";
 
-export const EMPLOYEE_COLORS = [
-  "#4caf50",
-  "#2196f3",
-  "#ff9800",
-  "#9c27b0",
-  "#f44336",
-  "#00bcd4",
-  "#795548",
-  "#607d8b",
-];
-
-export const employeeColor = (employeeId: number) =>
-  EMPLOYEE_COLORS[employeeId % EMPLOYEE_COLORS.length];
-
-export const employeeDisplayName = (employee: {
-  fullName?: string;
-  prenom: string;
-  nom: string;
-}) => employee.fullName ?? `${employee.prenom} ${employee.nom}`;
-
 export const formatMinutes = (value: number): string => {
   const hours = Math.floor(value / 60);
   const minutes = value % 60;

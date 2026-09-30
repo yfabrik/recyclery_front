@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { BLOCKED_FILL, EMPLOYEE_COLORS } from "./geometry";
+import { sampleEmployeeColor } from "../../../employee";
+import { BLOCKED_FILL } from "./geometry";
 
 type LegendSwatchProps = {
   fill: string;
@@ -26,13 +27,10 @@ const LegendSwatch = ({ fill, label }: LegendSwatchProps) => (
 );
 
 /** Explains the assigned column's colours: each Employee keeps their own colour. */
-export const AssignedColumnLegend = () => {
-  const sampleColor = EMPLOYEE_COLORS[0];
-  return (
-    <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
-      <LegendSwatch fill={alpha(sampleColor, 0.35)} label="Plage horaire de la tâche" />
-      <LegendSwatch fill={sampleColor} label="Assigné (couleur par employé)" />
-      <LegendSwatch fill={BLOCKED_FILL} label="Non assignable" />
-    </Stack>
-  );
-};
+export const AssignedColumnLegend = () => (
+  <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+    <LegendSwatch fill={alpha(sampleEmployeeColor, 0.35)} label="Plage horaire de la tâche" />
+    <LegendSwatch fill={sampleEmployeeColor} label="Assigné (couleur par employé)" />
+    <LegendSwatch fill={BLOCKED_FILL} label="Non assignable" />
+  </Stack>
+);

@@ -1,9 +1,8 @@
 import { AddCircleOutline, Delete } from "@mui/icons-material";
 import { Avatar, Box, Button, Card, CardContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import type { MinuteWindow } from "@recyclerie/api/domain/timeRange";
+import { employeeColor, employeeInitials, employeeName } from "../../../employee";
 import {
-  employeeColor,
-  employeeDisplayName,
   formatMinutes,
   freeWindowsForEmployee,
   type EmployeeInfo,
@@ -32,8 +31,8 @@ export const AssignedEmployeeRow = ({
   onRemoveRange,
   onRemoveEmployee,
 }: AssignedEmployeeRowProps) => {
-  const color = employeeColor(info.id);
-  const name = employeeDisplayName(info);
+  const color = employeeColor(info);
+  const name = employeeName(info);
   const canAddRange = freeWindowsForEmployee(task, info, allRanges).length > 0;
 
   return (
@@ -41,10 +40,7 @@ export const AssignedEmployeeRow = ({
       <CardContent sx={{ py: 1.5, px: 2, "&:last-child": { pb: 1.5 } }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <Avatar sx={{ width: 32, height: 32, bgcolor: color, fontSize: 14 }}>
-            {name
-              .split(" ")
-              .map((part) => part[0])
-              .join("")}
+            {employeeInitials(info)}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" fontWeight={600}>

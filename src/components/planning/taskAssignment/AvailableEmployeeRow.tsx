@@ -2,7 +2,8 @@ import { Add, Block, CheckCircle, Person } from "@mui/icons-material";
 import { Box, Card, CardContent, Chip, IconButton, Tooltip, Typography } from "@mui/material";
 import { assignableWindows, type MinuteWindow } from "@recyclerie/api/domain/timeRange";
 import type { TaskAvailableEmployeeDto } from "@recyclerie/api/responses/timeRanges";
-import { employeeDisplayName, formatMinutes, toMinuteWindow } from "./geometry";
+import { employeeName } from "../../../employee";
+import { formatMinutes, toMinuteWindow } from "./geometry";
 
 type AvailableEmployeeRowProps = {
   task: MinuteWindow;
@@ -18,7 +19,7 @@ export const AvailableEmployeeRow = ({ task, employee, onAssign }: AvailableEmpl
     otherRanges: employee.busyRanges.map(toMinuteWindow),
   });
   const busy = free.length === 0;
-  const name = employeeDisplayName(employee);
+  const name = employeeName(employee);
 
   return (
     <Card
