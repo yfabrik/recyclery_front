@@ -5,7 +5,7 @@ import {
   WbSunny,
 } from "@mui/icons-material";
 import { Box } from "@mui/material";
-import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import type { TaskModel } from "../../interfaces/Models";
 import WeekTaskSection, {
   TaskCard,
   TaskCardContent,
@@ -13,20 +13,14 @@ import WeekTaskSection, {
 
 interface WeekViewSectionsProps {
   schedules: TaskModel[];
-  getEmployeeColor: (employee: EmployeeModel) => string;
-  getEmployeeInitials: (employee: EmployeeModel) => string;
   handleAssignEmployeesToTask: (e: TaskModel) => void;
   handleOpenDialog: (t: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (t: TaskModel) => void;
   selectedDate: Date;
 }
 
-
-
 const WeekViewSections = ({
   schedules,
-  getEmployeeColor,
-  getEmployeeInitials,
   handleAssignEmployeesToTask,
   handleOpenDialog,
   handleDeleteTask,
@@ -100,8 +94,6 @@ const WeekViewSections = ({
                 <TaskCardContent
                   key={j}
                   schedule={schedule}
-                  getEmployeeColor={getEmployeeColor}
-                  getEmployeeInitials={getEmployeeInitials}
                   handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                   handleOpenDialog={handleOpenDialog}
                   handleDeleteTask={handleDeleteTask}
@@ -131,8 +123,6 @@ const WeekViewSections = ({
                 <TaskCardContent
                   key={j}
                   schedule={schedule}
-                  getEmployeeColor={getEmployeeColor}
-                  getEmployeeInitials={getEmployeeInitials}
                   handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                   handleOpenDialog={handleOpenDialog}
                   handleDeleteTask={handleDeleteTask}
@@ -180,8 +170,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
@@ -216,8 +204,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
@@ -270,8 +256,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
@@ -308,8 +292,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
@@ -358,8 +340,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}
@@ -394,8 +374,6 @@ const WeekViewSections = ({
                   <TaskCardContent
                     key={j}
                     schedule={schedule}
-                    getEmployeeColor={getEmployeeColor}
-                    getEmployeeInitials={getEmployeeInitials}
                     handleAssignEmployeesToTask={handleAssignEmployeesToTask}
                     handleOpenDialog={handleOpenDialog}
                     handleDeleteTask={handleDeleteTask}

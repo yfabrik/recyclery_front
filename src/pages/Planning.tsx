@@ -41,7 +41,7 @@ import { EmployeePresenceSchedule } from "../components/planning/PresenceEmploye
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
 import WeekViewSections from "../components/planning/WeekViewSections";
 import { TASK_STATUSES } from "../constants/taskStatuses";
-import { employeeColor, employeeInitials, employeeName } from "../employee";
+import { employeeName } from "../employee";
 import { useQueryErrorToast } from "../hooks/useQueryErrorToast";
 import type { PlanningFormValues } from "../services/schema/schedule";
 import type {
@@ -493,8 +493,6 @@ const Planning = () => {
         {viewMode === "week" && (
           <WeekViewSections
             schedules={schedules.data || []}
-            getEmployeeColor={employeeColor}
-            getEmployeeInitials={employeeInitials}
             handleAssignEmployeesToTask={handleAssignEmployeesToTask}
             handleDeleteTask={handleDeleteTask}
             handleOpenDialog={handleOpenDialog}

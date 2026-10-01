@@ -1,4 +1,4 @@
-type Employee = { id: number; prenom: string; nom: string };
+export type Employee = { id: number; prenom: string; nom: string };
 
 const PALETTE = [
   "#4caf50",
@@ -28,3 +28,5 @@ export const employeeColor = (employee: Employee): string =>
 
 /** A sample palette color, for callers (e.g. a legend) that don't have an Employee to hand. */
 export const sampleEmployeeColor = PALETTE[0];
+
+export { EmployeeAvatar, type EmployeeAvatarSize } from "./EmployeeAvatar";

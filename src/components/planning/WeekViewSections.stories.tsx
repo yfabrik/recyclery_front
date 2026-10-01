@@ -1,9 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { TaskModel } from "../../interfaces/Models";
-import { employeeColor, employeeInitials } from "../../employee";
+import { expect, within } from "storybook/test";
+import type { EmployeeModel, TaskModel } from "../../interfaces/Models";
+import { employeeColor } from "../../employee";
 import WeekViewSections from "./WeekViewSections";
 
 const nowIso = new Date().toISOString();
+
+const marie: EmployeeModel = {
+  id: 1,
+  nom: "Dupont",
+  prenom: "Marie",
+  isActive: true,
+  phone: null,
+  email: null,
+  createdAt: nowIso,
+  updatedAt: nowIso,
+};
 
 const sampleSchedules: TaskModel[] = [
   {
@@ -27,6 +39,7 @@ const sampleSchedules: TaskModel[] = [
     store_id: 1,
     collection_point_id: null,
     day_of_week: 1,
+    Employees: [marie],
   },
   {
     id: 61,
@@ -53,8 +66,6 @@ const sampleSchedules: TaskModel[] = [
 ];
 
 const handlers = {
-  getEmployeeColor: employeeColor,
-  getEmployeeInitials: employeeInitials,
   handleAssignEmployeesToTask: () => {},
   handleOpenDialog: () => {},
   handleDeleteTask: () => {},
@@ -84,7 +95,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const screen = within(canvasElement);
+    const avatar = await screen.findByTitle("Marie Dupont");
+
+    await expect(avatar).toHaveTextContent("MD");
+    await expect(avatar).toHaveStyle({ backgroundColor: employeeColor(marie) });
+  },
+};
 
 export const EmptyWeek: Story = {
   args: {

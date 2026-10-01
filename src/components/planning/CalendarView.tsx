@@ -8,10 +8,10 @@ import {
   Person,
   Store,
 } from "@mui/icons-material";
-import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
+import { Box, Button, IconButton, Typography } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
 import { weekDays } from "../../services/dateService";
-import { employeeColor, employeeInitials, employeeName } from "../../employee";
+import { EmployeeAvatar, employeeName } from "../../employee";
 import {
   calendarTaskStyles,
   getTaskVariant,
@@ -307,20 +307,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                   {schedule.Employees
                     .slice(0, 2)
                     .map((emp, index) => (
-                      <Avatar
-                        key={index}
-                        sx={{
-                          width: 14,
-                          height: 14,
-                          fontSize: "0.5rem",
-                          bgcolor: employeeColor(emp),
-                          color: "white",
-                          fontWeight: "bold",
-                        }}
-                        title={employeeName(emp)}
-                      >
-                        {employeeInitials(emp)}
-                      </Avatar>
+                      <EmployeeAvatar key={index} employee={emp} size="small" />
                     ))}
                 </Box>
               )}
@@ -379,20 +366,11 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                             minWidth: "fit-content",
                           }}
                         >
-                          <Avatar
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              fontSize: "0.8rem",
-                              bgcolor: employeeColor(emp),
-                              color: "white",
-                              fontWeight: "bold",
-                              border: "2px solid #4caf50",
-                            }}
-                            title={employeeName(emp)}
-                          >
-                            {employeeInitials(emp)}
-                          </Avatar>
+                          <EmployeeAvatar
+                            employee={emp}
+                            size="medium"
+                            sx={{ border: "2px solid #4caf50" }}
+                          />
                           <Typography
                             variant="caption"
                             sx={{
