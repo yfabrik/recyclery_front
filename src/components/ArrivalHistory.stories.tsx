@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { AuthProvider } from "../contexts/AuthContext";
 import type { ArrivalModel } from "../interfaces/Models";
 import axiosInstance from "../services/api/axios";
 import { ArrivalHistory } from "./ArrivalHistory";
@@ -113,7 +114,9 @@ function StoryWrapper({ empty = false }: { empty?: boolean }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ArrivalHistory />
+      <AuthProvider>
+        <ArrivalHistory />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

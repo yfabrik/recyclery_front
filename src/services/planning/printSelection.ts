@@ -1,3 +1,5 @@
+import { employeeName } from "../../employee";
+
 export const PRINT_MODES = ["store", "employees"] as const;
 export type PrintMode = (typeof PRINT_MODES)[number];
 
@@ -19,9 +21,12 @@ export type PrintableEmployee = {
   name: string;
 };
 
+/** `prenom nom` via the employee module, or "Employé" when either is missing. */
 export function printEmployeeName(employee: PrintEmployeeRef): string {
-  const fromParts = `${employee.prenom ?? ""} ${employee.nom ?? ""}`.trim();
-  return employee.fullName || fromParts || "Employé";
+  if (!employee.prenom || !employee.nom) {
+    return "Employé";
+  }
+  return employeeName({ id: employee.id, prenom: employee.prenom, nom: employee.nom });
 }
 
 function assertNever(x: never): never {

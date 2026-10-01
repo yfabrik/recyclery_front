@@ -8,10 +8,10 @@ import {
   Person,
   Store,
 } from "@mui/icons-material";
-import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
+import { Box, Button, IconButton, Typography } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
 import { weekDays } from "../../services/dateService";
-import { useEmployee } from "../../services/useEmployee";
+import { EmployeeAvatar, employeeName } from "../../employee";
 import {
   calendarTaskStyles,
   getTaskVariant,
@@ -228,8 +228,6 @@ interface EventCardProps {
 }
 
 const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignEmployeesToTask }: EventCardProps) => {
-  const { getEmployeeColor, getEmployeeInitials } = useEmployee();
-
   const variant = getTaskVariant(schedule);
   const styles = calendarTaskStyles[variant];
 
@@ -309,22 +307,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                   {schedule.Employees
                     .slice(0, 2)
                     .map((emp, index) => (
-                      <Avatar
-                        key={index}
-                        sx={{
-                          width: 14,
-                          height: 14,
-                          fontSize: "0.5rem",
-                          bgcolor: getEmployeeColor(
-                            emp.fullName||emp.prenom,
-                          ),
-                          color: "white",
-                          fontWeight: "bold",
-                        }}
-                        title={emp.fullName||emp.prenom}
-                      >
-                        {getEmployeeInitials(emp.fullName||emp.prenom)}
-                      </Avatar>
+                      <EmployeeAvatar key={index} employee={emp} size="small" />
                     ))}
                 </Box>
               )}
@@ -383,24 +366,11 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                             minWidth: "fit-content",
                           }}
                         >
-                          <Avatar
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              fontSize: "0.8rem",
-                              bgcolor: getEmployeeColor(
-                                emp.fullName||emp.prenom,
-                              ),
-                              color: "white",
-                              fontWeight: "bold",
-                              border: "2px solid #4caf50",
-                            }}
-                            title={emp.fullName||emp.prenom}
-                          >
-                            {getEmployeeInitials(
-                              emp.fullName||emp.prenom,
-                            )}
-                          </Avatar>
+                          <EmployeeAvatar
+                            employee={emp}
+                            size="medium"
+                            sx={{ border: "2px solid #4caf50" }}
+                          />
                           <Typography
                             variant="caption"
                             sx={{
@@ -413,7 +383,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {emp.fullName||emp.prenom}
+                            {employeeName(emp)}
                           </Typography>
                         </Box>
                       ),

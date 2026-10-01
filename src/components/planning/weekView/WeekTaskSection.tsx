@@ -3,7 +3,6 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Avatar,
   Box,
   Button,
   Card,
@@ -17,6 +16,7 @@ import {
   type Theme,
 } from "@mui/material";
 import React, { type ReactNode } from "react";
+import { EmployeeAvatar, employeeName } from "../../../employee";
 import type { TaskModel } from "../../../interfaces/Models";
 import {
   categoryStyles as sharedCategoryStyles,
@@ -64,8 +64,6 @@ interface TaskCardProps {
 
 interface TaskCardContentProps {
   schedule: TaskModel;
-  getEmployeeColor: (username: string) => string;
-  getEmployeeInitials: (username: string) => string;
   handleAssignEmployeesToTask: (schedule: TaskModel) => void;
   handleOpenDialog: (schedule: TaskModel | null, day?: Date) => void;
   handleDeleteTask: (schedule: TaskModel) => void;
@@ -323,8 +321,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
 export const TaskCardContent: React.FC<TaskCardContentProps> = ({
   schedule,
-  getEmployeeColor,
-  getEmployeeInitials,
   handleAssignEmployeesToTask,
   handleOpenDialog,
   handleDeleteTask,
@@ -416,19 +412,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                     justifyContent: "center",
                   }}
                 >
-                  <Avatar
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      fontSize: taskCss.fontSize,
-                      bgcolor: getEmployeeColor(emp.fullName||""),
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                    title={emp.fullName}
-                  >
-                    {getEmployeeInitials(emp.fullName||"")}
-                  </Avatar>
+                  <EmployeeAvatar employee={emp} size="small" />
                   <Typography
                     variant="caption"
                     sx={{
@@ -438,7 +422,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {emp.fullName}
+                    {employeeName(emp)}
                   </Typography>
                 </Box>
               ))}

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   type CartFormValues,
@@ -31,6 +31,12 @@ import { useCheckoutFormCore } from "./useCheckoutFormCore";
 import { manualItemPayloadFromForm } from "../services/mapper/label";
 import type { ManualItemFormOutput as ManualItemSchema } from "../services/schema/item";
 import type { SaleTransactionBaseInput } from "@recyclerie/api/schemas/salesTransactions";
+import {
+  clearPosCartDraft,
+  readPosCartDraft,
+  snapshotPosCarts,
+  writePosCartDraft,
+} from "../utils/posCartStorage";
 
 const defaultFormValues: CartFormValues = {
   cart: [],
@@ -55,8 +61,19 @@ export const usePointOfSale = ({
   onManualItemAdded,
 }: UsePointOfSaleOptions) => {
   const queryClient = useQueryClient();
-  const [tabValue, setTabValue] = useState(0);
-  const [carts, setCarts] = useState<CartSchema["cart"][]>([[]]);
+  const sessionId = activeSession?.id ?? null;
+  const [initialDraft] = useState(() =>
+    sessionId != null ? readPosCartDraft(sessionId) : null,
+  );
+  const [tabValue, setTabValue] = useState(() => initialDraft?.tabValue ?? 0);
+  const [carts, setCarts] = useState<CartItem[][]>(
+    () => initialDraft?.carts ?? [[]],
+  );
+  const [hydratedSessionId, setHydratedSessionId] = useState<number | null>(
+    () => sessionId,
+  );
+  const previousSessionIdRef = useRef(sessionId);
+
   const {
     form,
     cartFields,
@@ -76,9 +93,24 @@ export const usePointOfSale = ({
     setGiftCardScanInput,
     handleScanGiftCard,
   } = useCheckoutFormCore({
-    defaultValues: defaultFormValues,
+    defaultValues: {
+      ...defaultFormValues,
+      cart: initialDraft?.carts[initialDraft.tabValue] ?? [],
+    },
     autoRecalculateGiftCardSplits: true,
   });
+
+  if (sessionId !== hydratedSessionId) {
+    setHydratedSessionId(sessionId);
+    const stored = sessionId != null ? readPosCartDraft(sessionId) : null;
+    if (stored) {
+      setCarts(stored.carts);
+      setTabValue(stored.tabValue);
+    } else {
+      setCarts([[]]);
+      setTabValue(0);
+    }
+  }
 
   const resetPaymentFields = () => ({
     global_promotion: defaultFormValues.global_promotion,
@@ -90,7 +122,33 @@ export const usePointOfSale = ({
     form.reset(defaultFormValues);
     setCarts([[]]);
     setTabValue(0);
+    clearPosCartDraft();
   };
+
+  useEffect(() => {
+    if (previousSessionIdRef.current === sessionId) return;
+    previousSessionIdRef.current = sessionId;
+
+    if (sessionId == null) {
+      form.reset(defaultFormValues);
+      return;
+    }
+
+    const stored = readPosCartDraft(sessionId);
+    form.reset({
+      ...defaultFormValues,
+      cart: stored?.carts[stored.tabValue] ?? [],
+    });
+  }, [form, sessionId]);
+
+  useEffect(() => {
+    if (sessionId == null || hydratedSessionId !== sessionId) return;
+    const currentCart = cart ?? form.getValues("cart");
+    writePosCartDraft(sessionId, {
+      tabValue,
+      carts: snapshotPosCarts(carts, tabValue, currentCart),
+    });
+  }, [cart, carts, form, hydratedSessionId, sessionId, tabValue]);
 
   const completeCurrentCartAfterSale = () => {
     const nextCarts = carts.filter((_, index) => index !== tabValue);

@@ -29,7 +29,7 @@ export const cartFormSchema = z
     global_promotion: z.object({
       type: z.enum(["percent", "fixed"]),
       value: z.number().nonnegative(),
-    }),
+    }),    
     payment_splits: z
       .array(
         z.object({
@@ -62,6 +62,15 @@ export const cartFormSchema = z
         origin: "number",
         path: ["payment_splits"],
         message: `Le montant payé ne peut pas être inférieur au total du panier (${formatCurrency(roundCurrency(totalCart))})`,
+      });
+    }
+    if (data.global_promotion.type === "percent" && data.global_promotion.value > 100) {
+      ctx.addIssue({
+        code: "too_big",
+        maximum: 100,
+        origin: "number",
+        path: ["global_promotion.value"],
+        message: "La promotion ne peut pas être supérieure à 100%",
       });
     }
   });

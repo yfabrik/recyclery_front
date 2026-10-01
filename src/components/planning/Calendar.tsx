@@ -11,7 +11,6 @@ import {
   Store,
 } from "@mui/icons-material";
 import { useState } from "react";
-import { useEmployee } from "../../services/useEmployee";
 interface Task {
   scheduled_date: Date;
   task_employees: { username: string }[];
@@ -33,6 +32,36 @@ interface CalendarDay {
 }
 
 type DayTaskProps = Omit<CalendarProps, "filteredSchedules">;
+
+/** Kept local to this deprecated module: it hashes a `username` string, which the employee module does not accept. */
+const getEmployeeColor = (username: string) => {
+  if (!username) return "#999";
+  const colors = [
+    "#4caf50",
+    "#2196f3",
+    "#ff9800",
+    "#9c27b0",
+    "#f44336",
+    "#00bcd4",
+    "#795548",
+    "#607d8b",
+  ];
+  const hash = username.split("").reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const getEmployeeInitials = (username: string) => {
+  if (!username) return "?";
+  return username
+    .split(" ")
+    .map((name) => name.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
 /**
  * @deprecated ?? maybe
  * @returns 
@@ -189,8 +218,6 @@ export const DayTask = ({
   isPresenceTask,
   day,
 }: DayTaskProps & { day: CalendarDay }) => {
-  const { getEmployeeColor, getEmployeeInitials } = useEmployee();
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
       {day.schedules.slice(0, 2).map((schedule, scheduleIndex) => {

@@ -32,6 +32,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { employeeName } from "../../../employee";
 import { useQueryErrorToast } from "../../../hooks/useQueryErrorToast";
 import type { EmployeeModel } from "../../../interfaces/Models";
 import {
@@ -383,7 +384,7 @@ const EmployeeManagement = () => {
           {selectedEmployee && (
             <EmployeeStoreAssignment
               employeeId={selectedEmployee.id}
-              employeeName={selectedEmployee.nom}
+              employeeName={employeeName(selectedEmployee)}
               onClose={handleCloseStoreAssignment}
               onSave={() => {
                 queryClient.invalidateQueries({ queryKey: ["employees"] })
@@ -406,7 +407,7 @@ const EmployeeManagement = () => {
           {selectedEmployee && (
             <EmployeeWorkdays
               employeeId={selectedEmployee.id}
-              employeeName={`${selectedEmployee.prenom} ${selectedEmployee.nom}`}
+              employeeName={employeeName(selectedEmployee)}
               onClose={handleCloseWorkdays}
               onSave={() => {
                 // Optionnel: actualiser la liste des employés
@@ -481,7 +482,7 @@ const EmployeeCard = ({
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" component="div" fontWeight="bold">
-              {employee.nom} {employee.prenom}
+              {employeeName(employee)}
             </Typography>
             <Typography variant="body2" color="textSecondary">
               {employee.email}

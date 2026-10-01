@@ -35,6 +35,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { TASK_CATEGORIES } from "../../../constants/taskCategories";
 import { TASK_PRIORITIES } from "../../../constants/taskPriorities";
+import { employeeName } from "../../../employee";
 import type { EmployeeModel } from "../../../interfaces/Models";
 import {
   addEmployeeToTask,
@@ -64,8 +65,9 @@ import type {
 } from "../../../services/schema/task";
 
 /**
- * @deprecated
- * @returns
+ * @deprecated Assigns employees without going through Time ranges (creates an
+ * Assignment with no range, which the server no longer allows). Use
+ * `TaskAssignmentDialog` instead if this screen comes back.
  */
 const TaskManagement = () => {
   const [tasks, setTasks] = useState<TaskDisplay[]>([]);
@@ -626,10 +628,7 @@ const TaskManagement = () => {
                               .map((employee, index) => (
                                 <Chip
                                   key={index}
-                                  label={
-                                    employee.fullName ??
-                                    `${employee.prenom} ${employee.nom}`
-                                  }
+                                  label={employeeName(employee)}
                                   size="small"
                                   color="success"
                                   variant="outlined"
@@ -789,8 +788,7 @@ const TaskManagement = () => {
                   {employees && employees.length > 0 ? (
                     employees.map((employee) => (
                       <MenuItem key={employee.id} value={employee.id}>
-                        {employee.fullName ??
-                          `${employee.prenom} ${employee.nom}`}
+                        {employeeName(employee)}
                       </MenuItem>
                     ))
                   ) : (
@@ -939,8 +937,7 @@ const TaskManagement = () => {
                             >
                               <Person color="success" />
                               <Typography variant="body2" fontWeight="medium">
-                                {employee.fullName ??
-                                  `${employee.prenom} ${employee.nom}`}
+                                {employeeName(employee)}
                               </Typography>
                             </Box>
                             <IconButton
@@ -999,7 +996,7 @@ const TaskManagement = () => {
                           >
                             <Person color="action" />
                             <Typography variant="body2" fontWeight="medium">
-                              {employee.fullName ?? `${employee.prenom} ${employee.nom}`}
+                              {employeeName(employee)}
                             </Typography>
                             <Chip
                               label="Employé"

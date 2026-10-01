@@ -1,5 +1,4 @@
 import type {
-  AvailableEmployeesResponse,
   CreateTaskScheduleResponse,
   DeleteTaskScheduleResponse,
   ListTaskSchedulesResponse,
@@ -8,7 +7,7 @@ import type {
 } from "@recyclerie/api/responses/taskSchedule";
 import type { TaskScheduleDataInput, TaskScheduleFilterInput } from "@recyclerie/api/schemas/taskSchedule";
 import type { AxiosResponse } from "axios";
-import type { ScheduleModel, TaskModel } from "../../interfaces/Models";
+import type { ScheduleModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
 
 // export type { TaskScheduleFilter };
@@ -39,13 +38,6 @@ export const deletePlanning = (
   id: ScheduleModel["id"],
 ): Promise<AxiosResponse<DeleteTaskScheduleResponse>> =>
   axiosInstance.delete<DeleteTaskScheduleResponse>(`/api/planning/${id}`);
-
-export const getAvailableUserForTask = (
-  id: TaskModel["id"],
-): Promise<AxiosResponse<AvailableEmployeesResponse>> =>
-  axiosInstance.get<AvailableEmployeesResponse>(
-    `/api/planning/${id}/available-employees`,
-  );
 
 export const getPlanningStats = (): Promise<
   AxiosResponse<PlanningStatsResponse>

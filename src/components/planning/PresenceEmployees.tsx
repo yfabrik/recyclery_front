@@ -16,6 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { ReactNode } from "react";
+import { employeeName } from "../../employee";
 import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
 import {
   ALLDAY_PRESENCE_SLOT,
@@ -465,7 +466,7 @@ const EmployeeBadge = ({
           color: onVacation ? "text.disabled" : undefined,
         }}
       >
-        {employee.fullName}
+        {employeeName(employee)}
       </Typography>
     </Box>
   );
