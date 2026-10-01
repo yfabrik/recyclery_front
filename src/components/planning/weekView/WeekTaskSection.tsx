@@ -17,6 +17,7 @@ import {
   type Theme,
 } from "@mui/material";
 import React, { type ReactNode } from "react";
+import { employeeName } from "../../../employee";
 import type { EmployeeModel, TaskModel } from "../../../interfaces/Models";
 import {
   categoryStyles as sharedCategoryStyles,
@@ -425,7 +426,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       color: "white",
                       fontWeight: "bold",
                     }}
-                    title={emp.fullName}
+                    title={employeeName(emp)}
                   >
                     {getEmployeeInitials(emp)}
                   </Avatar>
@@ -438,7 +439,7 @@ export const TaskCardContent: React.FC<TaskCardContentProps> = ({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {emp.fullName}
+                    {employeeName(emp)}
                   </Typography>
                 </Box>
               ))}

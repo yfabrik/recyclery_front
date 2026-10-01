@@ -11,7 +11,7 @@ import {
 import { Avatar, Box, Button, IconButton, Typography } from "@mui/material";
 import type { TaskModel } from "../../interfaces/Models";
 import { weekDays } from "../../services/dateService";
-import { employeeColor, employeeInitials } from "../../employee";
+import { employeeColor, employeeInitials, employeeName } from "../../employee";
 import {
   calendarTaskStyles,
   getTaskVariant,
@@ -317,7 +317,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                           color: "white",
                           fontWeight: "bold",
                         }}
-                        title={emp.fullName||emp.prenom}
+                        title={employeeName(emp)}
                       >
                         {employeeInitials(emp)}
                       </Avatar>
@@ -389,7 +389,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               fontWeight: "bold",
                               border: "2px solid #4caf50",
                             }}
-                            title={emp.fullName||emp.prenom}
+                            title={employeeName(emp)}
                           >
                             {employeeInitials(emp)}
                           </Avatar>
@@ -405,7 +405,7 @@ const EventCard = ({ schedule, handleOpenDialog, handleDeleteTask, handleAssignE
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {emp.fullName||emp.prenom}
+                            {employeeName(emp)}
                           </Typography>
                         </Box>
                       ),
