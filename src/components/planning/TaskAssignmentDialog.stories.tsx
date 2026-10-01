@@ -29,9 +29,8 @@ const dialogScreen = (canvasElement: HTMLElement) => {
   return within(body.getByRole("dialog"));
 };
 
-// Task runs 08:00–11:00: `toIsoTime` reads the wire timestamp's own HH:mm digits
-// (it does not shift by the Europe/Paris offset), so these UTC strings are exactly
-// the local times the dialog displays.
+// Task runs 08:00–11:00 Europe/Paris: `toIsoTime` converts the wire instant to Paris
+// time, and in January Paris is UTC+1, so the UTC strings are one hour earlier.
 const TASK: TaskModel = {
   id: 1,
   name: "Tri arrivage",
@@ -43,8 +42,8 @@ const TASK: TaskModel = {
   equipment_needed: null,
   hourly_rate: null,
   scheduled_date: "2026-01-15T00:00:00.000Z" as TaskModel["scheduled_date"],
-  start_time: "2026-01-15T08:00:00.000Z" as TaskModel["start_time"],
-  end_time: "2026-01-15T11:00:00.000Z" as TaskModel["end_time"],
+  start_time: "2026-01-15T07:00:00.000Z" as TaskModel["start_time"],
+  end_time: "2026-01-15T10:00:00.000Z" as TaskModel["end_time"],
   notes: null,
   status: "pending",
   schedule_id: null,
