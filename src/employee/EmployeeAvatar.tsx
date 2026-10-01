@@ -3,16 +3,10 @@ import { employeeColor, employeeInitials, employeeName, type Employee } from "./
 
 export type EmployeeAvatarSize = "small" | "medium" | "large";
 
-const DIMENSION_PX: Record<EmployeeAvatarSize, number> = {
-  small: 14,
-  medium: 24,
-  large: 32,
-};
-
-const FONT_SIZE: Record<EmployeeAvatarSize, string> = {
-  small: "0.5rem",
-  medium: "0.8rem",
-  large: "0.875rem",
+const SIZES: Record<EmployeeAvatarSize, { dimension: number; fontSize: string }> = {
+  small: { dimension: 14, fontSize: "0.5rem" },
+  medium: { dimension: 24, fontSize: "0.8rem" },
+  large: { dimension: 32, fontSize: "0.875rem" },
 };
 
 interface EmployeeAvatarProps {
@@ -25,7 +19,7 @@ interface EmployeeAvatarProps {
 
 /** An Employee's color, initials and name, as a sized avatar with a hover tooltip. */
 export const EmployeeAvatar = ({ employee, size = "medium", sx }: EmployeeAvatarProps) => {
-  const dimension = DIMENSION_PX[size];
+  const { dimension, fontSize } = SIZES[size];
 
   return (
     <Avatar
@@ -33,7 +27,7 @@ export const EmployeeAvatar = ({ employee, size = "medium", sx }: EmployeeAvatar
       sx={{
         width: dimension,
         height: dimension,
-        fontSize: FONT_SIZE[size],
+        fontSize,
         bgcolor: employeeColor(employee),
         color: "white",
         fontWeight: "bold",
