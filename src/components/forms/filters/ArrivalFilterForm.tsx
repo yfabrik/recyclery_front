@@ -3,7 +3,8 @@ import { Grid, MenuItem } from "@mui/material";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FormDate, FormSelect } from "../FormBase";
+import { FormCategorySelect, FormDate, FormSelect } from "../FormBase";
+import type { CategoryModel } from "../../../interfaces/Models";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
@@ -16,11 +17,12 @@ import {
 } from "../../../services/schema/arrival";
 
 interface FilterFormProps {
+    categories: CategoryModel[];
     defaultValues: Filters;
     onChange: (values: Filters) => void;
 }
 
-export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) => {
+export const ArrivalFilterForm = ({ categories, defaultValues, onChange }: FilterFormProps) => {
 
     const filters = useForm({
         defaultValues,
@@ -68,6 +70,15 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
     return (
         <form onSubmit={filters.handleSubmit(onSubmit)}>
             <Grid container spacing={2} alignItems="center">
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <FormCategorySelect
+                        control={filters.control}
+                        name="category_id"
+                        label="Catégorie"
+                        categories={categories}
+                        emptyOption={{ value: "", label: "Toutes les catégories" }}
+                    />
+                </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                     <FormSelect control={filters.control} name="source_type" label="Type de provenance">
                         <MenuItem key="all-stores" value="">

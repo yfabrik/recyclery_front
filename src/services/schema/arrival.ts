@@ -53,6 +53,7 @@ export type ArrivalFormValues = z.input<ReturnType<typeof arrivalFormSchema>>;
 export const arrivalFilterFormSchema = z.object({
   date_from: filterIsoDate(),
   date_to: filterIsoDate(),
+  category_id: z.union([filterIdSchema(), z.literal("")]),
   source_type: z.union([sourceTypeEnum, z.literal("")]),
   collection_point_id: z.union([filterIdSchema(), z.literal("")]),
 });
@@ -61,6 +62,7 @@ export type ArrivalFilterFormValues = z.infer<typeof arrivalFilterFormSchema>;
 export const getArrivalFilterFormDefaults = (): ArrivalFilterFormValues => ({
   date_from: toIsoDate(new Date()),
   date_to: toIsoDate(new Date()),
+  category_id: "",
   source_type: "",
   collection_point_id: "",
 });

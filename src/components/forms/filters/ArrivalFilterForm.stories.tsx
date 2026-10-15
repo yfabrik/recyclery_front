@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { mockCollectionPoints } from "../../../stories/fixtures";
+import { mockCategories, mockCollectionPoints } from "../../../stories/fixtures";
 import axiosInstance from "../../../services/api/axios";
 import { toIsoDate } from "../../../services/dateService";
 import { ArrivalFilterForm } from "./ArrivalFilterForm";
@@ -30,9 +30,11 @@ function StoryWrapper() {
   return (
     <QueryClientProvider client={queryClient}>
       <ArrivalFilterForm
+        categories={mockCategories}
         defaultValues={{
           date_from: today,
           date_to: today,
+          category_id: "",
           source_type: "",
           collection_point_id: "",
         }}
@@ -51,7 +53,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Debounced arrival history filters (date range, source type, collection point).",
+          "Debounced arrival history filters (category, date range, source type, collection point).",
       },
     },
   },

@@ -11,6 +11,7 @@ export const toArrivalQuery = (f: ArrivalFilterFormValues): ArrivalQuery => ({
   date_from: f.date_from,
   date_to: f.date_to,
   ...omitBlank({
+    category_id: f.category_id,
     source_type: f.source_type,
     collection_point_id: f.collection_point_id,
   }),

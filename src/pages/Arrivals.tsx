@@ -103,7 +103,7 @@ const Arrivals = () => {
         <ArrivalAdd categories={categories} collectionPoints={collectionPoints} />
       )}
       {!showForm && (
-        <ArrivalHistory />
+        <ArrivalHistory categories={categories} />
       )}
 
     </Container>
