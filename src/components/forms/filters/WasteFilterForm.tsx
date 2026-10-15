@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { FormCategorySelect, FormDate, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import type { CategoryModel } from "../../../interfaces/Models";
-import { FORM_DISPOSAL_TYPES } from "../../../constants/disposalTypes";
+import { DISPOSAL_TYPES } from "../../../constants/disposalTypes";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
     getWasteFilterFormDefaults,
@@ -69,7 +69,7 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                 <FormSelect control={form.control} name="disposal_type" label="Type" extra={{ size: "small" }}>
                     <MenuItem value="">Tous</MenuItem>
-                    {FORM_DISPOSAL_TYPES.map((type) => (
+                    {DISPOSAL_TYPES.map((type) => (
                         <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
                     ))}
                 </FormSelect>

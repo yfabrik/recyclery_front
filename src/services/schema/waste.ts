@@ -1,8 +1,6 @@
+import { WASTE_DISPOSAL_TYPES } from "@recyclerie/api/enums";
 import * as z from "zod";
-import {
-  DISPOSAL_TYPE_FILTER_VALUES,
-  FORM_DISPOSAL_TYPES,
-} from "../../constants/disposalTypes";
+import { DISPOSAL_TYPE_FILTER_VALUES } from "../../constants/disposalTypes";
 import type { CategoryModel } from "../../interfaces/Models";
 import {
   filterIsoDate,
@@ -12,12 +10,7 @@ import {
 } from "../../interfaces/ZodTypes";
 import { dayjs, toIsoDate } from "../dateService";
 
-const disposalTypeEnum = z.enum(
-  FORM_DISPOSAL_TYPES.map((type) => type.value) as [
-    (typeof FORM_DISPOSAL_TYPES)[number]["value"],
-    ...(typeof FORM_DISPOSAL_TYPES)[number]["value"][],
-  ],
-);
+const disposalTypeEnum = z.enum(WASTE_DISPOSAL_TYPES);
 
 export const wasteFormSchema = (categories: CategoryModel[]) =>
   z

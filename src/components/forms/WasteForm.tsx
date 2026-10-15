@@ -3,7 +3,7 @@ import { Grid, MenuItem } from "@mui/material";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-import { FORM_DISPOSAL_TYPES } from "../../constants/disposalTypes";
+import { DISPOSAL_TYPES } from "../../constants/disposalTypes";
 import type { CategoryModel, EcoOrgModel } from "../../interfaces/Models";
 import {
   wasteFormSchema,
@@ -76,7 +76,7 @@ export const WasteForm = ({
             name="disposal_type"
             label="Type de sortie"
           >
-            {FORM_DISPOSAL_TYPES.map((type) => (
+            {DISPOSAL_TYPES.map((type) => (
               <MenuItem key={type.value} value={type.value}>
                 {type.label}
               </MenuItem>

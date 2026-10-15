@@ -24,10 +24,7 @@ export function wasteToFormValues(
 ): Partial<WasteFormValues> {
   return {
     disposal_date: new Date(disposal.disposal_date),
-    disposal_type:
-      disposal.disposal_type === "recycling"
-        ? "other"
-        : disposal.disposal_type,
+    disposal_type: disposal.disposal_type,
     category_id: disposal.category_id,
     subcategory_id: disposal.subcategory_id ?? "",
     eco_organism_id: disposal.eco_organism_id ?? "",

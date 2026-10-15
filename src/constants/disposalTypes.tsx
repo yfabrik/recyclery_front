@@ -6,7 +6,10 @@ import {
 } from "@mui/icons-material";
 import type { ChipProps } from "@mui/material";
 import type { ReactElement } from "react";
-import type { WasteDisposalType } from "@recyclerie/api/enums";
+import {
+  WASTE_DISPOSAL_TYPES,
+  type WasteDisposalType,
+} from "@recyclerie/api/enums";
 
 export type DisposalTypeValue = WasteDisposalType;
 
@@ -52,16 +55,10 @@ export const DISPOSAL_TYPES = defineDisposalTypes([
   },
 ] as const);
 
-export const FORM_DISPOSAL_TYPES = DISPOSAL_TYPES.filter(
-  (type) => type.value !== "recycling",
-);
-
 export const DISPOSAL_TYPE_FILTER_VALUES = [
-  "eco_organism",
-  "landfill",
-  "other",
+  ...WASTE_DISPOSAL_TYPES,
   "",
-] as const;
+] as const satisfies readonly (DisposalTypeValue | "")[];
 
 export const getDisposalType = (value: string) =>
   DISPOSAL_TYPES.find((type) => type.value === value);
