@@ -1,7 +1,23 @@
-import type { WasteBodyInput } from "@recyclerie/api/schemas/waste";
+import type {
+  ListWasteQueryInput,
+  WasteBodyInput,
+} from "@recyclerie/api/schemas/waste";
 import type { WasteModel } from "../../interfaces/Models";
-import type { WasteFormOutput, WasteFormValues } from "../schema/waste";
-import { emptyToNull } from "../zodTransform";
+import type {
+  WasteFilterFormValues,
+  WasteFormOutput,
+  WasteFormValues,
+} from "../schema/waste";
+import { emptyToNull, omitBlank } from "../zodTransform";
+
+export const toWasteQuery = (f: WasteFilterFormValues): ListWasteQueryInput => ({
+  date_from: f.date_from,
+  date_to: f.date_to,
+  ...omitBlank({
+    category_id: f.category_id,
+    disposal_type: f.disposal_type,
+  }),
+});
 
 export function wasteToFormValues(
   disposal: WasteModel,

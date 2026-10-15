@@ -39,16 +39,17 @@ export const taskFormSchema = z.object({
 export type TaskFormOutput = z.infer<typeof taskFormSchema>;
 export type TaskFormValues = z.input<typeof taskFormSchema>;
 
-export const customTaskFilterSchema = z.object({
+/** URL / form state of the custom task filters. Client-side only: nothing here is sent to the API. */
+export const customTaskFilterFormSchema =z.object({
   search: z.string().trim().optional(),
   store_id: z.union([idSchema(), z.literal("")]),
   priority: z.enum(PRIORITY_FILTER_VALUES),
   recurrence: z.enum(RECURRENCE_FILTER_VALUES),
 });
 
-export type CustomTaskFilters = z.infer<typeof customTaskFilterSchema>;
+export type CustomTaskFilterFormValues = z.infer<typeof customTaskFilterFormSchema>;
 
-export const CUSTOM_TASK_FILTER_DEFAULTS: CustomTaskFilters = {
+export const CUSTOM_TASK_FILTER_FORM_DEFAULTS: CustomTaskFilterFormValues = {
   search: "",
   store_id: "",
   priority: "all",

@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { ArrivalFilterForm } from "./forms/filters/ArrivalFilterForm";
 import {
-  arrivalFilterSchema,
-  getArrivalFilterDefaults,
+  arrivalFilterFormSchema,
+  getArrivalFilterFormDefaults,
 } from "../services/schema/arrival";
+import { toArrivalQuery } from "../services/mapper/arrival";
 import { deleteArrival, getArrivals } from "../services/api/arrival";
 import {
   Box,
@@ -38,12 +39,13 @@ import { useAuth } from "../contexts/AuthContext";
 
 export const ArrivalHistory = () => {
   const { user } = useAuth();
-  const defaults = useMemo(() => getArrivalFilterDefaults(), []);
+  const defaults = useMemo(() => getArrivalFilterFormDefaults(), []);
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: arrivalFilterSchema,
+    schema: arrivalFilterFormSchema,
     defaults,
     withPage: true,
   });
+  const query = useMemo(() => toArrivalQuery(filters), [filters]);
 
   const queryclient = useQueryClient();
   const {
@@ -59,19 +61,9 @@ export const ArrivalHistory = () => {
       },
     },
   } = useQuery({
-    queryKey: ["arrivals", filters, page],
+    queryKey: ["arrivals", query, page],
     queryFn: () =>
-      getArrivals({
-        date_from: filters.date_from,
-        date_to: filters.date_to,
-        ...(filters.source_type !== ""
-          ? { source_type: filters.source_type }
-          : {}),
-        ...(filters.collection_point_id !== ""
-          ? { collection_point_id: filters.collection_point_id }
-          : {}),
-        page,
-      }).then((result) => ({
+      getArrivals({ ...query, page }).then((result) => ({
         arrivals: result.data.data,
         pagination: result.data.pagination,
       })),
@@ -82,7 +74,7 @@ export const ArrivalHistory = () => {
     },
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "supression success"));
-      queryclient.invalidateQueries({ queryKey: ["arrivals", filters, page] });
+      queryclient.invalidateQueries({ queryKey: ["arrivals", query, page] });
     },
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),

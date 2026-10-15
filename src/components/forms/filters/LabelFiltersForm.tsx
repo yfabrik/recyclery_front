@@ -11,30 +11,30 @@ import {
 import { FormCategorySelect, FormDate, FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import {
-  LABEL_FILTER_DEFAULTS,
-  labelFilterSchema,
-  toLabelFilterInput,
-  type LabelFilterInput,
-  type LabelFilters,
+  LABEL_FILTER_FORM_DEFAULTS,
+  labelFilterFormSchema,
+  toLabelFilterFormInput,
+  type LabelFilterFormInput,
+  type LabelFilterFormValues,
 } from "../../../services/schema/label";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 
 interface FilterFormProps {
-    defaultValues: LabelFilterInput;
-    onChange: (values: LabelFilters) => void;
+    defaultValues: LabelFilterFormInput;
+    onChange: (values: LabelFilterFormValues) => void;
     categories: CategoryModel[]
 }
 
 export const LabelFiltersForm = ({ defaultValues, onChange, categories }: FilterFormProps) => {
 
-    const filters = useForm<LabelFilterInput, unknown, LabelFilters>({
+    const filters = useForm<LabelFilterFormInput, unknown, LabelFilterFormValues>({
         defaultValues,
-        resolver: zodResolver(labelFilterSchema),
+        resolver: zodResolver(labelFilterFormSchema),
     });
     const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
-    const onSubmit = (data: LabelFilters) => {
-        markEmitted(toLabelFilterInput(data));
+    const onSubmit = (data: LabelFilterFormValues) => {
+        markEmitted(toLabelFilterFormInput(data));
         onChange(data);
     };
 
@@ -53,9 +53,9 @@ export const LabelFiltersForm = ({ defaultValues, onChange, categories }: Filter
     }, [watch]) // watch all changes
 
     const handleReset = () => {
-        filters.reset(LABEL_FILTER_DEFAULTS);
-        markEmitted(LABEL_FILTER_DEFAULTS);
-        onChange(labelFilterSchema.parse(LABEL_FILTER_DEFAULTS));
+        filters.reset(LABEL_FILTER_FORM_DEFAULTS);
+        markEmitted(LABEL_FILTER_FORM_DEFAULTS);
+        onChange(labelFilterFormSchema.parse(LABEL_FILTER_FORM_DEFAULTS));
     };
 
     return (

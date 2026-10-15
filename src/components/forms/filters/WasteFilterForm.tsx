@@ -9,9 +9,9 @@ import type { CategoryModel } from "../../../interfaces/Models";
 import { FORM_DISPOSAL_TYPES } from "../../../constants/disposalTypes";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-    getWasteFilterDefaults,
-    wasteFilterSchema,
-    type WasteFilters as Filters,
+    getWasteFilterFormDefaults,
+    wasteFilterFormSchema,
+    type WasteFilterFormValues as Filters,
 } from "../../../services/schema/waste";
 
 interface WasteFilterFormProps {
@@ -22,7 +22,7 @@ interface WasteFilterFormProps {
 export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFilterFormProps) => {
     const form = useForm({
         defaultValues,
-        resolver: zodResolver(wasteFilterSchema),
+        resolver: zodResolver(wasteFilterFormSchema),
     });
     const markEmitted = useSyncFilterDefaults(form, defaultValues);
 
@@ -46,7 +46,7 @@ export const WasteFilterForm = ({ categories, defaultValues, onChange }: WasteFi
     }, [watch]) // watch all changes
 
     const handleReset = () => {
-        const defaults = getWasteFilterDefaults();
+        const defaults = getWasteFilterFormDefaults();
         form.reset(defaults);
         markEmitted(defaults);
         onChange(defaults);

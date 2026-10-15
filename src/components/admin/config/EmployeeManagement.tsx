@@ -60,8 +60,8 @@ import {
   employeeToFormValues,
 } from "../../../services/mapper/employee";
 import {
-  EMPLOYEE_FILTER_DEFAULTS,
-  employeeFilterSchema,
+  EMPLOYEE_FILTER_FORM_DEFAULTS,
+  employeeFilterFormSchema,
   type EmployeeFormOutput,
   type EmployeeFormValues,
   type EmployeeSkillFormOutput,
@@ -105,8 +105,8 @@ const EmployeeManagement = () => {
   // ];
 
   const { filters, setFilters } = useUrlFilters({
-    schema: employeeFilterSchema,
-    defaults: EMPLOYEE_FILTER_DEFAULTS,
+    schema: employeeFilterFormSchema,
+    defaults: EMPLOYEE_FILTER_FORM_DEFAULTS,
   });
 
   const queryClient = useQueryClient()

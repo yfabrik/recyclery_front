@@ -57,11 +57,15 @@ import {
 } from "../components/forms/LabeledItemForm";
 import type { LabeledItemFormOutput } from "../services/schema/item";
 import {
-  LABEL_FILTER_DEFAULTS,
-  labelFilterSchema,
-  toLabelFilterInput,
+  LABEL_FILTER_FORM_DEFAULTS,
+  labelFilterFormSchema,
+  toLabelFilterFormInput,
 } from "../services/schema/label";
-import { labeledItemToFormValues, labeledItemPayloadFromForm } from "../services/mapper/label";
+import {
+  labeledItemToFormValues,
+  labeledItemPayloadFromForm,
+  toLabeledItemQuery,
+} from "../services/mapper/label";
 import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   getLabeledItemConditionColor,
@@ -92,29 +96,22 @@ const Labels = () => {
   const [autoPrint, setAutoPrint] = useState(true);
 
   const defaults = useMemo(
-    () => labelFilterSchema.parse(LABEL_FILTER_DEFAULTS),
+    () => labelFilterFormSchema.parse(LABEL_FILTER_FORM_DEFAULTS),
     [],
   );
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: labelFilterSchema,
+    schema: labelFilterFormSchema,
     defaults,
     withPage: true,
   });
 
+  const query = useMemo(() => toLabeledItemQuery(filters), [filters]);
+
   const queryClient = useQueryClient();
   const items = useQuery({
-    queryKey: ["items", { filters }, page],
+    queryKey: ["items", query, page],
     queryFn: () => {
-      return getLabeledItems({
-        ...(filters.status && { status: filters.status }),
-        ...(typeof filters.category_id === "number" && {
-          category_id: filters.category_id,
-        }),
-        ...(filters.search && { search: filters.search }),
-        ...(filters.date_from && { date_from: filters.date_from }),
-        ...(filters.date_to && { date_to: filters.date_to }),
-        page,
-      }).then((response) => ({
+      return getLabeledItems({ ...query, page }).then((response) => ({
         items: response.data.data,
         pagination: response.data.pagination,
         total: response.data.pagination.total,
@@ -124,18 +121,9 @@ const Labels = () => {
   useQueryErrorToast(items.error, "Erreur lors du chargement des articles");
 
   const itemStats = useQuery({
-    queryKey: ["itemStats", "items", { filters }],
+    queryKey: ["itemStats", "items", query],
     queryFn: () => {
-      return getItemStats({
-        ...(filters.status && { status: filters.status }),
-        ...(typeof filters.category_id === "number" && {
-          category_id: filters.category_id,
-        }),
-        ...(filters.search && { search: filters.search }),
-        ...(filters.date_from && { date_from: filters.date_from }),
-        ...(filters.date_to && { date_to: filters.date_to }),
-        page,
-      }).then((response) => response.data.data)
+      return getItemStats({ ...query, page }).then((response) => response.data.data)
     },
   })
 
@@ -325,7 +313,7 @@ const Labels = () => {
       </Grid>
       {/* Filtres */}
       <LabelFiltersForm
-        defaultValues={toLabelFilterInput(filters)}
+        defaultValues={toLabelFilterFormInput(filters)}
         onChange={setFilters}
         categories={categories.data ?? []}
       />

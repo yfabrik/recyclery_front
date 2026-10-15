@@ -52,8 +52,8 @@ import {
 } from "../../../services/mapper/schedule";
 import type { PlanningFormOutput, PlanningFormValues } from "../../../services/schema/schedule";
 import {
-  CUSTOM_TASK_FILTER_DEFAULTS,
-  customTaskFilterSchema,
+  CUSTOM_TASK_FILTER_FORM_DEFAULTS,
+  customTaskFilterFormSchema,
 } from "../../../services/schema/task";
 import {
   getApiErrorMessage,
@@ -73,8 +73,8 @@ const CustomTaskScheduleManagement = () => {
   );
   const [formDefaults, setFormDefaults] = useState<Partial<PlanningFormValues> | null>(null);
   const { filters, setFilters } = useUrlFilters({
-    schema: customTaskFilterSchema,
-    defaults: CUSTOM_TASK_FILTER_DEFAULTS,
+    schema: customTaskFilterFormSchema,
+    defaults: CUSTOM_TASK_FILTER_FORM_DEFAULTS,
   });
 
   const stores = useQuery({

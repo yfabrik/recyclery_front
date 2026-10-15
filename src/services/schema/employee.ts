@@ -2,21 +2,25 @@ import { idSchema, phoneSchema } from "@recyclerie/api/primitives/zod";
 import z from "zod";
 import { noEmptyStr, optionalId } from "../../interfaces/ZodTypes";
 
-export const employeeFilterSchema = z.object({
+/**
+ * URL / form state of the employee list filters. Client-side only: the list is
+ * filtered in memory and none of these fields are sent to the API.
+ */
+export const employeeFilterFormSchema =z.object({
   search: z.string().optional(),
   status: z.string().optional(),
   store_id: z.union([idSchema(), z.literal("")]).optional(),
 });
-export type EmployeeFilters = z.infer<typeof employeeFilterSchema>;
-export type EmployeeFiltersValues = z.input<typeof employeeFilterSchema>;
+export type EmployeeFilterFormValues = z.infer<typeof employeeFilterFormSchema>;
+export type EmployeeFilterFormInput = z.input<typeof employeeFilterFormSchema>;
 
-const defaultFilterValues: EmployeeFiltersValues = {
+const defaultFilterValues: EmployeeFilterFormInput = {
   search: "",
   status: "",
   store_id: "",
 };
 
-export const EMPLOYEE_FILTER_DEFAULTS = defaultFilterValues;
+export const EMPLOYEE_FILTER_FORM_DEFAULTS = defaultFilterValues;
 
 export const employeeFormSchema = z.object({
   prenom: noEmptyStr("prenom requis"),

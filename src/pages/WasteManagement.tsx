@@ -56,12 +56,13 @@ import {
   updateWaste,
 } from "../services/api/wasteDisposal";
 import {
+  toWasteQuery,
   wastePayloadFromForm,
   wasteToFormValues,
 } from "../services/mapper/waste";
 import {
-  getWasteFilterDefaults,
-  wasteFilterSchema,
+  getWasteFilterFormDefaults,
+  wasteFilterFormSchema,
   type WasteFormOutput,
   type WasteFormValues,
 } from "../services/schema/waste";
@@ -83,12 +84,12 @@ const WasteManagement = () => {
   //   totalPages: 0,
   // });
 
-  const defaults = useMemo(() => getWasteFilterDefaults(), []);
+  const defaults = useMemo(() => getWasteFilterFormDefaults(), []);
   const { filters, setFilters } = useUrlFilters({
-    schema: wasteFilterSchema,
+    schema: wasteFilterFormSchema,
     defaults,
   });
-
+  const query = useMemo(() => toWasteQuery(filters), [filters]);
 
   const queryClient = useQueryClient()
   const categories = useQuery({
@@ -110,15 +111,8 @@ const WasteManagement = () => {
   })
 
   const disposals = useQuery({
-    queryKey: ["disposals", { filters }],
-    queryFn: () => {
-      return getWastes({
-        ...(filters.category_id != "" ? { category_id: filters.category_id } : {}),
-        ...(filters.disposal_type != "" ? { disposal_type: filters.disposal_type } : {}),
-        date_from: filters.date_from,
-        date_to: filters.date_to
-      }).then(response => response.data.data)
-    },
+    queryKey: ["disposals", query],
+    queryFn: () => getWastes(query).then(response => response.data.data),
     placeholderData: keepPreviousData
   })
 

@@ -59,16 +59,17 @@ export const wasteFormSchema = (categories: CategoryModel[]) =>
 export type WasteFormOutput = z.infer<ReturnType<typeof wasteFormSchema>>;
 export type WasteFormValues = z.input<ReturnType<typeof wasteFormSchema>>;
 
-export const wasteFilterSchema = z.object({
+/** URL / form state of the waste filters. Not the API query: see `toWasteQuery`. */
+export const wasteFilterFormSchema =z.object({
   category_id: z.union([filterIdSchema(), z.literal("")]),
   disposal_type: z.enum(DISPOSAL_TYPE_FILTER_VALUES),
   date_from: filterIsoDate(),
   date_to: filterIsoDate(),
 });
 
-export type WasteFilters = z.infer<typeof wasteFilterSchema>;
+export type WasteFilterFormValues = z.infer<typeof wasteFilterFormSchema>;
 
-export const getWasteFilterDefaults = (): WasteFilters => ({
+export const getWasteFilterFormDefaults = (): WasteFilterFormValues => ({
   category_id: "",
   disposal_type: "",
   date_from: toIsoDate(dayjs().subtract(7, "day").toDate()),

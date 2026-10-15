@@ -1,10 +1,20 @@
-import type { EcoOrganismDataInput } from "@recyclerie/api/schemas/ecoOrganism";
+import type {
+  EcoOrganismDataInput,
+  EcoOrganismQuartersFilterInput,
+} from "@recyclerie/api/schemas/ecoOrganism";
 import type { EcoOrgModel } from "../../interfaces/Models";
 import type {
+  EcoOrgFilterFormValues,
   EcoOrganismFormOutput,
   EcoOrganismFormValues,
 } from "../schema/ecoOrganism";
-import { emptyToNull } from "../zodTransform";
+import { emptyToNull, omitBlank } from "../zodTransform";
+
+/** Only the collection point is server-side; every other stats filter is applied in memory. */
+export const toEcoOrgQuartersQuery = (
+  f: EcoOrgFilterFormValues,
+): EcoOrganismQuartersFilterInput =>
+  omitBlank({ point: f.collection_point_id });
 
 export function ecoOrganismToFormValues(
   org: EcoOrgModel,

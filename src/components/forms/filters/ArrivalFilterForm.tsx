@@ -10,9 +10,9 @@ import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-    arrivalFilterSchema,
-    getArrivalFilterDefaults,
-    type ArrivalFilters as Filters,
+    arrivalFilterFormSchema,
+    getArrivalFilterFormDefaults,
+    type ArrivalFilterFormValues as Filters,
 } from "../../../services/schema/arrival";
 
 interface FilterFormProps {
@@ -24,7 +24,7 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
 
     const filters = useForm({
         defaultValues,
-        resolver: zodResolver(arrivalFilterSchema),
+        resolver: zodResolver(arrivalFilterFormSchema),
     });
     const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
@@ -59,7 +59,7 @@ export const ArrivalFilterForm = ({ defaultValues, onChange }: FilterFormProps) 
     }, [watch]) // watch all changes
 
     const handleReset = () => {
-        const defaults = getArrivalFilterDefaults();
+        const defaults = getArrivalFilterFormDefaults();
         filters.reset(defaults);
         markEmitted(defaults);
         onChange(defaults);

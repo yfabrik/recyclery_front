@@ -11,15 +11,15 @@ import { FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-  CUSTOM_TASK_FILTER_DEFAULTS,
-  customTaskFilterSchema,
-  type CustomTaskFilters,
+  CUSTOM_TASK_FILTER_FORM_DEFAULTS,
+  customTaskFilterFormSchema,
+  type CustomTaskFilterFormValues,
 } from "../../../services/schema/task";
 
 interface CustomTaskFiltersFormProps {
   stores: StoreModel[];
-  defaultValues: CustomTaskFilters;
-  onChange: (values: CustomTaskFilters) => void;
+  defaultValues: CustomTaskFilterFormValues;
+  onChange: (values: CustomTaskFilterFormValues) => void;
   onRefresh?: () => void;
 }
 
@@ -31,11 +31,11 @@ export const CustomTaskFiltersForm = ({
 }: CustomTaskFiltersFormProps) => {
   const filters = useForm({
     defaultValues,
-    resolver: zodResolver(customTaskFilterSchema),
+    resolver: zodResolver(customTaskFilterFormSchema),
   });
   const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
-  const onSubmit = (data: CustomTaskFilters) => {
+  const onSubmit = (data: CustomTaskFilterFormValues) => {
     markEmitted(data);
     onChange(data);
   };
@@ -59,9 +59,9 @@ export const CustomTaskFiltersForm = ({
   }, [watch, debouncer]);
 
   const handleReset = () => {
-    filters.reset(CUSTOM_TASK_FILTER_DEFAULTS);
-    markEmitted(CUSTOM_TASK_FILTER_DEFAULTS);
-    onChange(CUSTOM_TASK_FILTER_DEFAULTS);
+    filters.reset(CUSTOM_TASK_FILTER_FORM_DEFAULTS);
+    markEmitted(CUSTOM_TASK_FILTER_FORM_DEFAULTS);
+    onChange(CUSTOM_TASK_FILTER_FORM_DEFAULTS);
   };
 
   return (

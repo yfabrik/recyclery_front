@@ -24,7 +24,12 @@ export const ecoOrganismFormSchema = z.object({
 export type EcoOrganismFormOutput = z.infer<typeof ecoOrganismFormSchema>;
 export type EcoOrganismFormValues = z.input<typeof ecoOrganismFormSchema>;
 
-export const ecoOrgFilterSchema = z.object({
+/**
+ * URL / form state of the eco-organism stats filters. Not the API query: see
+ * `toEcoOrgQuartersQuery`. Only `collection_point_id` is server-side; the other
+ * fields filter the fetched rows in memory.
+ */
+export const ecoOrgFilterFormSchema =z.object({
   eco_organism_id: z.union([filterIdSchema(), z.literal("")]),
   metric_source: z.enum(ECO_ORG_METRIC_SOURCES),
 
@@ -35,10 +40,10 @@ export const ecoOrgFilterSchema = z.object({
   category: z.string(),
 });
 
-export type EcoOrgFilters = z.infer<typeof ecoOrgFilterSchema>;
-export type EcoOrgFilterValues = z.input<typeof ecoOrgFilterSchema>;
+export type EcoOrgFilterFormValues = z.infer<typeof ecoOrgFilterFormSchema>;
+export type EcoOrgFilterFormInput = z.input<typeof ecoOrgFilterFormSchema>;
 
-export const getEcoOrgFilterDefaults = (): EcoOrgFilters => ({
+export const getEcoOrgFilterFormDefaults = (): EcoOrgFilterFormValues => ({
   eco_organism_id: "",
   metric_source: "quarterOut",
   quarter: "",

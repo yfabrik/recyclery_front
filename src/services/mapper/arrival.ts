@@ -1,7 +1,20 @@
 import type { arrivalDataInput } from "@recyclerie/api/schemas/arrivals";
+import type { ArrivalQuery } from "../api/arrival";
 import { toIsoTime } from "../dateService";
-import type { ArrivalFormOutput } from "../schema/arrival";
-import { emptyToNull } from "../zodTransform";
+import type {
+  ArrivalFilterFormValues,
+  ArrivalFormOutput,
+} from "../schema/arrival";
+import { emptyToNull, omitBlank } from "../zodTransform";
+
+export const toArrivalQuery = (f: ArrivalFilterFormValues): ArrivalQuery => ({
+  date_from: f.date_from,
+  date_to: f.date_to,
+  ...omitBlank({
+    source_type: f.source_type,
+    collection_point_id: f.collection_point_id,
+  }),
+});
 
 export const arrivalPayloadFromForm = (
   data: ArrivalFormOutput,
