@@ -34,7 +34,6 @@ import {
   createRefund,
   getTransactions,
   getTranscationStats,
-  type transactionsFilters,
 } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
@@ -42,9 +41,8 @@ import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDial
 import { TransactionListTable } from "../transactions/TransactionListTable";
 import { SaleFiltersForm } from "../forms/filters/SaleFiltersForm";
 import {
-  getSaleFilterDefaults,
-  saleFilterSchema,
-  type SaleFilters as Filters,
+  getSaleFilterFormDefaults,
+  saleFilterFormSchema,
 } from "../../services/schema/sale";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
@@ -55,26 +53,17 @@ import { StatCard } from "../StatCard";
 import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
 import type { RefundFormOutput } from "../../services/schema/refund";
 import { useUrlFilters } from "../../hooks/useUrlFilters";
-
-const toTransactionFilters = ({
-  store_id,
-  period,
-  date_from,
-  date_to,
-}: Filters): transactionsFilters => ({
-  store_id: store_id || undefined,
-  period,
-  date_from,
-  date_to,
-});
+import { toSaleQuery, toSaleStatsQuery } from "../../services/mapper/sale";
 
 export const SalesAnalyticsTab = () => {
-  const defaults = useMemo(() => getSaleFilterDefaults(), []);
+  const defaults = useMemo(() => getSaleFilterFormDefaults(), []);
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: saleFilterSchema,
+    schema: saleFilterFormSchema,
     defaults,
     withPage: true,
   });
+  const query = useMemo(() => toSaleQuery(filters), [filters]);
+  const statsQuery = useMemo(() => toSaleStatsQuery(filters), [filters]);
 
   const [refundDialog, setRefundDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
@@ -92,20 +81,18 @@ export const SalesAnalyticsTab = () => {
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
   const transactions = useQuery({
-    queryKey: ["transactions", filters, page],
+    queryKey: ["transactions", query, page],
     queryFn: () =>
       getTransactions({
-        ...toTransactionFilters(filters),
+        ...query,
         include: ["refund", "items"],
         page,
       }).then((response) => response.data),
   });
   const statistics = useQuery({
-    queryKey: ["transactionsStats", filters],
+    queryKey: ["transactionsStats", statsQuery],
     queryFn: () =>
-      getTranscationStats(toTransactionFilters(filters)).then(
-        (response) => response.data.data,
-      ),
+      getTranscationStats(statsQuery).then((response) => response.data.data),
     placeholderData: {
       total_transactions: 0,
       total_sales: 0,
@@ -281,12 +268,12 @@ export const SalesAnalyticsTab = () => {
         {statistics.data?.payment_methods &&
           statistics.data?.payment_methods.length > 0 && (
             <Grid size={{ xs: 12, md: 6 }}>
-              <SalePaymentStats filters={toTransactionFilters(filters)} />
+              <SalePaymentStats filters={statsQuery} />
             </Grid>
           )}
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <SalePostalStats filters={toTransactionFilters(filters)} />
+          <SalePostalStats filters={statsQuery} />
         </Grid>
       </Grid>
 

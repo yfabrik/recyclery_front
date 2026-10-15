@@ -6,7 +6,8 @@ import {
   getTransactions,
   type transactionsFilters,
 } from "../../services/api/transactions";
-import type { SaleHistoryFilters as Filters } from "../../services/schema/sale";
+import { toSaleHistoryQuery } from "../../services/mapper/sale";
+import type { SaleHistoryFilterFormValues as Filters } from "../../services/schema/sale";
 import { ExportCsvButton, type ExportScope } from "../ExportCsvButton";
 import { downloadCsv, rowsToCsv, type CsvColumn } from "../../utils/csv";
 import { fetchAllPages } from "../../utils/fetchAllPages";
@@ -67,17 +68,7 @@ export const SalesHistoryExport = ({
     store_id: activeSession.CashRegister?.recyclery_id,
     include: ["refund", "items"] as transactionsFilters["include"],
     page: pageValue,
-    ...(scope === "filtered"
-      ? {
-          ...filters,
-          ...(filters.transactionType
-            ? { type: filters.transactionType }
-            : {}),
-          ...(filters.transactionMethod
-            ? { payment_method: filters.transactionMethod }
-            : {}),
-        }
-      : {}),
+    ...(scope === "filtered" ? toSaleHistoryQuery(filters) : {}),
   });
 
   const handleExportCsv = async (scope: ExportScope) => {

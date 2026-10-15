@@ -13,14 +13,14 @@ import {
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-    getSaleHistoryFilterDefaults,
-    saleHistoryFilterSchema,
-    type SaleHistoryFilterInput,
-    type SaleHistoryFilters as Filters,
+    getSaleHistoryFilterFormDefaults,
+    saleHistoryFilterFormSchema,
+    type SaleHistoryFilterFormInput,
+    type SaleHistoryFilterFormValues as Filters,
 } from "../../../services/schema/sale";
 
 interface FilterFormProps {
-    defaultValues: SaleHistoryFilterInput;
+    defaultValues: SaleHistoryFilterFormInput;
     onChange: (values: Filters) => void;
 }
 
@@ -28,9 +28,9 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
 
     // Explicit input/output generics: filterIsoDate uses coerce+transform, so z.input ≠ z.infer.
     // Without this, watch(callback) is typed as returning `never` and .unsubscribe breaks.
-    const filters = useForm<SaleHistoryFilterInput, unknown, Filters>({
+    const filters = useForm<SaleHistoryFilterFormInput, unknown, Filters>({
         defaultValues,
-        resolver: zodResolver(saleHistoryFilterSchema),
+        resolver: zodResolver(saleHistoryFilterFormSchema),
     });
     const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
@@ -54,7 +54,7 @@ export const SaleHistoryFilter = ({ defaultValues, onChange }: FilterFormProps) 
     }, [watch]) // watch all changes
 
     const handleReset = () => {
-        const defaults = getSaleHistoryFilterDefaults();
+        const defaults = getSaleHistoryFilterFormDefaults();
         filters.reset(defaults);
         markEmitted(defaults);
         onChange(defaults);

@@ -9,29 +9,29 @@ import { ResetFiltersButton } from "./ResetFiltersButton";
 import type { StoreModel } from "../../../interfaces/Models";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-  EMPLOYEE_FILTER_DEFAULTS,
-  employeeFilterSchema,
-  type EmployeeFilters,
+  EMPLOYEE_FILTER_FORM_DEFAULTS,
+  employeeFilterFormSchema,
+  type EmployeeFilterFormValues,
 } from "../../../services/schema/employee";
 
 interface EmployeeFilterFormProps {
-  defaultValues?: EmployeeFilters;
-  onChange: (values: EmployeeFilters) => void;
+  defaultValues?: EmployeeFilterFormValues;
+  onChange: (values: EmployeeFilterFormValues) => void;
   stores?: StoreModel[];
 }
 
 export const EmployeeFilterForm = ({
-  defaultValues = EMPLOYEE_FILTER_DEFAULTS,
+  defaultValues = EMPLOYEE_FILTER_FORM_DEFAULTS,
   onChange,
   stores = [],
 }: EmployeeFilterFormProps) => {
   const form = useForm({
     defaultValues,
-    resolver: zodResolver(employeeFilterSchema),
+    resolver: zodResolver(employeeFilterFormSchema),
   });
   const markEmitted = useSyncFilterDefaults(form, defaultValues);
 
-  const onSubmit = (data: EmployeeFilters) => {
+  const onSubmit = (data: EmployeeFilterFormValues) => {
     markEmitted(data);
     onChange(data);
   };
@@ -50,9 +50,9 @@ export const EmployeeFilterForm = ({
   }, [form, debouncer]) // watch all changes
 
   const handleReset = () => {
-    form.reset(EMPLOYEE_FILTER_DEFAULTS);
-    markEmitted(EMPLOYEE_FILTER_DEFAULTS);
-    onChange(EMPLOYEE_FILTER_DEFAULTS);
+    form.reset(EMPLOYEE_FILTER_FORM_DEFAULTS);
+    markEmitted(EMPLOYEE_FILTER_FORM_DEFAULTS);
+    onChange(EMPLOYEE_FILTER_FORM_DEFAULTS);
   };
 
   return (

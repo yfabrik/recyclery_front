@@ -2,14 +2,12 @@ import { LocalPostOffice, Place } from "@mui/icons-material";
 import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
 import { formatCurrency } from "../services/cartService";
 import { useQuery } from "@tanstack/react-query";
-import {
-  getTranscationPostalStats,
-  type transactionsFilters,
-} from "../services/api/transactions";
+import type { TransactionStatsFilterInput } from "@recyclerie/api/schemas/salesTransactions";
+import { getTranscationPostalStats } from "../services/api/transactions";
 import { Loading } from "./Loading";
 
 interface SalePostalStatsProps {
-  filters: transactionsFilters;
+  filters: TransactionStatsFilterInput;
 }
 export const SalePostalStats = ({ filters }: SalePostalStatsProps) => {
   const postalCodeStats = useQuery({

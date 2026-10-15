@@ -16,7 +16,7 @@ import axiosInstance from "./axios";
 
 const CATEGORY_SUBCATEGORIES_INCLUDE = "category.subcategories" as const;
 
-type LabeledItemQuery = Omit<LabeledItemFilterInput, "include"> & {
+export type LabeledItemQuery = Omit<LabeledItemFilterInput, "include"> & {
   include?: LabeledItemFilter["include"];
   page?: number;
 };

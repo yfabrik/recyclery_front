@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AuthProvider } from "../contexts/AuthContext";
 import type { ArrivalModel } from "../interfaces/Models";
 import axiosInstance from "../services/api/axios";
+import { mockCategories } from "../stories/fixtures/categories";
 import { ArrivalHistory } from "./ArrivalHistory";
 
 const nowIso = new Date().toISOString();
@@ -100,6 +101,20 @@ function StoryWrapper({ empty = false }: { empty?: boolean }) {
           },
         } as never);
       }
+      if (url === "/api/arrivals/stats/by-category") {
+        return Promise.resolve({
+          data: {
+            success: true,
+            data: empty
+              ? []
+              : mockArrivals.map((arrival) => ({
+                  count: 1,
+                  total_weight: arrival.weight,
+                  categorie: arrival.categorie,
+                })),
+          },
+        } as never);
+      }
       if (url === "/api/collection-points") {
         return Promise.resolve({
           data: { success: true, data: [] },
@@ -115,7 +130,7 @@ function StoryWrapper({ empty = false }: { empty?: boolean }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ArrivalHistory />
+        <ArrivalHistory categories={mockCategories} />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -10,9 +10,9 @@ import { FormDate, FormInput, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-    getSaleFilterDefaults,
-    saleFilterSchema,
-    type SaleFilters as Filters,
+    getSaleFilterFormDefaults,
+    saleFilterFormSchema,
+    type SaleFilterFormValues as Filters,
 } from "../../../services/schema/sale";
 
 interface FilterFormProps {
@@ -25,7 +25,7 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
 
     const filters = useForm({
         defaultValues,
-        resolver: zodResolver(saleFilterSchema),
+        resolver: zodResolver(saleFilterFormSchema),
     });
     const markEmitted = useSyncFilterDefaults(filters, defaultValues);
 
@@ -68,7 +68,7 @@ export const SaleFiltersForm = ({ stores, defaultValues, onChange }: FilterFormP
     }, [watch]) // watch all changes
 
     const handleReset = () => {
-        const defaults = getSaleFilterDefaults();
+        const defaults = getSaleFilterFormDefaults();
         filters.reset(defaults);
         markEmitted(defaults);
         onChange(defaults);

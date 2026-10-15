@@ -14,9 +14,10 @@ import EcoOrganismStatsTable, {
 } from "../components/admin/EcoOrganismStatsTable";
 import { EcoOrgStatsFilters } from "../components/forms/filters/EcoOrgStatsFilters";
 import {
-  ecoOrgFilterSchema,
-  getEcoOrgFilterDefaults,
+  ecoOrgFilterFormSchema,
+  getEcoOrgFilterFormDefaults,
 } from "../services/schema/ecoOrganism";
+import { toEcoOrgQuartersQuery } from "../services/mapper/ecoOrganism";
 import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   fetchEcoOrganismQuarterStats,
@@ -184,16 +185,18 @@ const getMetricRows = (
 };
 
 const EcoOrganismStatsPage = () => {
-  const defaults = useMemo(() => getEcoOrgFilterDefaults(), []);
+  const defaults = useMemo(() => getEcoOrgFilterFormDefaults(), []);
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: ecoOrgFilterSchema,
+    schema: ecoOrgFilterFormSchema,
     defaults,
     withPage: true,
   });
 
+  const quartersQuery = useMemo(() => toEcoOrgQuartersQuery(filters), [filters]);
+
   const ecoStats = useQuery({
-    queryKey: ["ecoOrganismQuarterStats",filters.collection_point_id],
-    queryFn: () => fetchEcoOrganismQuarterStats(filters.collection_point_id !=""?{point:filters.collection_point_id}:{}).then((response) => response.data.data),
+    queryKey: ["ecoOrganismQuarterStats", quartersQuery],
+    queryFn: () => fetchEcoOrganismQuarterStats(quartersQuery).then((response) => response.data.data),
   });
 
   const allRows = useMemo(() => {

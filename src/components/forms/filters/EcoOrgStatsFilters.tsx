@@ -14,10 +14,10 @@ import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
 import { ECO_ORG_METRIC_SOURCES } from "../../../constants/ecoOrgMetricSources";
 import { useSyncFilterDefaults } from "../../../hooks/useSyncFilterDefaults";
 import {
-  ecoOrgFilterSchema,
-  getEcoOrgFilterDefaults,
-  type EcoOrgFilters as Filters,
-  type EcoOrgFilterValues as EcoOrgStatsFiltersValues,
+  ecoOrgFilterFormSchema,
+  getEcoOrgFilterFormDefaults,
+  type EcoOrgFilterFormValues as Filters,
+  type EcoOrgFilterFormInput as EcoOrgStatsFiltersValues,
 } from "../../../services/schema/ecoOrganism";
 
 const parseQuarterKey = parseEcoOrgQuarterKey;
@@ -45,7 +45,7 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
     Filters
   >({
     defaultValues: defaultValues,
-    resolver: zodResolver(ecoOrgFilterSchema),
+    resolver: zodResolver(ecoOrgFilterFormSchema),
   });
   const markEmitted = useSyncFilterDefaults(form, defaultValues);
 
@@ -216,7 +216,7 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
         <Grid size="auto" sx={{ ml: "auto" }}>
           <ResetFiltersButton
             onReset={() => {
-              const defaults = getEcoOrgFilterDefaults();
+              const defaults = getEcoOrgFilterFormDefaults();
               form.reset(defaults);
               markEmitted(defaults);
               onChange(defaults);

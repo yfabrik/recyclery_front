@@ -14,7 +14,6 @@ import {
   deleteTransaction,
   getTransactions,
   updateTransaction,
-  type transactionsFilters,
 } from "../../services/api/transactions";
 import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
 import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
@@ -24,9 +23,10 @@ import { useReceiptPrint } from "../ReceiptPrint";
 import { useGiftCardPrint } from "./GiftCartPrint";
 import { SaleHistoryFilter } from "../forms/filters/SaleHistoryFilter";
 import {
-  getSaleHistoryFilterDefaults,
-  saleHistoryFilterSchema,
+  getSaleHistoryFilterFormDefaults,
+  saleHistoryFilterFormSchema,
 } from "../../services/schema/sale";
+import { toSaleHistoryQuery } from "../../services/mapper/sale";
 import { buildCreateRefundBody } from "../../utils/refundBody";
 import { buildUpdateTransactionBody } from "../../services/mapper/cart";
 import type { RefundFormOutput } from "../../services/schema/refund";
@@ -48,12 +48,13 @@ export const SalesHistory = ({
   const [transactionDetailsDialog, setTransactionDetailsDialog] =
     useState(false);
 
-  const defaults = useMemo(() => getSaleHistoryFilterDefaults(), []);
+  const defaults = useMemo(() => getSaleHistoryFilterFormDefaults(), []);
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: saleHistoryFilterSchema,
+    schema: saleHistoryFilterFormSchema,
     defaults,
     withPage: true,
   });
+  const query = useMemo(() => toSaleHistoryQuery(filters), [filters]);
 
   const categories = useQuery({
     queryKey: [
@@ -71,22 +72,14 @@ export const SalesHistory = ({
   const transactionsHistory = useQuery({
     queryKey: [
       "transactionsHistory",
-      { store_id: activeSession.CashRegister?.recyclery_id, page, filters },
+      { store_id: activeSession.CashRegister?.recyclery_id, page, query },
     ],
     queryFn: () =>
       getTransactions({
+        ...query,
         store_id: activeSession.CashRegister?.recyclery_id,
         include: ["refund", "items"],
         page,
-        ...{
-          ...filters,
-          ...(filters.transactionType || filters.transactionType != ""
-            ? { type: filters.transactionType }
-            : {}),
-          ...(filters.transactionMethod || filters.transactionMethod != ""
-            ? { payment_method: filters.transactionMethod }
-            : {}),
-        } satisfies transactionsFilters,
       }).then((response) => response.data),
     enabled: !!activeSession.CashRegister?.recyclery_id,
   });

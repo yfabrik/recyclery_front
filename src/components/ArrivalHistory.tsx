@@ -1,13 +1,19 @@
 import { useMemo } from "react";
 import { ArrivalFilterForm } from "./forms/filters/ArrivalFilterForm";
 import {
-  arrivalFilterSchema,
-  getArrivalFilterDefaults,
+  arrivalFilterFormSchema,
+  getArrivalFilterFormDefaults,
 } from "../services/schema/arrival";
-import { deleteArrival, getArrivals } from "../services/api/arrival";
+import { toArrivalQuery } from "../services/mapper/arrival";
+import {
+  deleteArrival,
+  getArrivalCategoryStats,
+  getArrivals,
+} from "../services/api/arrival";
 import {
   Box,
   Chip,
+  Grid,
   IconButton,
   Pagination,
   Paper,
@@ -19,8 +25,10 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { Business, Delete } from "@mui/icons-material";
-import type { ArrivalModel } from "../interfaces/Models";
+import { Business, Delete, Scale } from "@mui/icons-material";
+import { StatCard } from "./StatCard";
+import { ArrivalHistoryExport } from "./ArrivalHistoryExport";
+import type { ArrivalModel, CategoryModel } from "../interfaces/Models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { muiPageCount } from "../services/api/pagination";
 import { useUrlFilters } from "../hooks/useUrlFilters";
@@ -36,14 +44,19 @@ import {
 } from "../utils/apiToastMessage";
 import { useAuth } from "../contexts/AuthContext";
 
-export const ArrivalHistory = () => {
+interface ArrivalHistoryProps {
+  categories: CategoryModel[];
+}
+
+export const ArrivalHistory = ({ categories }: ArrivalHistoryProps) => {
   const { user } = useAuth();
-  const defaults = useMemo(() => getArrivalFilterDefaults(), []);
+  const defaults = useMemo(() => getArrivalFilterFormDefaults(), []);
   const { filters, setFilters, page, setPage } = useUrlFilters({
-    schema: arrivalFilterSchema,
+    schema: arrivalFilterFormSchema,
     defaults,
     withPage: true,
   });
+  const query = useMemo(() => toArrivalQuery(filters), [filters]);
 
   const queryclient = useQueryClient();
   const {
@@ -59,30 +72,34 @@ export const ArrivalHistory = () => {
       },
     },
   } = useQuery({
-    queryKey: ["arrivals", filters, page],
+    queryKey: ["arrivals", query, page],
     queryFn: () =>
-      getArrivals({
-        date_from: filters.date_from,
-        date_to: filters.date_to,
-        ...(filters.source_type !== ""
-          ? { source_type: filters.source_type }
-          : {}),
-        ...(filters.collection_point_id !== ""
-          ? { collection_point_id: filters.collection_point_id }
-          : {}),
-        page,
-      }).then((result) => ({
+      getArrivals({ ...query, page }).then((result) => ({
         arrivals: result.data.data,
         pagination: result.data.pagination,
       })),
   });
+  const { data: categoryStats = [] } = useQuery({
+    queryKey: ["arrivalCategoryStats", query],
+    queryFn: () =>
+      getArrivalCategoryStats(query).then((result) => result.data.data),
+  });
+  const totalWeight = categoryStats.reduce(
+    (sum, stat) => sum + (stat.total_weight ?? 0),
+    0,
+  );
+  const totalCount = categoryStats.reduce(
+    (sum, stat) => sum + (stat.count ?? 0),
+    0,
+  );
   const deleteArrivalMutation = useMutation({
     mutationFn: (id: ArrivalModel["id"]) => {
       return deleteArrival(id);
     },
     onSuccess: (response) => {
       toast.success(getApiSuccessMessage(response, "supression success"));
-      queryclient.invalidateQueries({ queryKey: ["arrivals", filters, page] });
+      queryclient.invalidateQueries({ queryKey: ["arrivals", query, page] });
+      queryclient.invalidateQueries({ queryKey: ["arrivalCategoryStats"] });
     },
     onError: (error) =>
       toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
@@ -94,12 +111,51 @@ export const ArrivalHistory = () => {
   return (
     <>
       <Paper sx={{ p: 2, mb: 3 }}>
-        <ArrivalFilterForm defaultValues={filters} onChange={setFilters} />
+        <ArrivalFilterForm
+          categories={categories}
+          defaultValues={filters}
+          onChange={setFilters}
+        />
       </Paper>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCard
+            title="Total"
+            value={`${totalWeight} kg`}
+            subtitle={`${totalCount} arrivage(s)`}
+            icon={<Scale />}
+            color="primary"
+          />
+        </Grid>
+        {/* {categoryStats.map((stat) => (
+          <Grid
+            key={stat.categorie?.id ?? "unknown"}
+            size={{ xs: 12, sm: 6, md: 3 }}
+          >
+            <StatCard
+              title={stat.categorie?.name ?? "Sans catégorie"}
+              value={`${stat.total_weight ?? 0} kg`}
+              subtitle={`${stat.count ?? 0} arrivage(s)`}
+              color="secondary"
+            />
+          </Grid>
+        ))} */}
+      </Grid>
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Arrivages du jour ({formatDate(now().toDate())})
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 2,
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6">
+            Arrivages du jour ({formatDate(now().toDate())})
+          </Typography>
+          <ArrivalHistoryExport filters={query} />
+        </Box>
         <TableContainer>
           <Table>
             <TableHead>

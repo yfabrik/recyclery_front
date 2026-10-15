@@ -6,16 +6,17 @@ import {
 import { filterIsoDate, idSchema } from "../../interfaces/ZodTypes";
 import { toIsoDate } from "../dateService";
 
-export const saleFilterSchema = z.object({
+/** URL / form state of the sales analytics filters. Not the API query: see `toSaleQuery` / `toSaleStatsQuery`. */
+export const saleFilterFormSchema =z.object({
   store_id: z.union([idSchema(), z.literal("")]),
   period: z.enum(["week", "month", "custom"]), //TODO find enum
   date_from: filterIsoDate(),
   date_to: filterIsoDate(),
   transaction_number: z.string().trim().optional(),
 });
-export type SaleFilters = z.infer<typeof saleFilterSchema>;
+export type SaleFilterFormValues = z.infer<typeof saleFilterFormSchema>;
 
-export const getSaleFilterDefaults = (): SaleFilters => {
+export const getSaleFilterFormDefaults = (): SaleFilterFormValues => {
   const today = new Date();
   return {
     store_id: "",
@@ -26,17 +27,18 @@ export const getSaleFilterDefaults = (): SaleFilters => {
   };
 };
 
-export const saleHistoryFilterSchema = z.object({
+/** URL / form state of the POS history filters. Not the API query: see `toSaleHistoryQuery`. */
+export const saleHistoryFilterFormSchema =z.object({
   date_from: filterIsoDate(),
   date_to: filterIsoDate(),
   transaction_number: z.string().trim().optional(),
   transactionType: z.enum(TRANSACTION_TYPE_FILTER_VALUES).optional(),
   transactionMethod: z.enum(PAYMENT_METHOD_FILTER_VALUES).optional(),
 });
-export type SaleHistoryFilters = z.infer<typeof saleHistoryFilterSchema>;
-export type SaleHistoryFilterInput = z.input<typeof saleHistoryFilterSchema>;
+export type SaleHistoryFilterFormValues = z.infer<typeof saleHistoryFilterFormSchema>;
+export type SaleHistoryFilterFormInput = z.input<typeof saleHistoryFilterFormSchema>;
 
-export const getSaleHistoryFilterDefaults = (): SaleHistoryFilters => {
+export const getSaleHistoryFilterFormDefaults = (): SaleHistoryFilterFormValues => {
   const today = new Date();
   return {
     date_from: toIsoDate(new Date(today.getFullYear(), today.getMonth(), 1)),

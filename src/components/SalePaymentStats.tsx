@@ -1,12 +1,13 @@
 import { Box, Card, CardContent, Divider, Typography } from "@mui/material"
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService"
 import { useQuery } from "@tanstack/react-query";
-import { getTranscationStats, type transactionsFilters } from "../services/api/transactions";
+import type { TransactionStatsFilterInput } from "@recyclerie/api/schemas/salesTransactions";
+import { getTranscationStats } from "../services/api/transactions";
 import { Loading } from "./Loading";
 import { CreditCard } from "@mui/icons-material";
 
 interface SalePaymentStatsProps {
-    filters: transactionsFilters;
+    filters: TransactionStatsFilterInput;
 }
 export const SalePaymentStats = ({ filters }: SalePaymentStatsProps) => {
     const statistics = useQuery({
