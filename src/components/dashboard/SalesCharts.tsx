@@ -17,7 +17,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
-import { getTranscationStats, type transactionsFilters } from "../../services/api/transactions";
+import type { TransactionStatsFilterInput } from "@recyclerie/api/schemas/salesTransactions";
+import { getTranscationStats } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
 import type { DashboardStoreDto } from "@recyclerie/api/responses/dashboard";
 
@@ -104,8 +105,8 @@ export const SalesCharts = ({ stores }: SalesChartsProps) => {
   });
   const [periodOffset, setPeriodOffset] = useState(0);
 
-  const statsFilters = useMemo((): transactionsFilters => {
-    const saleFilter: transactionsFilters = {};
+  const statsFilters = useMemo((): TransactionStatsFilterInput => {
+    const saleFilter: TransactionStatsFilterInput = {};
     if (viewStore !== ALL_STORES) saleFilter.store_id = viewStore;
     const { date_from, date_to } = getStatsDateRange(
       view,
