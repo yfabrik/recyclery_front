@@ -33,6 +33,8 @@ export interface EmployeeDayServerOptions {
   failReadsWith?: FakeApiError;
   /** Return an error to refuse that write (nothing is changed), or nothing to accept it. */
   rejectWrite?: (write: FakeWrite) => FakeApiError | undefined;
+  /** Return a delay in milliseconds to answer that write late (the day changes when it is answered). */
+  delayWrite?: (write: FakeWrite) => number | undefined;
   /** Called with the URL and params of each read. */
   onRead?: (url: string, params: unknown) => void;
   /** Called with each write received, refused ones included. */
@@ -50,6 +52,7 @@ export function createEmployeeDayServer({
   day,
   failReadsWith,
   rejectWrite,
+  delayWrite,
   onRead,
   onWrite,
 }: EmployeeDayServerOptions) {
@@ -60,13 +63,15 @@ export function createEmployeeDayServer({
   const rowOf = (taskId: string | undefined): EmployeeTaskRowDto | undefined =>
     current.rows.find((row) => String(row.task.id) === taskId);
 
-  /** Logs the write, then refuses it (a rejected promise) or lets `apply` change the day. */
+  /** Logs the write, then refuses it (a rejected promise) or lets `apply` change the day, possibly late. */
   const write = (method: FakeWrite["method"], url: string, body: unknown, apply: () => unknown) => {
     const received: FakeWrite = { method, url, body };
     writes.push(received);
     onWrite?.(received);
     const refusal = rejectWrite?.(received);
-    return refusal ? apiError(refusal.status, refusal.message) : ok(apply());
+    const respond = () => (refusal ? apiError(refusal.status, refusal.message) : ok(apply()));
+    const delay = delayWrite?.(received);
+    return delay ? new Promise((resolve) => setTimeout(resolve, delay)).then(respond) : respond();
   };
 
   const server: FakeServer = {

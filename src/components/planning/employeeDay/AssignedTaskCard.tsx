@@ -1,7 +1,7 @@
 import { Delete } from "@mui/icons-material";
 import { Box, Card, CardContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { AddRangeButton, RangeEditorRow } from "../taskAssignment/RangeEditor";
-import { formatWindow, taskMinuteWindow } from "./dayModel";
+import { describeTaskPlace, taskMinuteWindow } from "./dayModel";
 import type { DayRange, EmployeeDayRow } from "./localDay";
 
 interface AssignedTaskCardProps {
@@ -47,7 +47,7 @@ export const AssignedTaskCard = ({
               {row.task.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {formatWindow(taskWindow)} · {row.task.Recyclery?.name ?? "Sans magasin"}
+              {describeTaskPlace(row.task)}
             </Typography>
           </Box>
           <AddRangeButton

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dayStripBounds,
   formatDuration,
+  describeTaskPlace,
   formatWindow,
   hourTicks,
   splitRows,
@@ -29,6 +30,20 @@ describe("formatWindow / formatDuration", () => {
     expect(formatDuration(5 * 60)).toBe("5 h");
     expect(formatDuration(90)).toBe("1 h 30");
     expect(formatDuration(0)).toBe("0 min");
+  });
+});
+
+describe("describeTaskPlace", () => {
+  it("gives the Task's window and its Store", () => {
+    const task = makeTask({ id: 1, name: "Tri", from: [8, 30], to: [11] });
+
+    expect(describeTaskPlace(task)).toBe(`08:30–11:00 · ${task.Recyclery?.name}`);
+  });
+
+  it("says so when the Task has no Store", () => {
+    const task = makeTask({ id: 1, name: "Tri", from: [8, 30], to: [11], store: null });
+
+    expect(describeTaskPlace(task)).toBe("08:30–11:00 · Sans magasin");
   });
 });
 

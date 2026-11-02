@@ -1,6 +1,6 @@
 import { Add, Block, CheckCircle } from "@mui/icons-material";
 import { Box, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
-import { formatWindow, taskMinuteWindow, unavailableReasonText } from "./dayModel";
+import { describeTaskPlace, formatWindow, unavailableReasonText } from "./dayModel";
 import type { EmployeeDayRow } from "./localDay";
 
 interface AssignableTaskCardProps {
@@ -32,7 +32,7 @@ export const AssignableTaskCard = ({ row, employeeName, onAssign }: AssignableTa
               {row.task.name}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
-              {formatWindow(taskMinuteWindow(row.task))} · {row.task.Recyclery?.name ?? "Sans magasin"}
+              {describeTaskPlace(row.task)}
             </Typography>
             <Typography variant="caption" color={unavailable ? "error" : "text.secondary"} display="block">
               {unavailable

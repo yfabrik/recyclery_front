@@ -367,7 +367,7 @@ const DayScheduleHeader = ({
         {dayLabel}
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        {employeeCount} employé{employeeCount > 1 ? "s" : ""}
+        {plural(employeeCount, "employé")}
       </Typography>
       {conflictCount > 0 && (
         <Box sx={{ mt: 0.5 }}>
@@ -375,7 +375,7 @@ const DayScheduleHeader = ({
             size="small"
             color="error"
             icon={<ErrorOutline />}
-            label={`${conflictCount} conflit${conflictCount > 1 ? "s" : ""}`}
+            label={plural(conflictCount, "conflit")}
             sx={{ height: 20, fontSize: "0.65rem" }}
           />
         </Box>

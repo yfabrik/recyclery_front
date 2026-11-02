@@ -14,6 +14,10 @@ export const taskMinuteWindow = (task: Pick<TaskDto, "start_time" | "end_time">)
 export const formatWindow = (window: MinuteWindow): string =>
   `${formatMinutes(window.start)}–${formatMinutes(window.end)}`;
 
+/** "09:00–12:00 · Centre" : when a Task runs and where, as the Task cards show it under its name. */
+export const describeTaskPlace = (task: Pick<TaskDto, "start_time" | "end_time" | "Recyclery">): string =>
+  `${formatWindow(taskMinuteWindow(task))} · ${task.Recyclery?.name ?? "Sans magasin"}`;
+
 export const totalMinutes = (windows: readonly MinuteWindow[]): number =>
   windows.reduce((sum, window) => sum + (window.end - window.start), 0);
 

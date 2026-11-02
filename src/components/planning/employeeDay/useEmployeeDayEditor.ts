@@ -40,12 +40,15 @@ interface UseEmployeeDayEditorOptions {
 export function useEmployeeDayEditor({ employeeId, day, isFetching, open, refetchDay }: UseEmployeeDayEditorOptions) {
   const [ranges, setRanges] = useState<DayRange[]>([]);
   const rangesRef = useRef<DayRange[]>([]);
+  /**
+   * Replaces local state, and `rangesRef` with it at once: queued writes read the ref, and
+   * must see a change (such as the id a create call just returned) as soon as it is made,
+   * not whenever React gets to render it.
+   */
   const setRangesTracked = (next: DayRange[] | ((previous: DayRange[]) => DayRange[])) => {
-    setRanges((previous) => {
-      const value = typeof next === "function" ? next(previous) : next;
-      rangesRef.current = value;
-      return value;
-    });
+    const value = typeof next === "function" ? next(rangesRef.current) : next;
+    rangesRef.current = value;
+    setRanges(value);
   };
 
   // `session` counts the openings; `seededSession` is the one local state was last seeded for.
@@ -215,6 +218,8 @@ export function useEmployeeDayEditor({ employeeId, day, isFetching, open, refetc
       () => {
         const current = rangesRef.current.find((candidate) => candidate.key === range.key);
         // Gone, or a revert happened since this drag: the position it describes was discarded.
+        // A range still without an id cannot get here: its create was queued first, so it has
+        // settled (and given the range its id) before this write runs.
         if (!current || current.id == null || epoch !== epochRef.current) return Promise.resolve();
         return runWrite(
           () =>

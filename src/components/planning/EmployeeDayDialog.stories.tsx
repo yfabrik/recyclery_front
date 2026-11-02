@@ -48,6 +48,8 @@ interface StoryWrapperProps {
   onRequest?: (url: string, params: unknown) => void;
   /** Return an error to make the server refuse that write. */
   rejectWrite?: (write: FakeWrite) => FakeApiError | undefined;
+  /** Return a delay in milliseconds to make the server answer that write late. */
+  delayWrite?: (write: FakeWrite) => number | undefined;
   /** Called with each write the server receives (refused ones included). */
   onWrite?: (write: FakeWrite) => void;
   onClose?: () => void;
@@ -62,6 +64,7 @@ function StoryWrapper({
   failWith,
   onRequest,
   rejectWrite,
+  delayWrite,
   onWrite,
   onClose,
   onCloseWithChanges,
@@ -75,6 +78,7 @@ function StoryWrapper({
       day,
       ...(failWith ? { failReadsWith: failWith } : {}),
       ...(rejectWrite ? { rejectWrite } : {}),
+      ...(delayWrite ? { delayWrite } : {}),
       ...(onRequest ? { onRead: onRequest } : {}),
       ...(onWrite ? { onWrite } : {}),
     });
@@ -596,6 +600,41 @@ export const AdjustTimeRange: Story = {
       url: "/api/tasks/3/employees/1/time-ranges/300",
       body: { start_time: "13:00", end_time: "15:30" },
     });
+  },
+};
+
+/**
+ * A range dragged while its create call is still in flight keeps its final position on the
+ * server: the update is sent with the dragged bounds as soon as the create has come back.
+ */
+export const AdjustTimeRangeBeforeItsCreateReturns: Story = {
+  args: {
+    delayWrite: ({ method }) => (method === "POST" ? 1500 : undefined),
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+
+    await userEvent.click(await screen.findByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_VENTE}` }));
+    const start = await waitFor(() => thumb(screen, "Début", 2, LEA_ON_VENTE));
+    start.focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await expect(assigned.getByText("Plage horaire 2 · 15:30–16:00")).toBeInTheDocument();
+    // The create is still on its way: nothing but the create has been sent.
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => expect(args.onWrite).toHaveBeenCalledTimes(2), { timeout: 4000 });
+    await expect(args.onWrite).toHaveBeenNthCalledWith(1, {
+      method: "POST",
+      url: "/api/tasks/3/employees/1/time-ranges",
+      body: { start_time: "15:00", end_time: "16:00" },
+    });
+    await expect(args.onWrite).toHaveBeenNthCalledWith(2, {
+      method: "PUT",
+      url: "/api/tasks/3/employees/1/time-ranges/9000",
+      body: { start_time: "15:30", end_time: "16:00" },
+    });
+    await expect(assigned.getByText("Plage horaire 2 · 15:30–16:00")).toBeInTheDocument();
   },
 };
 

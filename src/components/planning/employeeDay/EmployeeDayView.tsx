@@ -15,7 +15,7 @@ import { VacationConflictBanner } from "./VacationConflictBanner";
 
 interface EmployeeDayViewProps {
   employee: Employee;
-  /** The server's day: Workday hours (and, from the Vacation tickets on, the Vacation). */
+  /** The server's day: Workday hours and the Employee's Vacation, if any. */
   day: EmployeeTasksDayDto;
   /** The Tasks of the day with their status for the Employee's current (local) Time ranges. */
   rows: readonly EmployeeDayRow[];
