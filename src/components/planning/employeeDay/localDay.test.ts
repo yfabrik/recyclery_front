@@ -122,3 +122,47 @@ describe("deriveDayRows after local changes", () => {
     expect(held.map((row) => row.status)).toEqual(["assigned", "unavailable", "unavailable"]);
   });
 });
+
+describe("deriveDayRows: where the Time ranges of an assigned Task may sit", () => {
+  const window = (startHour: number, startMinute: number, endHour: number, endMinute: number) => ({
+    start: startHour * 60 + startMinute,
+    end: endHour * 60 + endMinute,
+  });
+
+  it("leaves each range every window its own sibling ranges do not take", () => {
+    const [tri] = deriveDayRows(leaDay, seedDayRanges(leaDay));
+
+    // 08:30-09:30 and 10:00-11:00 on 08:00-11:00: each may go anywhere the other is not.
+    expect(tri?.rangeWindows).toEqual([[window(8, 0, 10, 0)], [window(8, 0, 8, 30), window(9, 30, 11, 0)]]);
+  });
+
+  it("offers a new range the windows left by all the ranges on the Task, none when it is full", () => {
+    const rows = deriveDayRows(leaDay, seedDayRanges(leaDay));
+    expect(rows[0]?.newRangeWindows).toEqual([window(8, 0, 8, 30), window(9, 30, 10, 0)]);
+    expect(rows[2]?.newRangeWindows).toEqual([window(15, 0, 16, 0)]);
+
+    // Marc's single range covers its whole Task.
+    expect(deriveDayRows(marcDay, seedDayRanges(marcDay)).map((row) => row.newRangeWindows)).toEqual([[], []]);
+  });
+
+  it("keeps a range out of the Employee's ranges on other Tasks", () => {
+    // Karim works 09:00-17:00 and holds "Tri textile" 09:00-10:00; "Tri arrivage" (08:00-11:00) is his too.
+    const ranges: DayRange[] = [
+      { key: "a", id: 1, employeeId: 2, taskId: 4, start: 9 * 60, end: 10 * 60 },
+      { key: "b", id: 2, employeeId: 2, taskId: 1, start: 10 * 60, end: 11 * 60 },
+    ];
+    const tri = deriveDayRows(karimDay, ranges).find((row) => row.task.id === 1);
+
+    expect(tri?.rangeWindows).toEqual([[window(10, 0, 11, 0)]]);
+    expect(tri?.newRangeWindows).toEqual([]);
+  });
+
+  it("has nothing to offer on a Task the Employee does not hold", () => {
+    const rows = deriveDayRows(leaDay, seedDayRanges(leaDay));
+    const collecte = rows[1];
+
+    expect(collecte?.status).toBe("assignable");
+    expect(collecte?.rangeWindows).toEqual([]);
+    expect(collecte?.newRangeWindows).toEqual([]);
+  });
+});

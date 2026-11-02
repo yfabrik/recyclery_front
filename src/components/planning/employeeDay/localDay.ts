@@ -34,6 +34,17 @@ export interface EmployeeDayRow {
    * Empty when `unavailable`.
    */
   freeWindows: MinuteWindow[];
+  /**
+   * Only when `assigned`, one entry per `ranges` entry: where that range may sit, i.e. Workday
+   * hours inside the Task minus the Employee's ranges on other Tasks and their other ranges
+   * here. Empty otherwise.
+   */
+  rangeWindows: MinuteWindow[][];
+  /**
+   * Only when `assigned`: where one more range could go (the same, minus ALL their ranges
+   * here); "Ajouter une plage horaire" is possible iff it is not empty. Empty otherwise.
+   */
+  newRangeWindows: MinuteWindow[];
   /** Only when `status` is `unavailable`. */
   reason?: EmployeeTaskUnavailableReason;
   /** Only when `reason` is `busy` and the blocking range is known. */
@@ -82,14 +93,30 @@ export const deriveDayRows = (day: EmployeeTasksDayDto, ranges: readonly DayRang
     const others = ranges.filter((range) => range.taskId !== task.id);
     const freeWindows = assignableWindows({ task: taskWindow, workWindows, otherRanges: others });
 
-    if (own.length > 0) return { task, status: "assigned", ranges: own, freeWindows };
-    if (day.vacation) return { task, status: "unavailable", ranges: [], freeWindows: [], reason: "vacation" };
+    if (own.length > 0) {
+      const windowsWithout = (exceptKey?: string) =>
+        assignableWindows({
+          task: taskWindow,
+          workWindows,
+          otherRanges: ranges.filter((range) => range.key !== exceptKey),
+        });
+      return {
+        task,
+        status: "assigned",
+        ranges: own,
+        freeWindows,
+        rangeWindows: own.map((range) => windowsWithout(range.key)),
+        newRangeWindows: windowsWithout(),
+      };
+    }
+    const noRanges = { ranges: [], freeWindows: [], rangeWindows: [], newRangeWindows: [] };
+    if (day.vacation) return { task, status: "unavailable", ...noRanges, reason: "vacation" };
 
     const hoursInTask = workWindows.flatMap((window) => clipWindow(window, taskWindow) ?? []);
     if (hoursInTask.length === 0) {
-      return { task, status: "unavailable", ranges: [], freeWindows: [], reason: "outside-hours" };
+      return { task, status: "unavailable", ...noRanges, reason: "outside-hours" };
     }
-    if (freeWindows.length > 0) return { task, status: "assignable", ranges: [], freeWindows };
+    if (freeWindows.length > 0) return { task, status: "assignable", ...noRanges, freeWindows };
 
     const blocker = others
       .filter((range) => hoursInTask.some((hours) => overlap(hours, range)))
@@ -98,8 +125,7 @@ export const deriveDayRows = (day: EmployeeTasksDayDto, ranges: readonly DayRang
     return {
       task,
       status: "unavailable",
-      ranges: [],
-      freeWindows: [],
+      ...noRanges,
       reason: "busy",
       ...(blockedBy ? { blockedBy } : {}),
     };

@@ -30,8 +30,9 @@ interface EmployeeDayDialogProps {
  * could be assigned to, or cannot be, from `GET /api/employees/:id/tasks`. It lists the Tasks
  * of all the Employee's Stores whatever Store the Planning page is filtered on.
  *
- * Like the Task dialog it works on local state: assigning ("+") and unassigning (trash)
- * update the dialog at once and are written through the shared write queue; a refused write
+ * Like the Task dialog it works on local state: assigning ("+"), unassigning (trash) and
+ * adjusting the Employee's Time ranges on a Task (sliders, add, delete) update the dialog at
+ * once and are written through the shared write queue; a refused write
  * reverts to the server's state with an error toast. Closing after a change refreshes the
  * Planning page's caches; closing without one refreshes nothing.
  */
@@ -86,6 +87,9 @@ export const EmployeeDayDialog = ({ open, onClose, onCloseWithChanges, employee,
                 rows={editor.rows}
                 onAssign={editor.assignTask}
                 onUnassign={editor.unassignTask}
+                onAddRange={editor.addRange}
+                onRemoveRange={editor.removeRange}
+                onUpdateRange={editor.updateRange}
               />
             )}
           </Loading>

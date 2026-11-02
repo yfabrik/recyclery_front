@@ -10,7 +10,7 @@ import { AssignedTaskCard } from "./AssignedTaskCard";
 import { DayStrip, type DayStripRange } from "./DayStrip";
 import { EmptyColumnMessage } from "./EmptyColumnMessage";
 import { splitRows } from "./dayModel";
-import type { EmployeeDayRow } from "./localDay";
+import type { DayRange, EmployeeDayRow } from "./localDay";
 import { VacationConflictBanner } from "./VacationConflictBanner";
 
 interface EmployeeDayViewProps {
@@ -23,6 +23,12 @@ interface EmployeeDayViewProps {
   onAssign: (taskId: number) => void;
   /** Removes the Employee from the Task (the trash button of an assigned Task). */
   onUnassign: (taskId: number) => void;
+  /** Adds a Time range on an assigned Task. */
+  onAddRange: (taskId: number) => void;
+  /** Removes one of several Time ranges of an assigned Task. */
+  onRemoveRange: (range: DayRange) => void;
+  /** Moves a Time range. */
+  onUpdateRange: (range: DayRange, start: number, end: number) => void;
 }
 
 /** An Employee on Vacation with nothing assigned: the server refuses any new Assignment that day. */
@@ -37,7 +43,16 @@ const VacationInfo = ({ reason }: { reason: EmployeeVacationDto["reason"] }) => 
  * and the Tasks they could take or cannot. Pure view: the dialog owns the data, the local
  * state (`useEmployeeDayEditor`) and the callbacks.
  */
-export const EmployeeDayView = ({ employee, day, rows, onAssign, onUnassign }: EmployeeDayViewProps) => {
+export const EmployeeDayView = ({
+  employee,
+  day,
+  rows,
+  onAssign,
+  onUnassign,
+  onAddRange,
+  onRemoveRange,
+  onUpdateRange,
+}: EmployeeDayViewProps) => {
   const { assigned, others } = splitRows(rows);
   // On Vacation but still holding Tasks is a Vacation conflict, shown by its own banner.
   const vacation = assigned.length === 0 ? day.vacation : null;
@@ -96,6 +111,9 @@ export const EmployeeDayView = ({ employee, day, rows, onAssign, onUnassign }: E
                   color={color}
                   employeeName={name}
                   onUnassign={onUnassign}
+                  onAddRange={onAddRange}
+                  onRemoveRange={onRemoveRange}
+                  onUpdateRange={onUpdateRange}
                 />
               ))}
             </Stack>

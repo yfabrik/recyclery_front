@@ -1,9 +1,19 @@
-import { minutesToTime } from "@recyclerie/api/domain/timeRange";
+import { minutesToTime, type MinuteWindow } from "@recyclerie/api/domain/timeRange";
 import type { EmployeeTasksDayDto } from "@recyclerie/api/responses/employeeTasks";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { addEmployeeToTask, removeEmployeeFromTask } from "../../../services/api/tasks";
+import type { TimeRangeDto } from "@recyclerie/api/responses/timeRanges";
+import {
+  addEmployeeToTask,
+  createTimeRange,
+  deleteTimeRange,
+  removeEmployeeFromTask,
+  updateTimeRange,
+} from "../../../services/api/tasks";
 import { useRevertingWriteQueue } from "../useRevertingWriteQueue";
 import { deriveDayRows, seedDayRanges, type DayRange, type EmployeeDayRow } from "./localDay";
+
+/** How long to wait after the last drag tick before sending a Time range's new position. */
+const RANGE_WRITE_DEBOUNCE_MS = 400;
 
 interface UseEmployeeDayEditorOptions {
   employeeId: number;
@@ -85,6 +95,63 @@ export function useEmployeeDayEditor({ employeeId, day, isFetching, open, refetc
 
   const rows: EmployeeDayRow[] = useMemo(() => (day && ready ? deriveDayRows(day, ranges) : []), [day, ready, ranges]);
 
+  /** Keys of ranges removed locally before their create call came back: deleted as soon as it does. */
+  const pendingRemovalRef = useRef<Set<string>>(new Set());
+
+  const enqueueDelete = (taskId: number, rangeId: number) => {
+    enqueueWrite(() =>
+      runWrite(
+        () => deleteTimeRange(taskId, employeeId, rangeId),
+        "Erreur lors de la suppression de la plage horaire",
+      ),
+    );
+  };
+
+  /**
+   * Shared by assigning and adding a range: both create a Time range from its latest locally
+   * known position, then give the local placeholder the server's id (or delete the range right
+   * back out when it was removed locally in the meantime).
+   */
+  const createRangeAndSettle = (
+    taskId: number,
+    key: string,
+    request: (range: { start_time: TimeRangeDto["start_time"]; end_time: TimeRangeDto["end_time"] }) => Promise<{
+      data: { data: TimeRangeDto };
+    }>,
+    errorMessage: string,
+  ) => {
+    enqueueWrite(() => {
+      const current = rangesRef.current.find((range) => range.key === key);
+      if (!current) return Promise.resolve(); // removed (or its Task unassigned) before this write ran
+      return runWrite(
+        () => request({ start_time: minutesToTime(current.start), end_time: minutesToTime(current.end) }),
+        errorMessage,
+        (response) => {
+          serverHeldRef.current.add(taskId);
+          const created = response.data.data;
+          if (pendingRemovalRef.current.delete(key)) {
+            enqueueDelete(taskId, created.id);
+            return;
+          }
+          setRangesTracked((previous) =>
+            previous.map((range) => (range.key === key ? { ...range, id: created.id } : range)),
+          );
+        },
+      );
+    });
+  };
+
+  /** Appends a local range, flagging the session as changed; returns its key. */
+  const appendLocalRange = (taskId: number, window: MinuteWindow): string => {
+    hasChangesRef.current = true;
+    const key = `local-${nextLocalId.current++}`;
+    setRangesTracked((previous) => [
+      ...previous,
+      { key, id: null, employeeId, taskId, start: window.start, end: window.end },
+    ]);
+    return key;
+  };
+
   /** Assigns the Employee to an `assignable` Task, on its first free window. */
   const assignTask = (taskId: number) => {
     if (!day) return;
@@ -92,31 +159,74 @@ export function useEmployeeDayEditor({ employeeId, day, isFetching, open, refetc
     const free = row?.status === "assignable" ? row.freeWindows[0] : undefined;
     if (!free) return;
 
+    const key = appendLocalRange(taskId, free);
+    createRangeAndSettle(
+      taskId,
+      key,
+      (range) => addEmployeeToTask(taskId, employeeId, range),
+      "Erreur lors de l'assignation",
+    );
+  };
+
+  /** Adds a Time range to an `assigned` Task, on the first window the Employee has left there. */
+  const addRange = (taskId: number) => {
+    if (!day) return;
+    const row = deriveDayRows(day, rangesRef.current).find((candidate) => candidate.task.id === taskId);
+    const free = row?.status === "assigned" ? row.newRangeWindows[0] : undefined;
+    if (!free) return;
+
+    const key = appendLocalRange(taskId, free);
+    createRangeAndSettle(
+      taskId,
+      key,
+      (range) => createTimeRange(taskId, employeeId, range),
+      "Erreur lors de l'ajout de la plage horaire",
+    );
+  };
+
+  /** Removes one of several Time ranges of a Task; removing the last one is `unassignTask`. */
+  const removeRange = (range: Pick<DayRange, "key">) => {
+    const current = rangesRef.current.find((candidate) => candidate.key === range.key);
+    if (!current) return;
+    if (rangesRef.current.filter((candidate) => candidate.taskId === current.taskId).length < 2) return;
+
     hasChangesRef.current = true;
-    const key = `local-${nextLocalId.current++}`;
-    setRangesTracked((previous) => [
-      ...previous,
-      { key, id: null, employeeId, taskId, start: free.start, end: free.end },
-    ]);
-    enqueueWrite(() => {
-      const current = rangesRef.current.find((range) => range.key === key);
-      if (!current) return Promise.resolve(); // unassigned again before this write ran
-      return runWrite(
-        () =>
-          addEmployeeToTask(taskId, employeeId, {
-            start_time: minutesToTime(current.start),
-            end_time: minutesToTime(current.end),
-          }),
-        "Erreur lors de l'assignation",
-        (response) => {
-          serverHeldRef.current.add(taskId);
-          const created = response.data.data;
-          setRangesTracked((previous) =>
-            previous.map((range) => (range.key === key ? { ...range, id: created.id } : range)),
-          );
-        },
-      );
-    });
+    writeQueue.cancel(current.key);
+    setRangesTracked((previous) => previous.filter((candidate) => candidate.key !== current.key));
+    if (current.id == null) {
+      pendingRemovalRef.current.add(current.key); // its create has not come back yet
+      return;
+    }
+    enqueueDelete(current.taskId, current.id);
+  };
+
+  /**
+   * Moves a Time range: the dialog follows at once, one write per range is sent once the
+   * dragging pauses. The caller keeps the range within its allowed windows (`rangeWindows`).
+   */
+  const updateRange = (range: Pick<DayRange, "key">, start: number, end: number) => {
+    hasChangesRef.current = true;
+    setRangesTracked((previous) =>
+      previous.map((candidate) => (candidate.key === range.key ? { ...candidate, start, end } : candidate)),
+    );
+    const epoch = epochRef.current;
+    writeQueue.scheduleDebounced(
+      range.key,
+      () => {
+        const current = rangesRef.current.find((candidate) => candidate.key === range.key);
+        // Gone, or a revert happened since this drag: the position it describes was discarded.
+        if (!current || current.id == null || epoch !== epochRef.current) return Promise.resolve();
+        return runWrite(
+          () =>
+            updateTimeRange(current.taskId, employeeId, current.id!, {
+              start_time: minutesToTime(current.start),
+              end_time: minutesToTime(current.end),
+            }),
+          "Erreur lors de la modification de la plage horaire",
+        );
+      },
+      RANGE_WRITE_DEBOUNCE_MS,
+    );
   };
 
   /** Removes the Employee from an `assigned` Task: all their Time ranges on it. */
@@ -151,5 +261,5 @@ export function useEmployeeDayEditor({ employeeId, day, isFetching, open, refetc
     return changed;
   };
 
-  return { ready, rows, ranges, assignTask, unassignTask, finish };
+  return { ready, rows, ranges, assignTask, unassignTask, addRange, removeRange, updateRange, finish };
 }

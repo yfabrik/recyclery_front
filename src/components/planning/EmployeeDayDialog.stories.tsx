@@ -110,7 +110,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Real dialog wired to `GET /api/employees/:id/tasks` with axios mocked per story. Assigned Tasks (with the Employee's Time ranges) on the left, assignable and unavailable Tasks on the right, work hours and Time ranges on the day strip. "+" assigns the Employee on the Task's first free window, the trash button removes them from the Task; both update the dialog at once and are written through the shared write queue.",
+          "Real dialog wired to `GET /api/employees/:id/tasks` with axios mocked per story. Assigned Tasks (with the Employee's Time ranges) on the left, assignable and unavailable Tasks on the right, work hours and Time ranges on the day strip. \"+\" assigns the Employee on the Task's first free window, the trash button removes them from the Task. Each Time range has the Task assignment dialog's slider (blocked zones cannot be entered), \"Ajouter une plage horaire\" and, with several ranges, a per-range delete. All update the dialog at once and are written through the shared write queue.",
       },
     },
   },
@@ -446,6 +446,258 @@ export const RejectedUnassignRevertsWithToast: Story = {
     await expect(await screen.findByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
     const assigned = within(screen.getByRole("region", { name: "Tâches assignées" }));
     await expect(assigned.getByText("Plage horaire 1 · 08:30–09:30")).toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 2 · 10:00–11:00")).toBeInTheDocument();
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+    await expect(args.onRequest).toHaveBeenCalledTimes(2);
+  },
+};
+
+/** The input behind one thumb of a Time range's slider (`Début`/`Fin`), focusable and driven by the keyboard. */
+const thumb = (screen: ReturnType<typeof dialogScreen>, which: "Début" | "Fin", position: number, subject: string) =>
+  screen.getByRole("slider", { name: `${which} plage horaire ${position} de ${subject}` });
+
+const LEA_ON_TRI = "Léa Martin sur Tri arrivage";
+const LEA_ON_VENTE = "Léa Martin sur Vente atelier";
+
+/**
+ * "Ajouter une plage horaire" puts a second range in the first window left on the Task and
+ * writes it through the Time range endpoint; the Task is then full, so the button is disabled.
+ * The day strip follows.
+ */
+export const AddTimeRange: Story = {
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+    await expect(assigned.queryByText("Plage horaire 2 · 15:00–16:00")).not.toBeInTheDocument();
+
+    await userEvent.click(await screen.findByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_VENTE}` }));
+
+    await expect(await assigned.findByText("Plage horaire 2 · 15:00–16:00")).toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 1 · 13:00–15:00")).toBeInTheDocument();
+    // Two ranges now: each can be deleted, and each has its own slider.
+    await expect(screen.getByRole("button", { name: `Retirer le plage horaire 2 de ${LEA_ON_VENTE}` })).toBeEnabled();
+    await expect(thumb(screen, "Début", 2, LEA_ON_VENTE)).toBeInTheDocument();
+    await expect(thumb(screen, "Fin", 2, LEA_ON_VENTE)).toBeInTheDocument();
+
+    const strip = within(screen.getByRole("group", { name: "Journée de Léa Martin" }));
+    await expect(strip.getByRole("img", { name: "Vente atelier · 15:00–16:00" })).toBeInTheDocument();
+    await expect(strip.getByText("Journée de l'employé — 5 h assignées sur 8 h de présence")).toBeInTheDocument();
+
+    // The Task has no free window left.
+    await expect(screen.getByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_VENTE}` })).toBeDisabled();
+
+    await waitFor(() =>
+      expect(args.onWrite).toHaveBeenCalledWith({
+        method: "POST",
+        url: "/api/tasks/3/employees/1/time-ranges",
+        body: { start_time: "15:00", end_time: "16:00" },
+      }),
+    );
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The new range takes the first free window, even before the existing ranges: ranges are numbered by start. */
+export const AddTimeRangeInFirstFreeWindow: Story = {
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+
+    // 08:30-09:30 and 10:00-11:00 are held; 08:00-08:30 is the first window left.
+    await userEvent.click(await screen.findByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_TRI}` }));
+
+    await expect(await assigned.findByText("Plage horaire 3 · 10:00–11:00")).toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 1 · 08:00–08:30")).toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 2 · 08:30–09:30")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(args.onWrite).toHaveBeenCalledWith({
+        method: "POST",
+        url: "/api/tasks/1/employees/1/time-ranges",
+        body: { start_time: "08:00", end_time: "08:30" },
+      }),
+    );
+  },
+};
+
+/** A Task whose Time range fills it has no room for another: disabled button, tooltip, no write. */
+export const NoFreeWindowDisablesAddTimeRange: Story = {
+  args: { employee: EMPLOYEES.marc, day: marcDay },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    const button = await screen.findByRole("button", { name: "Ajouter une plage horaire pour Marc Petit sur Tri arrivage" });
+    await expect(button).toBeDisabled();
+    await expect(
+      screen.getByRole("button", { name: "Ajouter une plage horaire pour Marc Petit sur Collecte" }),
+    ).toBeDisabled();
+
+    if (!button.parentElement) throw new Error("the disabled button is wrapped so that it can carry a tooltip");
+    await userEvent.hover(button.parentElement);
+    await expect(await pageScreen(canvasElement).findByRole("tooltip")).toHaveTextContent("Plus de plage horaire libre");
+    await expect(args.onWrite).not.toHaveBeenCalled();
+  },
+};
+
+/**
+ * A Task with several Time ranges lets each be deleted (one write for that range); the last
+ * one cannot, it is removed by unassigning. The day strip follows.
+ */
+export const RemoveTimeRange: Story = {
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+    // Only the Task with two ranges offers a delete.
+    await expect(await screen.findAllByRole("button", { name: /^Retirer le plage horaire/ })).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole("button", { name: `Retirer le plage horaire 1 de ${LEA_ON_TRI}` }));
+
+    await expect(await assigned.findByText("Plage horaire 1 · 10:00–11:00")).toBeInTheDocument();
+    await expect(assigned.queryByText("Plage horaire 1 · 08:30–09:30")).not.toBeInTheDocument();
+    await expect(assigned.queryByText(/^Plage horaire 2 · 10:00/)).not.toBeInTheDocument();
+    // Left with one range, the Task offers no delete any more.
+    await expect(screen.queryAllByRole("button", { name: /^Retirer le plage horaire/ })).toHaveLength(0);
+    await expect(screen.getByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
+
+    const strip = within(screen.getByRole("group", { name: "Journée de Léa Martin" }));
+    await expect(strip.queryByRole("img", { name: "Tri arrivage · 08:30–09:30" })).not.toBeInTheDocument();
+    await expect(strip.getByRole("img", { name: "Tri arrivage · 10:00–11:00" })).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(args.onWrite).toHaveBeenCalledWith({
+        method: "DELETE",
+        url: "/api/tasks/1/employees/1/time-ranges/100",
+        body: undefined,
+      }),
+    );
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * Dragging moves the range and the day strip at once; the writes of one drag are debounced
+ * into a single update of that range.
+ */
+export const AdjustTimeRange: Story = {
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+
+    const end = await waitFor(() => thumb(screen, "Fin", 1, LEA_ON_VENTE));
+    end.focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+
+    await expect(assigned.getByText("Plage horaire 1 · 13:00–15:30")).toBeInTheDocument();
+    const strip = within(screen.getByRole("group", { name: "Journée de Léa Martin" }));
+    await expect(strip.getByRole("img", { name: "Vente atelier · 13:00–15:30" })).toBeInTheDocument();
+
+    await waitFor(() => expect(args.onWrite).toHaveBeenCalledTimes(1));
+    await expect(args.onWrite).toHaveBeenCalledWith({
+      method: "PUT",
+      url: "/api/tasks/3/employees/1/time-ranges/300",
+      body: { start_time: "13:00", end_time: "15:30" },
+    });
+  },
+};
+
+/**
+ * A range cannot be dragged into a zone the Employee cannot work: the 2nd range of "Tri arrivage"
+ * stops at 09:30, where the 1st range (08:30-09:30) ends.
+ */
+export const DragStopsAtBlockedZone: Story = {
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+
+    const start = await waitFor(() => thumb(screen, "Début", 2, LEA_ON_TRI));
+    start.focus();
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}");
+
+    await expect(assigned.getByText("Plage horaire 2 · 09:30–11:00")).toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 1 · 08:30–09:30")).toBeInTheDocument();
+
+    await waitFor(() => expect(args.onWrite).toHaveBeenCalledTimes(1));
+    await expect(args.onWrite).toHaveBeenCalledWith({
+      method: "PUT",
+      url: "/api/tasks/1/employees/1/time-ranges/101",
+      body: { start_time: "09:30", end_time: "11:00" },
+    });
+  },
+};
+
+/** The server refuses the new range (409): it disappears again and the message is toasted. */
+export const RejectedAddTimeRangeRevertsWithToast: Story = {
+  args: {
+    rejectWrite: ({ method }) =>
+      method === "POST" ? { status: 409, message: "Cette plage horaire n'est plus disponible" } : undefined,
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_VENTE}` }));
+
+    await expect(
+      await pageScreen(canvasElement).findByText("Cette plage horaire n'est plus disponible", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+    await expect(assigned.queryByText("Plage horaire 2 · 15:00–16:00")).not.toBeInTheDocument();
+    await expect(assigned.getByText("Plage horaire 1 · 13:00–15:00")).toBeInTheDocument();
+    await expect(
+      within(screen.getByRole("group", { name: "Journée de Léa Martin" })).queryByRole("img", {
+        name: "Vente atelier · 15:00–16:00",
+      }),
+    ).not.toBeInTheDocument();
+    await expect(
+      screen.getByRole("button", { name: `Ajouter une plage horaire pour ${LEA_ON_VENTE}` }),
+    ).toBeEnabled();
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+    await expect(args.onRequest).toHaveBeenCalledTimes(2);
+  },
+};
+
+/** The server refuses the new position (409): the range goes back to where the server has it. */
+export const RejectedAdjustTimeRangeRevertsWithToast: Story = {
+  args: {
+    rejectWrite: ({ method }) =>
+      method === "PUT" ? { status: 409, message: "Léa Martin est déjà occupée sur cette plage" } : undefined,
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+
+    const end = await waitFor(() => thumb(screen, "Fin", 1, LEA_ON_VENTE));
+    end.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    await expect(
+      await pageScreen(canvasElement).findByText("Léa Martin est déjà occupée sur cette plage", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    await expect(await assigned.findByText("Plage horaire 1 · 13:00–15:00")).toBeInTheDocument();
+    await expect(
+      within(screen.getByRole("group", { name: "Journée de Léa Martin" })).getByRole("img", {
+        name: "Vente atelier · 13:00–15:00",
+      }),
+    ).toBeInTheDocument();
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+    await expect(args.onRequest).toHaveBeenCalledTimes(2);
+  },
+};
+
+/** The server refuses to delete the range (409): it is back, and the message is toasted. */
+export const RejectedRemoveTimeRangeRevertsWithToast: Story = {
+  args: {
+    rejectWrite: ({ method }) =>
+      method === "DELETE" ? { status: 409, message: "Impossible de supprimer cette plage horaire" } : undefined,
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: `Retirer le plage horaire 1 de ${LEA_ON_TRI}` }));
+
+    await expect(
+      await pageScreen(canvasElement).findByText("Impossible de supprimer cette plage horaire", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    const assigned = within(await screen.findByRole("region", { name: "Tâches assignées" }));
+    await expect(await assigned.findByText("Plage horaire 1 · 08:30–09:30")).toBeInTheDocument();
     await expect(assigned.getByText("Plage horaire 2 · 10:00–11:00")).toBeInTheDocument();
     await expect(args.onWrite).toHaveBeenCalledTimes(1);
     await expect(args.onRequest).toHaveBeenCalledTimes(2);
