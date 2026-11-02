@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "react-toastify";
 import {
   firstFreeWindow,
   minutesToTime,
@@ -21,7 +20,6 @@ import {
 import { toIsoTime } from "@recyclerie/api/domain/date";
 import type { TaskAssignedEmployeeDto } from "@recyclerie/api/responses/tasks";
 import type { TaskAvailableEmployeeDto, TimeRangeDto } from "@recyclerie/api/responses/timeRanges";
-import { getApiErrorMessage } from "../../utils/apiToastMessage";
 import type { TaskModel } from "../../interfaces/Models";
 import {
   addEmployeeToTask,
@@ -32,7 +30,7 @@ import {
   removeEmployeeFromTask,
   updateTimeRange,
 } from "../../services/api/tasks";
-import { createTimeRangeWriteQueue, type TimeRangeWriteQueue } from "./timeRangeWriteQueue";
+import { useRevertingWriteQueue } from "./useRevertingWriteQueue";
 import { AssignedEmployeeRow } from "./taskAssignment/AssignedEmployeeRow";
 import { AvailableEmployeeRow } from "./taskAssignment/AvailableEmployeeRow";
 import { CoverageTimeline } from "./taskAssignment/CoverageTimeline";
@@ -127,43 +125,9 @@ const TaskAssignmentDialog = ({
     await availableQuery.refetch();
     seedFromServer(result.data ?? []);
   };
-  const revertToServerRef = useRef(revertToServer);
-  revertToServerRef.current = revertToServer;
-
-  const hasChangesRef = useRef(false);
+  const { writeQueue, runWrite, hasChangesRef } = useRevertingWriteQueue(revertToServer);
   const pendingRemovalRef = useRef<Set<string>>(new Set());
   const nextLocalId = useRef(0);
-
-  const writeQueueRef = useRef<TimeRangeWriteQueue | null>(null);
-  if (!writeQueueRef.current) {
-    writeQueueRef.current = createTimeRangeWriteQueue((error) => {
-      void revertToServerRef.current();
-      toast.error(getApiErrorMessage(error, "Erreur lors de l'enregistrement"));
-    });
-  }
-  const writeQueue = writeQueueRef.current;
-
-  useEffect(
-    () => () => {
-      void writeQueue.flush();
-    },
-    [writeQueue],
-  );
-
-  /** Runs a write; on rejection, reverts local state to the server's and toasts the error. */
-  const runWrite = async <T,>(
-    write: () => Promise<T>,
-    errorMessage: string,
-    onSuccess?: (result: T) => void,
-  ) => {
-    try {
-      const result = await write();
-      onSuccess?.(result);
-    } catch (error) {
-      await revertToServerRef.current();
-      toast.error(getApiErrorMessage(error, errorMessage));
-    }
-  };
 
   const enqueueDelete = (employeeId: number, rangeId: number) => {
     writeQueue.enqueue(() =>

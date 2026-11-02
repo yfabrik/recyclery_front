@@ -1,16 +1,19 @@
-import { CheckCircle } from "@mui/icons-material";
-import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
-import type { EmployeeTaskRowDto } from "@recyclerie/api/responses/employeeTasks";
-import { toMinuteWindow } from "../taskAssignment/geometry";
+import { Add, Block, CheckCircle } from "@mui/icons-material";
+import { Box, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { formatWindow, taskMinuteWindow, unavailableReasonText } from "./dayModel";
+import type { EmployeeDayRow } from "./localDay";
 
 interface AssignableTaskCardProps {
   /** A row with `status: "assignable"` or `"unavailable"`. */
-  row: EmployeeTaskRowDto;
+  row: EmployeeDayRow;
+  /** The Employee's name, for the accessible name of the assign button. */
+  employeeName: string;
+  /** Assigns the Employee to this Task, on its first free window. */
+  onAssign: (taskId: number) => void;
 }
 
 /** A Task the Employee does not hold: where they could cover it ("Libre"), or why they cannot ("Impossible"). */
-export const AssignableTaskCard = ({ row }: AssignableTaskCardProps) => {
+export const AssignableTaskCard = ({ row, employeeName, onAssign }: AssignableTaskCardProps) => {
   const unavailable = row.status === "unavailable";
 
   return (
@@ -34,13 +37,34 @@ export const AssignableTaskCard = ({ row }: AssignableTaskCardProps) => {
             <Typography variant="caption" color={unavailable ? "error" : "text.secondary"} display="block">
               {unavailable
                 ? unavailableReasonText(row)
-                : `Libre ${row.freeWindows.map((window) => formatWindow(toMinuteWindow(window))).join(", ")}`}
+                : `Libre ${row.freeWindows.map(formatWindow).join(", ")}`}
             </Typography>
           </Box>
           {unavailable ? (
             <Chip label="Impossible" size="small" color="error" sx={{ fontSize: "0.7rem" }} />
           ) : (
             <Chip icon={<CheckCircle />} label="Libre" size="small" color="success" sx={{ fontSize: "0.7rem" }} />
+          )}
+          {unavailable ? (
+            <Tooltip describeChild title={unavailableReasonText(row)}>
+              <span>
+                <IconButton size="small" color="error" disabled aria-label={`Impossible d'assigner ${row.task.name}`}>
+                  <Block />
+                </IconButton>
+              </span>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Assigner à cette tâche">
+              <IconButton
+                size="small"
+                color="success"
+                aria-label={`Assigner ${employeeName} à ${row.task.name}`}
+                onClick={() => onAssign(row.task.id)}
+                sx={{ bgcolor: "#e8f5e8", "&:hover": { bgcolor: "#c8e6c9" } }}
+              >
+                <Add />
+              </IconButton>
+            </Tooltip>
           )}
         </Stack>
       </CardContent>

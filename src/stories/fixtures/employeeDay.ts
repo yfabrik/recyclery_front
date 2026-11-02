@@ -94,7 +94,7 @@ export const makeTask = ({ id, name, from, to, store = "centre" }: TaskSpec): Ta
   Recyclery: store ? STORES[store] : null,
 });
 
-const makeRange = (
+export const makeRange = (
   id: number,
   employeeId: number,
   taskId: number,

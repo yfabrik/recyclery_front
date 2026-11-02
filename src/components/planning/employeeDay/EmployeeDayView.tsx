@@ -10,10 +10,18 @@ import { AssignedTaskCard } from "./AssignedTaskCard";
 import { DayStrip, type DayStripRange } from "./DayStrip";
 import { EmptyColumnMessage } from "./EmptyColumnMessage";
 import { splitRows } from "./dayModel";
+import type { EmployeeDayRow } from "./localDay";
 
 interface EmployeeDayViewProps {
   employee: Employee;
+  /** The server's day: Workday hours (and, from the Vacation tickets on, the Vacation). */
   day: EmployeeTasksDayDto;
+  /** The Tasks of the day with their status for the Employee's current (local) Time ranges. */
+  rows: readonly EmployeeDayRow[];
+  /** Assigns the Employee to the Task (the "+" of an assignable Task). */
+  onAssign: (taskId: number) => void;
+  /** Removes the Employee from the Task (the trash button of an assigned Task). */
+  onUnassign: (taskId: number) => void;
 }
 
 /** An Employee on Vacation with nothing assigned: the server refuses any new Assignment that day. */
@@ -25,15 +33,15 @@ const VacationInfo = ({ reason }: { reason: EmployeeVacationDto["reason"] }) => 
 
 /**
  * The body of the Employee day dialog: a day strip, then the Tasks the Employee holds
- * and the Tasks they could take or cannot. Pure view of one `EmployeeTasksDayDto`: the
- * dialog owns the data (and, from the write tickets on, the local state and the callbacks).
+ * and the Tasks they could take or cannot. Pure view: the dialog owns the data, the local
+ * state (`useEmployeeDayEditor`) and the callbacks.
  */
-export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
-  const { assigned, others } = splitRows(day.rows);
+export const EmployeeDayView = ({ employee, day, rows, onAssign, onUnassign }: EmployeeDayViewProps) => {
+  const { assigned, others } = splitRows(rows);
   // On Vacation but still holding Tasks is a Vacation conflict, shown by its own banner.
   const vacation = assigned.length === 0 ? day.vacation : null;
 
-  if (day.rows.length === 0) {
+  if (rows.length === 0) {
     return (
       <>
         {vacation && <VacationInfo reason={vacation.reason} />}
@@ -43,11 +51,12 @@ export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
   }
 
   const color = employeeColor(employee);
+  const name = employeeName(employee);
   const stripRanges: DayStripRange[] = assigned.flatMap((row) =>
-    row.timeRanges.map((range) => ({
-      key: `range-${range.id}`,
+    row.ranges.map((range) => ({
+      key: range.key,
       taskName: row.task.name,
-      window: toMinuteWindow(range),
+      window: { start: range.start, end: range.end },
     })),
   );
 
@@ -55,7 +64,7 @@ export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
     <>
       {vacation && <VacationInfo reason={vacation.reason} />}
       <DayStrip
-        label={`Journée de ${employeeName(employee)}`}
+        label={`Journée de ${name}`}
         color={color}
         workWindows={day.workWindows.map(toMinuteWindow)}
         ranges={stripRanges}
@@ -70,7 +79,13 @@ export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
           ) : (
             <Stack spacing={1.5}>
               {assigned.map((row) => (
-                <AssignedTaskCard key={row.task.id} row={row} color={color} />
+                <AssignedTaskCard
+                  key={row.task.id}
+                  row={row}
+                  color={color}
+                  employeeName={name}
+                  onUnassign={onUnassign}
+                />
               ))}
             </Stack>
           )}
@@ -85,7 +100,7 @@ export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
           ) : (
             <Box sx={{ maxHeight: 480, overflow: "auto" }}>
               {others.map((row) => (
-                <AssignableTaskCard key={row.task.id} row={row} />
+                <AssignableTaskCard key={row.task.id} row={row} employeeName={name} onAssign={onAssign} />
               ))}
             </Box>
           )}

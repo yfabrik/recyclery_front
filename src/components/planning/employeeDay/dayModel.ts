@@ -45,14 +45,16 @@ export const hourTicks = ({ start, end }: MinuteWindow): number[] => {
   return ticks;
 };
 
-export interface EmployeeDayColumns {
+export interface EmployeeDayColumns<Row extends Pick<EmployeeTaskRowDto, "status">> {
   /** Rows the Employee holds, in the endpoint's order (start time). */
-  assigned: EmployeeTaskRowDto[];
+  assigned: Row[];
   /** Rows they could take (`assignable`) and rows they cannot (`unavailable`), in the endpoint's order. */
-  others: EmployeeTaskRowDto[];
+  others: Row[];
 }
 
-export const splitRows = (rows: readonly EmployeeTaskRowDto[]): EmployeeDayColumns => ({
+export const splitRows = <Row extends Pick<EmployeeTaskRowDto, "status">>(
+  rows: readonly Row[],
+): EmployeeDayColumns<Row> => ({
   assigned: rows.filter((row) => row.status === "assigned"),
   others: rows.filter((row) => row.status !== "assigned"),
 });
