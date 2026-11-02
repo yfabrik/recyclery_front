@@ -66,7 +66,7 @@ export function slotOfRange(range: { start_time: string }): TimeSlot {
   return timeSlotOfMinutes(timeToMinutes(range.start_time));
 }
 
-/** Date, then range start. Only the time of day of a range is meaningful. */
+/** Date, then range start. Only the time of day of a range is meaningful; ISO `YYYY-MM-DD` dates compare chronologically as strings. */
 function compareItems(
   a: EmployeeTimeRangeItem,
   b: EmployeeTimeRangeItem,

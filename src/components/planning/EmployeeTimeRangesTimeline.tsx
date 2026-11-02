@@ -53,10 +53,6 @@ function formatTime(value: Date | string): string {
   return toIsoTime(value);
 }
 
-/**
- * Timeline component that displays employee Time ranges with start/end time,
- * day of week and task name.
- */
 const printStyles = {
   "@media print": {
     breakInside: "avoid",
@@ -66,6 +62,10 @@ const printStyles = {
   },
 };
 
+/**
+ * Timeline component that displays employee Time ranges with start/end time,
+ * day of week and task name.
+ */
 export function EmployeeTimeRangesTimeline({
   timeRanges,
   employeeName,
@@ -104,7 +104,9 @@ export function EmployeeTimeRangesTimeline({
       {timeRanges.map((timeRange, index) => {
         const Icon = getCategoryIcon(timeRange.category);
         return (
-          <TimelineItem key={index}>
+          <TimelineItem
+            key={`${timeRange.date}-${timeRange.start_time}-${timeRange.name}`}
+          >
             <TimelineOppositeContent
               sx={{
                 py: 1.5,
