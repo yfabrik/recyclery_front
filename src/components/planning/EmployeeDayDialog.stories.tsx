@@ -21,6 +21,7 @@ import {
   EMPLOYEES,
   emptyDay,
   inesOnVacationDay,
+  inesVacationConflictDay,
   karimDay,
   leaDay,
   marcDay,
@@ -508,5 +509,167 @@ export const ClosingWithoutChangesDoesNotRefresh: Story = {
     for (const key of [...SEEDED_CACHES, UNRELATED_CACHE]) await expect(isStale(client, key)).toBe(false);
     await expect(args.onRequest).toHaveBeenCalledTimes(1);
     await expect(args.onWrite).not.toHaveBeenCalled();
+  },
+};
+
+/**
+ * Inès is on Vacation yet still holds two Tasks: a red banner says so and names the number of
+ * Tasks, the "En congé" info alert is not shown, and her Tasks stay in the assigned column.
+ */
+export const VacationConflict: Story = {
+  args: { employee: EMPLOYEES.ines, day: inesVacationConflictDay },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
+    const banner = screen.getByRole("alert");
+    await expect(banner).toHaveTextContent("En congé (Congé payé) mais encore assigné");
+    await expect(banner).toHaveTextContent("Assigné à 2 tâches ce jour.");
+    await expect(within(banner).getByRole("button", { name: "Retirer de 2 tâches" })).toBeEnabled();
+    await expect(screen.queryByText(/aucune tâche ne peut lui être assignée/)).not.toBeInTheDocument();
+
+    const assigned = within(screen.getByRole("region", { name: "Tâches assignées" }));
+    await expect(assigned.getByText("Tri arrivage")).toBeInTheDocument();
+    await expect(assigned.getByText("Collecte")).toBeInTheDocument();
+    // The Task she does not hold stays unavailable to her.
+    const assignable = within(screen.getByRole("region", { name: "Tâches assignables" }));
+    await expect(assignable.getByText("En congé")).toBeInTheDocument();
+    await expect(args.onWrite).not.toHaveBeenCalled();
+  },
+};
+
+/** An Employee not on Vacation gets no banner, whatever Tasks they hold. */
+export const NoVacationConflictWithoutVacation: Story = {
+  play: async ({ canvasElement }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
+    await expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await expect(screen.queryByRole("button", { name: /^Retirer de \d+ tâche/ })).not.toBeInTheDocument();
+  },
+};
+
+/**
+ * One click removes Inès from every Task she holds: the assigned column empties at once, the
+ * banner gives way to the "En congé" info alert, and one delete request per Task is sent.
+ */
+export const ClearVacationConflict: Story = {
+  args: { employee: EMPLOYEES.ines, day: inesVacationConflictDay },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Retirer de 2 tâches" }));
+
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (0)" })).toBeInTheDocument();
+    await expect(screen.getByRole("alert")).toHaveTextContent(
+      "En congé (Congé payé) : aucune tâche ne peut lui être assignée.",
+    );
+    await expect(screen.queryByText(/mais encore assigné/)).not.toBeInTheDocument();
+    await expect(screen.queryByRole("button", { name: /^Retirer de \d+ tâche/ })).not.toBeInTheDocument();
+    await expect(
+      within(screen.getByRole("region", { name: "Tâches assignées" })).getByText("Aucune tâche assignée"),
+    ).toBeInTheDocument();
+    // Every Task of the day is unavailable to her again, the two she held included.
+    const assignable = within(screen.getByRole("region", { name: "Tâches assignables" }));
+    await expect(assignable.getAllByText("En congé")).toHaveLength(3);
+
+    // One removal per Task held, in order; nothing was sent twice.
+    await waitFor(() => expect(args.onWrite).toHaveBeenCalledTimes(2));
+    await expect(args.onWrite).toHaveBeenNthCalledWith(1, {
+      method: "DELETE",
+      url: "/api/tasks/1/employees/5",
+      body: undefined,
+    });
+    await expect(args.onWrite).toHaveBeenNthCalledWith(2, {
+      method: "DELETE",
+      url: "/api/tasks/2/employees/5",
+      body: undefined,
+    });
+    await expect(args.onRequest).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * The server refuses the first removal: the dialog goes back to the server's day (banner and
+ * both Tasks back), the error is toasted, and the second removal, queued behind it, is dropped.
+ */
+export const RejectedVacationConflictRemovalReverts: Story = {
+  args: {
+    employee: EMPLOYEES.ines,
+    day: inesVacationConflictDay,
+    rejectWrite: ({ method }) =>
+      method === "DELETE" ? { status: 500, message: "Impossible de retirer Inès Roux de cette tâche" } : undefined,
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Retirer de 2 tâches" }));
+
+    await expect(
+      await pageScreen(canvasElement).findByText(
+        "Impossible de retirer Inès Roux de cette tâche",
+        {},
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument();
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
+    await expect(screen.getByRole("button", { name: "Retirer de 2 tâches" })).toBeInTheDocument();
+    await expect(screen.queryByText(/aucune tâche ne peut lui être assignée/)).not.toBeInTheDocument();
+    // Only the refused write reached the server; the one behind it was dropped with the revert.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(args.onWrite).toHaveBeenCalledTimes(1);
+    await expect(args.onRequest).toHaveBeenCalledTimes(2); // the day, then the revert's refetch
+  },
+};
+
+/**
+ * The server refuses only the second removal: the first went through, so the revert shows
+ * the server's real day, one Task left and the banner counting it.
+ */
+export const PartiallyRejectedVacationConflictRemovalReverts: Story = {
+  args: {
+    employee: EMPLOYEES.ines,
+    day: inesVacationConflictDay,
+    rejectWrite: ({ url }) =>
+      url === "/api/tasks/2/employees/5"
+        ? { status: 500, message: "Impossible de retirer Inès Roux de Collecte" }
+        : undefined,
+  },
+  play: async ({ canvasElement, args }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Retirer de 2 tâches" }));
+
+    await expect(
+      await pageScreen(canvasElement).findByText("Impossible de retirer Inès Roux de Collecte", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (1)" })).toBeInTheDocument();
+    await expect(screen.getByRole("button", { name: "Retirer de 1 tâche" })).toBeInTheDocument();
+    const assigned = within(screen.getByRole("region", { name: "Tâches assignées" }));
+    await expect(assigned.getByText("Collecte")).toBeInTheDocument();
+    await expect(assigned.queryByText("Tri arrivage")).not.toBeInTheDocument();
+    await expect(args.onWrite).toHaveBeenCalledTimes(2);
+  },
+};
+
+/** Closing after clearing a Vacation conflict refreshes the Planning page's caches, as after any change. */
+export const ClosingAfterClearingVacationConflictRefreshes: Story = {
+  args: { employee: EMPLOYEES.ines, day: inesVacationConflictDay },
+  play: async ({ canvasElement, args }) => {
+    const client = probe.client;
+    if (!client) throw new Error("the story did not hand over its QueryClient");
+    seedCaches(client);
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Retirer de 2 tâches" }));
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (0)" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Fermer" }));
+
+    await expect(args.onClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(args.onCloseWithChanges).toHaveBeenCalledTimes(1));
+    // Both removals were sent before anything was refreshed.
+    await expect(args.onWrite).toHaveBeenCalledTimes(2);
+    for (const key of SEEDED_CACHES) await expect(isStale(client, key)).toBe(true);
+    await expect(isStale(client, UNRELATED_CACHE)).toBe(false);
   },
 };

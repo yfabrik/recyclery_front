@@ -231,3 +231,18 @@ export const inesOnVacationDay: EmployeeTasksDayDto = {
     unavailable(VENTE, "vacation"),
   ],
 };
+
+/**
+ * A Vacation conflict: Inès is on Vacation (added after her Assignments, which stay) yet holds
+ * "Tri arrivage" and "Collecte". The Task she does not hold is unavailable to her.
+ */
+export const inesVacationConflictDay: EmployeeTasksDayDto = {
+  date: DAY,
+  workWindows: [window_(hm(8), hm(16))],
+  vacation: paidVacation(EMPLOYEES.ines.id),
+  rows: [
+    assigned(TRI, EMPLOYEES.ines.id, [[hm(8), hm(11)]], [window_(hm(8), hm(11))]),
+    assigned(COLLECTE, EMPLOYEES.ines.id, [[hm(11), hm(13)]], [window_(hm(11), hm(13))]),
+    unavailable(VENTE, "vacation"),
+  ],
+};

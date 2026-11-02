@@ -11,6 +11,7 @@ import { DayStrip, type DayStripRange } from "./DayStrip";
 import { EmptyColumnMessage } from "./EmptyColumnMessage";
 import { splitRows } from "./dayModel";
 import type { EmployeeDayRow } from "./localDay";
+import { VacationConflictBanner } from "./VacationConflictBanner";
 
 interface EmployeeDayViewProps {
   employee: Employee;
@@ -40,6 +41,7 @@ export const EmployeeDayView = ({ employee, day, rows, onAssign, onUnassign }: E
   const { assigned, others } = splitRows(rows);
   // On Vacation but still holding Tasks is a Vacation conflict, shown by its own banner.
   const vacation = assigned.length === 0 ? day.vacation : null;
+  const conflict = assigned.length > 0 ? day.vacation : null;
 
   if (rows.length === 0) {
     return (
@@ -63,6 +65,15 @@ export const EmployeeDayView = ({ employee, day, rows, onAssign, onUnassign }: E
   return (
     <>
       {vacation && <VacationInfo reason={vacation.reason} />}
+      {conflict && (
+        <VacationConflictBanner
+          reason={conflict.reason}
+          taskCount={assigned.length}
+          onRemoveAll={() => {
+            for (const row of assigned) onUnassign(row.task.id);
+          }}
+        />
+      )}
       <DayStrip
         label={`Journée de ${name}`}
         color={color}
