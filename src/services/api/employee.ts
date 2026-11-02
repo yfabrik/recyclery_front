@@ -6,6 +6,8 @@ import type {
   UpdateEmployeeResponse,
 } from "@recyclerie/api/responses/employees";
 import type { EmployeeDataInput, EmployeeFilterInput } from "@recyclerie/api/schemas/employees";
+import type { EmployeeTasksResponse } from "@recyclerie/api/responses/employeeTasks";
+import type { EmployeeTasksQueryInput } from "@recyclerie/api/schemas/employeeTasks";
 import type { AxiosResponse } from "axios";
 import type { EmployeeModel, WorkdaysModel } from "../../interfaces/Models";
 import axiosInstance from "./axios";
@@ -20,6 +22,16 @@ export const getEmployees = (
   filters?: EmployeeFilterInput,
 ): Promise<AxiosResponse<ListEmployeesResponse>> =>
   axiosInstance.get<ListEmployeesResponse>("/api/employees", { params: filters });
+
+/**
+ * The Employee's Tasks over `date_from..date_to` (both inclusive, 31 days at most), each one
+ * assigned, assignable or unavailable. The page's Store filter is deliberately not a parameter.
+ */
+export const getEmployeeTasks = (
+  id: EmployeeModel["id"],
+  params: EmployeeTasksQueryInput,
+): Promise<AxiosResponse<EmployeeTasksResponse>> =>
+  axiosInstance.get<EmployeeTasksResponse>(`/api/employees/${id}/tasks`, { params });
 
 export const detailEmployee = (
   id: EmployeeModel["id"],

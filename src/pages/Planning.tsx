@@ -30,12 +30,14 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import type { IsoDate } from "@recyclerie/api/primitives/zod";
 import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import type { Weekday } from "@recyclerie/api/enums";
 import { PlaningForm } from "../components/forms/planningForm";
 import { CalendarView } from "../components/planning/CalendarView";
 import { DayView } from "../components/planning/DayView";
+import { EmployeeDayDialog } from "../components/planning/EmployeeDayDialog";
 import { PlanningViewHeader } from "../components/planning/PlanningViewHeader";
 import { EmployeePresenceSchedule } from "../components/planning/PresenceEmployees";
 import TaskAssignmentDialog from "../components/planning/TaskAssignmentDialog";
@@ -89,6 +91,13 @@ const Planning = () => {
     useState(false);
   const [selectedTaskForAssignment, setSelectedTaskForAssignment] =
     useState<TaskModel | null>(null);
+
+  // Employee day dialog: the target is kept after closing so the dialog can fade out.
+  const [employeeDayTarget, setEmployeeDayTarget] = useState<{
+    employee: EmployeeModel;
+    date: IsoDate;
+  } | null>(null);
+  const [openEmployeeDayDialog, setOpenEmployeeDayDialog] = useState(false);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -448,6 +457,11 @@ const Planning = () => {
       <EmployeePresenceSchedule
         employeesByDay={getEmployeesByDay()}
         vacationEmployeeIdsByDay={vacationEmployeeIdsByDay}
+        weekStart={getWeekRangeFromDate(selectedDate).date_from}
+        onSelectEmployee={(employee, date) => {
+          setEmployeeDayTarget({ employee, date });
+          setOpenEmployeeDayDialog(true);
+        }}
         isLoading={employees.isLoading}
         selectedStore={selectedStore || null}
         onShowMissingEmployees={() => setMissingEmployeesDialogDismissed(false)}
@@ -548,6 +562,16 @@ const Planning = () => {
 
       {/* Dialog pour les employés manquants */}
       <MissingEMployeesDialog showDialog={showMissingEmployeesDialog} setShowDialog={setMissingEmployeesDialogDismissed}missingEmployees={missingEmployees} />
+
+      {/* Journée d'un employé, ouverte depuis l'en-tête de présence (ignore le filtre magasin) */}
+      {employeeDayTarget && (
+        <EmployeeDayDialog
+          open={openEmployeeDayDialog}
+          onClose={() => setOpenEmployeeDayDialog(false)}
+          employee={employeeDayTarget.employee}
+          date={employeeDayTarget.date}
+        />
+      )}
 
       {/* Dialogue d'assignation des employés depuis le planning */}
       {selectedTaskForAssignment && (

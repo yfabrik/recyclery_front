@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { isoDateSchema } from "@recyclerie/api/primitives/zod";
+import { expect, fn, userEvent, within } from "storybook/test";
 import type { EmployeeModel } from "../../interfaces/Models";
 import { mockStores } from "../../stories/fixtures";
 import { PrecenseEmployees } from "./PresenceEmployees";
@@ -44,6 +46,9 @@ const emptyEmployeesByDay = () => {
   return employeesByDay;
 };
 
+/** Monday of the displayed week: the cards only know their weekday. */
+const WEEK_START = isoDateSchema("date").parse("2026-01-12");
+
 const meta = {
   title: "Planning/PresenceEmployees",
   component: PrecenseEmployees,
@@ -63,6 +68,8 @@ const meta = {
     isLoading: false,
     employeesByDay: emptyEmployeesByDay(),
     vacationEmployeeIdsByDay: {},
+    weekStart: WEEK_START,
+    onSelectEmployee: fn(),
   },
 } satisfies Meta<typeof PrecenseEmployees>;
 
@@ -87,5 +94,42 @@ export const Populated: Story = {
 export const Loading: Story = {
   args: {
     isLoading: true,
+  },
+};
+
+/**
+ * Each Employee name is a button; its label names the Employee and the day, and the
+ * handler receives the date of the clicked card (Monday + weekday index, Sunday last).
+ */
+export const SelectEmployee: Story = {
+  args: {
+    employeesByDay: (() => {
+      const schedule = emptyEmployeesByDay();
+      schedule["1"].morning = [mockEmployee(1, "Marie", "Dupont")];
+      schedule["4"].allDay = [mockEmployee(3, "Sophie", "Bernard")];
+      schedule["0"].afternoon = [mockEmployee(2, "Jean", "Martin")];
+      return schedule;
+    })(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole("button", { name: "Voir les tâches de Marie Dupont le lundi 12 janvier" }));
+    await expect(args.onSelectEmployee).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 1 }),
+      "2026-01-12",
+    );
+
+    await userEvent.click(canvas.getByRole("button", { name: "Voir les tâches de Sophie Bernard le jeudi 15 janvier" }));
+    await expect(args.onSelectEmployee).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 3 }),
+      "2026-01-15",
+    );
+
+    await userEvent.click(canvas.getByRole("button", { name: "Voir les tâches de Jean Martin le dimanche 18 janvier" }));
+    await expect(args.onSelectEmployee).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 2 }),
+      "2026-01-18",
+    );
   },
 };
