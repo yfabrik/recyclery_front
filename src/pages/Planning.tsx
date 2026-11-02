@@ -73,6 +73,8 @@ import {
 } from "../services/dateService";
 import { getVacations } from "../services/api/vacations";
 import { employeeIdsOnVacationOnDate } from "../services/planning/presenceVacation";
+import { weekMarkersByWeekday } from "../services/planning/weekTaskMarkers";
+import { useWeekTasks } from "../hooks/useWeekTasks";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -218,6 +220,21 @@ const Planning = () => {
     });
     return byDay;
   }, [vacations.data, selectedDate]);
+
+  // The week of the header, whatever the view mode: not the `schedules` query, which follows
+  // the view mode and the Store filter. Refreshed by every `["tasks"]` invalidation.
+  const weekTasks = useWeekTasks(selectedDate);
+  useQueryErrorToast(weekTasks.error, "Erreur lors du chargement des tâches de la semaine");
+
+  const markersByDay = useMemo(
+    () =>
+      weekMarkersByWeekday({
+        tasks: weekTasks.data ?? [],
+        weekStart: getWeekRangeFromDate(selectedDate).date_from,
+        vacationEmployeeIdsByDay,
+      }),
+    [weekTasks.data, selectedDate, vacationEmployeeIdsByDay],
+  );
 
   const missingEmployees = useMemo(() => {
     const data = employees.data;
@@ -457,6 +474,7 @@ const Planning = () => {
       <EmployeePresenceSchedule
         employeesByDay={getEmployeesByDay()}
         vacationEmployeeIdsByDay={vacationEmployeeIdsByDay}
+        markersByDay={markersByDay}
         weekStart={getWeekRangeFromDate(selectedDate).date_from}
         onSelectEmployee={(employee, date) => {
           setEmployeeDayTarget({ employee, date });
