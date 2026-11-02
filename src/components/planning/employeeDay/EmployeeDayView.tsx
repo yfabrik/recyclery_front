@@ -1,5 +1,8 @@
-import { Box, Grid, Stack, Typography } from "@mui/material";
+import { BeachAccess } from "@mui/icons-material";
+import { Alert, Box, Grid, Stack, Typography } from "@mui/material";
 import type { EmployeeTasksDayDto } from "@recyclerie/api/responses/employeeTasks";
+import type { EmployeeVacationDto } from "@recyclerie/api/responses/vacations";
+import { getVacationReasonLabel } from "../../../constants/vacationReasons";
 import { employeeColor, employeeName, type Employee } from "../../../employee";
 import { toMinuteWindow } from "../taskAssignment/geometry";
 import { AssignableTaskCard } from "./AssignableTaskCard";
@@ -13,15 +16,32 @@ interface EmployeeDayViewProps {
   day: EmployeeTasksDayDto;
 }
 
+/** An Employee on Vacation with nothing assigned: the server refuses any new Assignment that day. */
+const VacationInfo = ({ reason }: { reason: EmployeeVacationDto["reason"] }) => (
+  <Alert severity="info" icon={<BeachAccess />} sx={{ mb: 2 }}>
+    En congé ({getVacationReasonLabel(reason)}) : aucune tâche ne peut lui être assignée.
+  </Alert>
+);
+
 /**
  * The body of the Employee day dialog: a day strip, then the Tasks the Employee holds
  * and the Tasks they could take or cannot. Pure view of one `EmployeeTasksDayDto`: the
  * dialog owns the data (and, from the write tickets on, the local state and the callbacks).
  */
 export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
-  if (day.rows.length === 0) return <EmptyColumnMessage text="Aucune tâche planifiée ce jour" />;
-
   const { assigned, others } = splitRows(day.rows);
+  // On Vacation but still holding Tasks is a Vacation conflict, shown by its own banner.
+  const vacation = assigned.length === 0 ? day.vacation : null;
+
+  if (day.rows.length === 0) {
+    return (
+      <>
+        {vacation && <VacationInfo reason={vacation.reason} />}
+        <EmptyColumnMessage text="Aucune tâche planifiée ce jour" />
+      </>
+    );
+  }
+
   const color = employeeColor(employee);
   const stripRanges: DayStripRange[] = assigned.flatMap((row) =>
     row.timeRanges.map((range) => ({
@@ -33,6 +53,7 @@ export const EmployeeDayView = ({ employee, day }: EmployeeDayViewProps) => {
 
   return (
     <>
+      {vacation && <VacationInfo reason={vacation.reason} />}
       <DayStrip
         label={`Journée de ${employeeName(employee)}`}
         color={color}

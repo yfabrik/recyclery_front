@@ -16,10 +16,12 @@ import {
 import type {
   EmployeeTaskRowDto,
   EmployeeTasksDayDto,
+  EmployeeTaskUnavailableReason,
 } from "@recyclerie/api/responses/employeeTasks";
 import type { EmployeeDto } from "@recyclerie/api/responses/employees";
 import type { TaskDto } from "@recyclerie/api/responses/tasks";
 import type { TimeRangeDto, WorkWindowDto } from "@recyclerie/api/responses/timeRanges";
+import type { EmployeeVacationDto } from "@recyclerie/api/responses/vacations";
 
 export const DAY: IsoDate = isoDateSchema("date").parse("2026-01-15");
 const CREATED: IsoDateTime = isoDateTimeSchema("date").parse("2026-01-01T00:00:00.000Z");
@@ -56,6 +58,7 @@ export const EMPLOYEES = {
   karim: makeEmployee(2, "Karim", "Benali"),
   sophie: makeEmployee(3, "Sophie", "Durand"),
   marc: makeEmployee(4, "Marc", "Petit"),
+  ines: makeEmployee(5, "Inès", "Roux"),
 };
 
 interface TaskSpec {
@@ -130,7 +133,7 @@ const assignable = (task: TaskDto, freeWindows: WorkWindowDto[]): EmployeeTaskRo
 
 const unavailable = (
   task: TaskDto,
-  reason: "outside-hours" | "busy",
+  reason: EmployeeTaskUnavailableReason,
   blockedBy?: TaskDto,
 ): EmployeeTaskRowDto => ({
   task,
@@ -200,4 +203,31 @@ export const emptyDay: EmployeeTasksDayDto = {
   workWindows: [],
   vacation: null,
   rows: [],
+};
+
+/** A paid Vacation covering `DAY` (Wednesday to Friday of that week). */
+export const paidVacation = (employeeId: number): EmployeeVacationDto => ({
+  id: 70 + employeeId,
+  employee_id: employeeId,
+  start_date: isoDateSchema("date").parse("2026-01-14"),
+  end_date: isoDateSchema("date").parse("2026-01-16"),
+  reason: "paid_vacation",
+  notes: null,
+  createdAt: CREATED,
+  updatedAt: CREATED,
+});
+
+/**
+ * Inès works 08:00-16:00 but is on Vacation and holds nothing: the server turns every Task
+ * of the day into an unavailable "vacation" row, no Task can be assigned to her.
+ */
+export const inesOnVacationDay: EmployeeTasksDayDto = {
+  date: DAY,
+  workWindows: [window_(hm(8), hm(16))],
+  vacation: paidVacation(EMPLOYEES.ines.id),
+  rows: [
+    unavailable(TRI, "vacation"),
+    unavailable(COLLECTE, "vacation"),
+    unavailable(VENTE, "vacation"),
+  ],
 };

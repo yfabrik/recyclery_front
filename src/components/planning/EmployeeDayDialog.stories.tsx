@@ -15,6 +15,7 @@ import {
   DAY,
   EMPLOYEES,
   emptyDay,
+  inesOnVacationDay,
   karimDay,
   leaDay,
   marcDay,
@@ -194,6 +195,27 @@ export const NothingAssignable: Story = {
 
     await expect(await screen.findByRole("heading", { name: "Tâches assignées (2)" })).toBeInTheDocument();
     await expect(screen.getByText("Aucune autre tâche ce jour")).toBeInTheDocument();
+  },
+};
+
+/**
+ * Inès is on Vacation and holds nothing: an info alert gives the reason and says no Task can
+ * be assigned; every Task of the day is unavailable for the same reason.
+ */
+export const OnVacationNothingAssigned: Story = {
+  args: { employee: EMPLOYEES.ines, day: inesOnVacationDay },
+  play: async ({ canvasElement }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+
+    await expect(await screen.findByRole("heading", { name: "Tâches assignées (0)" })).toBeInTheDocument();
+    await expect(screen.getByRole("alert")).toHaveTextContent(
+      "En congé (Congé payé) : aucune tâche ne peut lui être assignée.",
+    );
+
+    const assignable = within(screen.getByRole("region", { name: "Tâches assignables" }));
+    await expect(assignable.getAllByText("En congé")).toHaveLength(3);
+    await expect(assignable.getAllByText("Impossible")).toHaveLength(3);
+    await expect(assignable.queryByText(/^Libre/)).not.toBeInTheDocument();
   },
 };
 
