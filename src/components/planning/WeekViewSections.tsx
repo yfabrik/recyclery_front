@@ -5,6 +5,7 @@ import {
   WbSunny,
 } from "@mui/icons-material";
 import { Box } from "@mui/material";
+import { timeSlotOfMinutes, type WorkdayTimeSlotValue } from "../../constants/workdayTimeSlots";
 import type { TaskModel } from "../../interfaces/Models";
 import WeekTaskSection, {
   TaskCard,
@@ -44,16 +45,14 @@ const WeekViewSections = ({
 
   const filteredSchedules = (
     category: TaskModel["category"] = "vente",
-    start: number | null = null,
-    end: number | null = null,
+    slot: WorkdayTimeSlotValue,
   ) => {
     return (
-      schedules?.filter(
-        (s) =>
-          s.category == category &&
-          (!start || new Date(s.start_time).getHours() >= start) &&
-          (!end || new Date(s.start_time).getHours() <= end),
-      ) || []
+      schedules?.filter((s) => {
+        if (s.category != category) return false;
+        const start = new Date(s.start_time);
+        return timeSlotOfMinutes(start.getHours() * 60 + start.getMinutes()) === slot;
+      }) || []
     );
   };
 
@@ -66,7 +65,7 @@ const WeekViewSections = ({
             Ventes
           </>
         }
-        chipLabel={`${filteredSchedules("vente", 8, 12).length + filteredSchedules("vente", 13, 17).length
+        chipLabel={`${filteredSchedules("vente", "morning").length + filteredSchedules("vente", "afternoon").length
           } tâches`}
         chipSx={{ bgcolor: "#e8f5e8", color: "#4caf50", fontWeight: "bold" }}
         cardColor="#4caf50"
@@ -74,7 +73,7 @@ const WeekViewSections = ({
         rowLabels={["MATIN", "APRÈS-MIDI"]}
       >
         {weekDays.map((day) => {
-          const daySchedules = filteredSchedules("vente", 8, 12).filter((schedule) => {
+          const daySchedules = filteredSchedules("vente", "morning").filter((schedule) => {
             const scheduleDate = new Date(schedule.scheduled_date);
             return (
               scheduleDate.getDate() === day.getDate() &&
@@ -103,7 +102,7 @@ const WeekViewSections = ({
           );
         })}
         {weekDays.map((day) => {
-          const daySchedules = filteredSchedules("vente", 13, 17).filter((schedule) => {
+          const daySchedules = filteredSchedules("vente", "afternoon").filter((schedule) => {
             const scheduleDate = new Date(schedule.scheduled_date);
             return (
               scheduleDate.getDate() === day.getDate() &&
@@ -140,7 +139,7 @@ const WeekViewSections = ({
             Déchetteries
           </>
         }
-        chipLabel={`${filteredSchedules("point", 8, 12).length + filteredSchedules("point", 13, 17).length} présences`}
+        chipLabel={`${filteredSchedules("point", "morning").length + filteredSchedules("point", "afternoon").length} présences`}
         chipSx={{ bgcolor: "#fff3e0", color: "#ff9800", fontWeight: "bold" }}
         cardColor="#ff9800"
         borderColor="#ff9800"
@@ -148,7 +147,7 @@ const WeekViewSections = ({
       >
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("point", 8, 12).filter((schedule) => {
+            ? filteredSchedules("point", "morning").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
@@ -182,7 +181,7 @@ const WeekViewSections = ({
 
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("point", 13, 17).filter((schedule) => {
+            ? filteredSchedules("point", "afternoon").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
@@ -222,7 +221,7 @@ const WeekViewSections = ({
             Tâches normales
           </>
         }
-        chipLabel={`${filteredSchedules("custom", 8, 12).length + filteredSchedules("custom", 13, 17).length} tâches`}
+        chipLabel={`${filteredSchedules("custom", "morning").length + filteredSchedules("custom", "afternoon").length} tâches`}
         chipSx={{ bgcolor: "#e3f2fd", color: "#2196f3", fontWeight: "bold" }}
         cardColor="#2196f3"
         borderColor="#2196f3"
@@ -232,7 +231,7 @@ const WeekViewSections = ({
       >
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("custom", 8, 12).filter((schedule) => {
+            ? filteredSchedules("custom", "morning").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
@@ -268,7 +267,7 @@ const WeekViewSections = ({
 
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("custom", 13, 17).filter((schedule) => {
+            ? filteredSchedules("custom", "afternoon").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
@@ -310,7 +309,7 @@ const WeekViewSections = ({
             Logistique
           </>
         }
-        chipLabel={`${filteredSchedules("collection", 8, 12).length + filteredSchedules("collection", 13, 17).length} lieux de collecte`}
+        chipLabel={`${filteredSchedules("collection", "morning").length + filteredSchedules("collection", "afternoon").length} lieux de collecte`}
         chipSx={{ bgcolor: "#f3e5f5", color: "#9c27b0", fontWeight: "bold" }}
         cardColor="#9c27b0"
         borderColor="#9c27b0"
@@ -318,7 +317,7 @@ const WeekViewSections = ({
       >
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("collection", 8, 12).filter((schedule) => {
+            ? filteredSchedules("collection", "morning").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
@@ -352,7 +351,7 @@ const WeekViewSections = ({
      
         {weekDays.map((day) => {
           const daySchedules = Array.isArray(schedules)
-            ? filteredSchedules("collection", 13, 17).filter((schedule) => {
+            ? filteredSchedules("collection", "afternoon").filter((schedule) => {
               const scheduleDate = new Date(schedule.scheduled_date);
               return (
                 scheduleDate.getDate() === day.getDate() &&
