@@ -127,7 +127,7 @@ export const EmployeeDayView = ({
           {others.length === 0 ? (
             <EmptyColumnMessage text="Aucune autre tâche ce jour" />
           ) : (
-            <Box sx={{ maxHeight: 480, overflow: "auto" }}>
+            <Box>
               {others.map((row) => (
                 <AssignableTaskCard key={row.task.id} row={row} employeeName={name} onAssign={onAssign} />
               ))}

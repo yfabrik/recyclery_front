@@ -389,7 +389,7 @@ const TaskAssignmentDialog = ({
               </Typography>
               {availableToAssign.length > 0 ? (
 
-                <Box sx={{ maxHeight: 480, overflow: "auto" }}>
+                <Box>
                   {availableToAssign.map((employee) => (
                     <AvailableEmployeeRow
                       key={employee.id}
