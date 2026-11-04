@@ -1,16 +1,20 @@
 import { Store } from "@mui/icons-material";
-import { Box, DialogTitle, Typography } from "@mui/material";
+import { Box, Chip, DialogTitle, Typography } from "@mui/material";
+import type { MinuteWindow } from "@recyclerie/api/domain/timeRange";
+import { formatWindow } from "../employeeDay/dayModel";
 
 interface TaskAssignmentDialogTitleProps {
   taskName: string;
   storeName: string;
+  /** When the Task runs; shown as a start–end chip. */
+  taskWindow?: MinuteWindow;
 }
 
-export const TaskAssignmentDialogTitle = ({ taskName, storeName }: TaskAssignmentDialogTitleProps) => (
+export const TaskAssignmentDialogTitle = ({ taskName, storeName, taskWindow }: TaskAssignmentDialogTitleProps) => (
   <DialogTitle>
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       <Store color="primary" />
-      <Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="h6">
           Assigner des employés à la tâche: {taskName}
         </Typography>
@@ -18,6 +22,9 @@ export const TaskAssignmentDialogTitle = ({ taskName, storeName }: TaskAssignmen
           Magasin: {storeName || "Non spécifié"}
         </Typography>
       </Box>
+      {taskWindow && (
+        <Chip size="small" variant="outlined" aria-label="Horaires de la tâche" label={formatWindow(taskWindow)} />
+      )}
     </Box>
   </DialogTitle>
 );

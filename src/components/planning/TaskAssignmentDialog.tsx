@@ -320,6 +320,7 @@ const TaskAssignmentDialog = ({
       <TaskAssignmentDialogTitle
         taskName={selectedTask?.name}
         storeName={selectedTask?.Recyclery?.name ?? ""}
+        taskWindow={taskWindow}
       />
       <DialogContent>
         <TaskAssignmentDialogInfo
