@@ -17,8 +17,12 @@ export const getWastes = (
 ): Promise<AxiosResponse<ListWasteResponse>> =>
   axiosInstance.get<ListWasteResponse>("/api/waste-disposals", { params: filters });
 
-export const getWasteStats = (): Promise<AxiosResponse<WasteStatsResponse>> =>
-  axiosInstance.get<WasteStatsResponse>("/api/waste-disposals/stats/summary");
+export const getWasteStats = (
+  filters?: ListWasteQueryInput,
+): Promise<AxiosResponse<WasteStatsResponse>> =>
+  axiosInstance.get<WasteStatsResponse>("/api/waste-disposals/stats/summary", {
+    params: filters,
+  });
 
 export const updateWaste = (
   id: WasteModel["id"],

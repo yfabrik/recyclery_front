@@ -31,6 +31,7 @@ import { ArrivalHistoryExport } from "./ArrivalHistoryExport";
 import type { ArrivalModel, CategoryModel } from "../interfaces/Models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { muiPageCount } from "../services/api/pagination";
+import { formatWeight } from "../services/cartService";
 import { useUrlFilters } from "../hooks/useUrlFilters";
 import {
   getArrivalSourceLabel,
@@ -121,7 +122,7 @@ export const ArrivalHistory = ({ categories }: ArrivalHistoryProps) => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Total"
-            value={`${totalWeight} kg`}
+            value={formatWeight(totalWeight)}
             subtitle={`${totalCount} arrivage(s)`}
             icon={<Scale />}
             color="primary"
@@ -203,7 +204,7 @@ export const ArrivalHistory = ({ categories }: ArrivalHistoryProps) => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={`${arrival.weight} kg`}
+                        label={formatWeight(arrival.weight)}
                         size="small"
                         color="secondary"
                       />

@@ -1,4 +1,5 @@
 import type { Weekday } from "@recyclerie/api/enums";
+import type { IsoDate } from "@recyclerie/api/primitives/zod";
 import {
   dateFromWeekday,
   dayjs,
@@ -69,7 +70,7 @@ export const formatTime = (d: Date) => toIsoTime(d);
 /** Week (Monday–Sunday) containing the given date. Returns YYYY-MM-DD for API. */
 export const getWeekRangeFromDate = (
   selectedDate: Date,
-): { date_from: string; date_to: string } => {
+): { date_from: IsoDate; date_to: IsoDate } => {
   const d = startOfDay(selectedDate);
   const lundi = d.subtract(weekdaySortKey(d.day() as Weekday), "day");
   const dimanche = lundi.add(6, "day");
