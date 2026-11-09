@@ -1,3 +1,4 @@
+import type { GiftCardAnalyticsDto } from "@recyclerie/api/responses/giftCards";
 import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
@@ -75,4 +76,9 @@ export const salesCategoriesRoute = analyticsRoute<SalesCategoriesDto, SalesCate
 export const salesDiscountsRoute = analyticsRoute<SalesDiscountsDto>(
   "discounts",
   "/api/sales-transactions/analytics/discounts",
+);
+
+export const giftCardAnalyticsRoute = analyticsRoute<GiftCardAnalyticsDto>(
+  "gift-cards",
+  "/api/gift-cards/analytics",
 );

@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { CategoriesSection } from "./CategoriesSection";
 import { DiscountsSection } from "./DiscountsSection";
 import type { SalesAnalyticsFilters } from "./filters";
+import { GiftCardsSection } from "./GiftCardsSection";
 import { HeatmapSection } from "./HeatmapSection";
 import { KpiSection } from "./KpiSection";
 import { PaymentMethodsSection } from "./PaymentMethodsSection";
@@ -37,5 +38,6 @@ export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
   { id: "discounts", width: "half", Component: DiscountsSection },
   { id: "postal-codes", width: "half", Component: PostalCodesSection },
+  { id: "gift-cards", width: "half", Component: GiftCardsSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];
