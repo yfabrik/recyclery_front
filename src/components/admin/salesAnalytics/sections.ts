@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { CategoriesSection } from "./CategoriesSection";
+import { DiscountsSection } from "./DiscountsSection";
 import type { SalesAnalyticsFilters } from "./filters";
 import { HeatmapSection } from "./HeatmapSection";
 import { KpiSection } from "./KpiSection";
@@ -34,6 +35,7 @@ export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "stores", width: "full", Component: StoresSection },
   { id: "heatmap", width: "full", Component: HeatmapSection },
   { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
+  { id: "discounts", width: "half", Component: DiscountsSection },
   { id: "postal-codes", width: "half", Component: PostalCodesSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];

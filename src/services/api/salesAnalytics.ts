@@ -2,6 +2,7 @@ import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
   SalesCategoriesDto,
+  SalesDiscountsDto,
   SalesHeatmapDto,
   SalesKpisDto,
   SalesPaymentMethodsDto,
@@ -69,4 +70,9 @@ export const salesTimelineRoute = analyticsRoute<SalesTimelineDto>(
 export const salesCategoriesRoute = analyticsRoute<SalesCategoriesDto, SalesCategoriesQueryInput>(
   "categories",
   "/api/sales-transactions/analytics/categories",
+);
+
+export const salesDiscountsRoute = analyticsRoute<SalesDiscountsDto>(
+  "discounts",
+  "/api/sales-transactions/analytics/discounts",
 );
