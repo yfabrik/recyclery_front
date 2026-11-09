@@ -5,6 +5,7 @@ import { KpiSection } from "./KpiSection";
 import { PaymentMethodsSection } from "./PaymentMethodsSection";
 import { PostalCodesSection } from "./PostalCodesSection";
 import { StoresSection } from "./StoresSection";
+import { TimelineSection } from "./TimelineSection";
 import { TransactionListSection } from "./TransactionListSection";
 
 /** What every section receives. It runs its own query and shows its own states. */
@@ -27,6 +28,7 @@ export type SalesAnalyticsSection = {
 /** The page, top to bottom. Adding or removing a section is one line. */
 export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
+  { id: "timeline", width: "full", Component: TimelineSection },
   { id: "stores", width: "full", Component: StoresSection },
   { id: "heatmap", width: "full", Component: HeatmapSection },
   { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
