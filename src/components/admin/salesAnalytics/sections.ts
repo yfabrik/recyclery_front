@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { CategoriesSection } from "./CategoriesSection";
 import type { SalesAnalyticsFilters } from "./filters";
 import { HeatmapSection } from "./HeatmapSection";
 import { KpiSection } from "./KpiSection";
@@ -29,6 +30,7 @@ export type SalesAnalyticsSection = {
 export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
   { id: "timeline", width: "full", Component: TimelineSection },
+  { id: "categories", width: "full", Component: CategoriesSection },
   { id: "stores", width: "full", Component: StoresSection },
   { id: "heatmap", width: "full", Component: HeatmapSection },
   { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
