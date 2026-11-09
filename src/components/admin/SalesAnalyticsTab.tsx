@@ -1,44 +1,20 @@
 import {
   Assessment,
-  Clear,
-  Description,
   PointOfSale,
   Receipt,
   Refresh,
   ShoppingCart,
   TrendingUp,
 } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  Paper,
-  Typography,
-} from "@mui/material";
-import { useMemo, useState } from "react";
-import { toast } from "react-toastify";
-import {
-  getApiErrorMessage,
-  getApiSuccessMessage,
-} from "../../utils/apiToastMessage";
+import { Box, Button, Grid, Paper, Typography } from "@mui/material";
+import { useMemo } from "react";
 import { useQueryErrorToast } from "../../hooks/useQueryErrorToast";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { TransactionModel } from "../../interfaces/Models";
-import { fetchCategories } from "../../services/api/categories";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchStores as fStore } from "../../services/api/store";
-import {
-  createRefund,
-  getTransactions,
-  getTranscationStats,
-} from "../../services/api/transactions";
+import { getTranscationStats } from "../../services/api/transactions";
 import { formatCurrency } from "../../services/cartService";
-import { RefundTransactionDialog } from "../transactions/RefundTransactionDialog";
-import { TransactionDetailsDialog } from "../transactions/TransactionDetailsDialog";
-import { TransactionListTable } from "../transactions/TransactionListTable";
+import { TransactionListSection } from "./salesAnalytics/TransactionListSection";
 import { SaleFiltersForm } from "../forms/filters/SaleFiltersForm";
 import {
   getSaleFilterFormDefaults,
@@ -46,14 +22,9 @@ import {
 } from "../../services/schema/sale";
 import { SalePaymentStats } from "../SalePaymentStats";
 import { SalePostalStats } from "../SalePostalStats";
-import { useReceiptPrint } from "../ReceiptPrint";
-import { buildCreateRefundBody } from "../../utils/refundBody";
-import { reprintTransactionReceipt } from "../../utils/transactionReceipt";
 import { StatCard } from "../StatCard";
-import type { RefundDataInput } from "@recyclerie/api/schemas/salesTransactions";
-import type { RefundFormOutput } from "../../services/schema/refund";
 import { useUrlFilters } from "../../hooks/useUrlFilters";
-import { toSaleQuery, toSaleStatsQuery } from "../../services/mapper/sale";
+import { toSaleStatsQuery } from "../../services/mapper/sale";
 
 export const SalesAnalyticsTab = () => {
   const defaults = useMemo(() => getSaleFilterFormDefaults(), []);
@@ -62,14 +33,7 @@ export const SalesAnalyticsTab = () => {
     defaults,
     withPage: true,
   });
-  const query = useMemo(() => toSaleQuery(filters), [filters]);
   const statsQuery = useMemo(() => toSaleStatsQuery(filters), [filters]);
-
-  const [refundDialog, setRefundDialog] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<TransactionModel | null>(null);
-  const [transactionDetailsDialog, setTransactionDetailsDialog] =
-    useState(false);
 
   const queryClient = useQueryClient();
 
@@ -80,15 +44,6 @@ export const SalesAnalyticsTab = () => {
   });
   useQueryErrorToast(stores.error, "Erreur lors du chargement des magasins");
 
-  const transactions = useQuery({
-    queryKey: ["transactions", query, page],
-    queryFn: () =>
-      getTransactions({
-        ...query,
-        include: ["refund", "items"],
-        page,
-      }).then((response) => response.data),
-  });
   const statistics = useQuery({
     queryKey: ["transactionsStats", statsQuery],
     queryFn: () =>
@@ -106,75 +61,6 @@ export const SalesAnalyticsTab = () => {
     } as Awaited<ReturnType<typeof getTranscationStats>>["data"]["data"],
   });
 
-  const categories = useQuery({
-    queryKey: [
-      "categories",
-      { include: ["category", "promo"], only_category: true, sell: true },
-    ],
-    queryFn: () =>
-      fetchCategories({
-        include: ["category", "promo"],
-        only_category: true,
-        sell: true,
-      }).then((response) => response.data.data),
-  });
-
-  const addRefund = useMutation({
-    mutationFn: (v: { id: TransactionModel["id"]; data: RefundDataInput }) =>
-      createRefund(v.id, v.data),
-    onSuccess: (data) => {
-      handleCloseRefundDialog();
-      toast.success(
-        getApiSuccessMessage(data, "Remboursement effectué avec succès"),
-      );
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transactionsStats"] });
-    },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Erreur lors du remboursement"));
-    },
-  });
-
-  const handleSubmitRefund = async (data: RefundFormOutput) => {
-    if (!selectedTransaction?.cash_session_id) {
-      toast.error("Session de caisse introuvable pour ce remboursement.");
-      return;
-    }
-    const payload = buildCreateRefundBody(data, selectedTransaction.cash_session_id,);
-    addRefund.mutate({
-      id: selectedTransaction.id,
-      data: payload
-    });
-  };
-
-  const { triggerPrintReceipt, receiptPrintNode } = useReceiptPrint();
-
-  const handleReprintReceipt = (transactionId: TransactionModel["id"]) => {
-    reprintTransactionReceipt(transactionId, triggerPrintReceipt);
-  };
-
-  const handleRefund = (transaction: TransactionModel) => {
-    setSelectedTransaction(transaction);
-    setRefundDialog(true);
-  };
-
-  const handleCloseRefundDialog = () => {
-    setRefundDialog(false);
-    setSelectedTransaction(null);
-  };
-
-  const handleViewTransactionDetails = (transaction: TransactionModel) => {
-    setSelectedTransaction(transaction);
-    setTransactionDetailsDialog(true);
-  };
-
-  const handleCloseTransactionDetailsDialog = () => {
-    setTransactionDetailsDialog(false);
-    setSelectedTransaction(null);
-  };
-
-  const transactionList = transactions.data?.data ?? [];
-
   return (
     <Box>
       <Box
@@ -191,7 +77,7 @@ export const SalesAnalyticsTab = () => {
         <Button
           variant="contained"
           startIcon={<Refresh />}
-          loading={transactions.isLoading || statistics.isLoading}
+          loading={statistics.isLoading}
           onClick={() =>
             queryClient.invalidateQueries({
               queryKey: [
@@ -277,62 +163,14 @@ export const SalesAnalyticsTab = () => {
         </Grid>
       </Grid>
 
-      <Card>
-        <CardContent>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2,
-            }}
-          >
-            <Typography variant="h6">
-              <Description /> Détail des transactions
-            </Typography>
-            {filters.transaction_number && (
-              <Chip
-                label={`Filtré par: ${filters.transaction_number} (${transactionList.length} résultat${transactionList.length > 1 ? "s" : ""})`}
-                color="primary"
-                variant="outlined"
-                onDelete={() =>
-                  setFilters({ ...filters, transaction_number: "" })
-                }
-                deleteIcon={<Clear />}
-              />
-            )}
-          </Box>
-
-          <TransactionListTable
-            transactions={transactionList}
-            isLoading={transactions.isLoading}
-            emptyMessage="Aucune transaction trouvée pour la période sélectionnée."
-            page={page}
-            total={transactions.data?.pagination?.total || 0}
-            onPageChange={setPage}
-            handleReprintReceipt={handleReprintReceipt}
-            handleShowDetail={handleViewTransactionDetails}
-          // handleRefund={handleRefund}
-          />
-        </CardContent>
-      </Card>
-
-      <RefundTransactionDialog
-        open={refundDialog}
-        onClose={handleCloseRefundDialog}
-        transaction={selectedTransaction}
-        categories={categories.data || []}
-        onSubmit={handleSubmitRefund}
+      <TransactionListSection
+        filters={filters}
+        page={page}
+        onPageChange={setPage}
+        onClearTransactionNumber={() =>
+          setFilters({ ...filters, transaction_number: "" })
+        }
       />
-
-      <TransactionDetailsDialog
-        open={transactionDetailsDialog}
-        onClose={handleCloseTransactionDetailsDialog}
-        transaction={selectedTransaction}
-        categories={categories.data ?? []}
-      />
-
-      {receiptPrintNode}
     </Box>
   );
 };
