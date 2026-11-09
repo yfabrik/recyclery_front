@@ -22,8 +22,17 @@ const history: SaleHistoryFilterFormValues = {
 };
 
 describe("toSaleQuery", () => {
-  it("omits a blank store and never forwards transaction_number", () => {
+  it("forwards the transaction-number search with the period", () => {
     expect(toSaleQuery(sale)).toEqual({
+      period: "month",
+      date_from: "2026-10-01",
+      date_to: "2026-10-15",
+      transaction_number: "42",
+    });
+  });
+
+  it("omits a blank store and a blank transaction-number search", () => {
+    expect(toSaleQuery({ ...sale, transaction_number: "" })).toEqual({
       period: "month",
       date_from: "2026-10-01",
       date_to: "2026-10-15",

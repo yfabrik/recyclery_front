@@ -6,17 +6,15 @@ import type {
 } from "../schema/sale";
 import { omitBlank } from "../zodTransform";
 
-/**
- * Admin sales analytics list query.
- * `transaction_number` is deliberately not forwarded (it wasn't before the
- * form/query split either): the analytics form exposes the field but it has
- * never been sent to the API.
- */
+/** Admin sales analytics transaction list query (also used by its CSV export). */
 export const toSaleQuery = (f: SaleFilterFormValues): transactionsFilters => ({
   period: f.period,
   date_from: f.date_from,
   date_to: f.date_to,
-  ...omitBlank({ store_id: f.store_id }),
+  ...omitBlank({
+    store_id: f.store_id,
+    transaction_number: f.transaction_number,
+  }),
 });
 
 export const toSaleStatsQuery = (

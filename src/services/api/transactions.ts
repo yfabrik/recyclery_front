@@ -25,6 +25,7 @@ import axiosInstance from "./axios";
 export type transactionsFilters = Omit<TransactionListFilterInput, "include"> & {
   include?: TransactionListFilter["include"];
   page?: number;
+  perPage?: number;
 };
 
 // export type CreateTransactionBody = SaleTransactionBase & {
