@@ -7,8 +7,8 @@ import { filterIsoDate, idSchema } from "../../interfaces/ZodTypes";
 import { toIsoDate } from "../dateService";
 
 /**
- * Admin sales filters taken by `toSaleQuery` / `toSaleStatsQuery`. The analytics
- * page builds them from its own URL state (`toSaleFilterValues`).
+ * Admin sales filters taken by `toSaleQuery`. The analytics page builds them
+ * from its own URL state (`toSaleFilterValues`).
  */
 export const saleFilterFormSchema =z.object({
   store_id: z.union([idSchema(), z.literal("")]),

@@ -61,9 +61,8 @@ export const toSalesAnalyticsQuery = (
 });
 
 /**
- * The page's former filter shape, taken by `toSaleQuery` (transaction list,
- * `GET /sales-transactions`, which ignores `period`) and `toSaleStatsQuery`
- * (the payment and postal-code blocks' `/stats/*` routes).
+ * The page's former filter shape, taken by `toSaleQuery` for the transaction
+ * list (`GET /sales-transactions`, which ignores `period`).
  */
 export const toSaleFilterValues = (
   f: SalesAnalyticsFilters,

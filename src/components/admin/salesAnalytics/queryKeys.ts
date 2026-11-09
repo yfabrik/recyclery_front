@@ -8,9 +8,8 @@ export const salesAnalyticsQueryKey = (route: string, query: unknown) =>
   [...SALES_ANALYTICS_QUERY_KEY, route, query] as const;
 
 /**
- * Sections of the page that read other routes. The transaction list keeps
- * `GET /sales-transactions`; drop `transactionsStats` when the payment section
- * moves to an analytics route.
+ * Sections of the page that read other routes: the transaction list keeps
+ * `GET /sales-transactions`.
  */
 const OTHER_SECTION_KEYS = new Set<unknown>([
   "transactions",

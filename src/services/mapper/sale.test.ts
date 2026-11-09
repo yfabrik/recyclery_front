@@ -3,7 +3,7 @@ import type {
   SaleFilterFormValues,
   SaleHistoryFilterFormValues,
 } from "../schema/sale";
-import { toSaleHistoryQuery, toSaleQuery, toSaleStatsQuery } from "./sale";
+import { toSaleHistoryQuery, toSaleQuery } from "./sale";
 
 const sale: SaleFilterFormValues = {
   store_id: "",
@@ -41,16 +41,6 @@ describe("toSaleQuery", () => {
 
   it("forwards the store when selected", () => {
     expect(toSaleQuery({ ...sale, store_id: 2 })).toMatchObject({ store_id: 2 });
-  });
-});
-
-describe("toSaleStatsQuery", () => {
-  it("only sends the keys the stats endpoints accept", () => {
-    expect(Object.keys(toSaleStatsQuery({ ...sale, store_id: 2 })).sort()).toEqual([
-      "date_from",
-      "date_to",
-      "store_id",
-    ]);
   });
 });
 
