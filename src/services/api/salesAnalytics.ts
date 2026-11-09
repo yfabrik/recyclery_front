@@ -1,6 +1,7 @@
 import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
+  SalesHeatmapDto,
   SalesKpisDto,
   SalesPostalCodesDto,
 } from "@recyclerie/api/responses/salesAnalytics";
@@ -25,7 +26,13 @@ export const salesKpisRoute = analyticsRoute<SalesKpisDto>(
   "kpis",
   "/api/sales-transactions/analytics/kpis",
 );
+
 export const salesPostalCodesRoute = analyticsRoute<SalesPostalCodesDto>(
   "postal-codes",
   "/api/sales-transactions/analytics/postal-codes",
+);
+
+export const salesHeatmapRoute = analyticsRoute<SalesHeatmapDto>(
+  "heatmap",
+  "/api/sales-transactions/analytics/heatmap",
 );
