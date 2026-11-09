@@ -1,6 +1,7 @@
 import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
+  SalesHeatmapDto,
   SalesKpisDto,
 } from "@recyclerie/api/responses/salesAnalytics";
 import type { SalesAnalyticsQueryInput } from "@recyclerie/api/schemas/salesAnalytics";
@@ -23,4 +24,9 @@ const analyticsRoute = <T>(key: string, path: string): SalesAnalyticsRoute<T> =>
 export const salesKpisRoute = analyticsRoute<SalesKpisDto>(
   "kpis",
   "/api/sales-transactions/analytics/kpis",
+);
+
+export const salesHeatmapRoute = analyticsRoute<SalesHeatmapDto>(
+  "heatmap",
+  "/api/sales-transactions/analytics/heatmap",
 );
