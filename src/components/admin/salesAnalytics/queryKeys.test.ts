@@ -12,7 +12,6 @@ describe("refreshSalesAnalytics", () => {
       timeline: salesAnalyticsQueryKey("timeline", query),
       transactionList: ["transactions", query, 1],
       legacyPayments: ["transactionsStats", query],
-      legacyPostalCodes: ["transactionsPostalStats", query],
       stores: ["stores", { active: true }],
     };
     for (const key of Object.values(keys)) client.setQueryData(key, {});
@@ -25,7 +24,6 @@ describe("refreshSalesAnalytics", () => {
     expect(invalidated(keys.timeline)).toBe(true);
     expect(invalidated(keys.transactionList)).toBe(true);
     expect(invalidated(keys.legacyPayments)).toBe(true);
-    expect(invalidated(keys.legacyPostalCodes)).toBe(true);
     expect(invalidated(keys.stores)).toBe(false);
   });
 });

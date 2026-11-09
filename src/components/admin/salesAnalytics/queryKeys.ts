@@ -9,13 +9,12 @@ export const salesAnalyticsQueryKey = (route: string, query: unknown) =>
 
 /**
  * Sections of the page that read other routes. The transaction list keeps
- * `GET /sales-transactions`; drop `transactionsStats` / `transactionsPostalStats`
- * when the payment and postal-code sections move to analytics routes.
+ * `GET /sales-transactions`; drop `transactionsStats` when the payment section
+ * moves to an analytics route.
  */
 const OTHER_SECTION_KEYS = new Set<unknown>([
   "transactions",
   "transactionsStats",
-  "transactionsPostalStats",
 ]);
 
 /** A query shown on the Suivi des Ventes page. */
