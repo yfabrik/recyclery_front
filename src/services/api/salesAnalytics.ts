@@ -1,18 +1,29 @@
 import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
+  SalesCategoriesDto,
   SalesKpisDto,
 } from "@recyclerie/api/responses/salesAnalytics";
-import type { SalesAnalyticsQueryInput } from "@recyclerie/api/schemas/salesAnalytics";
+import type {
+  SalesAnalyticsQueryInput,
+  SalesCategoriesQueryInput,
+} from "@recyclerie/api/schemas/salesAnalytics";
 import axiosInstance from "./axios";
 
-/** One analytics route: its query-key name and how to fetch its `{ ranges, current, comparison }`. */
-export type SalesAnalyticsRoute<T> = {
+/**
+ * One analytics route: its query-key name and how to fetch its
+ * `{ ranges, current, comparison }`. `Q`: a route's own query, when it takes
+ * params beyond the common ones.
+ */
+export type SalesAnalyticsRoute<T, Q extends SalesAnalyticsQueryInput = SalesAnalyticsQueryInput> = {
   key: string;
-  fetch: (query: SalesAnalyticsQueryInput) => Promise<SalesAnalyticsDto<T>>;
+  fetch: (query: Q) => Promise<SalesAnalyticsDto<T>>;
 };
 
-const analyticsRoute = <T>(key: string, path: string): SalesAnalyticsRoute<T> => ({
+const analyticsRoute = <T, Q extends SalesAnalyticsQueryInput = SalesAnalyticsQueryInput>(
+  key: string,
+  path: string,
+): SalesAnalyticsRoute<T, Q> => ({
   key,
   fetch: (query) =>
     axiosInstance
@@ -23,4 +34,8 @@ const analyticsRoute = <T>(key: string, path: string): SalesAnalyticsRoute<T> =>
 export const salesKpisRoute = analyticsRoute<SalesKpisDto>(
   "kpis",
   "/api/sales-transactions/analytics/kpis",
+);
+export const salesCategoriesRoute = analyticsRoute<SalesCategoriesDto, SalesCategoriesQueryInput>(
+  "categories",
+  "/api/sales-transactions/analytics/categories",
 );
