@@ -40,9 +40,14 @@ export const SalesAnalyticsTab = () => {
         stores={stores.data ?? []}
       />
 
+      {/* A section may render nothing (Stores once a Store is selected): its empty item is hidden so it leaves no row gap. */}
       <Grid container spacing={3}>
         {SALES_ANALYTICS_SECTIONS.map(({ id, width, Component }) => (
-          <Grid key={id} size={{ xs: 12, md: width === "half" ? 6 : 12 }}>
+          <Grid
+            key={id}
+            size={{ xs: 12, md: width === "half" ? 6 : 12 }}
+            sx={{ "&:empty": { display: "none" } }}
+          >
             <Component
               filters={filters}
               onFiltersChange={setFilters}
