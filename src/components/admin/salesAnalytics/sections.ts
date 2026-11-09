@@ -1,10 +1,8 @@
 import type { ComponentType } from "react";
 import type { SalesAnalyticsFilters } from "./filters";
 import { KpiSection } from "./KpiSection";
-import {
-  LegacyPaymentMethodsSection,
-  LegacyPostalCodesSection,
-} from "./LegacySections";
+import { LegacyPostalCodesSection } from "./LegacySections";
+import { PaymentMethodsSection } from "./PaymentMethodsSection";
 import { TransactionListSection } from "./TransactionListSection";
 
 /** What every section receives. It runs its own query and shows its own states. */
@@ -27,7 +25,7 @@ export type SalesAnalyticsSection = {
 /** The page, top to bottom. Adding or removing a section is one line. */
 export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
-  { id: "payment-methods", width: "half", Component: LegacyPaymentMethodsSection },
+  { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
   { id: "postal-codes", width: "half", Component: LegacyPostalCodesSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];

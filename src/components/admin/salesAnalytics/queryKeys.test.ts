@@ -11,7 +11,6 @@ describe("refreshSalesAnalytics", () => {
       kpis: salesAnalyticsQueryKey("kpis", query),
       timeline: salesAnalyticsQueryKey("timeline", query),
       transactionList: ["transactions", query, 1],
-      legacyPayments: ["transactionsStats", query],
       legacyPostalCodes: ["transactionsPostalStats", query],
       stores: ["stores", { active: true }],
     };
@@ -24,7 +23,6 @@ describe("refreshSalesAnalytics", () => {
     expect(invalidated(keys.kpis)).toBe(true);
     expect(invalidated(keys.timeline)).toBe(true);
     expect(invalidated(keys.transactionList)).toBe(true);
-    expect(invalidated(keys.legacyPayments)).toBe(true);
     expect(invalidated(keys.legacyPostalCodes)).toBe(true);
     expect(invalidated(keys.stores)).toBe(false);
   });
