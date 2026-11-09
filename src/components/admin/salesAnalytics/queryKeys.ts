@@ -14,7 +14,6 @@ export const salesAnalyticsQueryKey = (route: string, query: unknown) =>
  */
 const OTHER_SECTION_KEYS = new Set<unknown>([
   "transactions",
-  "transactionsStats",
 ]);
 
 /** A query shown on the Suivi des Ventes page. */

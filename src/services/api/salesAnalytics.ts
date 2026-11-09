@@ -3,6 +3,7 @@ import type {
   SalesAnalyticsResponse,
   SalesHeatmapDto,
   SalesKpisDto,
+  SalesPaymentMethodsDto,
   SalesPostalCodesDto,
 } from "@recyclerie/api/responses/salesAnalytics";
 import type { SalesAnalyticsQueryInput } from "@recyclerie/api/schemas/salesAnalytics";
@@ -35,4 +36,9 @@ export const salesPostalCodesRoute = analyticsRoute<SalesPostalCodesDto>(
 export const salesHeatmapRoute = analyticsRoute<SalesHeatmapDto>(
   "heatmap",
   "/api/sales-transactions/analytics/heatmap",
+);
+
+export const salesPaymentMethodsRoute = analyticsRoute<SalesPaymentMethodsDto>(
+  "payment-methods",
+  "/api/sales-transactions/analytics/payment-methods",
 );

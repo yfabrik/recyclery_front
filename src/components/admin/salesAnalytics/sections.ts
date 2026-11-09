@@ -2,10 +2,8 @@ import type { ComponentType } from "react";
 import type { SalesAnalyticsFilters } from "./filters";
 import { HeatmapSection } from "./HeatmapSection";
 import { KpiSection } from "./KpiSection";
+import { PaymentMethodsSection } from "./PaymentMethodsSection";
 import { PostalCodesSection } from "./PostalCodesSection";
-import {
-  LegacyPaymentMethodsSection,
-} from "./LegacySections";
 import { TransactionListSection } from "./TransactionListSection";
 
 /** What every section receives. It runs its own query and shows its own states. */
@@ -29,7 +27,7 @@ export type SalesAnalyticsSection = {
 export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
   { id: "heatmap", width: "full", Component: HeatmapSection },
-  { id: "payment-methods", width: "half", Component: LegacyPaymentMethodsSection },
+  { id: "payment-methods", width: "half", Component: PaymentMethodsSection },
   { id: "postal-codes", width: "half", Component: PostalCodesSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];
