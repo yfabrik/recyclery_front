@@ -14,20 +14,14 @@ import type { TransactionModel } from "../../../interfaces/Models";
 import { fetchCategories } from "../../../services/api/categories";
 import { getTransactions } from "../../../services/api/transactions";
 import { toSaleQuery } from "../../../services/mapper/sale";
-import type { SaleFilterFormValues } from "../../../services/schema/sale";
 import { reprintTransactionReceipt } from "../../../utils/transactionReceipt";
 import { useTransactionsCsvExport } from "../../../hooks/useTransactionsCsvExport";
 import { useReceiptPrint } from "../../ReceiptPrint";
 import { TransactionDetailsDialog } from "../../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../../transactions/TransactionListTable";
-
-type TransactionListSectionProps = {
-  filters: SaleFilterFormValues;
-  page: number;
-  onPageChange: (page: number) => void;
-  /** Clears the "N° de transaction" search behind the "Filtré par" chip. */
-  onClearTransactionNumber: () => void;
-};
+import { toSaleFilterValues } from "./filters";
+import type { SalesAnalyticsSectionProps } from "./sections";
+import { TransactionNumberSearch } from "./TransactionNumberSearch";
 
 /**
  * Read-only list of the transactions matching the analytics filters: details,
@@ -36,11 +30,14 @@ type TransactionListSectionProps = {
  */
 export const TransactionListSection = ({
   filters,
+  onFiltersChange,
   page,
   onPageChange,
-  onClearTransactionNumber,
-}: TransactionListSectionProps) => {
-  const query = useMemo(() => toSaleQuery(filters), [filters]);
+}: SalesAnalyticsSectionProps) => {
+  const listFilters = useMemo(() => toSaleFilterValues(filters), [filters]);
+  const query = useMemo(() => toSaleQuery(listFilters), [listFilters]);
+  const setTransactionNumber = (transaction_number: string) =>
+    onFiltersChange({ ...filters, transaction_number });
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionModel | null>(null);
 
@@ -96,13 +93,17 @@ export const TransactionListSection = ({
             <Typography variant="h6">
               <Description /> Détail des transactions
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {filters.transaction_number && (
+            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
+              <TransactionNumberSearch
+                value={listFilters.transaction_number ?? ""}
+                onChange={setTransactionNumber}
+              />
+              {listFilters.transaction_number && (
                 <Chip
-                  label={`Filtré par: ${filters.transaction_number} (${total} résultat${total > 1 ? "s" : ""})`}
+                  label={`Filtré par: ${listFilters.transaction_number} (${total} résultat${total > 1 ? "s" : ""})`}
                   color="primary"
                   variant="outlined"
-                  onDelete={onClearTransactionNumber}
+                  onDelete={() => setTransactionNumber("")}
                   deleteIcon={<Clear />}
                 />
               )}
