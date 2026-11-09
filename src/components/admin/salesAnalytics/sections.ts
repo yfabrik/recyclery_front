@@ -1,9 +1,9 @@
 import type { ComponentType } from "react";
 import type { SalesAnalyticsFilters } from "./filters";
 import { KpiSection } from "./KpiSection";
+import { PostalCodesSection } from "./PostalCodesSection";
 import {
   LegacyPaymentMethodsSection,
-  LegacyPostalCodesSection,
 } from "./LegacySections";
 import { TransactionListSection } from "./TransactionListSection";
 
@@ -28,6 +28,6 @@ export type SalesAnalyticsSection = {
 export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
   { id: "payment-methods", width: "half", Component: LegacyPaymentMethodsSection },
-  { id: "postal-codes", width: "half", Component: LegacyPostalCodesSection },
+  { id: "postal-codes", width: "half", Component: PostalCodesSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];

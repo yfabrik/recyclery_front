@@ -5,7 +5,6 @@ import type {
   DetailSalesTransactionResponse,
   ListRefundsResponse,
   ListSalesTransactionsResponse,
-  PostalCodeStatsResponse,
   SalesTransactionStatsResponse,
   UpdateSalesTransactionResponse
 } from "@recyclerie/api/responses/salesTransactions";
@@ -55,14 +54,6 @@ export const getTranscationStats = (
 ): Promise<AxiosResponse<SalesTransactionStatsResponse>> =>
   axiosInstance.get<SalesTransactionStatsResponse>(
     "/api/sales-transactions/stats/summary",
-    { params: filters },
-  );
-
-export const getTranscationPostalStats = (
-  filters: TransactionStatsFilterInput,
-): Promise<AxiosResponse<PostalCodeStatsResponse>> =>
-  axiosInstance.get<PostalCodeStatsResponse>(
-    "/api/sales-transactions/stats/postal-codes",
     { params: filters },
   );
 
