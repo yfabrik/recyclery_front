@@ -5,6 +5,7 @@ import type {
   SalesKpisDto,
   SalesPaymentMethodsDto,
   SalesPostalCodesDto,
+  SalesStoresDto,
 } from "@recyclerie/api/responses/salesAnalytics";
 import type { SalesAnalyticsQueryInput } from "@recyclerie/api/schemas/salesAnalytics";
 import axiosInstance from "./axios";
@@ -41,4 +42,9 @@ export const salesHeatmapRoute = analyticsRoute<SalesHeatmapDto>(
 export const salesPaymentMethodsRoute = analyticsRoute<SalesPaymentMethodsDto>(
   "payment-methods",
   "/api/sales-transactions/analytics/payment-methods",
+);
+
+export const salesStoresRoute = analyticsRoute<SalesStoresDto>(
+  "stores",
+  "/api/sales-transactions/analytics/stores",
 );
