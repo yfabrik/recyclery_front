@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { SalesAnalyticsFilters } from "./filters";
+import { GiftCardsSection } from "./GiftCardsSection";
 import { KpiSection } from "./KpiSection";
 import {
   LegacyPaymentMethodsSection,
@@ -29,5 +30,6 @@ export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "kpis", width: "full", Component: KpiSection },
   { id: "payment-methods", width: "half", Component: LegacyPaymentMethodsSection },
   { id: "postal-codes", width: "half", Component: LegacyPostalCodesSection },
+  { id: "gift-cards", width: "half", Component: GiftCardsSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
 ];
