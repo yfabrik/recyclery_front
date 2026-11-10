@@ -3,6 +3,7 @@ import type {
   SalesAnalyticsDto,
   SalesAnalyticsResponse,
   SalesCategoriesDto,
+  SalesCategoryRefDto,
   SalesDiscountsDto,
   SalesHeatmapDto,
   SalesKpisDto,
@@ -11,26 +12,23 @@ import type {
   SalesStoresDto,
   SalesTimelineDto,
 } from "@recyclerie/api/responses/salesAnalytics";
-import type {
-  SalesAnalyticsQueryInput,
-  SalesCategoriesQueryInput,
-} from "@recyclerie/api/schemas/salesAnalytics";
+import type { SalesAnalyticsQueryInput } from "@recyclerie/api/schemas/salesAnalytics";
 import axiosInstance from "./axios";
 
 /**
  * One analytics route: its query-key name and how to fetch its
- * `{ ranges, current, comparison }`. `Q`: a route's own query, when it takes
- * params beyond the common ones.
+ * `{ ranges, current, comparison }`. `P`: the route's own params, beyond the
+ * common query.
  */
-export type SalesAnalyticsRoute<T, Q extends SalesAnalyticsQueryInput = SalesAnalyticsQueryInput> = {
+export type SalesAnalyticsRoute<T, P extends object = Record<never, never>> = {
   key: string;
-  fetch: (query: Q) => Promise<SalesAnalyticsDto<T>>;
+  fetch: (query: SalesAnalyticsQueryInput & P) => Promise<SalesAnalyticsDto<T>>;
 };
 
-const analyticsRoute = <T, Q extends SalesAnalyticsQueryInput = SalesAnalyticsQueryInput>(
+const analyticsRoute = <T, P extends object = Record<never, never>>(
   key: string,
   path: string,
-): SalesAnalyticsRoute<T, Q> => ({
+): SalesAnalyticsRoute<T, P> => ({
   key,
   fetch: (query) =>
     axiosInstance
@@ -68,7 +66,10 @@ export const salesTimelineRoute = analyticsRoute<SalesTimelineDto>(
   "/api/sales-transactions/analytics/timeline",
 );
 
-export const salesCategoriesRoute = analyticsRoute<SalesCategoriesDto, SalesCategoriesQueryInput>(
+/** The categories route's own param: the opened category, whose subcategories it lists. */
+type SalesCategoriesParams = { parent_id?: SalesCategoryRefDto["id"] };
+
+export const salesCategoriesRoute = analyticsRoute<SalesCategoriesDto, SalesCategoriesParams>(
   "categories",
   "/api/sales-transactions/analytics/categories",
 );

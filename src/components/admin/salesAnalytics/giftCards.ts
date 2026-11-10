@@ -1,9 +1,12 @@
+import { roundCurrency } from "@recyclerie/api/domain/cart";
 import type {
   GiftCardAnalyticsDto,
   GiftCardFigureDto,
 } from "@recyclerie/api/responses/giftCards";
 import type { SalesAnalyticsDto } from "@recyclerie/api/responses/salesAnalytics";
 import { rowsToCsv, type CsvColumn } from "../../../utils/csv";
+import { csvColumns } from "./comparison";
+import { formatShortDate } from "./format";
 
 /** Shown next to a network-wide line when a Store is selected. */
 export const ALL_STORES_LABEL = "tous magasins";
@@ -41,14 +44,7 @@ const CARDS: [string, string] = ["carte", "cartes"];
 
 const sum = (figures: GiftCardFigureDto[]): GiftCardFigureDto => ({
   count: figures.reduce((total, f) => total + f.count, 0),
-  amount: Math.round(figures.reduce((total, f) => total + f.amount, 0) * 100) / 100,
-});
-
-const frDate = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "UTC",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
+  amount: roundCurrency(figures.reduce((total, f) => total + f.amount, 0)),
 });
 
 /** The section's lines, top to bottom. */
@@ -112,7 +108,7 @@ const LINES: LineSpec[] = [
   },
   {
     key: "outstanding",
-    label: ({ date_to }) => `Solde restant au ${frDate.format(new Date(`${date_to}T00:00:00Z`))}`,
+    label: ({ date_to }) => `Solde restant au ${formatShortDate(date_to)}`,
     isOrigin: false,
     scope: "network",
     pick: (f) => f.outstanding,
@@ -178,4 +174,4 @@ const COMPARISON_CSV_COLUMNS: CsvColumn<GiftCardRow>[] = [
 export const giftCardsCsv = (
   rows: GiftCardRow[],
   { comparison }: { comparison: boolean },
-) => rowsToCsv(rows, comparison ? [...CSV_COLUMNS, ...COMPARISON_CSV_COLUMNS] : CSV_COLUMNS);
+) => rowsToCsv(rows, csvColumns(CSV_COLUMNS, COMPARISON_CSV_COLUMNS, comparison));

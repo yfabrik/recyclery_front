@@ -14,13 +14,11 @@ import { downloadCsv } from "../../../utils/csv";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
 import { computeChange, formatChange } from "./change";
 import { COMPARE_LABELS } from "./filters";
-import { giftCardRows, giftCardsCsv, hasNoGiftCards, type GiftCardRow } from "./giftCards";
+import { countLabel } from "./format";
+import { giftCardRows, giftCardsCsv, hasNoGiftCards } from "./giftCards";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const countLabel = ({ count: n, unit: [one, many] }: GiftCardRow) =>
-  `${count.format(n)} ${n > 1 ? many : one}`;
 
 /**
  * Gift cards issued in the period by origin, used, expired, and the balance
@@ -86,7 +84,7 @@ export const GiftCardsSection = ({ filters }: SalesAnalyticsSectionProps) => {
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell align="right">{countLabel(row)}</TableCell>
+                  <TableCell align="right">{countLabel(row.count, ...row.unit)}</TableCell>
                   <TableCell align="right" sx={row.isOrigin ? {} : { fontWeight: 500 }}>
                     {formatCurrency(row.amount)}
                   </TableCell>

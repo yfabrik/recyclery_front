@@ -27,7 +27,6 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { salesCategoriesRoute } from "../../../services/api/salesAnalytics";
 import { formatCurrency, formatPercentage } from "../../../services/cartService";
@@ -47,19 +46,19 @@ import {
   type CategoryRow,
 } from "./categories";
 import { changeTone, computeChange, formatChange } from "./change";
-import { COMPARE_LABELS, toSalesAnalyticsQuery } from "./filters";
-import { salesAnalyticsQueryKey } from "./queryKeys";
+import { TONE_COLORS } from "./changeStyles";
+import { COMPARE_LABELS } from "./filters";
+import { countLabel, formatCount } from "./format";
 import type { SalesAnalyticsSectionProps } from "./sections";
+import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const items = (n: number) => `${count.format(n)} objet${Math.abs(n) > 1 ? "s" : ""}`;
 
 const METRIC_LABELS = {
   net_revenue: "CA net",
   quantity: "Quantité",
 } as const satisfies Record<CategoryMetric, string>;
 const formatMetric = (metric: CategoryMetric, value: number) =>
-  metric === "net_revenue" ? formatCurrency(value) : items(value);
+  metric === "net_revenue" ? formatCurrency(value) : countLabel(value, "objet");
 
 /** What follows a bar's name on its label, the one to drop last first. */
 const barFigures = (bar: CategoryBar, metric: CategoryMetric) => [
@@ -208,12 +207,6 @@ const CategoryChart = ({ bars, metric, onBarClick }: CategoryChartProps) => {
   );
 };
 
-const TONE_COLORS = {
-  success: "success.main",
-  error: "error.main",
-  neutral: "text.secondary",
-} as const;
-
 const ChangeCell = ({ row, metric }: { row: CategoryRow; metric: CategoryMetric }) => {
   const change = computeChange(row.current[metric], row.comparison?.[metric]);
   return (
@@ -289,7 +282,7 @@ const CategoryTable = ({ rows, changeLabel, onOpen }: CategoryTableProps) => {
                 </TableCell>
                 <TableCell align="right">{formatCurrency(row.current.net_revenue)}</TableCell>
                 {changeLabel && <ChangeCell row={row} metric="net_revenue" />}
-                <TableCell align="right">{count.format(row.current.quantity)}</TableCell>
+                <TableCell align="right">{formatCount(row.current.quantity)}</TableCell>
                 {changeLabel && <ChangeCell row={row} metric="quantity" />}
                 <TableCell align="right">{formatPercentage(row.current.share)}</TableCell>
                 <TableCell align="right">{formatCurrency(row.current.average_price)}</TableCell>
@@ -317,18 +310,8 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
   const [showAll, setShowAll] = useState(false);
 
   const parentId = path.at(-1)?.id;
-  const query = useMemo(
-    () => ({
-      ...toSalesAnalyticsQuery(filters),
-      ...(parentId ? { parent_id: parentId } : {}),
-    }),
-    [filters, parentId],
-  );
-  const categories = useQuery({
-    queryKey: salesAnalyticsQueryKey(salesCategoriesRoute.key, query),
-    queryFn: () => salesCategoriesRoute.fetch(query),
-    placeholderData: keepPreviousData,
-  });
+  const params = useMemo(() => (parentId ? { parent_id: parentId } : {}), [parentId]);
+  const categories = useSalesAnalytics(salesCategoriesRoute, filters, params);
 
   const rows = useMemo(
     () =>

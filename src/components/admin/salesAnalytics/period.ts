@@ -9,11 +9,11 @@ import {
   startOfYear,
 } from "@recyclerie/api/domain/calendar";
 import type { SalesAnalyticsPeriod } from "@recyclerie/api/schemas/salesAnalytics";
+import { formatShortDate, frDateFormat, utcDate, type DateRange } from "./format";
 
 // Calendar maths on `YYYY-MM-DD` strings only: dayjs here has no quarter
 // plugin and starts weeks on Sunday.
-type Range = { date_from: string; date_to: string };
-export type PeriodSelection = Range & { period: SalesAnalyticsPeriod };
+export type PeriodSelection = DateRange & { period: SalesAnalyticsPeriod };
 export type PresetPeriod = Exclude<SalesAnalyticsPeriod, "custom">;
 
 export const PERIOD_LABELS: Record<SalesAnalyticsPeriod, string> = {
@@ -41,7 +41,7 @@ export const presetRange = (
   period: PresetPeriod,
   anchor: string,
   today: string,
-): Range => {
+): DateRange => {
   const unit = UNITS[period];
   const date_from = unit.start(anchor);
   const end = addDays(unit.add(date_from, 1), -1);
@@ -82,9 +82,6 @@ export const stepPeriod = (
 export const canStepForward = (current: PeriodSelection, today: string) =>
   stepPeriod(current, 1, today).date_from <= today;
 
-const utcDate = (date: string) => new Date(`${date}T00:00:00Z`);
-const fr = (options: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", ...options });
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** "novembre 2026", "T4 2026", "2026", "2–8 nov. 2026". */
@@ -92,14 +89,14 @@ export const periodLabel = ({ period, date_from, date_to }: PeriodSelection) => 
   const from = utcDate(date_from);
   switch (period) {
     case "month":
-      return capitalize(fr({ month: "long", year: "numeric" }).format(from));
+      return capitalize(frDateFormat({ month: "long", year: "numeric" }).format(from));
     case "quarter":
       return `T${Math.floor(from.getUTCMonth() / 3) + 1} ${from.getUTCFullYear()}`;
     case "year":
       return String(from.getUTCFullYear());
     case "week":
     case "custom":
-      return fr({ day: "numeric", month: "short", year: "numeric" }).formatRange(
+      return frDateFormat({ day: "numeric", month: "short", year: "numeric" }).formatRange(
         from,
         utcDate(date_to),
       );
@@ -107,7 +104,5 @@ export const periodLabel = ({ period, date_from, date_to }: PeriodSelection) => 
 };
 
 /** "01/11/2026 – 09/11/2026". */
-export const rangeLabel = ({ date_from, date_to }: Range) => {
-  const format = fr({ day: "2-digit", month: "2-digit", year: "numeric" });
-  return `${format.format(utcDate(date_from))} – ${format.format(utcDate(date_to))}`;
-};
+export const rangeLabel = ({ date_from, date_to }: DateRange) =>
+  `${formatShortDate(date_from)} – ${formatShortDate(date_to)}`;

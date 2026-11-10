@@ -5,10 +5,7 @@ import type {
   SalesTimelineDto,
   SalesTimelineStep,
 } from "@recyclerie/api/responses/salesAnalytics";
-
-// French labels through Intl on UTC midnight, never the dayjs locale (two
-// dayjs copies here, only one with `fr`).
-type Range = { date_from: string; date_to: string };
+import { frDateFormat, utcDate, type DateRange } from "./format";
 
 /** What one bar stands for. Weeks start on Monday. */
 export const STEP_LABELS: Record<SalesTimelineStep, string> = {
@@ -17,25 +14,26 @@ export const STEP_LABELS: Record<SalesTimelineStep, string> = {
   month: "Par mois",
 };
 
-const utcDate = (date: string) => new Date(`${date}T00:00:00Z`);
-const fr = (options: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", ...options });
+const WEEKDAY_DAY = frDateFormat({ weekday: "short", day: "numeric" });
+const WEEKDAY_DATE = frDateFormat({
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+const DAY_MONTH = frDateFormat({ day: "numeric", month: "short" });
+const DATE = frDateFormat({ day: "numeric", month: "short", year: "numeric" });
+const SHORT_MONTH = frDateFormat({ month: "short", year: "numeric" });
+const LONG_MONTH = frDateFormat({ month: "long", year: "numeric" });
 
-const WEEKDAY_DAY = fr({ weekday: "short", day: "numeric" });
-const WEEKDAY_DATE = fr({ weekday: "short", day: "numeric", month: "short", year: "numeric" });
-const DAY_MONTH = fr({ day: "numeric", month: "short" });
-const DATE = fr({ day: "numeric", month: "short", year: "numeric" });
-const SHORT_MONTH = fr({ month: "short", year: "numeric" });
-const LONG_MONTH = fr({ month: "long", year: "numeric" });
-
-const isWholeMonth = ({ date_from, date_to }: Range) =>
+const isWholeMonth = ({ date_from, date_to }: DateRange) =>
   date_from === startOfMonth(date_from) && date_to === endOfMonth(date_from);
 
-const dates = (format: Intl.DateTimeFormat, { date_from, date_to }: Range) =>
+const dates = (format: Intl.DateTimeFormat, { date_from, date_to }: DateRange) =>
   format.formatRange(utcDate(date_from), utcDate(date_to));
 
 /** Axis label: "lun. 3", "2–8 nov.", "nov. 2026"; a partial week or month at an edge: "27–30 sept.". */
-export const bucketLabel = (bucket: Range, step: SalesTimelineStep): string => {
+export const bucketLabel = (bucket: DateRange, step: SalesTimelineStep): string => {
   switch (step) {
     case "day":
       return WEEKDAY_DAY.format(utcDate(bucket.date_from));
@@ -49,7 +47,7 @@ export const bucketLabel = (bucket: Range, step: SalesTimelineStep): string => {
 };
 
 /** Tooltip title, with the year: "jeu. 1 févr. 2024", "28 déc. 2023 – 3 janv. 2024", "février 2024". */
-export const bucketTitle = (bucket: Range, step: SalesTimelineStep): string => {
+export const bucketTitle = (bucket: DateRange, step: SalesTimelineStep): string => {
   if (step === "day") return WEEKDAY_DATE.format(utcDate(bucket.date_from));
   if (step === "month" && isWholeMonth(bucket))
     return LONG_MONTH.format(utcDate(bucket.date_from));

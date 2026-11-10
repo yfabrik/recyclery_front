@@ -9,12 +9,11 @@ import {
 } from "../../../services/cartService";
 import { downloadCsv } from "../../../utils/csv";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
+import { countLabel } from "./format";
 import { paymentMethodsCsv, refundLine } from "./paymentMethods";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const payments = (n: number) => `${count.format(n)} paiement${n > 1 ? "s" : ""}`;
 
 const PaymentMethodList = ({ data }: { data: SalesPaymentMethodsDto }) => (
   <Box>
@@ -37,7 +36,7 @@ const PaymentMethodList = ({ data }: { data: SalesPaymentMethodsDto }) => (
           />
           <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 1 }}>
             <Typography variant="caption" color="text.secondary">
-              {payments(method.payment_count)}
+              {countLabel(method.payment_count, "paiement")}
             </Typography>
             {refund && (
               <Typography variant="caption" color="error.main">

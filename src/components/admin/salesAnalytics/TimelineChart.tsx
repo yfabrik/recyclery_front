@@ -15,6 +15,7 @@ import {
 } from "@mui/x-charts";
 import { formatCurrency } from "../../../services/cartService";
 import type { TimelinePoint } from "./timeline";
+import { countLabel } from "./format";
 
 type TimelineChartProps = {
   points: TimelinePoint[];
@@ -22,13 +23,11 @@ type TimelineChartProps = {
   comparisonLabel: string | null;
 };
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const euroTick = new Intl.NumberFormat("fr-FR", {
   style: "currency",
   currency: "EUR",
   maximumFractionDigits: 0,
 });
-const sales = (n: number) => `${count.format(n)} vente${n > 1 ? "s" : ""}`;
 
 /**
  * Net revenue as bars, the comparison as a line, on one euro axis. The number
@@ -50,7 +49,7 @@ export const TimelineChart = ({ points, comparisonLabel }: TimelineChartProps) =
           data: points.map((p) => p.net),
           valueFormatter: (value, { dataIndex }) => {
             const point = at(dataIndex);
-            return point ? `${formatCurrency(value ?? 0)} · ${sales(point.salesCount)}` : null;
+            return point ? `${formatCurrency(value ?? 0)} · ${countLabel(point.salesCount, "vente")}` : null;
           },
         },
         ...(comparisonLabel === null
@@ -66,7 +65,7 @@ export const TimelineChart = ({ points, comparisonLabel }: TimelineChartProps) =
                 valueFormatter: (_value: number | null, { dataIndex }: { dataIndex: number }) => {
                   const other = at(dataIndex)?.comparison;
                   return other
-                    ? `${formatCurrency(other.net)} · ${sales(other.salesCount)} (${other.title})`
+                    ? `${formatCurrency(other.net)} · ${countLabel(other.salesCount, "vente")} (${other.title})`
                     : "—";
                 },
               },

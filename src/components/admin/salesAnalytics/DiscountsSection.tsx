@@ -2,13 +2,7 @@ import type {
   SalesDiscountsDto,
   WholeTransactionDiscountDto,
 } from "@recyclerie/api/responses/salesAnalytics";
-import {
-  FileDownload,
-  LocalOffer,
-  TrendingDown,
-  TrendingFlat,
-  TrendingUp,
-} from "@mui/icons-material";
+import { FileDownload, LocalOffer } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -28,19 +22,17 @@ import { formatCurrency, formatPercentage } from "../../../services/cartService"
 import { downloadCsv, rowsToCsv } from "../../../utils/csv";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
 import { computeChange, formatChange } from "./change";
+import { TREND_ICONS } from "./changeStyles";
 import {
   comparisonDiscountGroup,
   DISCOUNTS_CSV_COLUMNS,
   discountsCsvRows,
 } from "./discountsCsv";
 import { COMPARE_LABELS } from "./filters";
+import { countLabel, formatCount } from "./format";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const salesLabel = (n: number) => `${count.format(n)} vente${n > 1 ? "s" : ""}`;
-
-const TREND_ICONS = { up: TrendingUp, down: TrendingDown, flat: TrendingFlat };
 
 /**
  * Change vs the comparison range, in a neutral colour: more discount is
@@ -160,7 +152,7 @@ const StoreSplit = ({ group }: { group: WholeTransactionDiscountDto }) => {
         {group.by_store.map((store) => (
           <TableRow key={store.store_id}>
             <TableCell>{store.store_name}</TableCell>
-            <TableCell align="right">{count.format(store.sales_count)}</TableCell>
+            <TableCell align="right">{formatCount(store.sales_count)}</TableCell>
             <TableCell align="right">{formatCurrency(store.discount_amount)}</TableCell>
             <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
               {formatCurrency(store.average_basket_before)} →{" "}
@@ -196,7 +188,7 @@ const DiscountGroup = ({
     </Box>
     <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 1 }}>
       <Typography variant="body2" color="text.secondary">
-        {salesLabel(group.sales_count)} ({formatPercentage(group.share_of_sales)} des ventes)
+        {countLabel(group.sales_count, "vente")} ({formatPercentage(group.share_of_sales)} des ventes)
       </Typography>
       <DiscountChange
         current={group.discount_amount}
@@ -212,7 +204,7 @@ const DiscountGroup = ({
     )}
     {comparison && (
       <Typography variant="caption" color="text.secondary">
-        {vs} : {salesLabel(comparison.sales_count)},{" "}
+        {vs} : {countLabel(comparison.sales_count, "vente")},{" "}
         {formatCurrency(comparison.discount_amount)}
       </Typography>
     )}

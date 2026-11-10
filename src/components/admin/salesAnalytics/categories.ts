@@ -4,6 +4,8 @@ import type {
 } from "@recyclerie/api/responses/salesAnalytics";
 import { rowsToCsv, type CsvColumn } from "../../../utils/csv";
 import { computeChange } from "./change";
+import { comparisonLookup, csvColumns } from "./comparison";
+import { countLabel, toPercent } from "./format";
 
 export type CategoryFigures = Pick<
   SalesCategoryRowDto,
@@ -70,13 +72,11 @@ export const categoryRows = (
   current: SalesCategoriesDto,
   comparison: SalesCategoriesDto | null,
 ): CategoryRow[] => {
-  const compared = new Map(
-    (comparison?.categories ?? []).map((c) => [c.category_id, c]),
-  );
+  const compared = comparisonLookup(comparison?.categories, (c) => c.category_id);
   const listed = new Set(current.categories.map((c) => c.category_id));
   const comparisonOf = (categoryId: number | null) => {
     if (!comparison) return null;
-    const row = compared.get(categoryId);
+    const row = compared(categoryId);
     return row ? figures(row) : NO_FIGURES;
   };
   return [
@@ -146,7 +146,7 @@ export const categoryBars = (
     ...sorted.slice(0, limit).map(bar),
     {
       key: "others",
-      name: `Autres (${others.length} ${others.length > 1 ? "catégories" : "catégorie"})`,
+      name: `Autres (${countLabel(others.length, "catégorie")})`,
       value,
       share: ratio(value, total),
       row: null,
@@ -218,7 +218,7 @@ export const fitBarLabel = (
 
 /** A ratio as a percentage with 2 decimals (0.2375 → 23.75); blank when there is none. */
 const csvPercent = (ratio: number | null | undefined) =>
-  ratio == null ? "" : Math.round(ratio * 10_000) / 100;
+  ratio == null ? "" : toPercent(ratio, 2);
 
 const csvChange = (row: CategoryRow, metric: CategoryMetric) =>
   csvPercent(computeChange(row.current[metric], row.comparison?.[metric])?.ratio);
@@ -258,7 +258,9 @@ const CSV_COMPARISON_COLUMNS: CsvColumn<CategoryRow>[] = [
 export const categoriesCsv = (rows: CategoryRow[]) =>
   rowsToCsv(
     rows,
-    rows.some((row) => row.comparison !== null)
-      ? [...CSV_COLUMNS, ...CSV_COMPARISON_COLUMNS]
-      : CSV_COLUMNS,
+    csvColumns(
+      CSV_COLUMNS,
+      CSV_COMPARISON_COLUMNS,
+      rows.some((row) => row.comparison !== null),
+    ),
   );

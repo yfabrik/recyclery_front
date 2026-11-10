@@ -5,6 +5,8 @@ import type {
 } from "@recyclerie/api/responses/salesAnalytics";
 import { rowsToCsv, type CsvColumn } from "../../../utils/csv";
 import { computeChange, type Change } from "./change";
+import { comparisonLookup, csvColumns } from "./comparison";
+import { toPercent } from "./format";
 
 /** A row of the Store table: the Store's figures and its net revenue vs the comparison range. */
 export type StoreRow = SalesStoreDto & {
@@ -18,12 +20,10 @@ export const toStoreRows = ({
   current,
   comparison,
 }: Pick<SalesAnalyticsDto<SalesStoresDto>, "current" | "comparison">): StoreRow[] => {
-  const before = new Map(
-    comparison?.stores.map((store) => [store.store_id, store.net_revenue]),
-  );
+  const before = comparisonLookup(comparison?.stores, (store) => store.store_id);
   return current.stores.map((store) => {
     const comparison_net_revenue = comparison
-      ? (before.get(store.store_id) ?? 0)
+      ? (before(store.store_id)?.net_revenue ?? 0)
       : null;
     return {
       ...store,
@@ -32,10 +32,6 @@ export const toStoreRows = ({
     };
   });
 };
-
-/** A 0–1 ratio as a percentage, `decimals` after the dot. */
-const toPercent = (ratio: number, decimals: number) =>
-  Math.round(ratio * 100 * 10 ** decimals) / 10 ** decimals;
 
 const COLUMNS: CsvColumn<StoreRow>[] = [
   { header: "Magasin", key: "name" },
@@ -65,7 +61,9 @@ const COMPARISON_COLUMNS: CsvColumn<StoreRow>[] = [
 export const storesCsv = (rows: StoreRow[]) =>
   rowsToCsv(
     rows,
-    rows.some((row) => row.comparison_net_revenue !== null)
-      ? [...COLUMNS, ...COMPARISON_COLUMNS]
-      : COLUMNS,
+    csvColumns(
+      COLUMNS,
+      COMPARISON_COLUMNS,
+      rows.some((row) => row.comparison_net_revenue !== null),
+    ),
   );

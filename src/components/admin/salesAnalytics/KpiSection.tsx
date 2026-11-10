@@ -4,13 +4,12 @@ import { salesKpisRoute } from "../../../services/api/salesAnalytics";
 import { formatCurrency, formatPercentage } from "../../../services/cartService";
 import { computeChange } from "./change";
 import { COMPARE_LABELS } from "./filters";
+import { countLabel, formatCount } from "./format";
 import { EmptyKpiCard, KpiCard } from "./KpiCard";
 import { rangeLabel } from "./period";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const plural = (n: number, word: string) => `${count.format(n)} ${word}${n > 1 ? "s" : ""}`;
 
 type CardSpec = {
   title: string;
@@ -30,7 +29,7 @@ const CARDS: CardSpec[] = [
       `Brut ${formatCurrency(k.gross_revenue)} · Remboursé ${formatCurrency(k.refunded_amount)}`,
     figure: (k) => k.net_revenue,
   },
-  { title: "Ventes", value: (k) => count.format(k.sales_count), figure: (k) => k.sales_count },
+  { title: "Ventes", value: (k) => formatCount(k.sales_count), figure: (k) => k.sales_count },
   {
     title: "Panier moyen",
     value: (k) => formatCurrency(k.average_basket),
@@ -38,20 +37,20 @@ const CARDS: CardSpec[] = [
   },
   {
     title: "Objets vendus",
-    value: (k) => count.format(k.items_sold),
+    value: (k) => formatCount(k.items_sold),
     figure: (k) => k.items_sold,
   },
   {
     title: "CA par jour d'ouverture",
     value: (k) => formatCurrency(k.revenue_per_opening_day),
-    subtitle: (k) => plural(k.opening_days, "jour") + " d'ouverture",
+    subtitle: (k) => countLabel(k.opening_days, "jour") + " d'ouverture",
     figure: (k) => k.revenue_per_opening_day,
   },
   {
     title: "Remboursements",
     value: (k) => formatCurrency(k.refunded_amount),
     subtitle: (k) =>
-      `${plural(k.refund_count, "remboursement")} · ${formatPercentage(
+      `${countLabel(k.refund_count, "remboursement")} · ${formatPercentage(
         k.gross_revenue > 0 ? k.refunded_amount / k.gross_revenue : 0,
       )} du brut`,
     figure: (k) => k.refunded_amount,

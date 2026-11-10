@@ -17,18 +17,13 @@ import { formatCurrency, formatPercentage } from "../../../services/cartService"
 import { downloadCsv } from "../../../utils/csv";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
 import { changeTone, formatChange } from "./change";
+import { TONE_COLORS } from "./changeStyles";
 import { COMPARE_LABELS } from "./filters";
+import { formatCount } from "./format";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { storesCsv, toStoreRows, type StoreRow } from "./stores";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-
-const TONE_COLORS = {
-  success: "success.main",
-  error: "error.main",
-  neutral: "text.secondary",
-} as const;
 
 type StoreTableProps = {
   rows: StoreRow[];
@@ -85,7 +80,7 @@ const StoreTable = ({ rows, changeLabel, onSelect }: StoreTableProps) => {
                   )}
                 </TableCell>
                 <TableCell align="right">{formatCurrency(row.net_revenue)}</TableCell>
-                <TableCell align="right">{count.format(row.sales_count)}</TableCell>
+                <TableCell align="right">{formatCount(row.sales_count)}</TableCell>
                 <TableCell align="right">{formatCurrency(row.average_basket)}</TableCell>
                 <TableCell align="right">{formatPercentage(row.net_revenue_share)}</TableCell>
                 {changeLabel !== null && (
