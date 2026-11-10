@@ -55,6 +55,18 @@ describe("giftCardRows", () => {
     ]);
   });
 
+  it("says that the issued total takes in the network-wide hand-created cards when a Store is selected", () => {
+    const issued = (storeSelected: boolean) =>
+      giftCardRows(response(null), { storeSelected }).find((r) => r.key === "issued");
+
+    expect(issued(true)).toMatchObject({
+      count: 5,
+      amount: 78.5,
+      scope: "dont créées à la main : tous magasins",
+    });
+    expect(issued(false)?.scope).toBe("");
+  });
+
   it("carries the comparison figures, none on compare=none", () => {
     const comparison = figures({ used: { count: 1, amount: 15 } });
 
@@ -81,7 +93,7 @@ describe("giftCardsCsv", () => {
     expect(lines[0]).toBe(
       "Ligne,Magasins,Nombre,Montant (€),Nombre (comparaison),Montant (comparaison) (€)",
     );
-    expect(lines[1]).toBe("Émises,,5,78.5,5,78.5");
+    expect(lines[1]).toBe("Émises,dont créées à la main : tous magasins,5,78.5,5,78.5");
     expect(lines[2]).toBe("Créées à la main,tous magasins,1,30,1,30");
     expect(lines).toHaveLength(9);
   });
