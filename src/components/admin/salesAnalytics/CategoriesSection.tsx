@@ -37,6 +37,7 @@ import {
   barLabelPlacement,
   categoriesCsv,
   categoryBars,
+  CATEGORY_METRICS,
   categoryRows,
   fitBarLabel,
   sortCategoryRows,
@@ -53,10 +54,10 @@ import type { SalesAnalyticsSectionProps } from "./sections";
 const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const items = (n: number) => `${count.format(n)} objet${Math.abs(n) > 1 ? "s" : ""}`;
 
-const METRIC_LABELS: Record<CategoryMetric, string> = {
+const METRIC_LABELS = {
   net_revenue: "CA net",
   quantity: "Quantité",
-};
+} as const satisfies Record<CategoryMetric, string>;
 const formatMetric = (metric: CategoryMetric, value: number) =>
   metric === "net_revenue" ? formatCurrency(value) : items(value);
 
@@ -387,7 +388,7 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
               onChange={(_event, next: CategoryMetric | null) => next && setMetric(next)}
               aria-label="Trier par"
             >
-              {(Object.keys(METRIC_LABELS) as CategoryMetric[]).map((m) => (
+              {CATEGORY_METRICS.map((m) => (
                 <ToggleButton key={m} value={m}>
                   {METRIC_LABELS[m]}
                 </ToggleButton>

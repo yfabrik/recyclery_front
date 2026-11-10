@@ -10,8 +10,9 @@ export type CategoryFigures = Pick<
   "net_revenue" | "quantity" | "share" | "average_price"
 >;
 
-/** What the bars are sized and sorted by. */
-export type CategoryMetric = "net_revenue" | "quantity";
+/** What the bars are sized and sorted by, in the order of the switch. */
+export const CATEGORY_METRICS = ["net_revenue", "quantity"] as const;
+export type CategoryMetric = (typeof CATEGORY_METRICS)[number];
 
 /** A category of the section, with its figures in both ranges. */
 export type CategoryRow = Pick<
