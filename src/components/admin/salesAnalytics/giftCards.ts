@@ -1,12 +1,28 @@
+import { roundCurrency } from "@recyclerie/api/domain/cart";
 import type {
   GiftCardAnalyticsDto,
   GiftCardFigureDto,
 } from "@recyclerie/api/responses/giftCards";
 import type { SalesAnalyticsDto } from "@recyclerie/api/responses/salesAnalytics";
 import { rowsToCsv, type CsvColumn } from "../../../utils/csv";
+import { csvColumns } from "./comparison";
+import { formatShortDate } from "./format";
 
 /** Shown next to a network-wide line when a Store is selected. */
 export const ALL_STORES_LABEL = "tous magasins";
+
+/**
+ * How far a line follows the Store filter: traced to a Store, network-wide
+ * (not traced to a Store), or a total that takes in a network-wide line.
+ */
+type LineScope = "store" | "network" | "partlyNetwork";
+
+/** Shown next to a line when a Store is selected. */
+const SCOPE_LABELS = {
+  store: "",
+  network: ALL_STORES_LABEL,
+  partlyNetwork: `dont créées à la main : ${ALL_STORES_LABEL}`,
+} as const satisfies Record<LineScope, string>;
 
 type LineKey =
   | "issued"
@@ -18,8 +34,7 @@ type LineSpec = {
   label: (range: { date_to: string }) => string;
   /** One of the origins of the issued value, shown under "Émises". */
   isOrigin: boolean;
-  /** Not traced to a Store: the same whatever the Store filter. */
-  networkWide: boolean;
+  scope: LineScope;
   pick: (figures: GiftCardAnalyticsDto) => GiftCardFigureDto;
   /** What the count counts: [one, many]. */
   unit: [string, string];
@@ -29,14 +44,7 @@ const CARDS: [string, string] = ["carte", "cartes"];
 
 const sum = (figures: GiftCardFigureDto[]): GiftCardFigureDto => ({
   count: figures.reduce((total, f) => total + f.count, 0),
-  amount: Math.round(figures.reduce((total, f) => total + f.amount, 0) * 100) / 100,
-});
-
-const frDate = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "UTC",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
+  amount: roundCurrency(figures.reduce((total, f) => total + f.amount, 0)),
 });
 
 /** The section's lines, top to bottom. */
@@ -45,7 +53,8 @@ const LINES: LineSpec[] = [
     key: "issued",
     label: () => "Émises",
     isOrigin: false,
-    networkWide: false,
+    // The total of its origins, hand-created cards (network-wide) included.
+    scope: "partlyNetwork",
     pick: (f) => sum(Object.values(f.issued)),
     unit: ["crédit", "crédits"],
   },
@@ -53,7 +62,7 @@ const LINES: LineSpec[] = [
     key: "by_hand",
     label: () => "Créées à la main",
     isOrigin: true,
-    networkWide: true,
+    scope: "network",
     pick: (f) => f.issued.by_hand,
     unit: CARDS,
   },
@@ -61,7 +70,7 @@ const LINES: LineSpec[] = [
     key: "sold",
     label: () => "Vendues en caisse",
     isOrigin: true,
-    networkWide: false,
+    scope: "store",
     pick: (f) => f.issued.sold,
     unit: CARDS,
   },
@@ -69,7 +78,7 @@ const LINES: LineSpec[] = [
     key: "store_credit",
     label: () => "Avoirs sur remboursement",
     isOrigin: true,
-    networkWide: false,
+    scope: "store",
     pick: (f) => f.issued.store_credit,
     unit: ["avoir", "avoirs"],
   },
@@ -77,7 +86,7 @@ const LINES: LineSpec[] = [
     key: "top_up",
     label: () => "Recharges",
     isOrigin: true,
-    networkWide: false,
+    scope: "store",
     pick: (f) => f.issued.top_up,
     unit: ["recharge", "recharges"],
   },
@@ -85,7 +94,7 @@ const LINES: LineSpec[] = [
     key: "used",
     label: () => "Utilisées en paiement",
     isOrigin: false,
-    networkWide: false,
+    scope: "store",
     pick: (f) => f.used,
     unit: ["paiement", "paiements"],
   },
@@ -93,15 +102,15 @@ const LINES: LineSpec[] = [
     key: "expired",
     label: () => "Expirées",
     isOrigin: false,
-    networkWide: true,
+    scope: "network",
     pick: (f) => f.expired,
     unit: CARDS,
   },
   {
     key: "outstanding",
-    label: ({ date_to }) => `Solde restant au ${frDate.format(new Date(`${date_to}T00:00:00Z`))}`,
+    label: ({ date_to }) => `Solde restant au ${formatShortDate(date_to)}`,
     isOrigin: false,
-    networkWide: true,
+    scope: "network",
     pick: (f) => f.outstanding,
     unit: CARDS,
   },
@@ -111,7 +120,10 @@ export type GiftCardRow = {
   key: LineKey;
   label: string;
   isOrigin: boolean;
-  /** `ALL_STORES_LABEL` for a network-wide line while a Store is selected, else "". */
+  /**
+   * While a Store is selected: `ALL_STORES_LABEL` for a network-wide line,
+   * a note on "Émises", which takes in the hand-created cards; else "".
+   */
   scope: string;
   unit: [string, string];
   count: number;
@@ -133,7 +145,7 @@ export const giftCardRows = (
       key: line.key,
       label: line.label(data.ranges.current),
       isOrigin: line.isOrigin,
-      scope: storeSelected && line.networkWide ? ALL_STORES_LABEL : "",
+      scope: storeSelected ? SCOPE_LABELS[line.scope] : "",
       unit: line.unit,
       count: current.count,
       amount: current.amount,
@@ -162,4 +174,4 @@ const COMPARISON_CSV_COLUMNS: CsvColumn<GiftCardRow>[] = [
 export const giftCardsCsv = (
   rows: GiftCardRow[],
   { comparison }: { comparison: boolean },
-) => rowsToCsv(rows, comparison ? [...CSV_COLUMNS, ...COMPARISON_CSV_COLUMNS] : CSV_COLUMNS);
+) => rowsToCsv(rows, csvColumns(CSV_COLUMNS, COMPARISON_CSV_COLUMNS, comparison));

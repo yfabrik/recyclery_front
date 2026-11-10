@@ -1,13 +1,15 @@
 import type { transactionsFilters } from "../api/transactions";
 import type {
-  SaleFilterFormValues,
   SaleHistoryFilterFormValues,
+  SaleListFilterValues,
 } from "../schema/sale";
 import { omitBlank } from "../zodTransform";
 
-/** Admin sales analytics transaction list query (also used by its CSV export). */
-export const toSaleQuery = (f: SaleFilterFormValues): transactionsFilters => ({
-  period: f.period,
+/**
+ * Admin sales analytics transaction list query (also used by its CSV export).
+ * No `period`: `GET /sales-transactions` filters on the dates only.
+ */
+export const toSaleQuery = (f: SaleListFilterValues): transactionsFilters => ({
   date_from: f.date_from,
   date_to: f.date_to,
   ...omitBlank({

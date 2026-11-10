@@ -16,6 +16,7 @@ import { Fragment, useMemo, useState } from "react";
 import { salesHeatmapRoute } from "../../../services/api/salesAnalytics";
 import { formatCurrency } from "../../../services/cartService";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
+import { countLabel, formatCount } from "./format";
 import {
   cellIntensity,
   heatmapCellColors,
@@ -32,7 +33,6 @@ const METRICS: { value: HeatmapMetric; label: string }[] = [
   { value: "sales_count", label: "Ventes" },
 ];
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const compactCurrency = new Intl.NumberFormat("fr-FR", {
   style: "currency",
   currency: "EUR",
@@ -40,9 +40,7 @@ const compactCurrency = new Intl.NumberFormat("fr-FR", {
 });
 
 const formatMetric = (metric: HeatmapMetric, value: number) =>
-  metric === "net_revenue" ? compactCurrency.format(value) : count.format(value);
-
-const salesLabel = (n: number) => `${count.format(n)} vente${n > 1 ? "s" : ""}`;
+  metric === "net_revenue" ? compactCurrency.format(value) : formatCount(value);
 
 const isEmptyCell = (cell: SalesHeatmapCellDto) =>
   cell.net_revenue === 0 && cell.sales_count === 0;
@@ -101,7 +99,7 @@ const HeatmapGrid = ({
                     arrow
                     title={`${heatmapCellLabel(row.weekday, cell.hour)} : ${formatCurrency(
                       cell.net_revenue,
-                    )} · ${salesLabel(cell.sales_count)}`}
+                    )} · ${countLabel(cell.sales_count, "vente")}`}
                   >
                     <Box
                       sx={{

@@ -1,6 +1,6 @@
-import { TrendingDown, TrendingFlat, TrendingUp } from "@mui/icons-material";
 import { Box, Card, CardContent, Skeleton, Typography } from "@mui/material";
 import { changeTone, formatChange, type Change } from "./change";
+import { TONE_COLORS, TREND_ICONS } from "./changeStyles";
 
 type KpiCardProps = {
   title: string;
@@ -14,13 +14,6 @@ type KpiCardProps = {
   lowerIsBetter?: boolean;
   loading?: boolean;
 };
-
-const TREND_ICONS = { up: TrendingUp, down: TrendingDown, flat: TrendingFlat };
-const TONE_COLORS = {
-  success: "success.main",
-  error: "error.main",
-  neutral: "text.secondary",
-} as const;
 
 /** One figure of the page, with its change vs the comparison range. */
 export const KpiCard = ({

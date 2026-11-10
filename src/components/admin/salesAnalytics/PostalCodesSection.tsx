@@ -15,11 +15,11 @@ import { formatCurrency, formatPercentage } from "../../../services/cartService"
 import { downloadCsv } from "../../../utils/csv";
 import { AnalyticsSectionCard } from "./AnalyticsSectionCard";
 import { COMPARE_LABELS } from "./filters";
+import { formatCount } from "./format";
 import { postalCodeShare, postalCodesCsv } from "./postalCodes";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
 const ShareLine = ({
   current,
@@ -35,7 +35,7 @@ const ShareLine = ({
   return (
     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
       <strong>{formatPercentage(share)}</strong> des ventes ont un code postal (
-      {count.format(current.sales_with_postal_code)} sur {count.format(current.sales_count)})
+      {formatCount(current.sales_with_postal_code)} sur {formatCount(current.sales_count)})
       {comparisonShare != null && ` · ${vsLabel} : ${formatPercentage(comparisonShare)}`}
     </Typography>
   );
@@ -98,7 +98,7 @@ export const PostalCodesSection = ({ filters }: SalesAnalyticsSectionProps) => {
                   <TableRow key={row.postal_code}>
                     <TableCell sx={{ fontWeight: "bold" }}>{row.postal_code}</TableCell>
                     <TableCell align="right">{formatCurrency(row.net_revenue)}</TableCell>
-                    <TableCell align="right">{count.format(row.sales_count)}</TableCell>
+                    <TableCell align="right">{formatCount(row.sales_count)}</TableCell>
                     <TableCell align="right">{formatCurrency(row.average_basket)}</TableCell>
                   </TableRow>
                 ))}

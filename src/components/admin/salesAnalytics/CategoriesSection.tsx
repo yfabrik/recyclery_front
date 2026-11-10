@@ -26,17 +26,19 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { salesCategoriesRoute } from "../../../services/api/salesAnalytics";
 import { formatCurrency, formatPercentage } from "../../../services/cartService";
 import { downloadCsv } from "../../../utils/csv";
 import { AnalyticsQueryState } from "./AnalyticsSectionCard";
 import {
+  barLabelPlacement,
   categoriesCsv,
   categoryBars,
+  CATEGORY_METRICS,
   categoryRows,
+  fitBarLabel,
   sortCategoryRows,
   TOP_CATEGORIES,
   type CategoryBar,
@@ -44,54 +46,108 @@ import {
   type CategoryRow,
 } from "./categories";
 import { changeTone, computeChange, formatChange } from "./change";
-import { COMPARE_LABELS, toSalesAnalyticsQuery } from "./filters";
-import { salesAnalyticsQueryKey } from "./queryKeys";
+import { TONE_COLORS } from "./changeStyles";
+import { COMPARE_LABELS } from "./filters";
+import { countLabel, formatCount } from "./format";
 import type { SalesAnalyticsSectionProps } from "./sections";
+import { useSalesAnalytics } from "./useSalesAnalytics";
 
-const count = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-const items = (n: number) => `${count.format(n)} objet${Math.abs(n) > 1 ? "s" : ""}`;
 
-const METRIC_LABELS: Record<CategoryMetric, string> = {
+const METRIC_LABELS = {
   net_revenue: "CA net",
   quantity: "Quantité",
-};
+} as const satisfies Record<CategoryMetric, string>;
 const formatMetric = (metric: CategoryMetric, value: number) =>
-  metric === "net_revenue" ? formatCurrency(value) : items(value);
+  metric === "net_revenue" ? formatCurrency(value) : countLabel(value, "objet");
 
-const barLabel = (bar: CategoryBar, metric: CategoryMetric) =>
-  `${bar.name} · ${formatMetric(metric, bar.value)} · ${formatPercentage(bar.share)}`;
+/** What follows a bar's name on its label, the one to drop last first. */
+const barFigures = (bar: CategoryBar, metric: CategoryMetric) => [
+  ` · ${formatMetric(metric, bar.value)}`,
+  ` · ${formatPercentage(bar.share)}`,
+];
 
-/** Height of one bar and the label above it. */
-const BAR_STEP = 48;
-/** Room above the first bar for its label. */
-const TOP_MARGIN = 20;
+/** Height of one bar and the gap below it. */
+const BAR_STEP = 36;
+/** Share of `BAR_STEP` left between two bars. */
+const BAR_GAP_RATIO = 0.25;
+
+let measureContext: CanvasRenderingContext2D | null | undefined;
+
+/** Width in px of `text` drawn in `font` (a CSS font shorthand in px), letter spacing included. */
+const textWidth = (text: string, font: string, fontSizePx: number, letterSpacingPx: number) => {
+  measureContext ??= document.createElement("canvas").getContext("2d");
+  if (!measureContext) return text.length * (fontSizePx * 0.6 + letterSpacingPx);
+  measureContext.font = font;
+  return measureContext.measureText(text).width + text.length * letterSpacingPx;
+};
+
+/** A typography length ("0.875rem", "0.01071em", "14px", 14) in px. */
+const toPx = (
+  length: string | number | undefined,
+  { rem, em }: { rem: number; em: number },
+) => {
+  if (typeof length === "number") return length;
+  const value = Number.parseFloat(length ?? "");
+  if (Number.isNaN(value)) return 0;
+  if (length?.endsWith("rem")) return value * rem;
+  if (length?.endsWith("em")) return value * em;
+  return value;
+};
 
 /**
- * Each bar's label, written above the bar from its start so a long name is
- * never cut. Drawn as a chart child: the bar plot itself is clipped to the
- * drawing area, which would cut the first label.
+ * Each bar's label (name, amount, %), written on the bar from its start in
+ * a colour that reads on the bar, or just after the bar's end when the bar is
+ * too short for it. On a narrow chart, a label that fits on neither side
+ * goes where there is more room, its name shortened. Drawn as a chart child,
+ * over the bar plot.
  */
-const CategoryBarLabels = ({ bars, metric }: { bars: CategoryBar[]; metric: CategoryMetric }) => {
+const CategoryBarLabels = ({
+  bars,
+  metric,
+  colorOf,
+}: {
+  bars: CategoryBar[];
+  metric: CategoryMetric;
+  colorOf: (bar: CategoryBar) => string;
+}) => {
   const theme = useTheme();
   const xScale = useXScale<"linear">();
   const yScale = useYScale<"band">();
+  const area = useDrawingArea();
+  const { fontFamily, fontWeight, fontSize, letterSpacing } = theme.typography.body2;
+  const { htmlFontSize } = theme.typography;
+  const fontSizePx = toPx(fontSize, { rem: htmlFontSize, em: htmlFontSize }) || htmlFontSize;
+  const letterSpacingPx = toPx(letterSpacing, { rem: htmlFontSize, em: fontSizePx });
+  const font = `${fontWeight ?? 400} ${fontSizePx}px ${fontFamily ?? "sans-serif"}`;
+  const widthOf = (text: string) => textWidth(text, font, fontSizePx, letterSpacingPx);
   return (
-    <g>
+    <g style={{ pointerEvents: "none" }}>
       {bars.map((bar) => {
         const top = yScale(bar.key);
         if (top === undefined) return null;
+        const zero = xScale(0);
+        const end = xScale(bar.value);
+        const figures = barFigures(bar, metric);
+        const { x, inside, room } = barLabelPlacement(
+          { start: Math.min(zero, end), end: Math.max(zero, end) },
+          widthOf(`${bar.name}${figures.join("")}`),
+          area.left + area.width,
+        );
         return (
           <text
             key={bar.key}
-            x={xScale(Math.min(0, bar.value)) + 2}
-            y={top - 6}
+            x={x}
+            y={top + yScale.bandwidth() / 2}
+            dominantBaseline="central"
             style={{
-              ...theme.typography.body2,
-              fill: theme.palette.text.primary,
-              pointerEvents: "none",
+              font,
+              letterSpacing: letterSpacingPx,
+              fill: inside
+                ? theme.palette.getContrastText(colorOf(bar))
+                : theme.palette.text.primary,
             }}
           >
-            {barLabel(bar, metric)}
+            {fitBarLabel(bar.name, figures, room, widthOf)}
           </text>
         );
       })}
@@ -108,11 +164,14 @@ type CategoryChartProps = {
 const CategoryChart = ({ bars, metric, onBarClick }: CategoryChartProps) => {
   const theme = useTheme();
   const names = new Map(bars.map((bar) => [bar.key, bar.name]));
+  const categoryColor = theme.palette.primary.main;
+  const othersColor = theme.palette.grey[400];
+  const colorOf = (bar: CategoryBar) => (bar.row ? categoryColor : othersColor);
   return (
     <BarChart
       layout="horizontal"
-      height={bars.length * BAR_STEP + TOP_MARGIN}
-      margin={{ top: TOP_MARGIN, right: 8, bottom: 0, left: 8 }}
+      height={bars.length * BAR_STEP}
+      margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
       hideLegend
       borderRadius={4}
       series={[
@@ -128,12 +187,12 @@ const CategoryChart = ({ bars, metric, onBarClick }: CategoryChartProps) => {
           data: bars.map((bar) => bar.key),
           valueFormatter: (key: string) => names.get(key) ?? key,
           position: "none",
-          categoryGapRatio: 0.5,
+          categoryGapRatio: BAR_GAP_RATIO,
           colorMap: {
             type: "ordinal",
             values: ["others"],
-            colors: [theme.palette.grey[400]],
-            unknownColor: theme.palette.primary.main,
+            colors: [othersColor],
+            unknownColor: categoryColor,
           },
         },
       ]}
@@ -143,16 +202,10 @@ const CategoryChart = ({ bars, metric, onBarClick }: CategoryChartProps) => {
         if (bar) onBarClick(bar);
       }}
     >
-      <CategoryBarLabels bars={bars} metric={metric} />
+      <CategoryBarLabels bars={bars} metric={metric} colorOf={colorOf} />
     </BarChart>
   );
 };
-
-const TONE_COLORS = {
-  success: "success.main",
-  error: "error.main",
-  neutral: "text.secondary",
-} as const;
 
 const ChangeCell = ({ row, metric }: { row: CategoryRow; metric: CategoryMetric }) => {
   const change = computeChange(row.current[metric], row.comparison?.[metric]);
@@ -229,7 +282,7 @@ const CategoryTable = ({ rows, changeLabel, onOpen }: CategoryTableProps) => {
                 </TableCell>
                 <TableCell align="right">{formatCurrency(row.current.net_revenue)}</TableCell>
                 {changeLabel && <ChangeCell row={row} metric="net_revenue" />}
-                <TableCell align="right">{count.format(row.current.quantity)}</TableCell>
+                <TableCell align="right">{formatCount(row.current.quantity)}</TableCell>
                 {changeLabel && <ChangeCell row={row} metric="quantity" />}
                 <TableCell align="right">{formatPercentage(row.current.share)}</TableCell>
                 <TableCell align="right">{formatCurrency(row.current.average_price)}</TableCell>
@@ -257,18 +310,8 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
   const [showAll, setShowAll] = useState(false);
 
   const parentId = path.at(-1)?.id;
-  const query = useMemo(
-    () => ({
-      ...toSalesAnalyticsQuery(filters),
-      ...(parentId ? { parent_id: parentId } : {}),
-    }),
-    [filters, parentId],
-  );
-  const categories = useQuery({
-    queryKey: salesAnalyticsQueryKey(salesCategoriesRoute.key, query),
-    queryFn: () => salesCategoriesRoute.fetch(query),
-    placeholderData: keepPreviousData,
-  });
+  const params = useMemo(() => (parentId ? { parent_id: parentId } : {}), [parentId]);
+  const categories = useSalesAnalytics(salesCategoriesRoute, filters, params);
 
   const rows = useMemo(
     () =>
@@ -328,7 +371,7 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
               onChange={(_event, next: CategoryMetric | null) => next && setMetric(next)}
               aria-label="Trier par"
             >
-              {(Object.keys(METRIC_LABELS) as CategoryMetric[]).map((m) => (
+              {CATEGORY_METRICS.map((m) => (
                 <ToggleButton key={m} value={m}>
                   {METRIC_LABELS[m]}
                 </ToggleButton>
@@ -410,7 +453,7 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
                       {grouped && "Cliquez sur « Autres » pour voir toutes les catégories."}
                     </Typography>
                   )}
-                  {showAll && bars.length > TOP_CATEGORIES + 1 && (
+                  {showAll && bars.length > TOP_CATEGORIES && (
                     <Button size="small" onClick={() => setShowAll(false)}>
                       Afficher le top {TOP_CATEGORIES}
                     </Button>

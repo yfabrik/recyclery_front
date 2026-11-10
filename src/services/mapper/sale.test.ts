@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type {
-  SaleFilterFormValues,
-  SaleHistoryFilterFormValues,
-} from "../schema/sale";
+import type { SalesAnalyticsFilters } from "../../components/admin/salesAnalytics/filters";
+import type { SaleHistoryFilterFormValues } from "../schema/sale";
 import { toSaleHistoryQuery, toSaleQuery } from "./sale";
 
-const sale: SaleFilterFormValues = {
+// The Suivi des Ventes page's own URL filters, as its transaction list passes them.
+const sale: SalesAnalyticsFilters = {
   store_id: "",
-  period: "month",
+  period: "quarter",
   date_from: "2026-10-01",
   date_to: "2026-10-15",
+  compare: "last_year",
   transaction_number: "42",
 };
 
@@ -22,9 +22,8 @@ const history: SaleHistoryFilterFormValues = {
 };
 
 describe("toSaleQuery", () => {
-  it("forwards the transaction-number search with the period", () => {
+  it("forwards the dates and the transaction-number search, not the period or the comparison", () => {
     expect(toSaleQuery(sale)).toEqual({
-      period: "month",
       date_from: "2026-10-01",
       date_to: "2026-10-15",
       transaction_number: "42",
@@ -33,7 +32,6 @@ describe("toSaleQuery", () => {
 
   it("omits a blank store and a blank transaction-number search", () => {
     expect(toSaleQuery({ ...sale, transaction_number: "" })).toEqual({
-      period: "month",
       date_from: "2026-10-01",
       date_to: "2026-10-15",
     });

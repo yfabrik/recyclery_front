@@ -3,6 +3,8 @@ import type {
   WholeTransactionDiscountDto,
 } from "@recyclerie/api/responses/salesAnalytics";
 import type { CsvColumn } from "../../../utils/csv";
+import { comparisonLookup } from "./comparison";
+import { toPercent } from "./format";
 
 /** One line of the discounts CSV. `null` cells are written empty. */
 export type DiscountsCsvRow = {
@@ -34,8 +36,6 @@ export const DISCOUNTS_CSV_COLUMNS: CsvColumn<DiscountsCsvRow>[] = [
   { header: "Remise période de comparaison (€)", key: "comparison_discount" },
 ];
 
-const toPercent = (ratio: number) => Math.round(ratio * 1000) / 10;
-
 const emptyRow = {
   store: "",
   sales_count: null,
@@ -50,7 +50,8 @@ const emptyRow = {
 export const comparisonDiscountGroup = (
   comparison: SalesDiscountsDto | null,
   key: WholeTransactionDiscountDto["key"],
-) => comparison?.whole_transaction_discounts.find((group) => group.key === key) ?? null;
+) =>
+  comparisonLookup(comparison?.whole_transaction_discounts, (group) => group.key)(key) ?? null;
 
 /** Rows of the discounts CSV: totals, top categories, then each whole-transaction discount and its Stores. */
 export const discountsCsvRows = (
@@ -58,7 +59,8 @@ export const discountsCsvRows = (
   comparison: SalesDiscountsDto | null,
 ): DiscountsCsvRow[] => {
   const shareOfGross = (amount: number) =>
-    toPercent(current.gross_revenue > 0 ? amount / current.gross_revenue : 0);
+    toPercent(current.gross_revenue > 0 ? amount / current.gross_revenue : 0, 1);
+  const comparedCategory = comparisonLookup(comparison?.top_categories, (c) => c.category_id);
   const total = (
     label: string,
     pick: (figures: SalesDiscountsDto) => number,
@@ -84,9 +86,7 @@ export const discountsCsvRows = (
       section: "Catégorie",
       label: category.name,
       discount: category.discount,
-      comparison_discount:
-        comparison?.top_categories.find((c) => c.category_id === category.category_id)
-          ?.discount ?? null,
+      comparison_discount: comparedCategory(category.category_id)?.discount ?? null,
     })),
     ...current.whole_transaction_discounts.flatMap((group) => [
       {
@@ -94,7 +94,7 @@ export const discountsCsvRows = (
         label: group.label,
         store: "Tous magasins",
         sales_count: group.sales_count,
-        share_of_sales: toPercent(group.share_of_sales),
+        share_of_sales: toPercent(group.share_of_sales, 1),
         discount: group.discount_amount,
         share_of_gross_revenue: null,
         average_basket_before: group.average_basket_before,
