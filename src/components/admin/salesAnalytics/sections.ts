@@ -22,6 +22,7 @@ export type SalesAnalyticsSectionProps = {
 };
 
 export type SalesAnalyticsSection = {
+  /** Unique on the page: the React key of the section. */
   id: string;
   /** "half": two sections side by side on wide screens. */
   width: "full" | "half";
@@ -29,7 +30,7 @@ export type SalesAnalyticsSection = {
 };
 
 /** The page, top to bottom. Adding or removing a section is one line. */
-export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
+export const SALES_ANALYTICS_SECTIONS = [
   { id: "kpis", width: "full", Component: KpiSection },
   { id: "timeline", width: "full", Component: TimelineSection },
   { id: "categories", width: "full", Component: CategoriesSection },
@@ -40,4 +41,4 @@ export const SALES_ANALYTICS_SECTIONS: SalesAnalyticsSection[] = [
   { id: "postal-codes", width: "half", Component: PostalCodesSection },
   { id: "gift-cards", width: "half", Component: GiftCardsSection },
   { id: "transactions", width: "full", Component: TransactionListSection },
-];
+] as const satisfies readonly SalesAnalyticsSection[];
