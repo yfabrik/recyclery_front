@@ -153,6 +153,68 @@ export const categoryBars = (
   ];
 };
 
+/** Room between a bar's edge and its label, in px. */
+export const BAR_LABEL_PADDING = 6;
+
+/** Where a bar's label is written, and how much width it has there. */
+export type BarLabelPlacement = { x: number; inside: boolean; room: number };
+
+/**
+ * Where a bar's label is written: inside the bar from its start (left end)
+ * when it fits there, else just after the bar's end; when it fits on
+ * neither, on the side with more room (see `fitBarLabel`). `start` and `end`
+ * are the bar's left and right x in px, `areaEnd` the right edge of the
+ * drawing area.
+ */
+export const barLabelPlacement = (
+  bar: { start: number; end: number },
+  labelWidth: number,
+  areaEnd: number,
+): BarLabelPlacement => {
+  const inside = {
+    x: bar.start + BAR_LABEL_PADDING,
+    inside: true,
+    room: bar.end - bar.start - 2 * BAR_LABEL_PADDING,
+  };
+  const after = {
+    x: bar.end + BAR_LABEL_PADDING,
+    inside: false,
+    room: areaEnd - bar.end - BAR_LABEL_PADDING,
+  };
+  if (labelWidth <= inside.room) return inside;
+  if (labelWidth <= after.room) return after;
+  return inside.room > after.room ? inside : after;
+};
+
+/** Letters of a category name kept before a bar label gives up a figure. */
+const MIN_NAME_LETTERS = 7;
+
+const shortenName = (name: string, letters: number) =>
+  letters >= name.length ? name : `${name.slice(0, letters).trimEnd()}…`;
+
+/**
+ * A bar's label at most `room` px wide by `widthOf`: `name` then `figures`
+ * (" · 12,00 €", " · 3,4 %"). Too wide, the name is shortened with "…" down
+ * to 7 letters; then the figures go, last first; then the name is shortened
+ * further.
+ */
+export const fitBarLabel = (
+  name: string,
+  figures: readonly string[],
+  room: number,
+  widthOf: (text: string) => number,
+) => {
+  for (let kept = figures.length; kept >= 0; kept--) {
+    const tail = figures.slice(0, kept).join("");
+    const minLetters = kept === 0 ? 1 : Math.min(MIN_NAME_LETTERS, name.length);
+    for (let letters = name.length; letters >= minLetters; letters--) {
+      const label = `${shortenName(name, letters)}${tail}`;
+      if (widthOf(label) <= room) return label;
+    }
+  }
+  return shortenName(name, 1);
+};
+
 /** A ratio as a percentage with 2 decimals (0.2375 → 23.75); blank when there is none. */
 const csvPercent = (ratio: number | null | undefined) =>
   ratio == null ? "" : Math.round(ratio * 10_000) / 100;

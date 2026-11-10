@@ -3,7 +3,14 @@ import type {
   SalesCategoryRowDto,
 } from "@recyclerie/api/responses/salesAnalytics";
 import { describe, expect, it } from "vitest";
-import { categoriesCsv, categoryBars, categoryRows } from "./categories";
+import {
+  BAR_LABEL_PADDING,
+  barLabelPlacement,
+  categoriesCsv,
+  categoryBars,
+  categoryRows,
+  fitBarLabel,
+} from "./categories";
 
 let nextId = 1;
 const category = (
@@ -150,5 +157,74 @@ describe("categoriesCsv", () => {
       "Catégorie,CA net,Quantité,Part du CA (%),Prix moyen",
       "Vaisselle,40,0,0,0",
     ]);
+  });
+});
+
+describe("barLabelPlacement", () => {
+  const P = BAR_LABEL_PADDING;
+
+  it("writes the label inside the bar, from its start, when it fits", () => {
+    expect(barLabelPlacement({ start: 0, end: 300 }, 200, 1000)).toEqual({
+      x: P,
+      inside: true,
+      room: 300 - 2 * P,
+    });
+  });
+
+  it("writes it just after the bar's end when the bar is too short", () => {
+    expect(barLabelPlacement({ start: 0, end: 120 }, 200, 1000)).toEqual({
+      x: 120 + P,
+      inside: false,
+      room: 1000 - 120 - P,
+    });
+    expect(barLabelPlacement({ start: 0, end: 200 + P }, 200, 1000).inside).toBe(false);
+  });
+
+  it("starts from the left end of a negative bar and goes after its right end", () => {
+    expect(barLabelPlacement({ start: 40, end: 100 }, 200, 1000)).toMatchObject({
+      x: 100 + P,
+      inside: false,
+    });
+    expect(barLabelPlacement({ start: 40, end: 400 }, 200, 1000)).toMatchObject({
+      x: 40 + P,
+      inside: true,
+    });
+  });
+
+  it("takes the side with more room when the label fits on neither", () => {
+    expect(barLabelPlacement({ start: 0, end: 250 }, 400, 300)).toEqual({
+      x: P,
+      inside: true,
+      room: 250 - 2 * P,
+    });
+    expect(barLabelPlacement({ start: 0, end: 50 }, 400, 300)).toEqual({
+      x: 50 + P,
+      inside: false,
+      room: 300 - 50 - P,
+    });
+  });
+});
+
+describe("fitBarLabel", () => {
+  // 10 px a character.
+  const width = (text: string) => text.length * 10;
+  const figures = [" · 30 €", " · 5 %"];
+
+  it("keeps the whole label when it fits", () => {
+    expect(fitBarLabel("Vaisselle", figures, 300, width)).toBe("Vaisselle · 30 € · 5 %");
+  });
+
+  it("shortens the name first, keeping at least 7 letters", () => {
+    expect(fitBarLabel("Vêtements et accessoires", figures, 230, width)).toBe(
+      "Vêtements… · 30 € · 5 %",
+    );
+  });
+
+  it("then drops the share, then the amount, before shortening the name further", () => {
+    expect(fitBarLabel("Vêtements et accessoires", figures, 200, width)).toBe(
+      "Vêtements et… · 30 €",
+    );
+    expect(fitBarLabel("Vaisselle", figures, 170, width)).toBe("Vaisselle · 30 €");
+    expect(fitBarLabel("Vaisselle", figures, 50, width)).toBe("Vais…");
   });
 });
