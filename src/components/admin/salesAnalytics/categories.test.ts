@@ -53,8 +53,18 @@ describe("categoryBars", () => {
     expect(bars[0]).toMatchObject({ name: "C1", value: 120, share: 120 / 780 });
   });
 
-  it("shows every category when there are 11 or fewer", () => {
-    expect(categoryBars(categoryRows(dto(descending(11)), null), "net_revenue")).toHaveLength(11);
+  it("groups even a single category beyond the 10th", () => {
+    const bars = categoryBars(categoryRows(dto(descending(11)), null), "net_revenue");
+
+    expect(bars).toHaveLength(11);
+    expect(bars[10]).toMatchObject({ key: "others", name: "Autres (1 catégorie)", value: 10 });
+  });
+
+  it("shows every category when there are 10 or fewer", () => {
+    const bars = categoryBars(categoryRows(dto(descending(10)), null), "net_revenue");
+
+    expect(bars).toHaveLength(10);
+    expect(bars.some((bar) => bar.row === null)).toBe(false);
     expect(categoryBars(categoryRows(dto(descending(3)), null), "net_revenue")).toHaveLength(3);
   });
 

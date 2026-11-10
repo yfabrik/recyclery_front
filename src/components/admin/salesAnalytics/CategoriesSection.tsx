@@ -410,7 +410,7 @@ export const CategoriesSection = ({ filters }: SalesAnalyticsSectionProps) => {
                       {grouped && "Cliquez sur « Autres » pour voir toutes les catégories."}
                     </Typography>
                   )}
-                  {showAll && bars.length > TOP_CATEGORIES + 1 && (
+                  {showAll && bars.length > TOP_CATEGORIES && (
                     <Button size="small" onClick={() => setShowAll(false)}>
                       Afficher le top {TOP_CATEGORIES}
                     </Button>

@@ -117,8 +117,8 @@ const ratio = (value: number, total: number) => (total > 0 ? value / total : 0);
 
 /**
  * The chart: the current range's categories sorted on `metric`, the top 10
- * then one "Autres (N catégories)" bar for the rest, unless `showAll`.
- * A single leftover category is shown rather than grouped.
+ * then one "Autres (N catégories)" bar for the rest, even a single one,
+ * unless `showAll`.
  */
 export const categoryBars = (
   rows: CategoryRow[],
@@ -137,7 +137,7 @@ export const categoryBars = (
     share: ratio(row.current[metric], total),
     row,
   });
-  if (showAll || sorted.length <= limit + 1) return sorted.map(bar);
+  if (showAll || sorted.length <= limit) return sorted.map(bar);
 
   const others = sorted.slice(limit);
   const value = others.reduce((sum, row) => sum + row.current[metric], 0);
@@ -145,7 +145,7 @@ export const categoryBars = (
     ...sorted.slice(0, limit).map(bar),
     {
       key: "others",
-      name: `Autres (${others.length} catégories)`,
+      name: `Autres (${others.length} ${others.length > 1 ? "catégories" : "catégorie"})`,
       value,
       share: ratio(value, total),
       row: null,
