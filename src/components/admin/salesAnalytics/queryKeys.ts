@@ -1,10 +1,11 @@
 import type { Query, QueryClient } from "@tanstack/react-query";
+import type { SalesAnalyticsRouteKey } from "../../../services/api/salesAnalytics";
 
 /** First element of every analytics route's query key. */
 export const SALES_ANALYTICS_QUERY_KEY = ["salesAnalytics"] as const;
 
 /** `["salesAnalytics", route, query]`. */
-export const salesAnalyticsQueryKey = (route: string, query: unknown) =>
+export const salesAnalyticsQueryKey = (route: SalesAnalyticsRouteKey, query: unknown) =>
   [...SALES_ANALYTICS_QUERY_KEY, route, query] as const;
 
 /**

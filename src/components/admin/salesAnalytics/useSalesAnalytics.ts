@@ -1,3 +1,4 @@
+import type { SalesAnalyticsResponse } from "@recyclerie/api/responses/salesAnalytics";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { SalesAnalyticsRoute } from "../../../services/api/salesAnalytics";
@@ -9,8 +10,8 @@ import { salesAnalyticsQueryKey } from "./queryKeys";
  * page filters, plus the route's own `params` (e.g. the categories'
  * `parent_id`). Memoise `params`, or the query is rebuilt on every render.
  */
-export const useSalesAnalytics = <T, P extends object>(
-  route: SalesAnalyticsRoute<T, P>,
+export const useSalesAnalytics = <R extends SalesAnalyticsResponse<unknown>, P extends object>(
+  route: SalesAnalyticsRoute<R, P>,
   filters: SalesAnalyticsFilters,
   params?: P,
 ) => {
