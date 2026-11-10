@@ -19,7 +19,6 @@ import { useTransactionsCsvExport } from "../../../hooks/useTransactionsCsvExpor
 import { useReceiptPrint } from "../../ReceiptPrint";
 import { TransactionDetailsDialog } from "../../transactions/TransactionDetailsDialog";
 import { TransactionListTable } from "../../transactions/TransactionListTable";
-import { toSaleFilterValues } from "./filters";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { TransactionNumberSearch } from "./TransactionNumberSearch";
 
@@ -34,8 +33,8 @@ export const TransactionListSection = ({
   page,
   onPageChange,
 }: SalesAnalyticsSectionProps) => {
-  const listFilters = useMemo(() => toSaleFilterValues(filters), [filters]);
-  const query = useMemo(() => toSaleQuery(listFilters), [listFilters]);
+  // The page's own filters, mapped straight to the list query.
+  const query = useMemo(() => toSaleQuery(filters), [filters]);
   const setTransactionNumber = (transaction_number: string) =>
     onFiltersChange({ ...filters, transaction_number });
   const [selectedTransaction, setSelectedTransaction] =
@@ -95,12 +94,12 @@ export const TransactionListSection = ({
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
               <TransactionNumberSearch
-                value={listFilters.transaction_number ?? ""}
+                value={filters.transaction_number ?? ""}
                 onChange={setTransactionNumber}
               />
-              {listFilters.transaction_number && (
+              {filters.transaction_number && (
                 <Chip
-                  label={`Filtré par: ${listFilters.transaction_number} (${total} résultat${total > 1 ? "s" : ""})`}
+                  label={`Filtré par: ${filters.transaction_number} (${total} résultat${total > 1 ? "s" : ""})`}
                   color="primary"
                   variant="outlined"
                   onDelete={() => setTransactionNumber("")}

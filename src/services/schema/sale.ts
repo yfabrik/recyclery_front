@@ -6,10 +6,7 @@ import {
 import { filterIsoDate, idSchema } from "../../interfaces/ZodTypes";
 import { toIsoDate } from "../dateService";
 
-/**
- * Admin sales filters taken by `toSaleQuery`. The analytics page builds them
- * from its own URL state (`toSaleFilterValues`).
- */
+/** Admin sales filters (store, period, dates, transaction-number search). */
 export const saleFilterFormSchema =z.object({
   store_id: z.union([idSchema(), z.literal("")]),
   period: z.enum(["week", "month", "custom"]), //TODO find enum
@@ -18,6 +15,15 @@ export const saleFilterFormSchema =z.object({
   transaction_number: z.string().trim().optional(),
 });
 export type SaleFilterFormValues = z.infer<typeof saleFilterFormSchema>;
+
+/**
+ * What `toSaleQuery` reads: the Suivi des Ventes page passes its own URL
+ * filters (`SalesAnalyticsFilters`) as they are.
+ */
+export type SaleListFilterValues = Pick<
+  SaleFilterFormValues,
+  "store_id" | "date_from" | "date_to" | "transaction_number"
+>;
 
 /** URL / form state of the POS history filters. Not the API query: see `toSaleHistoryQuery`. */
 export const saleHistoryFilterFormSchema =z.object({

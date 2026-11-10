@@ -3,7 +3,6 @@ import {
   getSalesAnalyticsFilterDefaults,
   salesAnalyticsFilterSchema,
   toSalesAnalyticsQuery,
-  toSaleFilterValues,
   type SalesAnalyticsFilters,
 } from "./filters";
 
@@ -52,17 +51,5 @@ describe("toSalesAnalyticsQuery", () => {
       compare: "previous",
     });
     expect(toSalesAnalyticsQuery({ ...filters, store_id: 2 })).toMatchObject({ store_id: 2 });
-  });
-});
-
-describe("toSaleFilterValues", () => {
-  it("is the former filter shape, with the transaction list's search", () => {
-    expect(toSaleFilterValues({ ...filters, store_id: 2 })).toEqual({
-      period: "custom",
-      date_from: "2026-10-01",
-      date_to: "2026-11-09",
-      store_id: 2,
-      transaction_number: "42",
-    });
   });
 });

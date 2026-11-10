@@ -7,7 +7,6 @@ import {
 import z from "zod";
 import { filterIsoDate, idSchema } from "../../../interfaces/ZodTypes";
 import { toIsoDate } from "../../../services/dateService";
-import type { SaleFilterFormValues } from "../../../services/schema/sale";
 import { omitBlank } from "../../../services/zodTransform";
 import { presetRange } from "./period";
 
@@ -58,18 +57,4 @@ export const toSalesAnalyticsQuery = (
   date_to: f.date_to,
   compare: f.compare,
   ...omitBlank({ store_id: f.store_id }),
-});
-
-/**
- * The page's former filter shape, taken by `toSaleQuery` for the transaction
- * list (`GET /sales-transactions`, which ignores `period`).
- */
-export const toSaleFilterValues = (
-  f: SalesAnalyticsFilters,
-): SaleFilterFormValues => ({
-  period: "custom",
-  date_from: f.date_from,
-  date_to: f.date_to,
-  store_id: f.store_id,
-  transaction_number: f.transaction_number ?? "",
 });
