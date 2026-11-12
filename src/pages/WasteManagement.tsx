@@ -116,9 +116,15 @@ const WasteManagement = () => {
     placeholderData: keepPreviousData
   })
 
-  const stats = useQuery({
-    queryKey: ["wasteStats"],
+  const totalStats = useQuery({
+    queryKey: ["wasteStats", "total"],
     queryFn: () => getWasteStats().then(response => response.data.data)
+  })
+
+  const filteredStats = useQuery({
+    queryKey: ["wasteStats", "filtered", query],
+    queryFn: () => getWasteStats(query).then(response => response.data.data),
+    placeholderData: keepPreviousData
   })
 
 
@@ -203,6 +209,16 @@ const WasteManagement = () => {
     return `${kg} kg`;
   };
 
+  const formatCount = (value?: number | null) => String(Number(value ?? 0));
+  const formatStatWeight = (value?: number | null) => formatWeight(value || 0);
+
+  const statCards = [
+    { key: "total_disposals", title: "Total Sorties", icon: <Assessment />, color: "primary", format: formatCount },
+    { key: "total_weight_kg", title: "Poids Total", icon: <TrendingUp />, color: "success", format: formatStatWeight },
+    { key: "eco_organism_disposals", title: "Éco-organismes", icon: <Nature />, color: "success", format: formatCount },
+    { key: "landfill_disposals", title: "Déchetterie", icon: <DeleteSweep />, color: "warning", format: formatCount },
+  ] as const;
+
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box
@@ -233,47 +249,21 @@ const WasteManagement = () => {
         </Button>
       </Box>
       {/* Statistiques */}
-      {stats && (
+      <Loading isLoading={totalStats.isLoading || filteredStats.isLoading}>
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Loading isLoading={stats.isLoading}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {statCards.map(({ key, title, icon, color, format }) => (
+            <Grid key={key} size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
-                title="Total Sorties"
-                value={Number(stats.data?.total_disposals ?? 0)}
-                icon={<Assessment />}
-                color="primary"
+                title={title}
+                value={format(filteredStats.data?.[key])}
+                subtitle={`Total : ${format(totalStats.data?.[key])}`}
+                icon={icon}
+                color={color}
               />
             </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title="Poids Total"
-                value={formatWeight(stats.data?.total_weight_kg || 0)}
-                icon={<TrendingUp />}
-                color="success"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title="Éco-organismes"
-                value={Number(stats.data?.eco_organism_disposals ?? 0)}
-                icon={<Nature />}
-                color="success"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title="Déchetterie"
-                value={Number(stats.data?.landfill_disposals ?? 0)}
-                icon={<DeleteSweep />}
-                color="warning"
-              />
-            </Grid>
-          </Loading>
+          ))}
         </Grid>
-      )}
+      </Loading>
       {/* Filtres */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <WasteFilterForm

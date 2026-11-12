@@ -173,6 +173,14 @@ export const formatWeight = (amount: number) => {
   }).format(amount || 0);
 };
 
+export const formatHours = (hours: number) => {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "unit",
+    unit: "hour",
+    maximumFractionDigits: 2,
+  }).format(hours || 0);
+};
+
 export const formatPercentage = (value: number) => {
   return new Intl.NumberFormat("fr-FR", {
     style: "percent",

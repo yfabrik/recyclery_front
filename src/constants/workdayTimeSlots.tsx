@@ -68,3 +68,11 @@ export const getWorkdayTimeSlotColor = (
 
 export const getWorkdayTimeSlotIcon = (slot: WorkdayTimeSlotValue | string) =>
   getWorkdayTimeSlot(slot)?.icon;
+
+/** Minutes since midnight at which the morning ends and the afternoon starts (12:00). */
+export const MORNING_ENDS_AT_MINUTES = 12 * 60;
+
+/** Morning or afternoon column for a clock time, given as minutes since midnight. */
+export function timeSlotOfMinutes(minutes: number): WorkdayTimeSlotValue {
+  return minutes < MORNING_ENDS_AT_MINUTES ? "morning" : "afternoon";
+}

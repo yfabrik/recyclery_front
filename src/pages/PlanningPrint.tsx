@@ -13,47 +13,22 @@ import { useQuery } from "@tanstack/react-query";
 import { Fragment, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useSearchParams, Link as RouterLink } from "react-router";
-import { dayjs, toIsoDate, toIsoTime, weekday } from "@recyclerie/api/domain/date";
-import type { TimeSlot } from "@recyclerie/api/enums";
-import { EmployeeTasksTimeline, type EmployeeTaskItem } from "../components/planning/EmployeeTasksTimeline";
+import { dayjs, toIsoDate } from "@recyclerie/api/domain/date";
+import { EmployeeTimeRangesTimeline } from "../components/planning/EmployeeTimeRangesTimeline";
 import type { TaskModel } from "../interfaces/Models";
-import { getWeekRangeFromDate, weekdayLabel } from "../services/dateService";
+import { getWeekRangeFromDate } from "../services/dateService";
 import { getTasks } from "../services/api/tasks";
 import { fetchStores as fstore } from "../services/api/store";
 import {
-  assigneesForPrint,
+  buildGridCells,
+  employeeTimeRangeLists,
+} from "../services/planning/printEntries";
+import {
   defaultSelectedEmployeeIds,
   employeesWithAssignedTasks,
   filterPrintTasks,
-  printedTasksMixStores,
-  printEmployeeName,
   type PrintMode,
 } from "../services/planning/printSelection";
-
-function toTaskItem(s: TaskModel, storeName: string | null): EmployeeTaskItem {
-  const scheduled = new Date(s.scheduled_date);
-  const dayOfWeek = weekdayLabel(weekday(scheduled));
-  return {
-    name: s.name,
-    start_time: s.start_time,
-    end_time: s.end_time,
-    day_of_week: dayOfWeek,
-    category: s.category,
-    storeName,
-  };
-}
-
-function formatTaskCell(task: TaskModel): string {
-  return `${toIsoTime(task.start_time)}-${toIsoTime(task.end_time)} ${task.name}`;
-}
-
-function taskStoreName(task: TaskModel): string | null {
-  return task.Recyclery?.name ?? null;
-}
-
-function getTaskSlot(task: TaskModel): TimeSlot {
-  return new Date(task.start_time).getHours() < 13 ? "morning" : "afternoon";
-}
 
 const NO_TASKS: TaskModel[] = [];
 
@@ -92,7 +67,7 @@ export default function PlanningPrint() {
     queryKey: ["tasks", "print", { date_from, date_to }],
     queryFn: () =>
       getTasks({
-        include: ["user", "store"],
+        include: ["user", "store", "timeRanges"],
         date_from,
         date_to,
       }).then((r) => r.data.data),
@@ -131,49 +106,15 @@ export default function PlanningPrint() {
     [printMode, storeId, selectedIds, weekTasks],
   );
 
-  const showStoreOnTasks = printedTasksMixStores(printedTasks);
-
-  const byEmployee = useMemo(() => {
-    const map = new Map<
-      string,
-      { employeeName: string; employeeId?: number; rawTasks: TaskModel[] }
-    >();
-
-    const add = (empName: string, empId: number | undefined, task: TaskModel) => {
-      const key = empId != null ? `id-${empId}` : `name-${empName}`;
-      if (!map.has(key)) {
-        map.set(key, { employeeName: empName, employeeId: empId, rawTasks: [] });
-      }
-      map.get(key)!.rawTasks.push(task);
-    };
-
-    printedTasks.forEach((s) => {
-      assigneesForPrint(s, printMode, selectedIds).forEach((emp) => {
-        add(printEmployeeName(emp), emp.id, s);
-      });
-    });
-
-    const sortByDateThenTime = (a: TaskModel, b: TaskModel) => {
-      const dateA = toIsoDate(a.scheduled_date);
-      const dateB = toIsoDate(b.scheduled_date);
-      if (dateA !== dateB) {
-        return new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime();
-      }
-      return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-    };
-
-    return Array.from(map.values()).map((g) => {
-      const rawTasks = [...g.rawTasks].sort(sortByDateThenTime);
-      return {
-        employeeName: g.employeeName,
-        employeeId: g.employeeId,
-        rawTasks,
-        tasks: rawTasks.map((s) =>
-          toTaskItem(s, showStoreOnTasks ? taskStoreName(s) : null),
-        ),
-      };
-    });
-  }, [printedTasks, printMode, selectedIds, showStoreOnTasks]);
+  const byEmployee = useMemo(
+    () =>
+      employeeTimeRangeLists({
+        tasks: printedTasks,
+        mode: printMode,
+        selectedEmployeeIds: selectedIds,
+      }),
+    [printedTasks, printMode, selectedIds],
+  );
 
   const weekDays = useMemo(() => {
     const start = dayjs(date_from);
@@ -190,28 +131,13 @@ export default function PlanningPrint() {
   }, [date_from]);
 
   const gridRows = useMemo(() => {
-    return byEmployee.map(({ employeeName, employeeId, rawTasks }) => {
-      const cells: Record<
-        string,
-        { text: string; storeName: string | null }[]
-      > = {};
-      for (const day of weekDays) {
-        cells[`${day.iso}-morning`] = [];
-        cells[`${day.iso}-afternoon`] = [];
-      }
-      for (const task of rawTasks) {
-        const dayKey = toIsoDate(task.scheduled_date);
-        const slot = getTaskSlot(task);
-        const key = `${dayKey}-${slot}`;
-        if (!(key in cells)) continue;
-        cells[key].push({
-          text: formatTaskCell(task),
-          storeName: showStoreOnTasks ? taskStoreName(task) : null,
-        });
-      }
-      return { employeeName, employeeId, cells };
-    });
-  }, [byEmployee, weekDays, showStoreOnTasks]);
+    const dayIsos = weekDays.map((day) => day.iso);
+    return byEmployee.map(({ employeeName, employeeId, items }) => ({
+      employeeName,
+      employeeId,
+      cells: buildGridCells(items, dayIsos),
+    }));
+  }, [byEmployee, weekDays]);
 
   const weekLabel = useMemo(() => {
     const dateOptions: Intl.DateTimeFormatOptions = {
@@ -462,18 +388,18 @@ export default function PlanningPrint() {
                 displayPrint: "none",
               }}
             >
-              {byEmployee.map(({ employeeName, tasks }) => (
+              {byEmployee.map(({ employeeId, employeeName, items }) => (
                 <Box
-                  key={employeeName}
+                  key={employeeId}
                   sx={{
                     minWidth: 320,
                     flex: "1 1 320px",
                     maxWidth: 480,
                   }}
                 >
-                  <EmployeeTasksTimeline
+                  <EmployeeTimeRangesTimeline
                     employeeName={employeeName}
-                    tasks={tasks}
+                    timeRanges={items}
                   />
                 </Box>
               ))}
@@ -509,11 +435,11 @@ export default function PlanningPrint() {
               <Box component="tbody">
                 {employeeRows.map((row, rowIndex) => (
                   <Box component="tr" key={rowIndex}>
-                    {row.map(({ employeeName, tasks }) => (
-                      <Box component="td" key={employeeName}>
-                        <EmployeeTasksTimeline
+                    {row.map(({ employeeId, employeeName, items }) => (
+                      <Box component="td" key={employeeId}>
+                        <EmployeeTimeRangesTimeline
                           employeeName={employeeName}
-                          tasks={tasks}
+                          timeRanges={items}
                         />
                       </Box>
                     ))}
@@ -584,7 +510,7 @@ export default function PlanningPrint() {
           </Box>
           <Box component="tbody">
             {gridRows.map(({ employeeName, employeeId, cells }) => (
-              <Box component="tr" key={employeeId ?? employeeName}>
+              <Box component="tr" key={employeeId}>
                 <Box component="td" className="employee-col" sx={{ fontWeight: "bold" }}>
                   {employeeName}
                 </Box>

@@ -4,10 +4,9 @@ import {
   clampRangeToWindow,
   nearestWindow,
   subtractWindows,
-  TIME_RANGE_STEP_MINUTES,
   type MinuteWindow,
 } from "@recyclerie/api/domain/timeRange";
-import { BLOCKED_FILL, formatMinutes, hourMarks, isMinuteRange, type LocalRange } from "./geometry";
+import { BLOCKED_FILL, formatMinutes, isMinuteRange, sliderMarks, type LocalRange } from "./geometry";
 
 type RangeSliderProps = {
   task: MinuteWindow;
@@ -71,16 +70,16 @@ export const RangeSlider = ({ task, range, label, color, free, employeeName, onC
           value={[range.start, range.end]}
           min={task.start}
           max={task.end}
-          step={TIME_RANGE_STEP_MINUTES}
+          step={null}
           disableSwap
-          marks={hourMarks(task.start, task.end)}
+          marks={sliderMarks(task)}
           valueLabelDisplay="auto"
           valueLabelFormat={formatMinutes}
           onChange={(_event, value, activeThumb) => {
             if (!isMinuteRange(value)) return;
             const fragment = nearestWindow(free, activeThumb === 0 ? value[0] : value[1]);
             if (!fragment) return;
-            const clamped = clampRangeToWindow(value, fragment);
+            const clamped = clampRangeToWindow(value, fragment, task);
             if (!clamped) return;
             onChange(clamped[0], clamped[1]);
           }}
@@ -94,6 +93,8 @@ export const RangeSlider = ({ task, range, label, color, free, employeeName, onC
             "& .MuiSlider-track": { display: "none" },
             "& .MuiSlider-thumb": { width: 16, height: 16 },
             "& .MuiSlider-valueLabel": { pointerEvents: "none" },
+            // Every allowed position is a mark (step={null}); only the hour labels are shown.
+            "& .MuiSlider-mark": { display: "none" },
             "& .MuiSlider-markLabel": { fontSize: 10 },
           }}
         />

@@ -21,7 +21,24 @@ export const hourMarks = (from: number, to: number): { value: number; label: str
   return marks;
 };
 
-export const isMinuteRange = (value: number | readonly number[]): value is [number, number] =>
+/**
+ * Every position a slider thumb may take across a Task: the clock's 15-minute
+ * grid, plus the Task's own edges (which may sit off it, e.g. 10:01). Used with
+ * `step={null}` because a stepped slider counts from the Task's start and would
+ * land on 10:16, 10:31, ... which the server refuses. Only whole hours are labelled.
+ */
+export const sliderMarks = (task: MinuteWindow): { value: number; label?: string }[] => {
+  const values = new Set([task.start, task.end]);
+  const firstOnGrid = Math.ceil(task.start / TIME_RANGE_STEP_MINUTES) * TIME_RANGE_STEP_MINUTES;
+  for (let value = firstOnGrid; value < task.end; value += TIME_RANGE_STEP_MINUTES) {
+    values.add(value);
+  }
+  return [...values]
+    .sort((a, b) => a - b)
+    .map((value) => (value % 60 === 0 ? { value, label: formatMinutes(value) } : { value }));
+};
+
+export const isMinuteRange =(value: number | readonly number[]): value is [number, number] =>
   Array.isArray(value) && value.length === 2;
 
 export const toMinuteWindow = (

@@ -1,3 +1,4 @@
+import type { TimeRangeDto } from "@recyclerie/api/responses/timeRanges";
 import { employeeName } from "../../employee";
 
 export const PRINT_MODES = ["store", "employees"] as const;
@@ -14,6 +15,7 @@ export type PrintTask = {
   id: number;
   store_id: number | null;
   Employees?: PrintEmployeeRef[];
+  timeRanges?: TimeRangeDto[];
 };
 
 export type PrintableEmployee = {

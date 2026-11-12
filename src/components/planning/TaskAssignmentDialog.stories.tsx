@@ -219,12 +219,14 @@ function createFakeServer(
 function StoryWrapper({
   initialAssignments = { 1: [{ start: "09:00", end: "10:00" }] },
   options = {},
+  task = TASK,
   onAssignEmployee,
   onUnassignEmployee,
   onCloseWithChanges,
 }: {
   initialAssignments?: Record<number, { start: string; end: string }[]>;
   options?: FakeServerOptions;
+  task?: TaskModel;
   onAssignEmployee?: (employeeId: number) => void;
   onUnassignEmployee?: (employeeId: number) => void;
   onCloseWithChanges?: () => void;
@@ -261,7 +263,7 @@ function StoryWrapper({
       <TaskAssignmentDialog
         open
         onClose={fn()}
-        selectedTask={TASK}
+        selectedTask={task}
         onAssignEmployee={onAssignEmployee}
         onUnassignEmployee={onUnassignEmployee}
         onCloseWithChanges={onCloseWithChanges}
@@ -359,6 +361,79 @@ export const AddAndRemoveRange: Story = {
     await waitFor(() => expect(screen.getAllByRole("slider")).toHaveLength(before));
     await expect(screen.getByText("Plage horaire 1 · 08:00–09:00")).toBeInTheDocument();
     await expect(screen.queryByText(/Plage horaire 2/)).not.toBeInTheDocument();
+  },
+};
+
+/**
+ * A Task that starts at 10:01 and ends at 12:07. The slider moves on the clock's
+ * 15-minute grid (plus the Task's own edges), never on 10:16, 10:31, ... which the
+ * server would refuse as off-grid.
+ */
+export const OffGridTask: Story = {
+  args: {
+    task: {
+      ...TASK,
+      // January in Paris is UTC+1: 10:01-12:07 local.
+      start_time: "2026-01-15T09:01:00.000Z" as TaskModel["start_time"],
+      end_time: "2026-01-15T11:07:00.000Z" as TaskModel["end_time"],
+    },
+    initialAssignments: { 1: [{ start: "10:01", end: "11:00" }] },
+  },
+  play: async ({ canvasElement }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    await screen.findByText("Plage horaire 1 · 10:01–11:00");
+
+    const [startThumb, endThumb] = screen.getAllByRole("slider");
+
+    // From the Task's own 10:01 start, the next position is 10:15 on the grid.
+    startThumb.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await screen.findByText("Plage horaire 1 · 10:15–11:00");
+
+    // And back to the Task's start, not to a position in between.
+    await userEvent.keyboard("{ArrowLeft}");
+    await screen.findByText("Plage horaire 1 · 10:01–11:00");
+
+    // The end thumb walks the grid, then lands on the Task's own 12:07 end.
+    endThumb.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await screen.findByText("Plage horaire 1 · 10:01–11:15");
+    for (const expected of ["11:30", "11:45", "12:00", "12:07"]) {
+      await userEvent.keyboard("{ArrowRight}");
+      await screen.findByText(`Plage horaire 1 · 10:01–${expected}`);
+    }
+
+    // And leaves it for the grid again, not for 11:52.
+    await userEvent.keyboard("{ArrowLeft}");
+    await screen.findByText("Plage horaire 1 · 10:01–12:00");
+  },
+};
+
+/**
+ * Dragging a thumb onto the other one collapses the range. It must grow back to a
+ * valid edge (the 10:01-10:15 leftover), not by a flat 15 minutes to 10:16, which
+ * the server refuses.
+ */
+export const OffGridTaskCollapse: Story = {
+  args: OffGridTask.args ?? {},
+  play: async ({ canvasElement }) => {
+    const screen = await waitFor(() => dialogScreen(canvasElement));
+    await screen.findByText("Plage horaire 1 · 10:01–11:00");
+
+    const [, endThumb] = screen.getAllByRole("slider");
+    endThumb.focus();
+
+    // Walk the end thumb back down the grid: 10:45, 10:30, 10:15 ...
+    for (const expected of ["10:45", "10:30", "10:15"]) {
+      await userEvent.keyboard("{ArrowLeft}");
+      await screen.findByText(`Plage horaire 1 · 10:01–${expected}`);
+    }
+
+    // ... and onto the start: the range stays the valid 10:01-10:15 leftover.
+    await userEvent.keyboard("{ArrowLeft}");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(screen.getByText("Plage horaire 1 · 10:01–10:15")).toBeInTheDocument();
+    await expect(screen.queryByText(/10:16/)).not.toBeInTheDocument();
   },
 };
 

@@ -1,14 +1,9 @@
-import { AddCircleOutline, Delete } from "@mui/icons-material";
-import { Box, Button, Card, CardContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { Delete } from "@mui/icons-material";
+import { Box, Card, CardContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import type { MinuteWindow } from "@recyclerie/api/domain/timeRange";
 import { EmployeeAvatar, employeeColor, employeeName } from "../../../employee";
-import {
-  formatMinutes,
-  freeWindowsForEmployee,
-  type EmployeeInfo,
-  type LocalRange,
-} from "./geometry";
-import { RangeSlider } from "./RangeSlider";
+import { freeWindowsForEmployee, type EmployeeInfo, type LocalRange } from "./geometry";
+import { AddRangeButton, RangeEditorRow } from "./RangeEditor";
 
 type AssignedEmployeeRowProps = {
   task: MinuteWindow;
@@ -45,19 +40,7 @@ export const AssignedEmployeeRow = ({
               {name}
             </Typography>
           </Box>
-          <Tooltip describeChild title={canAddRange ? "" : "Plus de plage horaire libre"}>
-            <span>
-              <Button
-                size="small"
-                startIcon={<AddCircleOutline />}
-                disabled={!canAddRange}
-                aria-label={`Ajouter une plage horaire pour ${name}`}
-                onClick={() => onAddRange(info.id)}
-              >
-                Ajouter une plage horaire
-              </Button>
-            </span>
-          </Tooltip>
+          <AddRangeButton subject={name} canAdd={canAddRange} onAdd={() => onAddRange(info.id)} />
           <Tooltip title="Retirer cet employé de la tâche">
             <IconButton
               size="small"
@@ -71,40 +54,20 @@ export const AssignedEmployeeRow = ({
         </Stack>
 
         <Stack spacing={0.5} sx={{ mt: 1 }}>
-          {employeeRanges.map((range, index) => {
-            const label = `plage horaire ${index + 1}`;
-            const free = freeWindowsForEmployee(task, info, allRanges, range.key);
-            return (
-              <Box key={range.key}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography variant="caption" color="text.secondary">
-                    Plage horaire {index + 1} · {formatMinutes(range.start)}–
-                    {formatMinutes(range.end)}
-                  </Typography>
-                  {employeeRanges.length > 1 ? (
-                    <Tooltip title="Retirer cette plage horaire">
-                      <IconButton
-                        size="small"
-                        aria-label={`Retirer le ${label} de ${name}`}
-                        onClick={() => onRemoveRange(range)}
-                      >
-                        <Delete fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  ) : null}
-                </Stack>
-                <RangeSlider
-                  task={task}
-                  range={range}
-                  label={label}
-                  color={color}
-                  free={free}
-                  employeeName={name}
-                  onChange={(start, end) => onUpdateRange(range, start, end)}
-                />
-              </Box>
-            );
-          })}
+          {employeeRanges.map((range, index) => (
+            <RangeEditorRow
+              key={range.key}
+              task={task}
+              range={range}
+              position={index + 1}
+              removable={employeeRanges.length > 1}
+              color={color}
+              subject={name}
+              free={freeWindowsForEmployee(task, info, allRanges, range.key)}
+              onChange={(start, end) => onUpdateRange(range, start, end)}
+              onRemove={() => onRemoveRange(range)}
+            />
+          ))}
         </Stack>
       </CardContent>
     </Card>

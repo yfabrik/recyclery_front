@@ -1,6 +1,7 @@
 import {
   BeachAccess,
   CalendarToday,
+  ErrorOutline,
   Person,
   Warning,
 } from "@mui/icons-material";
@@ -8,14 +9,18 @@ import {
   Avatar,
   Box,
   Button,
+  ButtonBase,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Grid,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import type { ReactNode } from "react";
+import type { IsoDate } from "@recyclerie/api/primitives/zod";
 import { employeeName } from "../../employee";
 import type { EmployeeModel, StoreModel } from "../../interfaces/Models";
 import {
@@ -25,6 +30,12 @@ import {
 } from "../../constants/workdayTimeSlots";
 import type { Weekday } from "@recyclerie/api/enums";
 import { WEEKDAYS_MONDAY_FIRST } from "../../services/dateService";
+import { dateOfWeekday, formatDayLong } from "../../services/planning/employeeDayDate";
+import {
+  conflictCountAmong,
+  NO_MARKERS,
+  type DayMarkers,
+} from "../../services/planning/weekTaskMarkers";
 
 const MORNING_SLOT = getWorkdayTimeSlot("morning")!;
 const AFTERNOON_SLOT = getWorkdayTimeSlot("afternoon")!;
@@ -60,7 +71,21 @@ interface EmployeePresenceScheduleProps {
   isLoading: boolean;
   employeesByDay: EmployeeScheduleByWeek;
   vacationEmployeeIdsByDay: VacationEmployeeIdsByDay;
+  /** Monday of the displayed week: the cards only know their weekday, their date is derived from it. */
+  weekStart: IsoDate;
+  /** An Employee's name was clicked on the card of `date`. */
+  onSelectEmployee: SelectEmployee;
+  /**
+   * Task count pills and Vacation conflict markers per weekday (see `weekMarkersByWeekday`).
+   * A day without an entry shows none.
+   */
+  markersByDay?: MarkersByDay;
 }
+
+type MarkersByDay = Readonly<Partial<Record<Weekday, DayMarkers>>>;
+
+/** Called with the clicked Employee and the date of the day card they were clicked on. */
+type SelectEmployee = (employee: EmployeeModel, date: IsoDate) => void;
 
 /**
  * Main component displaying employee presence schedule by day of the week
@@ -71,6 +96,9 @@ export const EmployeePresenceSchedule = ({
   isLoading,
   employeesByDay,
   vacationEmployeeIdsByDay,
+  weekStart,
+  onSelectEmployee,
+  markersByDay = {},
 }: EmployeePresenceScheduleProps) => {
   return (
     <Box sx={{ mb: 3 }}>
@@ -88,6 +116,9 @@ export const EmployeePresenceSchedule = ({
               employeesByDay={employeesByDay}
               vacationEmployeeIdsByDay={vacationEmployeeIdsByDay}
               selectedStore={selectedStore}
+              weekStart={weekStart}
+              onSelectEmployee={onSelectEmployee}
+              markersByDay={markersByDay}
             />
           )}
         </CardContent>
@@ -175,12 +206,18 @@ interface WeeklyScheduleGridProps {
   employeesByDay: EmployeeScheduleByWeek;
   vacationEmployeeIdsByDay: VacationEmployeeIdsByDay;
   selectedStore: StoreModel | null;
+  weekStart: IsoDate;
+  onSelectEmployee: SelectEmployee;
+  markersByDay: MarkersByDay;
 }
 
 const WeeklyScheduleGrid = ({
   employeesByDay,
   vacationEmployeeIdsByDay,
   selectedStore,
+  weekStart,
+  onSelectEmployee,
+  markersByDay,
 }: WeeklyScheduleGridProps) => {
   if (!employeesByDay || Object.keys(employeesByDay).length === 0) {
     return <EmptyScheduleMessage message="Aucun employé trouvé" />;
@@ -212,8 +249,11 @@ const WeeklyScheduleGrid = ({
           <DayScheduleCard
             key={dayKey}
             dayKey={dayKey}
+            date={dateOfWeekday(weekStart, day)}
             daySchedule={daySchedule}
             vacationEmployeeIds={vacationEmployeeIdsByDay[day]}
+            markers={markersByDay[day] ?? NO_MARKERS}
+            onSelectEmployee={onSelectEmployee}
           />
         );
       })}
@@ -227,14 +267,20 @@ const WeeklyScheduleGrid = ({
 
 interface DayScheduleCardProps {
   dayKey: string;
+  date: IsoDate;
   daySchedule: DaySchedule;
   vacationEmployeeIds: ReadonlySet<number> | undefined;
+  markers: DayMarkers;
+  onSelectEmployee: SelectEmployee;
 }
 
 const DayScheduleCard = ({
   dayKey,
+  date,
   daySchedule,
   vacationEmployeeIds,
+  markers,
+  onSelectEmployee,
 }: DayScheduleCardProps) => {
 const scheduledEmployees =
   daySchedule.allDay.length +
@@ -247,6 +293,12 @@ const totalEmployees = Math.max(
   0,
   scheduledEmployees - vacationEmployees
 );
+  // By Employee, not by badge, and only among the Employees this card lists, so the chip
+  // always matches the red badges one can see.
+  const conflictCount = conflictCountAmong(
+    markers,
+    [...daySchedule.allDay, ...daySchedule.morning, ...daySchedule.afternoon].map((employee) => employee.id),
+  );
   const hasEmployees =
     daySchedule.allDay.length > 0 ||
     daySchedule.morning.length > 0 ||
@@ -266,13 +318,17 @@ const totalEmployees = Math.max(
           <DayScheduleHeader
             dayLabel={daySchedule.label}
             employeeCount={totalEmployees}
+            conflictCount={conflictCount}
           />
 
           {hasEmployees ? (
             <Stack spacing={1}>
               <DayEmployeeList
+                date={date}
                 daySchedule={daySchedule}
                 vacationEmployeeIds={vacationEmployeeIds}
+                markers={markers}
+                onSelectEmployee={onSelectEmployee}
               />
             </Stack>
           ) : (
@@ -291,11 +347,14 @@ const totalEmployees = Math.max(
 interface DayScheduleHeaderProps {
   dayLabel: string;
   employeeCount: number;
+  /** Employees on Vacation who still hold a Task that day. */
+  conflictCount: number;
 }
 
 const DayScheduleHeader = ({
   dayLabel,
   employeeCount,
+  conflictCount,
 }: DayScheduleHeaderProps) => {
   return (
     <Box sx={{ textAlign: "center", mb: 2 }}>
@@ -308,8 +367,19 @@ const DayScheduleHeader = ({
         {dayLabel}
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        {employeeCount} employé{employeeCount > 1 ? "s" : ""}
+        {plural(employeeCount, "employé")}
       </Typography>
+      {conflictCount > 0 && (
+        <Box sx={{ mt: 0.5 }}>
+          <Chip
+            size="small"
+            color="error"
+            icon={<ErrorOutline />}
+            label={plural(conflictCount, "conflit")}
+            sx={{ height: 20, fontSize: "0.65rem" }}
+          />
+        </Box>
+      )}
     </Box>
   );
 };
@@ -319,13 +389,19 @@ const DayScheduleHeader = ({
 // ============================================================================
 
 interface DayEmployeeListProps {
+  date: IsoDate;
   daySchedule: DaySchedule;
   vacationEmployeeIds: ReadonlySet<number> | undefined;
+  markers: DayMarkers;
+  onSelectEmployee: SelectEmployee;
 }
 
 const DayEmployeeList = ({
+  date,
   daySchedule,
   vacationEmployeeIds,
+  markers,
+  onSelectEmployee,
 }: DayEmployeeListProps) => {
   return (
     <>
@@ -336,6 +412,9 @@ const DayEmployeeList = ({
           label={ALLDAY_PRESENCE_SLOT.label}
           color={ALLDAY_PRESENCE_SLOT.avatarColor}
           vacationEmployeeIds={vacationEmployeeIds}
+          markers={markers}
+          date={date}
+          onSelectEmployee={onSelectEmployee}
         />
       )}
 
@@ -353,6 +432,9 @@ const DayEmployeeList = ({
           }
           color={WORKDAY_TIME_SLOT_AVATAR_COLORS.morning}
           vacationEmployeeIds={vacationEmployeeIds}
+          markers={markers}
+          date={date}
+          onSelectEmployee={onSelectEmployee}
         />
       )}
 
@@ -370,6 +452,9 @@ const DayEmployeeList = ({
           }
           color={WORKDAY_TIME_SLOT_AVATAR_COLORS.afternoon}
           vacationEmployeeIds={vacationEmployeeIds}
+          markers={markers}
+          date={date}
+          onSelectEmployee={onSelectEmployee}
         />
       )}
     </>
@@ -386,6 +471,9 @@ interface TimeSlotSectionProps {
   label: ReactNode;
   color: string;
   vacationEmployeeIds: ReadonlySet<number> | undefined;
+  markers: DayMarkers;
+  date: IsoDate;
+  onSelectEmployee: SelectEmployee;
 }
 
 const TimeSlotSection = ({
@@ -394,6 +482,9 @@ const TimeSlotSection = ({
   label,
   color,
   vacationEmployeeIds,
+  markers,
+  date,
+  onSelectEmployee,
 }: TimeSlotSectionProps) => {
   return (
     <Box>
@@ -415,6 +506,10 @@ const TimeSlotSection = ({
           employee={employee}
           timeSlot={timeSlot}
           onVacation={vacationEmployeeIds?.has(employee.id) === true}
+          taskCount={markers.taskCounts.get(employee.id) ?? 0}
+          conflictTaskCount={markers.conflicts.get(employee.id) ?? 0}
+          date={date}
+          onSelect={onSelectEmployee}
         />
       ))}
     </Box>
@@ -429,23 +524,52 @@ interface EmployeeBadgeProps {
   employee: EmployeeModel;
   timeSlot: TimeSlot;
   onVacation: boolean;
+  /** Distinct Tasks the Employee holds that day, over all Stores; no pill at 0. */
+  taskCount: number;
+  /** On Vacation and still holding this many Tasks that day (a Vacation conflict); 0 when not in conflict. */
+  conflictTaskCount: number;
+  /** The day of the card this badge sits on. */
+  date: IsoDate;
+  onSelect: SelectEmployee;
 }
 
+const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
+
+/** An Employee on a day card: a button that opens their day. */
 const EmployeeBadge = ({
   employee,
   timeSlot,
   onVacation,
+  taskCount,
+  conflictTaskCount,
+  date,
+  onSelect,
 }: EmployeeBadgeProps) => {
   const Icon = onVacation ? BeachAccess : Person;
   const avatarColor = onVacation ? "text.disabled" : getTimeSlotColor(timeSlot);
+  const inConflict = conflictTaskCount > 0;
 
   return (
-    <Box
+    <ButtonBase
+      onClick={() => onSelect(employee, date)}
+      aria-label={`Voir les tâches de ${employeeName(employee)} le ${formatDayLong(date)}`}
       sx={{
         display: "flex",
+        justifyContent: "flex-start",
         alignItems: "center",
         gap: 0.5,
         mt: 0.5,
+        width: "100%",
+        borderRadius: 1,
+        textAlign: "left",
+        ...(inConflict && {
+          px: 0.5,
+          bgcolor: "#ffebee",
+          outline: "1px solid",
+          outlineColor: "error.main",
+        }),
+        "&:hover": { bgcolor: inConflict ? "#ffcdd2" : "action.hover" },
+        "&.Mui-focusVisible": { outline: "2px solid", outlineColor: "primary.main" },
       }}
     >
       <Avatar
@@ -468,7 +592,41 @@ const EmployeeBadge = ({
       >
         {employeeName(employee)}
       </Typography>
-    </Box>
+      {(taskCount > 0 || inConflict) && (
+        <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
+          {inConflict && (
+            <Tooltip title={`En congé mais assigné à ${plural(conflictTaskCount, "tâche")}`}>
+              <Box component="span" role="img" sx={{ display: "flex", color: "error.main" }}>
+                <ErrorOutline sx={{ fontSize: 16 }} />
+              </Box>
+            </Tooltip>
+          )}
+          {taskCount > 0 && (
+            <Tooltip title={`${plural(taskCount, "tâche")} ce jour`}>
+              <Box
+                component="span"
+                role="img"
+                sx={{
+                  minWidth: 16,
+                  height: 16,
+                  px: 0.5,
+                  boxSizing: "border-box",
+                  borderRadius: 8,
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
+                  fontSize: "0.65rem",
+                  fontWeight: "bold",
+                  lineHeight: "16px",
+                  textAlign: "center",
+                }}
+              >
+                {taskCount}
+              </Box>
+            </Tooltip>
+          )}
+        </Box>
+      )}
+    </ButtonBase>
   );
 };
 

@@ -43,6 +43,7 @@ import {
 } from "../../../services/api/employee";
 import { fetchSkills, updateEmployeeSkills } from "../../../services/api/skills";
 import { fetchStores } from "../../../services/api/store";
+import { formatHours } from "../../../services/cartService";
 import {
   getApiErrorMessage,
   getApiSuccessMessage,
@@ -522,7 +523,7 @@ const EmployeeCard = ({
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <AccessTime fontSize="small" color="action" />
               <Typography variant="body2">
-                {employee.workTime}h/semaine
+                {formatHours(employee.workTime)}/semaine
               </Typography>
             </Box>
           )}

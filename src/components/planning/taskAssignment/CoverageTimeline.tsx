@@ -1,7 +1,7 @@
 import { Box, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
 import type { MinuteWindow } from "@recyclerie/api/domain/timeRange";
-import { coverageColor, coverageSegments, formatMinutes, type LocalRange } from "./geometry";
+import { coverageColor, coverageSegments, formatMinutes, hourMarks, type LocalRange } from "./geometry";
 
 type CoverageTimelineProps = {
   task: MinuteWindow;
@@ -50,6 +50,23 @@ export const CoverageTimeline = ({ task, ranges }: CoverageTimelineProps) => {
               {segment.count}
             </Box>
           </Tooltip>
+        ))}
+      </Box>
+      <Box aria-hidden sx={{ position: "relative", height: 14 }}>
+        {hourMarks(task.start, task.end).map(({ value, label }) => (
+          <Typography
+            key={value}
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: "absolute",
+              left: `${((value - task.start) / duration) * 100}%`,
+              transform: "translateX(-50%)",
+              fontSize: 10,
+            }}
+          >
+            {label}
+          </Typography>
         ))}
       </Box>
     </Box>
