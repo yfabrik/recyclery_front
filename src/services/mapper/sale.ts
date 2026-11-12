@@ -1,30 +1,21 @@
-import type { TransactionStatsFilterInput } from "@recyclerie/api/schemas/salesTransactions";
 import type { transactionsFilters } from "../api/transactions";
 import type {
-  SaleFilterFormValues,
   SaleHistoryFilterFormValues,
+  SaleListFilterValues,
 } from "../schema/sale";
 import { omitBlank } from "../zodTransform";
 
 /**
- * Admin sales analytics list query.
- * `transaction_number` is deliberately not forwarded (it wasn't before the
- * form/query split either): the analytics form exposes the field but it has
- * never been sent to the API.
+ * Admin sales analytics transaction list query (also used by its CSV export).
+ * No `period`: `GET /sales-transactions` filters on the dates only.
  */
-export const toSaleQuery = (f: SaleFilterFormValues): transactionsFilters => ({
-  period: f.period,
+export const toSaleQuery = (f: SaleListFilterValues): transactionsFilters => ({
   date_from: f.date_from,
   date_to: f.date_to,
-  ...omitBlank({ store_id: f.store_id }),
-});
-
-export const toSaleStatsQuery = (
-  f: SaleFilterFormValues,
-): TransactionStatsFilterInput => ({
-  date_from: f.date_from,
-  date_to: f.date_to,
-  ...omitBlank({ store_id: f.store_id }),
+  ...omitBlank({
+    store_id: f.store_id,
+    transaction_number: f.transaction_number,
+  }),
 });
 
 /** POS history query. The store comes from the active cash session, not the form. */

@@ -62,6 +62,38 @@ export const WithTrendDown: Story = {
   },
 };
 
+export const WithTrendFlat: Story = {
+  args: {
+    title: "Objets vendus",
+    value: "128",
+    trend: "flat",
+    trendValue: "0,0 %",
+    trendLabel: "vs N-1",
+  },
+};
+
+/** A rise shown red: lower is better for refunds. */
+export const WithTrendTone: Story = {
+  args: {
+    title: "Remboursements",
+    value: "84,00 €",
+    subtitle: "3 remboursements · 1,2 % du brut",
+    icon: undefined,
+    trend: "up",
+    trendValue: "+15,0 %",
+    trendTone: "error",
+    trendLabel: "vs période préc.",
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    loading: true,
+    trend: "up",
+    trendValue: "+12 %",
+  },
+};
+
 export const NoTrend: Story = {
   args: {
     title: "Articles en stock",
