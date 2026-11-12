@@ -1,15 +1,30 @@
-import { Avatar, Box, Card, CardContent, Typography } from "@mui/material"
-import { TrendingDown, TrendingUp } from "@mui/icons-material"
+import { Avatar, Box, Card, CardContent, Skeleton, Typography } from "@mui/material"
+import { TrendingDown, TrendingFlat, TrendingUp } from "@mui/icons-material"
+import type { SvgIconComponent } from "@mui/icons-material"
 import type { ReactNode } from "react"
+
+type Trend = "up" | "down" | "flat"
+type TrendTone = "success" | "error" | "neutral"
+
+const TREND_ICONS = { up: TrendingUp, down: TrendingDown, flat: TrendingFlat } as const satisfies Record<Trend, SvgIconComponent>
+const TONE_COLORS = { success: "success.main", error: "error.main", neutral: "text.secondary" } as const satisfies Record<TrendTone, string>
+/** A rise is good by default. */
+const DEFAULT_TONES = { up: "success", down: "error", flat: "neutral" } as const satisfies Record<Trend, TrendTone>
 
 interface StatCardProps {
     title: string
     value: number | string
     icon?: ReactNode
     color?: string
-    subtitle?: string
-    trend?: "up" | "down"
-    trendValue?: string
+    subtitle?: string | undefined
+    trend?: Trend | undefined
+    trendValue?: string | undefined
+    /** Colour of the trend, when it isn't "a rise is good" (refunds). */
+    trendTone?: TrendTone | undefined
+    /** What the trend compares to. */
+    trendLabel?: string | undefined
+    /** Shows a skeleton in place of the value, and hides subtitle and trend. */
+    loading?: boolean
 }
 
 export const StatCard = ({
@@ -20,7 +35,13 @@ export const StatCard = ({
     subtitle,
     trend,
     trendValue,
+    trendTone,
+    trendLabel = "vs mois dernier",
+    loading = false,
 }: StatCardProps) => {
+    const showTrend = trend && !loading
+    const TrendIcon = trend ? TREND_ICONS[trend] : null
+    const trendColor = trend ? TONE_COLORS[trendTone ?? DEFAULT_TONES[trend]] : undefined
     return (
         <Card
             sx={{
@@ -34,7 +55,7 @@ export const StatCard = ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        mb: trend ? 2 : 0,
+                        mb: showTrend ? 2 : 0,
                         gap: 2,
                     }}
                 >
@@ -53,9 +74,9 @@ export const StatCard = ({
                             color={`${color}.main`}
                             sx={{ fontWeight: "bold" }}
                         >
-                            {value || 0}
+                            {loading ? <Skeleton width="60%" /> : value || 0}
                         </Typography>
-                        {subtitle && (
+                        {subtitle && !loading && (
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                 {subtitle}
                             </Typography>
@@ -65,19 +86,17 @@ export const StatCard = ({
                     {icon && <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>{icon}</Avatar>}
                 </Box>
 
-                {trend && (
+                {showTrend && TrendIcon && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {trend === "up" ? (
-                            <TrendingUp color="success" fontSize="small" />
-                        ) : (
-                            <TrendingDown color="error" fontSize="small" />
-                        )}
-                        <Typography variant="body2" color={trend === "up" ? "success.main" : "error.main"}>
+                        <TrendIcon fontSize="small" sx={{ color: trendColor }} />
+                        <Typography variant="body2" sx={{ color: trendColor }}>
                             {trendValue}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            vs mois dernier
-                        </Typography>
+                        {trendLabel && (
+                            <Typography variant="body2" color="text.secondary">
+                                {trendLabel}
+                            </Typography>
+                        )}
                     </Box>
                 )}
             </CardContent>

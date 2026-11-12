@@ -1,11 +1,11 @@
 import type { SalesKpisDto } from "@recyclerie/api/responses/salesAnalytics";
-import { Alert, Box, Grid, Typography } from "@mui/material";
+import { Alert, Box, Card, Grid, Typography } from "@mui/material";
 import { salesKpisRoute } from "../../../services/api/salesAnalytics";
 import { formatCurrency, formatPercentage } from "../../../services/cartService";
-import { computeChange } from "./change";
+import { StatCard } from "../../StatCard";
+import { changeTone, computeChange, formatChange } from "./change";
 import { COMPARE_LABELS } from "./filters";
 import { countLabel, formatCount } from "./format";
-import { EmptyKpiCard, KpiCard } from "./KpiCard";
 import { rangeLabel } from "./period";
 import type { SalesAnalyticsSectionProps } from "./sections";
 import { useSalesAnalytics } from "./useSalesAnalytics";
@@ -60,6 +60,15 @@ const CARDS: CardSpec[] = [
 
 const CARD_SIZE = { xs: 12, sm: 6, lg: 3 } as const;
 
+/** Fills a row of cards on wide screens. */
+const EmptyCard = () => (
+  <Card
+    variant="outlined"
+    sx={{ height: "100%", borderStyle: "dashed", bgcolor: "transparent" }}
+    aria-hidden
+  />
+);
+
 /** The KPI cards: net revenue, sales, basket, items, revenue per opening day, refunds. */
 export const KpiSection = ({ filters }: SalesAnalyticsSectionProps) => {
   const kpis = useSalesAnalytics(salesKpisRoute, filters);
@@ -85,26 +94,29 @@ export const KpiSection = ({ filters }: SalesAnalyticsSectionProps) => {
         </Alert>
       )}
       <Grid container spacing={3}>
-        {CARDS.map((card) => (
-          <Grid key={card.title} size={CARD_SIZE}>
-            <KpiCard
-              title={card.title}
-              loading={!current}
-              value={current ? card.value(current) : ""}
-              subtitle={current && card.subtitle?.(current)}
-              change={
-                current && comparison
-                  ? computeChange(card.figure(current), card.figure(comparison))
-                  : null
-              }
-              changeLabel={COMPARE_LABELS[filters.compare].vs}
-              lowerIsBetter={card.lowerIsBetter ?? false}
-            />
-          </Grid>
-        ))}
+        {CARDS.map((card) => {
+          const change =
+            current && comparison
+              ? computeChange(card.figure(current), card.figure(comparison))
+              : null;
+          return (
+            <Grid key={card.title} size={CARD_SIZE}>
+              <StatCard
+                title={card.title}
+                loading={!current}
+                value={current ? card.value(current) : ""}
+                subtitle={current && card.subtitle?.(current)}
+                trend={change?.direction}
+                trendValue={change ? formatChange(change) : undefined}
+                trendTone={changeTone(change, { lowerIsBetter: card.lowerIsBetter ?? false })}
+                trendLabel={COMPARE_LABELS[filters.compare].vs}
+              />
+            </Grid>
+          );
+        })}
         {[0, 1].map((i) => (
           <Grid key={`empty-${i}`} size={CARD_SIZE} sx={{ display: { xs: "none", lg: "block" } }}>
-            <EmptyKpiCard />
+            <EmptyCard />
           </Grid>
         ))}
       </Grid>

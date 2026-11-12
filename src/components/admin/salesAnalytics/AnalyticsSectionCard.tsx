@@ -23,12 +23,13 @@ export const AnalyticsQueryState = <T,>({
   if (query.isError) return <Alert severity="error">{errorMessage}</Alert>;
   if (query.isLoading || query.data === undefined)
     return <Loading isLoading>{null}</Loading>;
-  if (isEmpty?.(query.data))
+  if (isEmpty?.(query.data)){
+    return <Alert severity="info">{emptyMessage}</Alert>;
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
         {emptyMessage}
       </Typography>
-    );
+    );}
   return children(query.data);
 };
 
