@@ -62,6 +62,7 @@ const handlers = {
   handleReprintReceipt: (id: number) => console.log("reprint", id),
   handleRefund: (t: TransactionModel) => console.log("refund", t.id),
   handleShowDetail: (t: TransactionModel) => console.log("detail", t.id),
+  handleRemove: (id: number) => console.log("remove", id),
 };
 
 const meta = {
@@ -117,5 +118,19 @@ export const RefundRow: Story = {
     },
     ...handlers,
     handleRefund: undefined,
+  },
+};
+
+export const RefundRowInCurrentSession: Story = {
+  args: {
+    transaction: {
+      ...baseTransaction,
+      id: 1003,
+      transactionType: "refund",
+      total_amount: -15,
+      payment_method: "cash",
+    },
+    currentCashSessionId: 1,
+    ...handlers,
   },
 };

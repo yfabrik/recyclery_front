@@ -12,6 +12,7 @@ import { alpha } from "@mui/material/styles";
 import type { TransactionModel } from "../interfaces/Models";
 import { formatCurrency, getPaymentMethodLabel } from "../services/cartService";
 import { getPaymentMethodColor } from "../constants/paymentMethods";
+import { getTransactionRowActions } from "../utils/transactionRowActions";
 interface TransactionTableLineProps {
   transaction: TransactionModel;
   handleReprintReceipt: (id: number) => void;
@@ -28,10 +29,11 @@ export const TransactionTableLine = ({
   handleRemove,
   currentCashSessionId,
 }: TransactionTableLineProps) => {
-  const isEditable =
-    transaction.transactionType === "sell" &&
-    currentCashSessionId != null &&
-    transaction.cash_session_id === currentCashSessionId;
+  const {
+    canEdit: isEditable,
+    canCancel,
+    canRefund,
+  } = getTransactionRowActions(transaction, currentCashSessionId);
   const isRefund = transaction.transactionType === "refund";
 
   return (
@@ -117,8 +119,7 @@ export const TransactionTableLine = ({
             </IconButton>
           </Tooltip>
 
-          {handleRefund && transaction.transactionType === "sell" && !isEditable && (
-
+          {handleRefund && canRefund && (
             <Tooltip title="Remboursement">
               <IconButton
                 size="small"
@@ -127,18 +128,19 @@ export const TransactionTableLine = ({
               >
                 <Undo />
               </IconButton>
-            </Tooltip>)}
-            {isEditable && (
-              <Tooltip title="annuler la transaction">
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={()=>handleRemove && handleRemove(transaction.id)}
-                >
-                  <Delete />
-                </IconButton>
-              </Tooltip>
-            )}
+            </Tooltip>
+          )}
+          {handleRemove && canCancel && (
+            <Tooltip title="annuler la transaction">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleRemove(transaction.id)}
+              >
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </TableCell>
     </TableRow>
