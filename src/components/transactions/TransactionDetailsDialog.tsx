@@ -16,28 +16,37 @@ import { TransactionDetailsContent } from "./TransactionDetailsContent";
 
 const EDIT_TRANSACTION_FORM_ID = "editTransactionForm";
 
-interface TransactionDetailsDialogProps {
+/** Which transaction the dialog shows: exactly one of the two. */
+type TransactionSource =
+  | {
+      /** The transaction in hand. Its full details are loaded by id. */
+      transaction: TransactionModel | null;
+      transactionId?: never;
+    }
+  | {
+      /** Loads the transaction from its id alone, when there's none in hand (e.g. a labeled item's `sale_id`). */
+      transactionId: number | null;
+      transaction?: never;
+    };
+
+type TransactionDetailsDialogProps = TransactionSource & {
   open: boolean;
   onClose: () => void;
-  /** The transaction in hand. Its full details are loaded by id either way. */
-  transaction?: TransactionModel | null;
-  /** Loads the transaction from its id alone, when there's none in hand (e.g. a labeled item's `sale_id`). */
-  transactionId?: number | null;
   categories: CategoryModel[];
   editable?: boolean;
   onSubmit?: (data: EditTransactionSchema) => void;
-}
+};
 
 export const TransactionDetailsDialog = ({
   open,
   onClose,
-  transaction = null,
-  transactionId = null,
   categories,
   editable = false,
   onSubmit,
+  ...source
 }: TransactionDetailsDialogProps) => {
-  const id = transaction?.id ?? transactionId;
+  const transaction = source.transaction ?? null;
+  const id = transaction?.id ?? source.transactionId ?? null;
   const details = useSelectedTransaction(id, open);
   const fullTransaction = details.data ?? transaction;
   const isEditable =

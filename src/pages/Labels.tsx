@@ -46,7 +46,12 @@ import type {
   CreateLabeledItemResponse,
   UpdateLabeledItemResponse,
 } from "@recyclerie/api/responses/items";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
 import { AutoPrintToggle } from "../components/AutoPrintToggle";
 import { useLabelPrint } from "../components/LabelPrint";
@@ -79,7 +84,7 @@ import {
 } from "../constants/labeledItemStatuses";
 import type { LabeledItemWithSaleModel } from "../interfaces/Models";
 import { TransactionDetailsDialog } from "../components/transactions/TransactionDetailsDialog";
-import { labelRowActions, type LabelRowAction } from "../services/labelRowActions";
+import { labelRowActions, type LabelRowAction } from "../utils/labelRowActions";
 import { fetchCategories as fcat } from "../services/api/categories";
 import {
   createLabeledItem,
@@ -91,6 +96,42 @@ import {
   updateLabeledItem
 } from "../services/api/labeledItems";
 import { formatCurrency, formatWeight } from "../services/cartService";
+
+/** Refreshes the list and the stats at the top of the page. */
+const invalidateItems = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: ["items"] });
+  queryClient.invalidateQueries({ queryKey: ["itemStats"] });
+};
+
+/**
+ * A row action that asks for confirmation, then sends `request` for the item,
+ * shows the outcome in a toast and refreshes the list and the stats.
+ */
+const useConfirmedItemAction = ({
+  request,
+  confirmation,
+  success,
+  failure,
+}: {
+  request: (id: LabeledItemWithSaleModel["id"]) => Promise<unknown>;
+  confirmation: string;
+  success: string;
+  failure: string;
+}) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: request,
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, success));
+      invalidateItems(queryClient);
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, failure)),
+  });
+  return (item: LabeledItemWithSaleModel) => {
+    if (!window.confirm(confirmation)) return;
+    mutation.mutate(item.id);
+  };
+};
 
 const Labels = () => {
   const { triggerPrintLabel, labelPrintNode } = useLabelPrint();
@@ -160,33 +201,23 @@ const Labels = () => {
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la sauvegarde")),
   });
-  const removeItem = useMutation({
-    mutationFn: (id: number) => deleteLabeledItem(id),
-    onSuccess: (data) => {
-      toast.success(getApiSuccessMessage(data, "Article supprimé avec succès"));
-      queryClient.invalidateQueries({ queryKey: ["items"] });
-    },
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la suppression")),
+  const handleDelete = useConfirmedItemAction({
+    request: deleteLabeledItem,
+    confirmation: "Êtes-vous sûr de vouloir supprimer cet article ?",
+    success: "Article supprimé avec succès",
+    failure: "Erreur lors de la suppression",
   });
-
-  const sell = useMutation({
-    mutationFn: (id: number) => sellItem(id),
-    onSuccess: (data) => {
-      toast.success(getApiSuccessMessage(data, "Article marqué comme vendu"));
-      queryClient.invalidateQueries({ queryKey: ["items"] });
-    },
-    onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la vente")),
+  const handleSell = useConfirmedItemAction({
+    request: sellItem,
+    confirmation: "Marquer cet article comme vendu ?",
+    success: "Article marqué comme vendu",
+    failure: "Erreur lors de la vente",
   });
-
-  const restock = useMutation({
-    mutationFn: (id: number) => markItemAvailable(id),
-    onSuccess: (data) => {
-      toast.success(getApiSuccessMessage(data, "Article remis disponible"));
-      queryClient.invalidateQueries({ queryKey: ["items"] });
-      queryClient.invalidateQueries({ queryKey: ["itemStats"] });
-    },
-    onError: (error) =>
-      toast.error(getApiErrorMessage(error, "Erreur lors de la remise en stock")),
+  const handleMarkAvailable = useConfirmedItemAction({
+    request: markItemAvailable,
+    confirmation: "Remettre cet article disponible ?",
+    success: "Article remis disponible",
+    failure: "Erreur lors de la remise en stock",
   });
 
   const saved = (
@@ -222,7 +253,7 @@ const Labels = () => {
       ),
     );
     handleCloseDialog();
-    queryClient.invalidateQueries({ queryKey: ["items"] });
+    invalidateItems(queryClient);
   };
 
 
@@ -244,27 +275,6 @@ const Labels = () => {
   const handleSave = async (data: LabeledItemFormOutput) => {
     if (editingItemId) editItem.mutate({ id: editingItemId, data });
     else addItem.mutate(data);
-  };
-
-  const handleDelete = async (item: LabeledItemWithSaleModel) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
-      return;
-    }
-    removeItem.mutate(item.id);
-  };
-
-  const handleSell = async (item: LabeledItemWithSaleModel) => {
-    if (!window.confirm("Marquer cet article comme vendu ?")) {
-      return;
-    }
-    sell.mutate(item.id);
-  };
-
-  const handleMarkAvailable = async (item: LabeledItemWithSaleModel) => {
-    if (!window.confirm("Remettre cet article disponible ?")) {
-      return;
-    }
-    restock.mutate(item.id);
   };
 
   return (
