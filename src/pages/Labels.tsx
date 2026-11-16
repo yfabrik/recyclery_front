@@ -9,6 +9,7 @@ import {
   Print,
   QrCode,
   ReceiptLong,
+  Restore,
   Sell
 } from "@mui/icons-material";
 import {
@@ -85,6 +86,7 @@ import {
   deleteLabeledItem,
   getItemStats,
   getLabeledItems,
+  markItemAvailable,
   sellItem,
   updateLabeledItem
 } from "../services/api/labeledItems";
@@ -176,6 +178,17 @@ const Labels = () => {
     onError: (error) => toast.error(getApiErrorMessage(error, "Erreur lors de la vente")),
   });
 
+  const restock = useMutation({
+    mutationFn: (id: number) => markItemAvailable(id),
+    onSuccess: (data) => {
+      toast.success(getApiSuccessMessage(data, "Article remis disponible"));
+      queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["itemStats"] });
+    },
+    onError: (error) =>
+      toast.error(getApiErrorMessage(error, "Erreur lors de la remise en stock")),
+  });
+
   const saved = (
     data: AxiosResponse<CreateLabeledItemResponse | UpdateLabeledItemResponse>,
   ) => {
@@ -245,6 +258,13 @@ const Labels = () => {
       return;
     }
     sell.mutate(item.id);
+  };
+
+  const handleMarkAvailable = async (item: LabeledItemWithSaleModel) => {
+    if (!window.confirm("Remettre cet article disponible ?")) {
+      return;
+    }
+    restock.mutate(item.id);
   };
 
   return (
@@ -328,6 +348,7 @@ const Labels = () => {
         onPrint={triggerPrintLabel}
         onEdit={handleOpenDialog}
         onSell={handleSell}
+        onMarkAvailable={handleMarkAvailable}
         onDelete={handleDelete}
         onViewSale={setViewedSaleId}
       />
@@ -387,6 +408,7 @@ interface LabelTableProps {
   onPrint: (item: LabeledItemWithSaleModel) => void;
   onEdit: (item: LabeledItemWithSaleModel) => void;
   onSell: (item: LabeledItemWithSaleModel) => void;
+  onMarkAvailable: (item: LabeledItemWithSaleModel) => void;
   onDelete: (item: LabeledItemWithSaleModel) => void;
   onViewSale: (saleId: number) => void;
 }
@@ -397,6 +419,7 @@ const LabelTable = ({
   onPrint,
   onEdit,
   onSell,
+  onMarkAvailable,
   onDelete,
   onViewSale,
 }: LabelTableProps) => {
@@ -431,6 +454,19 @@ const LabelTable = ({
           <Tooltip key={action.type} title="Supprimer">
             <IconButton size="small" color="error" onClick={() => onDelete(item)}>
               <Delete />
+            </IconButton>
+          </Tooltip>
+        );
+      case "markAvailable":
+        return (
+          <Tooltip key={action.type} title="Remettre disponible">
+            <IconButton
+              size="small"
+              color="success"
+              aria-label="Remettre disponible"
+              onClick={() => onMarkAvailable(item)}
+            >
+              <Restore />
             </IconButton>
           </Tooltip>
         );

@@ -4,6 +4,7 @@ import type {
   DetailLabeledItemResponse,
   LabeledItemStatsResponse,
   ListLabeledItemsResponse,
+  TagLabeledItemAvailableResponse,
   TagLabeledItemSoldResponse,
   UpdateLabeledItemResponse,
 } from "@recyclerie/api/responses/items";
@@ -69,6 +70,14 @@ export const sellItem = (
   id: LabeledItemModel["id"],
 ): Promise<AxiosResponse<TagLabeledItemSoldResponse>> =>
   axiosInstance.post<TagLabeledItemSoldResponse>(`/api/labeled-items/${id}/sell`);
+
+/** Puts an item marked sold by hand back in stock (reverse of `sellItem`). */
+export const markItemAvailable = (
+  id: LabeledItemModel["id"],
+): Promise<AxiosResponse<TagLabeledItemAvailableResponse>> =>
+  axiosInstance.post<TagLabeledItemAvailableResponse>(
+    `/api/labeled-items/${id}/available`,
+  );
 
 export const getItemFromBarcode = (
   barcode: LabeledItemModel["barcode"]|LabeledItemModel["id"],
