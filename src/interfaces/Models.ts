@@ -7,7 +7,10 @@ import type { CategoryDto } from "@recyclerie/api/responses/categories";
 import type { CollectionPointDto } from "@recyclerie/api/responses/collectionPoints";
 import type { ArrivalDto } from "@recyclerie/api/responses/arrivals";
 import type { EcoOrganismDto } from "@recyclerie/api/responses/ecoOrganism";
-import type { LabeledItemDto } from "@recyclerie/api/responses/items";
+import type {
+  LabeledItemDto,
+  LabeledItemWithSaleDto,
+} from "@recyclerie/api/responses/items";
 import type { UserDto } from "@recyclerie/api/responses/users";
 import type { EmployeeDto } from "@recyclerie/api/responses/employees";
 import type { RecycleryDto } from "@recyclerie/api/responses/recycleries";
@@ -48,6 +51,9 @@ export type DonModel = DonationDto;
 export type EcoOrgModel = EcoOrganismDto;
 
 export type LabeledItemModel = LabeledItemDto;
+
+/** A labeled item as the item endpoints return it, with the id of its Sale. */
+export type LabeledItemWithSaleModel = LabeledItemWithSaleDto;
 
 export type UserModel = UserDto;
 

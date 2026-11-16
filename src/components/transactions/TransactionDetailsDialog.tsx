@@ -19,7 +19,10 @@ const EDIT_TRANSACTION_FORM_ID = "editTransactionForm";
 interface TransactionDetailsDialogProps {
   open: boolean;
   onClose: () => void;
-  transaction: TransactionModel | null;
+  /** The transaction in hand. Its full details are loaded by id either way. */
+  transaction?: TransactionModel | null;
+  /** Loads the transaction from its id alone, when there's none in hand (e.g. a labeled item's `sale_id`). */
+  transactionId?: number | null;
   categories: CategoryModel[];
   editable?: boolean;
   onSubmit?: (data: EditTransactionSchema) => void;
@@ -28,12 +31,14 @@ interface TransactionDetailsDialogProps {
 export const TransactionDetailsDialog = ({
   open,
   onClose,
-  transaction,
+  transaction = null,
+  transactionId = null,
   categories,
   editable = false,
   onSubmit,
 }: TransactionDetailsDialogProps) => {
-  const details = useSelectedTransaction(transaction?.id ?? null, open);
+  const id = transaction?.id ?? transactionId;
+  const details = useSelectedTransaction(id, open);
   const fullTransaction = details.data ?? transaction;
   const isEditable =
     editable &&
@@ -51,7 +56,7 @@ export const TransactionDetailsDialog = ({
           )}
           <Typography variant="h6">
             {isEditable ? "Modifier" : "Détails de"} la Transaction #
-            {transaction?.id}
+            {id}
           </Typography>
         </Box>
       </DialogTitle>
