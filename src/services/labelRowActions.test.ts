@@ -18,10 +18,20 @@ describe("labelRowActions", () => {
     ]);
   });
 
-  it("offers only Print on an item marked sold by hand", () => {
+  it("offers Print and back in stock on an item marked sold by hand", () => {
     expect(labelRowActions({ status: "sold", sale_id: null })).toEqual([
       { type: "print" },
+      { type: "markAvailable" },
     ]);
+  });
+
+  it("offers back in stock only on a sold item with no Sale", () => {
+    const offers = (item: Parameters<typeof labelRowActions>[0]) =>
+      labelRowActions(item).some((action) => action.type === "markAvailable");
+
+    expect(offers({ status: "sold", sale_id: null })).toBe(true);
+    expect(offers({ status: "sold", sale_id: 42 })).toBe(false);
+    expect(offers({ status: "available", sale_id: null })).toBe(false);
   });
 
   it("never offers Edit or Delete on a sold item", () => {
