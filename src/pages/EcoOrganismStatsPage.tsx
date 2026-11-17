@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { EcoOrganismStatsExport } from "../components/admin/EcoOrganismStatsExport";
 import type { EcoOrgMetricSource } from "@recyclerie/api/enums";
 import EcoOrganismStatsTable, {
@@ -202,9 +202,9 @@ const EcoOrganismStatsPage = () => {
   const allRows = useMemo(() => {
     return (ecoStats.data || [])
       .filter((item) =>
-        filters.eco_organism_id === ""
+        filters.eco_organism_id.length === 0
           ? true
-          : item.id === Number(filters.eco_organism_id),
+          : filters.eco_organism_id.includes(item.id),
       )
       .flatMap((stat) =>
         stat.quarters.flatMap((quarter) =>
@@ -233,35 +233,38 @@ const EcoOrganismStatsPage = () => {
     return quarterAtPage ? [quarterAtPage] : [];
   }, [selectedQuarter, quarterOptions, page]);
 
+  // Empty selection = no filter. Source only applies to the "quarterIn" flow.
+  const matchesSourceType = useCallback(
+    (row: EcoOrganismStatsRow) =>
+      filters.metric_source !== "quarterIn" ||
+      filters.source_type.length === 0 ||
+      filters.source_type.some((type) => type === row.sourceType),
+    [filters.metric_source, filters.source_type],
+  );
+
+  const matchesCategory = useCallback(
+    (row: EcoOrganismStatsRow) =>
+      filters.category.length === 0 || filters.category.includes(row.category),
+    [filters.category],
+  );
+
   const rows = useMemo(() => {
     if (displayedQuarters.length === 0) return [];
     const quarterSet = new Set(displayedQuarters);
     return allRows
       .filter((row) => quarterSet.has(row.quarter))
-      .filter((row) =>
-        filters.metric_source !== "quarterIn" || filters.source_type === ""
-          ? true
-          : row.sourceType === filters.source_type,
-      )
-      .filter((row) =>
-        filters.category === "" ? true : row.category === filters.category,
-      );
-  }, [allRows, displayedQuarters, filters.metric_source, filters.source_type, filters.category]);
+      .filter(matchesSourceType)
+      .filter(matchesCategory);
+  }, [allRows, displayedQuarters, matchesSourceType, matchesCategory]);
 
   const filteredRows = useMemo(() => {
     return allRows
       .filter((row) =>
         selectedQuarter === "" ? true : row.quarter === selectedQuarter,
       )
-      .filter((row) =>
-        filters.metric_source !== "quarterIn" || filters.source_type === ""
-          ? true
-          : row.sourceType === filters.source_type,
-      )
-      .filter((row) =>
-        filters.category === "" ? true : row.category === filters.category,
-      );
-  }, [allRows, selectedQuarter, filters.metric_source, filters.source_type, filters.category]);
+      .filter(matchesSourceType)
+      .filter(matchesCategory);
+  }, [allRows, selectedQuarter, matchesSourceType, matchesCategory]);
 
   // const sourceTypeOptions = useMemo(() => {
   //   return Array.from(

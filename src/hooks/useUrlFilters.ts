@@ -7,6 +7,10 @@ const PAGE_PARAM = "page";
 
 export function serializeFilterValue(value: unknown): string | null {
   if (value == null || value === "") return null;
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    return JSON.stringify(value.map((item) => serializeFilterValue(item)));
+  }
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) return null;
     return toIsoDate(value);
@@ -31,7 +35,7 @@ function valuesEqual(a: unknown, b: unknown): boolean {
   return serializeFilterValue(a) === serializeFilterValue(b);
 }
 
-function buildSearchParams<T extends Record<string, unknown>>(
+export function buildSearchParams<T extends Record<string, unknown>>(
   filters: T,
   defaults: T,
   page: number | undefined,
@@ -42,6 +46,14 @@ function buildSearchParams<T extends Record<string, unknown>>(
   for (const key of Object.keys(filters) as (keyof T & string)[]) {
     const value = filters[key];
     if (valuesEqual(value, defaults[key])) continue;
+    if (Array.isArray(value)) {
+      // Repeated params (not comma-joined): values such as category names may contain commas.
+      for (const item of value) {
+        const serializedItem = serializeFilterValue(item);
+        if (serializedItem != null) params.append(key, serializedItem);
+      }
+      continue;
+    }
     const serialized = serializeFilterValue(value);
     if (serialized == null) continue;
     params.set(key, serialized);
@@ -54,7 +66,7 @@ function buildSearchParams<T extends Record<string, unknown>>(
   return params;
 }
 
-function parseFiltersFromParams<T extends Record<string, unknown>>(
+export function parseFiltersFromParams<T extends Record<string, unknown>>(
   searchParams: URLSearchParams,
   schema: z.ZodType<T>,
   defaults: T,
@@ -62,6 +74,11 @@ function parseFiltersFromParams<T extends Record<string, unknown>>(
   const raw: Record<string, unknown> = { ...defaults };
 
   for (const key of Object.keys(defaults)) {
+    if (Array.isArray(defaults[key])) {
+      const params = searchParams.getAll(key);
+      if (params.length > 0) raw[key] = params;
+      continue;
+    }
     const param = searchParams.get(key);
     if (param == null) continue;
     raw[key] = param;
