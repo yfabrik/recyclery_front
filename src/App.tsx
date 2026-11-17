@@ -14,7 +14,6 @@ import EmployeeManagement from "./components/admin/config/EmployeeManagement";
 import TaskManagement from "./components/admin/config/TaskManagement";
 import Admin from "./pages/Admin";
 import Arrivals from "./pages/Arrivals";
-import CollectionReceipts from "./pages/CollectionReceipts";
 import Dashboard from "./pages/Dashboard";
 import EcoOrganismStatsPage from "./pages/EcoOrganismStatsPage";
 import EmployeeTools from "./pages/EmployeeTools";
@@ -183,14 +182,6 @@ function App() {
             }
           />
          
-          <Route
-            path="/collection-receipts"
-            element={
-              <ProtectedRoute module="arrival">
-                <CollectionReceipts />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/arrivals"
             element={
