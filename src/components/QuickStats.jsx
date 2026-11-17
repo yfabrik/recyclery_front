@@ -91,7 +91,9 @@ const QuickStats = ({ stats }) => {
     </Stack>
   );
 };
-
+/**
+ * @deprecated
+ */
 export default QuickStats;
 
 

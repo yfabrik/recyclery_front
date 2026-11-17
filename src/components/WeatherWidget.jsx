@@ -92,7 +92,9 @@ const WeatherWidget = () => {
     </Paper>
   );
 };
-
+/**
+ * @deprecated
+ */
 export default WeatherWidget;
 
 
