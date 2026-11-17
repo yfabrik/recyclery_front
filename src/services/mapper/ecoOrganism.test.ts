@@ -3,13 +3,13 @@ import type { EcoOrgFilterFormValues } from "../schema/ecoOrganism";
 import { toEcoOrgQuartersQuery } from "./ecoOrganism";
 
 const base: EcoOrgFilterFormValues = {
-  eco_organism_id: 9,
+  eco_organism_id: [9],
   metric_source: "quarterOut",
   quarter: "2026-T3",
   month_year: null,
-  source_type: "point",
+  source_type: ["point"],
   collection_point_id: "",
-  category: "Meubles",
+  category: ["Meubles"],
 };
 
 describe("toEcoOrgQuartersQuery", () => {

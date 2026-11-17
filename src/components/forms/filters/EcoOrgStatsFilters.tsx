@@ -7,7 +7,7 @@ import {  useEffect, useMemo } from "react";
 import { useDebouncer } from "@tanstack/react-pacer";
 import { useQuery } from "@tanstack/react-query";
 import { Grid, MenuItem } from "@mui/material";
-import { FormDate, FormSelect } from "../FormBase";
+import { FormDate, FormMultiSelect, FormSelect } from "../FormBase";
 import { ResetFiltersButton } from "./ResetFiltersButton";
 import { fetchCollectionPoints } from "../../../services/api/collectionPoint";
 import { ARRIVAL_SOURCE_TYPES } from "../../../constants/arrivalSourceTypes";
@@ -88,18 +88,27 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
   const metric_source = form.watch("metric_source")
   const sourceType = form.watch("source_type")
 
+  const hasPointSource = (sourceType ?? []).includes("point");
+
   useEffect(() => {
     if (metric_source != "quarterIn") {
-      form.setValue("source_type", "");
+      form.setValue("source_type", []);
       form.setValue("collection_point_id", "");
     }
   }, [metric_source, form]);
 
   useEffect(() => {
-    if (sourceType !== "point") {
+    if (!hasPointSource) {
       form.setValue("collection_point_id", "");
     }
-  }, [sourceType, form]);
+  }, [hasPointSource, form]);
+
+  /** Select placeholder: the joined labels, or `emptyLabel` when nothing is picked. */
+  const renderMultiValue = (emptyLabel: string, toLabel: (value: string | number) => string) =>
+    (selected: unknown) => {
+      const values = Array.isArray(selected) ? (selected as (string | number)[]) : [];
+      return values.length === 0 ? emptyLabel : values.map(toLabel).join(", ");
+    };
 
 
   const watch = form.watch;
@@ -121,18 +130,22 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <Grid container spacing={2} alignItems="center">
         <Grid size={{ xs: 12, md: 3 }}>
-          <FormSelect
+          <FormMultiSelect
             control={form.control}
             name="eco_organism_id"
             label="Eco-organisme"
+            showCheckboxes
+            renderValue={renderMultiValue(
+              "Tous",
+              (id) => ecoOrganismOptions.find((option) => option.id === Number(id))?.name ?? String(id),
+            )}
           >
-            <MenuItem value="">Tous</MenuItem>
             {ecoOrganismOptions.map((option) => (
               <MenuItem key={option.id} value={option.id}>
                 {option.name}
               </MenuItem>
             ))}
-          </FormSelect>
+          </FormMultiSelect>
         </Grid>
 
         <Grid size={{ xs: 12, md: 3 }}>
@@ -168,20 +181,24 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
         {metric_source == "quarterIn" && (
           <>
             <Grid size={{ xs: 12, md: 2 }}>
-              <FormSelect
+              <FormMultiSelect
                 control={form.control}
                 name="source_type"
                 label="Source"
+                showCheckboxes
+                renderValue={renderMultiValue(
+                  "Toutes les sources",
+                  (value) => ARRIVAL_SOURCE_TYPES.find((option) => option.value === value)?.label ?? String(value),
+                )}
               >
-                <MenuItem value="">Toutes les sources</MenuItem>
                 {ARRIVAL_SOURCE_TYPES.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>
                 ))}
-              </FormSelect>
+              </FormMultiSelect>
             </Grid>
-            {sourceType === "point" && (
+            {hasPointSource && (
               <Grid size={{ xs: 12, md: 3 }}>
                 <FormSelect control={form.control} name="collection_point_id" label="Point de collecte">
                   <MenuItem key="all-points" value="">Tous les points de collecte</MenuItem>
@@ -199,18 +216,19 @@ export const EcoOrgStatsFilters = ({ statsRows, allRows, defaultValues, onChange
 
 
         <Grid size={{ xs: 12, md: 2 }}>
-          <FormSelect
+          <FormMultiSelect
             control={form.control}
             name="category"
             label="Categorie"
+            showCheckboxes
+            renderValue={renderMultiValue("Toutes les categories", String)}
           >
-            <MenuItem value="">Toutes les categories</MenuItem>
             {categoryOptions.map((category) => (
               <MenuItem key={category} value={category}>
                 {category}
               </MenuItem>
             ))}
-          </FormSelect>
+          </FormMultiSelect>
         </Grid>
 
         <Grid size="auto" sx={{ ml: "auto" }}>

@@ -27,28 +27,29 @@ export type EcoOrganismFormValues = z.input<typeof ecoOrganismFormSchema>;
 /**
  * URL / form state of the eco-organism stats filters. Not the API query: see
  * `toEcoOrgQuartersQuery`. Only `collection_point_id` is server-side; the other
- * fields filter the fetched rows in memory.
+ * fields filter the fetched rows in memory. `eco_organism_id`, `source_type`
+ * and `category` are multi-select: an empty array means "no filter".
  */
 export const ecoOrgFilterFormSchema =z.object({
-  eco_organism_id: z.union([filterIdSchema(), z.literal("")]),
+  eco_organism_id: z.array(filterIdSchema()),
   metric_source: z.enum(ECO_ORG_METRIC_SOURCES),
 
   quarter: z.string(),
   month_year: z.coerce.date().nullable(),
-  source_type: z.enum([...ARRIVAL_SOURCE_TYPES, ""]),
+  source_type: z.array(z.enum(ARRIVAL_SOURCE_TYPES)),
   collection_point_id: z.union([filterIdSchema(), z.literal("")]),
-  category: z.string(),
+  category: z.array(z.string()),
 });
 
 export type EcoOrgFilterFormValues = z.infer<typeof ecoOrgFilterFormSchema>;
 export type EcoOrgFilterFormInput = z.input<typeof ecoOrgFilterFormSchema>;
 
 export const getEcoOrgFilterFormDefaults = (): EcoOrgFilterFormValues => ({
-  eco_organism_id: "",
+  eco_organism_id: [],
   metric_source: "quarterOut",
   quarter: "",
   month_year: null,
-  source_type: "",
+  source_type: [],
   collection_point_id: "",
-  category: "",
+  category: [],
 });
