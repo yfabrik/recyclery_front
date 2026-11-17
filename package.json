@@ -24,7 +24,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.3.6",
     "@mui/lab": "^7.0.1-beta.22",
-    "@mui/material": "^7.3.6",
+    "@mui/material": "^9.5.0",
     "@mui/x-charts": "^8.24.0",
     "@mui/x-date-pickers": "^8.21.0",
     "@recyclerie/api": "github:yfabrik/api-recyclerie#v0.5.7",
