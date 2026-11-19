@@ -2,13 +2,12 @@ import {
   Assessment,
   Category,
   CheckCircle,
+  CloudOff,
   Inventory,
   LocalShipping,
   People,
-  QrCode,
   Refresh,
   ShoppingCart,
-  Store,
   TrendingUp,
   VolunteerActivism,
   WavingHand
@@ -35,12 +34,10 @@ import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActivityItem } from "../components/dashboard/ActivityItem";
 import { SalesCharts } from "../components/dashboard/SalesCharts";
-import DashboardNotifications from "../components/DashboardNotifications";
 import { Loading } from "../components/Loading";
 import QuickStats from "../components/QuickStats";
 import { StatCard } from "../components/StatCard";
 import StoreStats from "../components/StoreStats";
-import WeatherWidget from "../components/WeatherWidget";
 import { useAuth } from "../contexts/AuthContext";
 import {
   getActivities,
@@ -54,6 +51,7 @@ import { formatCurrency, formatPercentage } from "../services/cartService";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const SELL_TARGET = 200
 
   // Données simulées réalistes pour la démonstration
   const mockStats = {
@@ -182,6 +180,12 @@ const Dashboard = () => {
     };
   };
 
+  const hasApiError =
+    activities.isError ||
+    storesStats.isError ||
+    stats.isError ||
+    charts.isError;
+
   const revenueTrend = calculateTrend(
     stats.data?.thisMonthRevenue,
     stats.data?.lastMonthRevenue,
@@ -240,25 +244,19 @@ const Dashboard = () => {
               </IconButton>
             </Tooltip>
             <Chip
-              icon={<CheckCircle />}
-              label="En ligne"
-              color="success"
+              icon={hasApiError ? <CloudOff /> : <CheckCircle />}
+              label={hasApiError ? "Hors ligne" : "En ligne"}
+              color={hasApiError ? "error" : "success"}
               variant="outlined"
             />
           </Box>
         </Box>
 
-        {activities.isError ||
-          storesStats.isError ||
-          stats.isError ||
-          (charts.isError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {activities.error}
-              {storesStats.isError}
-              {stats.isError}
-              {charts.isError}
-            </Alert>
-          ))}
+        {hasApiError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Certaines données n'ont pas pu être chargées depuis le serveur.
+          </Alert>
+        )}
       </Box>
 
       {/* Statistiques principales améliorées */}
@@ -425,7 +423,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={3}>
             {/* Actions rapides améliorées */}
-            <Paper sx={{ p: 3 }}>
+            {/* <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
                 Actions rapides
               </Typography>
@@ -500,16 +498,16 @@ const Dashboard = () => {
                   </>
                 )}
               </Box>
-            </Paper>
+            </Paper> */}
 
             {/* Widget météo */}
-            <WeatherWidget />
+            {/* <WeatherWidget /> */}
 
             {/* Statistiques rapides */}
             <QuickStats stats={stats} />
 
             {/* Notifications */}
-            <DashboardNotifications onDismiss={() => { }} />
+            {/* <DashboardNotifications onDismiss={() => { }} /> */}
           </Stack>
         </Grid>
       </Grid>
@@ -523,15 +521,15 @@ const Dashboard = () => {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
               <Typography variant="h4" color="primary">
-                {(((stats.data?.soldThisMonth || 0) / 200) * 100).toFixed(0)}%
+                {(((stats.data?.soldThisMonth || 0) / SELL_TARGET) * 100).toFixed(0)}%
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                de l'objectif (200 ventes)
+                de l'objectif ({SELL_TARGET} ventes)
               </Typography>
             </Box>
             <LinearProgress
               variant="determinate"
-              value={(stats.data?.soldThisMonth || 0 / 200) * 100}
+              value={(stats.data?.soldThisMonth || 0 / SELL_TARGET) * 100}
               sx={{ height: 8, borderRadius: 4 }}
             />
           </Paper>
