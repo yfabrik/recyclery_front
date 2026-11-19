@@ -4,7 +4,11 @@ import { Box, Button, Grid, MenuItem, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { TASK_CATEGORIES } from "../../constants/taskCategories";
 import { TASK_PRIORITIES } from "../../constants/taskPriorities";
-import { WORKDAY_TIME_SLOT_VALUES } from "../../constants/workdayTimeSlots";
+import {
+  WORKDAY_TIME_SLOT_HOURS,
+  WORKDAY_TIME_SLOT_VALUES,
+  formatWorkdayTimeSlotRange,
+} from "../../constants/workdayTimeSlots";
 import {
   FormDate,
   FormInput,
@@ -50,13 +54,9 @@ export const PlaningForm = ({
   });
 
   const handleQuickTimeSlot = (slot: (typeof WORKDAY_TIME_SLOT_VALUES)[number]) => {
-    if (slot === "morning") {
-      form.setValue("start_time", new Date(new Date().setHours(8, 0)));
-      form.setValue("end_time", new Date(new Date().setHours(12, 0)));
-    } else {
-      form.setValue("start_time", new Date(new Date().setHours(13, 30)));
-      form.setValue("end_time", new Date(new Date().setHours(17, 0)));
-    }
+    const { start, end } = WORKDAY_TIME_SLOT_HOURS[slot];
+    form.setValue("start_time", new Date(new Date().setHours(...start)));
+    form.setValue("end_time", new Date(new Date().setHours(...end)));
   };
 
   return (
@@ -140,7 +140,7 @@ export const PlaningForm = ({
               }}
             >
               <WbTwilight sx={{ mr: 1 }} />
-              Matin (8h - 12h)
+              Matin ({formatWorkdayTimeSlotRange("morning")})
             </Button>
             <Button
               variant="outlined"
@@ -158,7 +158,7 @@ export const PlaningForm = ({
               }}
             >
               <WbSunny sx={{ mr: 1 }} />
-              Après-midi (13h30 - 17h)
+              Après-midi ({formatWorkdayTimeSlotRange("afternoon")})
             </Button>
           </Box>
         </Grid>

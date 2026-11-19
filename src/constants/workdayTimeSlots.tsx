@@ -69,6 +69,24 @@ export const getWorkdayTimeSlotColor = (
 export const getWorkdayTimeSlotIcon = (slot: WorkdayTimeSlotValue | string) =>
   getWorkdayTimeSlot(slot)?.icon;
 
+/** Quick-set start/end hours for each workday time slot (single source of truth). */
+export const WORKDAY_TIME_SLOT_HOURS: Record<
+  WorkdayTimeSlotValue,
+  { start: readonly [number, number]; end: readonly [number, number] }
+> = {
+  morning: { start: [8, 30], end: [12, 0] },
+  afternoon: { start: [13, 30], end: [17, 0] },
+};
+
+const formatHourMinute = (hours: number, minutes: number) =>
+  minutes === 0 ? `${hours}h` : `${hours}h${minutes.toString().padStart(2, "0")}`;
+
+/** e.g. "8h30 - 12h", derived from WORKDAY_TIME_SLOT_HOURS. */
+export const formatWorkdayTimeSlotRange = (slot: WorkdayTimeSlotValue) => {
+  const { start, end } = WORKDAY_TIME_SLOT_HOURS[slot];
+  return `${formatHourMinute(...start)} - ${formatHourMinute(...end)}`;
+};
+
 /** Minutes since midnight at which the morning ends and the afternoon starts (12:00). */
 export const MORNING_ENDS_AT_MINUTES = 12 * 60;
 
